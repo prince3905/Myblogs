@@ -1,5 +1,5 @@
 import { Button, Box, Tooltip } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
@@ -8,7 +8,7 @@ import ShareIcon from '@mui/icons-material/Share';
 export default function SocialShare({ title, slug }) {
   const [url, setUrl] = useState('');
 
-  useState(() => {
+  useEffect(() => {
     setUrl(`${window.location.origin}/blog/${slug}`);
   }, [slug]);
 
@@ -47,11 +47,12 @@ export default function SocialShare({ title, slug }) {
           onClick={() => share('twitter')}
           sx={{
             minWidth: 'auto',
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             borderRadius: '50%',
             borderColor: '#1DA1F2',
             color: '#1DA1F2',
+            p: 0,
             '&:hover': {
               bgcolor: '#1DA1F2',
               color: 'white',
@@ -72,11 +73,12 @@ export default function SocialShare({ title, slug }) {
           onClick={() => share('facebook')}
           sx={{
             minWidth: 'auto',
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             borderRadius: '50%',
             borderColor: '#1877F2',
             color: '#1877F2',
+            p: 0,
             '&:hover': {
               bgcolor: '#1877F2',
               color: 'white',
@@ -97,11 +99,12 @@ export default function SocialShare({ title, slug }) {
           onClick={() => share('linkedin')}
           sx={{
             minWidth: 'auto',
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             borderRadius: '50%',
             borderColor: '#0A66C2',
             color: '#0A66C2',
+            p: 0,
             '&:hover': {
               bgcolor: '#0A66C2',
               color: 'white',
