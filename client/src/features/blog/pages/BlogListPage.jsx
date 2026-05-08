@@ -133,8 +133,8 @@ export default function BlogListPage() {
       </Paper>
 
       {/* Main Content + Sidebar */}
-      <Container maxWidth="lg">
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '70% 30%' }, gap: 4 }}>
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 0.9fr' }, gap: '32px' }}>
           {/* Left: Posts */}
           <Box>
             {postsLoading ? (
@@ -149,15 +149,9 @@ export default function BlogListPage() {
                   {resultText}
                 </Typography>
                 
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: '32px' }}>
                   {posts.map((post) => (
-                    <Box 
-                      key={post._id} 
-                      sx={{ 
-                        width: { xs: '100%', sm: 'calc(50% - 16px)' },
-                        flexShrink: 0,
-                      }}
-                    >
+                    <Box key={post._id}>
                       <PostCard post={post} />
                     </Box>
                   ))}

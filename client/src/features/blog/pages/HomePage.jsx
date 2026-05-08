@@ -1,12 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Container, Typography, Button, Box, Grid, Stack, Chip, Avatar } from '@mui/material';
+import { Container, Typography, Button, Box, Chip, Avatar } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
 import { usePosts } from '../../../hooks/usePosts';
-import CalendarToday from '@mui/icons-material/CalendarToday';
-import AccessTime from '@mui/icons-material/AccessTime';
-import Visibility from '@mui/icons-material/Visibility';
 
 export default function HomePage() {
   const { posts, loading, error } = usePosts({ limit: 7 });
@@ -19,26 +16,30 @@ export default function HomePage() {
       
       {/* Hero Section - Featured Article */}
       {featuredPost && (
-        <Box sx={{ pt: { xs: 10, md: 18 }, pb: { xs: 8, md: 12 }, px: 2, bgcolor: 'background.default' }}>
-          <Container maxWidth="lg">
-            <Grid container spacing={{ xs: 4, md: 5 }} alignItems="center">
+        <Box sx={{ pt: { xs: 10, md: 18 }, pb: { xs: 8, md: 12 }, minHeight: { md: 600 }, display: 'flex', alignItems: 'center' }}>
+          <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' },
+              gap: { xs: 4, md: 5 },
+              alignItems: 'center',
+            }}>
               {/* Left: Text content */}
-              <Grid item xs={12} md={7}>
-                <Chip 
-                  label={featuredPost.category} 
-                  size="small"
-                  sx={{ 
-                    bgcolor: '#4F46E5', 
-                    color: 'white', 
-                    fontWeight: 600,
-                    fontSize: '0.8rem',
-                    mb: 3,
-                    borderRadius: '9999px',
-                    px: 2,
+              <Box>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
+                    color: '#4F46E5',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                  }} 
-                />
+                    letterSpacing: '0.1em',
+                    mb: 2,
+                    display: 'block',
+                  }}
+                >
+                  {featuredPost.category}
+                </Typography>
                 <Typography
                   variant="h1"
                   sx={{
@@ -67,34 +68,33 @@ export default function HomePage() {
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                   <Avatar
-                    sx={{ width: 40, height: 40, bgcolor: '#4F46E5', fontSize: '0.875rem' }}
+                    sx={{ width: 48, height: 48, bgcolor: '#4F46E5', fontSize: '1rem', fontWeight: 600 }}
                   >
                     {featuredPost.author?.charAt(0) || 'A'}
                   </Avatar>
                   <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827', fontSize: '0.95rem' }}>
                       {featuredPost.author || 'Admin'}
                     </Typography>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                      <CalendarToday sx={{ fontSize: 14, color: '#6B7280' }} />
-                      <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 500 }}>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 0.5 }}>
+                      <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 500, fontSize: '0.8rem' }}>
                         {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </Typography>
-                      <AccessTime sx={{ fontSize: 14, color: '#6B7280', ml: 1 }} />
-                      <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                      <Typography variant="caption" sx={{ color: '#6B7280' }}>•</Typography>
+                      <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.8rem' }}>
                         {featuredPost.readingTime || 5} min read
                       </Typography>
-                      <Visibility sx={{ fontSize: 14, color: '#6B7280', ml: 1 }} />
-                      <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                      <Typography variant="caption" sx={{ color: '#6B7280' }}>•</Typography>
+                      <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.8rem' }}>
                         {featuredPost.views || 0} views
                       </Typography>
                     </Box>
                   </Box>
                 </Box>
-              </Grid>
+              </Box>
               
               {/* Right: Featured Image */}
-              <Grid item xs={12} md={5}>
+              <Box>
                 {featuredPost.featuredImage ? (
                   <Box
                     component="img"
@@ -126,14 +126,14 @@ export default function HomePage() {
                     </Typography>
                   </Box>
                 )}
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Container>
         </Box>
       )}
 
       {/* Latest Insights Section */}
-      <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
+      <Container maxWidth="xl" sx={{ py: { xs: 8, md: 12 }, px: { xs: 2, md: 6, lg: 6 } }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 6 }}>
           <Typography variant="h3" sx={{ fontWeight: 700, color: '#111827', letterSpacing: '-0.02em', fontSize: { xs: '1.75rem', md: '2.5rem' } }}>
             Latest Insights
@@ -159,20 +159,24 @@ export default function HomePage() {
             Error loading posts: {error}
           </Typography>
         ) : (
-          <Grid container spacing={4}>
+          <Box sx={{ 
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+            gap: '32px',
+          }}>
             {regularPosts.map((post) => (
-              <Grid item xs={12} sm={6} md={4} key={post._id}>
+              <Box key={post._id} sx={{ minWidth: 0 }}>
                 <PostCard post={post} />
-              </Grid>
+              </Box>
             ))}
             {!regularPosts.length ? (
-              <Grid item xs={12}>
+              <Box sx={{ gridColumn: '1 / -1' }}>
                 <Typography sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
                   No published posts yet. Log in to admin and create your first article.
                 </Typography>
-              </Grid>
+              </Box>
             ) : null}
-          </Grid>
+          </Box>
         )}
       </Container>
     </Layout>
