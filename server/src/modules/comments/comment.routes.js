@@ -6,9 +6,9 @@ const auth = require('../../shared/middleware/auth.middleware');
 router.post('/posts/:slug/comments', addComment);
 router.get('/posts/:slug/comments', getComments);
 
-router.use(auth);
-router.get('/admin/comments', listComments);
-router.put('/admin/comments/:id/approve', approveComment);
-router.delete('/admin/comments/:id', deleteComment);
+// Protect only admin routes
+router.get('/admin/comments', auth, listComments);
+router.put('/admin/comments/:id/approve', auth, approveComment);
+router.delete('/admin/comments/:id', auth, deleteComment);
 
 module.exports = router;

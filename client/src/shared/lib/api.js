@@ -10,10 +10,19 @@ async function request(path, options = {}) {
     ...(options.headers || {})
   };
 
-  const token = getToken();
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+  // Public endpoints: /api/posts/:slug/comments (GET + POST)
+  // Never attach admin Authorization token for these.
+  const isPublicComments = /^\/api\/posts\/[^/]+\/comments(\?.*)?$/.test(path);
+
+  if (!isPublicComments) {
+    const token = getToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
   }
+
+  // Debug helper (remove after confirming fix)
+  // console.debug('[api]', { path, isPublicComments, hasToken: !!getToken() });
+
+
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
