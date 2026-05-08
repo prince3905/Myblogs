@@ -1,8 +1,7 @@
 import { createTheme } from '@mui/material/styles';
 
-const theme = createTheme({
+const baseTheme = {
   palette: {
-    mode: 'light',
     primary: {
       main: '#6366f1', // Modern indigo
       light: '#818cf8',
@@ -13,14 +12,6 @@ const theme = createTheme({
       main: '#ec4899', // Vibrant pink
       light: '#f472b6',
       dark: '#db2777',
-    },
-    background: {
-      default: '#fafafa',
-      paper: '#ffffff',
-    },
-    text: {
-      primary: '#0f172a',
-      secondary: '#64748b',
     },
     grey: {
       50: '#f8fafc',
@@ -142,6 +133,6 @@ const theme = createTheme({
       },
     },
   },
-});
+};
 
-export default theme;
+export default baseTheme;
