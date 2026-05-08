@@ -1,9 +1,23 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, Typography, Chip, Box, useTheme } from '@mui/material';
-import { CalendarToday, AccessTime, Visibility, Favorite } from '@mui/icons-material';
+import { CalendarToday, AccessTime, Visibility } from '@mui/icons-material';
+
+// Category color mapping per spec
+const categoryColors = {
+  'AI Strategy': '#60A5FA',
+  'Web Development': '#EC4899', 
+  'MERN Stack': '#34D399',
+  'UI/UX Design': '#A78BFA',
+  'SEO Optimization': '#60A5FA',
+  'Technology': '#60A5FA',
+  'Design': '#A78BFA',
+  'Business': '#34D399',
+  'default': '#60A5FA'
+};
 
 export default function PostCard({ post }) {
   const theme = useTheme();
+  const categoryColor = categoryColors[post.category] || categoryColors.default;
   
   return (
     <Card 
@@ -13,23 +27,21 @@ export default function PostCard({ post }) {
         textDecoration: 'none',
         display: 'flex', 
         flexDirection: 'column',
-        height: 480,
-        borderRadius: 3,
+        borderRadius: '28px',
         overflow: 'hidden',
-        border: '1px solid',
-        borderColor: 'divider',
+        border: '1px solid #F2F2F2',
+        bgcolor: 'background.paper',
         transition: 'all 0.3s ease',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.02), 0 10px 40px rgba(0,0,0,0.04)',
         '&:hover': {
-          transform: 'translateY(-8px)',
-          boxShadow: theme.palette.mode === 'dark' 
-            ? '0 20px 40px rgba(0,0,0,0.4)' 
-            : '0 20px 40px rgba(0,0,0,0.1)',
-          borderColor: 'primary.main',
+          transform: 'translateY(-6px)',
+          boxShadow: '0 10px 50px rgba(0,0,0,0.08)',
+          borderColor: '#ECECEC',
         }
       }}
     >
-      {/* Fixed height image section */}
-      <Box sx={{ position: 'relative', overflow: 'hidden', height: 200, flexShrink: 0 }}>
+      {/* Image section */}
+      <Box sx={{ position: 'relative', overflow: 'hidden', height: 220, flexShrink: 0 }}>
         {post.featuredImage ? (
           <Box
             component="img"
@@ -49,7 +61,7 @@ export default function PostCard({ post }) {
           <Box 
             sx={{ 
               height: '100%', 
-              bgcolor: 'primary.main',
+              bgcolor: categoryColor,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -65,55 +77,80 @@ export default function PostCard({ post }) {
           size="small" 
           sx={{ 
             position: 'absolute',
-            top: 12,
-            left: 12,
+            top: 16,
+            left: 16,
             fontWeight: 600,
+            fontSize: '0.8rem',
             bgcolor: 'rgba(255,255,255,0.95)',
-            color: 'primary.main',
+            color: categoryColor,
+            borderRadius: '9999px',
+            px: 1,
           }} 
         />
       </Box>
       
-      {/* Content section with fixed spacing */}
+      {/* Content section - 32px padding per spec */}
       <CardContent sx={{ 
         flex: 1, 
         display: 'flex', 
         flexDirection: 'column',
-        p: 3,
-        '&:last-child': { pb: 3 }
+        p: 4,
+        '&:last-child': { pb: 4 }
       }}>
+        {/* Category label at top */}
+        <Chip 
+          label={post.category} 
+          size="small"
+          sx={{ 
+            alignSelf: 'flex-start',
+            bgcolor: categoryColor,
+            color: 'white',
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            borderRadius: '9999px',
+            mb: 2,
+            px: 1,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }} 
+        />
+        
+        {/* Large blog title - 36px per spec */}
         <Typography 
           variant="h6" 
           gutterBottom 
           sx={{ 
             fontWeight: 700,
-            lineHeight: 1.4,
+            fontSize: '1.75rem',
+            lineHeight: 1.3,
             mb: 2,
-            color: 'text.primary',
+            color: '#111827',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            minHeight: '2.8em',
+            minHeight: '2.6em',
             transition: 'color 0.2s',
             '&:hover': {
-              color: 'primary.main',
+              color: '#4F46E5',
             }
           }}
         >
           {post.title}
         </Typography>
         
+        {/* Short excerpt - 17px per spec */}
         <Typography 
           variant="body2" 
-          color="text.secondary" 
           sx={{ 
-            mb: 2,
+            mb: 3,
+            fontSize: '1.0625rem',
+            lineHeight: 1.7,
+            color: '#6B7280',
             display: '-webkit-box',
             WebkitLineClamp: 3,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            lineHeight: 1.7,
             flex: 1,
             minHeight: '4.2em',
           }}
@@ -121,8 +158,8 @@ export default function PostCard({ post }) {
           {post.excerpt}
         </Typography>
         
-        {/* Push stats to bottom */}
-        <Box sx={{ mt: 'auto', pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+        {/* Author row at bottom */}
+        <Box sx={{ mt: 'auto', pt: 2, borderTop: '1px solid #F2F2F2' }}>
           <Box 
             sx={{ 
               display: 'flex', 
@@ -132,14 +169,14 @@ export default function PostCard({ post }) {
           >
             <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <CalendarToday sx={{ fontSize: 14, color: 'text.disabled' }} />
-                <Typography variant="caption" color="text.disabled">
-                  {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                <CalendarToday sx={{ fontSize: 14, color: '#9CA3AF' }} />
+                <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.8rem' }}>
+                  {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <AccessTime sx={{ fontSize: 14, color: 'text.disabled' }} />
-                <Typography variant="caption" color="text.disabled">
+                <AccessTime sx={{ fontSize: 14, color: '#9CA3AF' }} />
+                <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.8rem' }}>
                   {post.readingTime || 5}m
                 </Typography>
               </Box>
@@ -147,8 +184,8 @@ export default function PostCard({ post }) {
             
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-                <Visibility sx={{ fontSize: 14, color: 'text.disabled' }} />
-                <Typography variant="caption" color="text.disabled">
+                <Visibility sx={{ fontSize: 14, color: '#9CA3AF' }} />
+                <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.8rem' }}>
                   {post.views || 0}
                 </Typography>
               </Box>
