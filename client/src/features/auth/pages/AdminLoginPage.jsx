@@ -36,9 +36,7 @@ export default function AdminLoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: 'grey.50',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        py: 4,
+        bgcolor: 'background.default',
       }}
     >
       <Seo title="Admin Login | Inkspire Blog" description="Secure admin login for blog content management." />

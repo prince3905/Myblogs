@@ -32,20 +32,20 @@ export default function NewsletterWidget() {
         p: { xs: 3, md: 6 }, 
         textAlign: 'center',
         borderRadius: 4,
-        background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
-        color: 'white',
-        mb: 4,
+        bgcolor: 'background.paper',
+        border: '1px solid',
+        borderColor: 'divider',
       }}
     >
       <Typography 
         variant="h4" 
-        sx={{ fontWeight: 800, mb: 2, color: 'white' }}
+        sx={{ fontWeight: 800, mb: 2, color: 'text.primary' }}
       >
         Stay Inspired
       </Typography>
       <Typography 
         variant="body1" 
-        sx={{ mb: 4, opacity: 0.9, maxWidth: 500, mx: 'auto' }}
+        sx={{ mb: 4, color: 'text.secondary', maxWidth: 500, mx: 'auto' }}
       >
         Get the latest posts and insights delivered directly to your inbox. No spam, ever.
       </Typography>
@@ -55,7 +55,7 @@ export default function NewsletterWidget() {
         onSubmit={handleSubmit} 
         sx={{ 
           display: 'flex', 
-          gap: 1, 
+          gap: 2, 
           justifyContent: 'center', 
           flexWrap: 'wrap',
           maxWidth: 500,
@@ -73,9 +73,9 @@ export default function NewsletterWidget() {
             flex: 1,
             minWidth: 250,
             '& .MuiOutlinedInput-root': {
-              bgcolor: 'rgba(255,255,255,0.95)',
+              bgcolor: 'background.paper',
               borderRadius: 2,
-              '& fieldset': { border: 'none' },
+              '& fieldset': { borderColor: 'divider' },
             }
           }}
         />
@@ -85,13 +85,13 @@ export default function NewsletterWidget() {
           disabled={loading}
           size="large"
           sx={{
-            bgcolor: 'white',
-            color: 'primary.main',
+            bgcolor: 'primary.main',
+            color: 'white',
             fontWeight: 700,
             px: 4,
             borderRadius: 2,
             '&:hover': {
-              bgcolor: 'rgba(255,255,255,0.9)',
+              bgcolor: 'primary.dark',
             }
           }}
         >
@@ -113,7 +113,7 @@ export default function NewsletterWidget() {
         </Alert>
       )}
       
-      <Typography variant="caption" sx={{ mt: 2, display: 'block', opacity: 0.7 }}>
+      <Typography variant="caption" sx={{ mt: 2, display: 'block', color: 'text.disabled' }}>
         Join 500+ developers who already subscribed
       </Typography>
     </Paper>

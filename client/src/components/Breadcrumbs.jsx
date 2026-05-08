@@ -9,19 +9,20 @@ export default function BreadcrumbsNav() {
   if (paths.length === 0) return null;
 
   return (
-    <Box sx={{ 
-      py: 2, 
-      px: { xs: 2, md: 0 },
-      maxWidth: 'lg', 
-      mx: 'auto',
-    }}>
-      <Breadcrumbs 
-        separator={<NavigateNextIcon fontSize="small" />} 
+    <Box
+      sx={{
+        py: 1.75,
+        px: { xs: 2, md: 0 },
+        maxWidth: 'lg',
+        mx: 'auto',
+      }}
+    >
+      <Breadcrumbs
+        separator={<NavigateNextIcon fontSize="small" sx={{ color: 'primary.main', opacity: 0.7 }} />}
         aria-label="breadcrumb"
-        sx={{ 
-          '& .MuiBreadcrumbs-ol': {
-            alignItems: 'center',
-          }
+        sx={{
+          '& .MuiBreadcrumbs-ol': { alignItems: 'center' },
+          '& a': { fontWeight: 500 },
         }}
       >
         <Link 
@@ -46,22 +47,24 @@ export default function BreadcrumbsNav() {
                        path === 'edit' ? 'Edit' :
                        decodeURIComponent(path).charAt(0).toUpperCase() + decodeURIComponent(path).slice(1);
           
+          const primarySx = {
+            fontWeight: 600,
+            color: 'primary.main',
+            opacity: 0.95,
+            transition: 'opacity 0.2s',
+          };
+
           return isLast ? (
-            <Typography key={url} color="primary" sx={{ fontWeight: 600 }}>
+            <Typography key={url} sx={primarySx}>
               {label}
             </Typography>
           ) : (
-            <Link 
-              key={url} 
+            <Link
+              key={url}
               to={url}
-              style={{ 
-                textDecoration: 'none', 
-                color: 'inherit',
-                fontWeight: 500,
-                transition: 'color 0.2s',
-              }}
-              onMouseEnter={(e) => e.target.style.color = '#6366f1'}
-              onMouseLeave={(e) => e.target.style.color = 'inherit'}
+              style={{ textDecoration: 'none', color: 'inherit', fontWeight: 500, transition: 'color 0.2s' }}
+              onMouseEnter={(e) => (e.target.style.color = '#6366f1')}
+              onMouseLeave={(e) => (e.target.style.color = 'inherit')}
             >
               {label}
             </Link>

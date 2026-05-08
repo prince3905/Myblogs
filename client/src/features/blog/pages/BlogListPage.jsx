@@ -27,9 +27,9 @@ export default function BlogListPage() {
     <Layout>
       <Seo title="Blog Articles | Inkspire Blog" description="Browse SEO-friendly articles with category filters and search." />
       
-      <Paper elevation={0} sx={{ py: { xs: 4, md: 6 }, mb: 4, bgcolor: 'grey.50' }}>
+      <Paper elevation={0} sx={{ py: { xs: 4, md: 6 }, mb: 4, bgcolor: 'background.paper' }}>
         <Container maxWidth="lg">
-          <Typography variant="h2" gutterBottom sx={{ fontWeight: 700 }}>
+          <Typography variant="h2" gutterBottom sx={{ fontWeight: 700, color: 'text.primary' }}>
             All Blog Posts
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>

@@ -50,7 +50,7 @@ export default function PostPage() {
        />
       
       {/* Hero Image Section */}
-      {post.featuredImage ? (
+       {post.featuredImage ? (
         <Box sx={{ 
           width: '100%', 
           height: { xs: '40vh', md: '60vh' },
@@ -65,7 +65,7 @@ export default function PostPage() {
           <Box sx={{ 
             position: 'absolute', 
             top: 0, left: 0, right: 0, bottom: 0,
-            background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+            background: 'rgba(0,0,0,0.5)',
           }} />
           <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, pb: 4 }}>
             <Chip label={post.category} sx={{ bgcolor: 'rgba(255,255,255,0.9)', color: 'primary.main', fontWeight: 600, mb: 2 }} />
@@ -91,31 +91,31 @@ export default function PostPage() {
            ← Back to blog
          </Button>
 
-        {/* Title (if no featured image) */}
-        {!post.featuredImage && (
-          <>
-            <Chip label={post.category} sx={{ mb: 2 }} />
-            <Typography variant="h2" gutterBottom sx={{ fontWeight: 700, mb: 3 }}>
-              {post.title}
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              {new Date(post.publishedAt || post.createdAt).toLocaleDateString()} • {post.readingTime} min read • {post.views || 0} views
-            </Typography>
-          </>
-        )}
+         {/* Title (if no featured image) */}
+         {!post.featuredImage && (
+           <>
+             <Chip label={post.category} sx={{ mb: 2 }} />
+             <Typography variant="h2" gutterBottom sx={{ fontWeight: 700, mb: 3, color: 'text.primary' }}>
+               {post.title}
+             </Typography>
+             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+               {new Date(post.publishedAt || post.createdAt).toLocaleDateString()} • {post.readingTime} min read • {post.views || 0} views
+             </Typography>
+           </>
+         )}
 
-        {/* Excerpt */}
-        <Typography variant="h6" color="text.secondary" sx={{ mb: 4, fontStyle: 'italic', lineHeight: 1.7 }}>
-          {post.excerpt}
-        </Typography>
+         {/* Excerpt */}
+         <Typography variant="h6" color="text.secondary" sx={{ mb: 4, fontStyle: 'italic', lineHeight: 1.7, color: 'text.primary' }}>
+           {post.excerpt}
+         </Typography>
 
-        {/* Content */}
-        <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, mb: 4, bgcolor: 'background.paper' }}>
-          <div 
-            dangerouslySetInnerHTML={{ __html: post.content }} 
-            style={{ lineHeight: 1.8, fontSize: '1.1rem' }}
-          />
-        </Paper>
+         {/* Content */}
+         <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, mb: 4, bgcolor: 'background.paper' }}>
+           <div 
+             dangerouslySetInnerHTML={{ __html: post.content }} 
+             style={{ lineHeight: 1.8, fontSize: '1.1rem', color: '#0f172a' }}
+           />
+         </Paper>
 
         {/* Tags */}
         {post.tags?.length ? (

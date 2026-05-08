@@ -5,15 +5,14 @@
 
 body {
   margin: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-attachment: fixed;
   min-height: 100vh;
+  background: #ffffff;
 }
 
-/* Dark mode body */
 .dark body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4a 100%);
+  background: #0a0a0a;
 }
+
 
 /* Glassmorphism effect */
 .glass {
@@ -82,7 +81,8 @@ html {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -102,7 +102,7 @@ html {
   animation: slideInRight 0.6s ease-out;
 }
 
-/* Image hover zoom */
+/* Hover/utility classes */
 .img-zoom {
   overflow: hidden;
 }
@@ -115,7 +115,6 @@ html {
   transform: scale(1.05);
 }
 
-/* Gradient text */
 .gradient-text {
   background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
   -webkit-background-clip: text;
@@ -143,7 +142,7 @@ html {
   transform: translateY(-2px);
 }
 
-/* Modern shadows */
+/* Shadows */
 .shadow-modern {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
@@ -154,35 +153,29 @@ html {
 
 /* Dark mode */
 .dark {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4a 100%);
-  color: #e5e7eb;
+  color: #ffffff;
+  background: transparent;
 }
 
-.dark .MuiPaper-root {
-  background-color: #1e293b;
-}
 
+.dark .MuiPaper-root,
 .dark .MuiCard-root {
   background-color: #1e293b;
 }
 
-.dark body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4a 100%);
-}
-
-/* Selection color */
+/* Selection */
 ::selection {
   background: #6366f1;
   color: white;
 }
 
-/* Focus visible outline */
+/* Focus */
 *:focus-visible {
   outline: 2px solid #6366f1;
   outline-offset: 2px;
 }
 
-/* Loading shimmer effect */
+/* Loading shimmer */
 @keyframes shimmer {
   0% {
     background-position: -1000px 0;
@@ -202,3 +195,4 @@ html {
   background: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%);
   background-size: 1000px 100%;
 }
+

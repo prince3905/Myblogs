@@ -22,9 +22,9 @@ export default function ReadingProgress() {
     <Box
       sx={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
+        top:0,
+        left:0,
+        right:0,
         height: 4,
         zIndex: 9999,
         bgcolor: 'rgba(0,0,0,0.05)',
@@ -34,10 +34,10 @@ export default function ReadingProgress() {
         sx={{
           height: '100%',
           width: `${progress}%`,
-          background: 'linear-gradient(90deg, #6366f1 0%, #ec4899 100%)',
+          background: theme.palette.primary.main,
           transition: 'width 0.1s ease',
           borderRadius: '0 4px 4px 0',
-          boxShadow: '0 0 10px rgba(99, 102, 241, 0.5)',
+          boxShadow: `0 0 10px ${theme.palette.primary.main}80`,
         }}
       />
     </Box>

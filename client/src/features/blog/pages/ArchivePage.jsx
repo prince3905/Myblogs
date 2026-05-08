@@ -50,7 +50,7 @@ export default function ArchivePage() {
           >
             Archive
           </Typography>
-          <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>
+          <Typography variant="h3" sx={{ fontWeight: 800, mb: 2, color: 'text.primary' }}>
             All Posts by Date
           </Typography>
           <Typography variant="body1" color="text.secondary">

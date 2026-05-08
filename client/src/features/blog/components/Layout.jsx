@@ -9,35 +9,39 @@ export default function Layout({ children }) {
   
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <AppBar 
-        position="sticky" 
+      <AppBar
+        position="sticky"
         elevation={0}
         sx={{
-          background: theme.palette.mode === 'dark' 
-            ? 'rgba(18, 18, 18, 0.8)'
-            : 'rgba(255, 255, 255, 0.8)',
+          background:
+            theme.palette.mode === 'dark'
+              ? 'rgba(10, 10, 10, 0.88)'
+              : 'rgba(255, 255, 255, 0.88)',
           backdropFilter: 'blur(10px)',
           borderBottom: `1px solid ${theme.palette.divider}`,
         }}
       >
         <Container maxWidth="lg">
-          <Toolbar disableGutters>
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                flexGrow: 1, 
+          <Toolbar
+            disableGutters
+            sx={{
+              minHeight: 64,
+              px: { xs: 0, md: 0 },
+            }}
+          >
+            <Typography
+              variant="h5"
+              sx={{
+                flexGrow: 1,
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '-0.5px',
+                color: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.text.primary,
+                letterSpacing: '-0.4px',
               }}
             >
-              <Link to="/" style={{ textDecoration: 'none' }}>Inkspire</Link>
+              <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>Inkspire</Link>
             </Typography>
-            
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+
+            <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'center' }}>
               <Button 
                 component={NavLink} 
                 to="/" 
@@ -83,14 +87,14 @@ export default function Layout({ children }) {
         {children}
       </Container>
       
-      <Box 
-        component="footer" 
-        sx={{ 
-          py: 6, 
-          textAlign: 'center', 
-          borderTop: 1, 
+      <Box
+        component="footer"
+        sx={{
+          py: 6,
+          textAlign: 'center',
+          borderTop: 1,
           borderColor: 'divider',
-          bgcolor: 'background.paper',
+          bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#fafafa',
         }}
       >
         <Container maxWidth="lg">

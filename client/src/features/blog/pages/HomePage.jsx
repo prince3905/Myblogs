@@ -12,111 +12,111 @@ export default function HomePage() {
     <Layout>
       <Seo title="Inkspire Blog | MERN Publishing Platform" description="Create, publish, edit and manage SEO-ready blog content with a modern MERN stack website." />
       
-      {/* Modern Hero Section */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          py: { xs: 8, md: 12 },
-          px: 2,
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <Container maxWidth="md">
-          <Typography
-            variant="overline"
-            sx={{
-              letterSpacing: 3,
-              color: 'rgba(255,255,255,0.9)',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              mb: 2,
-              display: 'block',
-            }}
-          >
-            MERN Blogging Platform
-          </Typography>
-          
-          <Typography
-            variant="h1"
-            sx={{
-              fontWeight: 800,
-              mb: 3,
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
-              lineHeight: 1.1,
-              textShadow: '0 2px 20px rgba(0,0,0,0.1)',
-            }}
-          >
-            Publish fast, rank smarter, and manage every article from one dashboard.
-          </Typography>
-          
-          <Typography
-            variant="h6"
-            sx={{
-              mb: 4,
-              fontWeight: 400,
-              opacity: 0.95,
-              maxWidth: 600,
-              mx: 'auto',
-              lineHeight: 1.7,
-            }}
-          >
-            This starter gives you post CRUD, SEO fields, categories, search, drafts, and a clean admin workflow.
-          </Typography>
-          
-          <Stack
-            direction="row"
-            spacing={2}
-            justifyContent="center"
-            flexWrap="wrap"
-          >
-            <Button
-              component={Link}
-              to="/blog"
-              variant="contained"
-              size="large"
-              sx={{
-                bgcolor: 'white',
-                color: 'primary.main',
-                fontWeight: 700,
-                px: 4,
-                py: 1.5,
-                fontSize: '1.1rem',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.9)',
-                  transform: 'translateY(-2px)',
-                }
-              }}
-            >
-              Explore Blog
-            </Button>
-            <Button
-              component={Link}
-              to="/admin"
-              variant="outlined"
-              size="large"
-              sx={{
-                color: 'white',
-                borderColor: 'rgba(255,255,255,0.6)',
-                borderWidth: 2,
-                fontWeight: 600,
-                px: 4,
-                py: 1.5,
-                fontSize: '1.1rem',
-                '&:hover': {
-                  borderColor: 'white',
-                  bgcolor: 'rgba(255,255,255,0.1)',
-                  transform: 'translateY(-2px)',
-                }
-              }}
-            >
-              Open Admin
-            </Button>
-          </Stack>
-        </Container>
-      </Box>
+       {/* Modern Hero Section */}
+       <Box
+         sx={{
+           background: '#ffffff',
+           color: 'text.primary',
+           py: { xs: 8, md: 12 },
+           px: 2,
+           textAlign: 'center',
+           position: 'relative',
+           overflow: 'hidden',
+         }}
+       >
+         <Container maxWidth="md">
+           <Typography
+             variant="overline"
+             sx={{
+               letterSpacing: 3,
+               color: 'primary.main',
+               fontWeight: 600,
+               fontSize: '0.95rem',
+               mb: 2,
+               display: 'block',
+             }}
+           >
+             MERN Blogging Platform
+           </Typography>
+           
+           <Typography
+             variant="h1"
+             sx={{
+               fontWeight: 800,
+               mb: 3,
+               fontSize: { xs: '2.5rem', md: '3.5rem' },
+               lineHeight: 1.1,
+               color: 'text.primary',
+             }}
+           >
+             Publish fast, rank smarter, and manage every article from one dashboard.
+           </Typography>
+           
+           <Typography
+             variant="h6"
+             sx={{
+               mb: 4,
+               fontWeight: 400,
+               color: 'text.secondary',
+               maxWidth: 600,
+               mx: 'auto',
+               lineHeight: 1.7,
+             }}
+           >
+             This starter gives you post CRUD, SEO fields, categories, search, drafts, and a clean admin workflow.
+           </Typography>
+           
+           <Stack
+             direction="row"
+             spacing={2}
+             justifyContent="center"
+             flexWrap="wrap"
+           >
+             <Button
+               component={Link}
+               to="/blog"
+               variant="contained"
+               size="large"
+               sx={{
+                 bgcolor: 'primary.main',
+                 color: 'white',
+                 fontWeight: 700,
+                 px: 4,
+                 py: 1.5,
+                 fontSize: '1.1rem',
+                 '&:hover': {
+                   bgcolor: 'primary.dark',
+                   transform: 'translateY(-2px)',
+                 }
+               }}
+             >
+               Explore Blog
+             </Button>
+             <Button
+               component={Link}
+               to="/admin"
+               variant="outlined"
+               size="large"
+               sx={{
+                 color: 'primary.main',
+                 borderColor: 'primary.main',
+                 borderWidth: 2,
+                 fontWeight: 600,
+                 px: 4,
+                 py: 1.5,
+                 fontSize: '1.1rem',
+                 '&:hover': {
+                   borderColor: 'primary.dark',
+                   bgcolor: 'rgba(99, 102, 241, 0.04)',
+                   transform: 'translateY(-2px)',
+                 }
+               }}
+             >
+               Open Admin
+             </Button>
+           </Stack>
+         </Container>
+       </Box>
 
       {/* Recent Posts Section */}
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
