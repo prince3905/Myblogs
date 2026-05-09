@@ -61,6 +61,8 @@ export default function PostPage() {
           display: 'flex',
           alignItems: 'flex-end',
           mb: 4,
+          borderRadius: '32px',
+          overflow: 'hidden',
         }}>
           <Box sx={{ 
             position: 'absolute', 

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 export default function ReadingProgress() {
+  const theme = useTheme();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
