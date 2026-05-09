@@ -68,10 +68,28 @@ async function listPublishedPosts(req, res) {
   }
 
   if (dateFrom || dateTo) {
-    query.publishedAt = {};
-    if (dateFrom) query.publishedAt.$gte = new Date(dateFrom);
-    if (dateTo) query.publishedAt.$lte = new Date(dateTo + 'T23:59:59.999Z');
+    const toDate = (value, opts = {}) => {
+      if (typeof value !== 'string') return null;
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      const d = opts.appendT23EndOfDay
+        ? new Date(`${trimmed}T23:59:59.999Z`)
+        : new Date(trimmed);
+      return Number.isNaN(d?.getTime?.()) ? null : d;
+    };
+
+    const dateFromParsed = toDate(dateFrom);
+    const dateToParsed = toDate(dateTo, { appendT23EndOfDay: true });
+
+    // Real-world behavior: if incoming dates are invalid, ignore the date filter
+    // rather than crashing the endpoint.
+    if (dateFromParsed || dateToParsed) {
+      query.publishedAt = {};
+      if (dateFromParsed) query.publishedAt.$gte = dateFromParsed;
+      if (dateToParsed) query.publishedAt.$lte = dateToParsed;
+    }
   }
+
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
   const total = await BlogPost.countDocuments(query);

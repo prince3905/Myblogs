@@ -15,12 +15,22 @@ export function usePosts(params = {}) {
       setError(null);
       const queryParams = { ...params, page };
       
-      // Format dates properly for API
+      // Format dates properly for API - only valid dates
       if (queryParams.dateFrom) {
-        queryParams.dateFrom = new Date(queryParams.dateFrom).toISOString().split('T')[0];
+        const d = new Date(queryParams.dateFrom);
+        if (d instanceof Date && !isNaN(d.getTime()) && d.getTime() > 0) {
+          queryParams.dateFrom = d.toISOString().split('T')[0];
+        } else {
+          delete queryParams.dateFrom;
+        }
       }
       if (queryParams.dateTo) {
-        queryParams.dateTo = new Date(queryParams.dateTo).toISOString().split('T')[0];
+        const d = new Date(queryParams.dateTo);
+        if (d instanceof Date && !isNaN(d.getTime()) && d.getTime() > 0) {
+          queryParams.dateTo = d.toISOString().split('T')[0];
+        } else {
+          delete queryParams.dateTo;
+        }
       }
       
       const data = await postsService.getAll(queryParams);
