@@ -309,22 +309,6 @@ export default function BlogListPage() {
               </Typography>
             </Paper>
 
-            {/* Profile Image Section */}
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Box
-                component="img"
-                src="/profile-placeholder.jpg"
-                alt="Profile"
-                sx={{
-                  width: 200,
-                  height: 200,
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-                  border: '3px solid white',
-                }}
-              />
-            </Box>
           </Box>
         </Box>
       </Container>

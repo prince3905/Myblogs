@@ -5,7 +5,6 @@ const auth = require('../../shared/middleware/auth.middleware');
 
 router.post('/newsletter/subscribe', subscribe);
 
-router.use(auth);
-router.get('/admin/subscribers', listSubscribers);
+router.get('/admin/subscribers', auth, listSubscribers);
 
 module.exports = router;

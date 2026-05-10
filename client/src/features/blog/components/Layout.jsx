@@ -30,7 +30,7 @@ export default function Layout({ children }) {
           width: { xs: 'calc(100% - 32px)', md: '800px' },
           zIndex: 1100,
         }}
-      >
+        >
         <Box
           sx={{
             background: theme.palette.mode === 'dark' 
@@ -47,7 +47,9 @@ export default function Layout({ children }) {
             py: 0.5,
           }}
         >
-          <Box sx={{ display: 'flex', justifyContent: { xs: 'space-between', md: 'center' }, alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+
+
             {/* Mobile: Hamburger */}
             <IconButton
               onClick={() => setMobileOpen(true)}
@@ -64,9 +66,9 @@ export default function Layout({ children }) {
                 fontSize: { xs: '1.1rem', md: '1.75rem' },
                 color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111',
                 letterSpacing: '-0.02em',
-                position: { xs: 'absolute', md: 'static' },
-                left: '50%',
-                transform: { xs: 'translateX(-50%)', md: 'none' },
+                position: { xs: 'static', md: 'static' },
+                left: 'auto',
+                transform: { xs: 'none', md: 'none' },
               }}
             >
               <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>Digital Home</Link>

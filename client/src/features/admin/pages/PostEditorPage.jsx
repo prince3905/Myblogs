@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider } from '@mui/material';
-import Seo from '../../blog/components/Seo';
+import { Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider } from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
 import ImageUpload from '../../../components/ImageUpload';
 import RichTextEditor from '../../../components/RichTextEditor';
 import { request } from '../../../shared/lib/api';
@@ -72,25 +72,27 @@ export default function PostEditorPage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
-      <Seo title={isEdit ? 'Edit Post | Inkspire Blog' : 'New Post | Inkspire Blog'} description="Manage article content and SEO metadata." />
-      
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-        <Box>
-          <Typography variant="overline" color="text.secondary" sx={{ mb: 1, fontWeight: 600, letterSpacing: 2 }}>
-            Post Editor
-          </Typography>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            {isEdit ? 'Edit blog post' : 'Create new blog post'}
-          </Typography>
+    <>
+      <Box sx={{
+        px: 4, py: 2.5, bgcolor: 'white',
+        borderBottom: '1px solid', borderColor: '#ECECEC',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Button component={Link} to="/admin" sx={{ minWidth: 0, px: 1, color: '#6B7280', borderRadius: 2 }}>
+            <ArrowBack />
+          </Button>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>{isEdit ? 'Edit Post' : 'New Post'}</Typography>
+            <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.3 }}>{isEdit ? 'Update your article content and settings' : 'Create a new article for your blog'}</Typography>
+          </Box>
         </Box>
-        <Button component={Link} to="/admin" variant="outlined" sx={{ fontWeight: 600 }}>
-          ← Back to Dashboard
-        </Button>
       </Box>
 
-      <form onSubmit={handleSubmit}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: 4 }}>
+        {error ? <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setError('')}>{error}</Alert> : null}
+
+        <form onSubmit={handleSubmit}>
         <Grid container spacing={4}>
           {/* Left Column - Main Content */}
           <Grid item xs={12} md={8}>
@@ -234,8 +236,6 @@ export default function PostEditorPage() {
                 sx={{ mb: 3 }}
               />
 
-              {error ? <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert> : null}
-
               <Button
                 type="submit"
                 variant="contained"
@@ -254,6 +254,7 @@ export default function PostEditorPage() {
           </Grid>
         </Grid>
       </form>
-    </Container>
+      </Box>
+    </>
   );
 }
