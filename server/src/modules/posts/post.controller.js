@@ -243,7 +243,14 @@ async function likePost(req, res, next) {
     const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' });
     if (!post) return res.status(404).json({ message: 'Post not found' });
     
-    post.likes = (post.likes || 0) + 1;
+    const { liked } = req.body;
+    if (liked === true) {
+      post.likes = (post.likes || 0) + 1;
+    } else if (liked === false) {
+      post.likes = Math.max(0, (post.likes || 0) - 1);
+    } else {
+      post.likes = (post.likes || 0) + 1;
+    }
     await post.save();
     res.json({ success: true, likes: post.likes });
   } catch (err) {

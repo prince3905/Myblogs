@@ -4,17 +4,32 @@ import { request } from '../shared/lib/api';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 
+function getStorageKey(slug) {
+  return `liked_${slug}`;
+}
+
 export default function LikeButton({ slug, initialLikes = 0 }) {
   const [likes, setLikes] = useState(initialLikes);
   const [loading, setLoading] = useState(false);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(() => {
+    try {
+      return localStorage.getItem(getStorageKey(slug)) === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   async function handleLike() {
     setLoading(true);
+    const newLiked = !liked;
     try {
-      const data = await request(`/api/posts/${slug}/like`, { method: 'POST' });
+      const data = await request(`/api/posts/${slug}/like`, {
+        method: 'POST',
+        body: JSON.stringify({ liked: newLiked }),
+      });
       setLikes(data.likes);
-      setLiked(!liked);
+      setLiked(newLiked);
+      localStorage.setItem(getStorageKey(slug), String(newLiked));
     } catch (err) {
       console.error('Like failed', err);
     } finally {
