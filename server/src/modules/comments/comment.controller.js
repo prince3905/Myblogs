@@ -37,7 +37,13 @@ async function getComments(req, res, next) {
 
 async function listComments(req, res, next) {
   try {
-    const comments = await Comment.find().populate('post', 'title slug').sort({ createdAt: -1 });
+    const all = await Comment.find().populate('post', 'title slug').sort({ createdAt: -1 }).lean();
+    const topLevel = all.filter(c => !c.parent);
+    const replies = all.filter(c => c.parent);
+    const comments = topLevel.map(c => ({
+      ...c,
+      replies: replies.filter(r => String(r.parent) === String(c._id)),
+    }));
     res.json({ success: true, comments });
   } catch (err) {
     next(err);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { 
   Box, Typography, TextField, Button, Alert, CircularProgress, 
   Paper, Divider, Avatar, Fade, IconButton 
@@ -8,9 +8,9 @@ import SendIcon from '@mui/icons-material/Send';
 import CommentIcon from '@mui/icons-material/Comment';
 import ReplyIcon from '@mui/icons-material/Reply';
 
-function CommentCard({ c, onReply, replyOpen, replyText, onReplyText, onReplySubmit, replying }) {
+const CommentCard = forwardRef(({ c, onReply, replyOpen, replyText, onReplyText, onReplySubmit, replying }, ref) => {
   return (
-    <Paper elevation={0} sx={{ 
+    <Paper elevation={0} ref={ref} sx={{ 
       p: 3, mb: 2, borderRadius: 3,
       border: '1px solid', borderColor: 'divider',
       transition: 'all 0.2s',
@@ -75,7 +75,7 @@ function CommentCard({ c, onReply, replyOpen, replyText, onReplyText, onReplySub
       )}
     </Paper>
   );
-}
+});
 
 export default function CommentSection({ slug }) {
   const [comments, setComments] = useState([]);
