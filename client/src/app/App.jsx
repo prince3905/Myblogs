@@ -9,6 +9,9 @@ import PostEditorPage from '../features/admin/pages/PostEditorPage';
 import HomePage from '../features/blog/pages/HomePage';
 import BlogListPage from '../features/blog/pages/BlogListPage';
 import PostPage from '../features/blog/pages/PostPage';
+import AboutPage from '../features/blog/pages/AboutPage';
+import ContactPage from '../features/blog/pages/ContactPage';
+import PrivacyPage from '../features/blog/pages/PrivacyPage';
 import ArchivePage from '../features/blog/pages/ArchivePage';
 
 export default function App() {
@@ -18,6 +21,9 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/:slug" element={<PostPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/archive" element={<ArchivePage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>

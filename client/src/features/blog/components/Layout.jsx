@@ -15,6 +15,8 @@ export default function Layout({ children }) {
   const navItems = [
     { label: 'Home', path: '/' },
     { label: 'Insights', path: '/blog' },
+    { label: 'About', path: '/about' },
+    { label: 'Contact', path: '/contact' },
     { label: 'Admin', path: '/admin' },
   ];
 
@@ -166,7 +168,12 @@ export default function Layout({ children }) {
       >
         <Container maxWidth="lg">
           <NewsletterWidget />
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 3, fontWeight: 500 }}>
+          <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', mt: 3 }}>
+            <Link to="/privacy" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Privacy Policy</Link>
+            <Link to="/contact" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Contact</Link>
+            <Link to="/about" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>About</Link>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontWeight: 500 }}>
             Built with MERN Stack • Modern Blogging Platform
           </Typography>
         </Container>
