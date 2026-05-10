@@ -17,9 +17,13 @@ const blogPostSchema = new mongoose.Schema(
     publishedAt: { type: Date, default: null },
     readingTime: { type: Number, default: 1 },
     views: { type: Number, default: 0 },
-    likes: { type: Number, default: 0 }
+    likes: { type: Number, default: 0 },
+    sponsored: { type: Boolean, default: false },
+    affiliateDisclosure: { type: Boolean, default: false }
   },
   { timestamps: true }
 );
+
+blogPostSchema.index({ title: 'text', content: 'text', excerpt: 'text' });
 
 module.exports = mongoose.model('BlogPost', blogPostSchema);

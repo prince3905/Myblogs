@@ -11,7 +11,7 @@ export default function BreadcrumbsNav() {
   return (
     <Box
       sx={{
-        py: 1.75,
+        py: 0.5,
         px: { xs: 2, md: 0 },
         maxWidth: 'lg',
         mx: 'auto',

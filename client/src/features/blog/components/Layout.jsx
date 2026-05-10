@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
-import { Button, Container, Box, Typography, useTheme, Drawer, List, ListItem, ListItemButton, ListItemText, IconButton } from '@mui/material';
+import { Button, Container, Box, Typography, useTheme, Drawer, List, ListItem, ListItemButton, ListItemText, IconButton, Avatar } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import SearchIcon from '@mui/icons-material/Search';
 import { useState } from 'react';
 
 import NewsletterWidget from '../../../components/NewsletterWidget';
@@ -13,8 +14,8 @@ export default function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
-    { label: 'Home', path: '/' },
     { label: 'Insights', path: '/blog' },
+    { label: 'Search', path: '/search' },
     { label: 'About', path: '/about' },
     { label: 'Contact', path: '/contact' },
     { label: 'Admin', path: '/admin' },
@@ -61,20 +62,31 @@ export default function Layout({ children }) {
             </IconButton>
 
             {/* Logo */}
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                fontWeight: 700, 
-                fontSize: { xs: '1.1rem', md: '1.75rem' },
-                color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111',
-                letterSpacing: '-0.02em',
-                position: { xs: 'static', md: 'static' },
-                left: 'auto',
-                transform: { xs: 'none', md: 'none' },
-              }}
-            >
-              <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>Digital Home</Link>
-            </Typography>
+            <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none' }}>
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: 'primary.main',
+                  fontSize: '0.85rem',
+                  fontWeight: 800,
+                  color: 'white',
+                }}
+              >
+                D
+              </Avatar>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 700, 
+                  fontSize: { xs: '1.1rem', md: '1.3rem' },
+                  color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Digital Home
+              </Typography>
+            </Box>
             
             {/* Desktop Nav items */}
              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center', ml: 4 }}>
@@ -109,8 +121,15 @@ export default function Layout({ children }) {
               ))}
              </Box>
             
-            {/* Dark mode toggle */}
-            <Box>
+            {/* Search + Dark mode toggle */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <IconButton
+                component={Link}
+                to="/search"
+                sx={{ color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#6B7280' }}
+              >
+                <SearchIcon />
+              </IconButton>
               <DarkModeToggle />
             </Box>
           </Box>
@@ -126,8 +145,9 @@ export default function Layout({ children }) {
           sx: { bgcolor: theme.palette.mode === 'dark' ? '#111827' : '#ffffff', minWidth: 200 }
         }}
       >
-        <Box sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111' }}>
+        <Box component={Link} to="/" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none' }}>
+          <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: '0.75rem', fontWeight: 800, color: 'white' }}>D</Avatar>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111' }}>
             Digital Home
           </Typography>
         </Box>
@@ -148,11 +168,11 @@ export default function Layout({ children }) {
       </Drawer>
       
       {/* Spacer for fixed navbar */}
-      <Box sx={{ height: { xs: 72, md: 96 } }} />
+      <Box sx={{ height: { xs: 64, md: 72 } }} />
       
       <BreadcrumbsNav />
       
-      <Container maxWidth="lg" sx={{ flex: 1, py: { xs: 2, md: 4 } }}>
+      <Container maxWidth="lg" sx={{ flex: 1, py: { xs: 1.5, md: 2 } }}>
         {children}
       </Container>
       

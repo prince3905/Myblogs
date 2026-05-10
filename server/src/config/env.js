@@ -21,5 +21,10 @@ module.exports = {
   adminPassword: process.env.ADMIN_PASSWORD || 'admin12345',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   siteUrl: process.env.SITE_URL || 'http://localhost:5173',
+  smtpHost: process.env.SMTP_HOST || '',
+  smtpPort: process.env.SMTP_PORT || '587',
+  smtpUser: process.env.SMTP_USER || '',
+  smtpPass: process.env.SMTP_PASS || '',
+  smtpFrom: process.env.SMTP_FROM || '',
   nodeEnv: process.env.NODE_ENV || 'development'
 };

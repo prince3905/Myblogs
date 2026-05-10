@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Comment = require('./comment.model');
+const { notifyNewComment } = require('../../shared/services/mail.service');
 
 async function addComment(req, res, next) {
   try {
@@ -10,6 +11,7 @@ async function addComment(req, res, next) {
     if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
 
     const comment = await Comment.create({ post: post._id, name, email, content });
+    notifyNewComment({ name, email, content, postTitle: post.title, postId: post._id }).catch(() => {});
     res.status(201).json({ success: true, comment });
   } catch (err) {
     next(err);

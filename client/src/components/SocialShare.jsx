@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import ShareIcon from '@mui/icons-material/Share';
 
 export default function SocialShare({ title, slug }) {
@@ -19,7 +20,8 @@ export default function SocialShare({ title, slug }) {
     const links = {
       twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+      whatsapp: `https://wa.me/?text=${encodedTitle}%0A${encodedUrl}`
     };
     
     window.open(links[platform], '_blank', 'width=600,height=400');
@@ -115,6 +117,32 @@ export default function SocialShare({ title, slug }) {
           }}
         >
           <LinkedInIcon fontSize="small" />
+        </Button>
+      </Tooltip>
+
+      <Tooltip title="Share on WhatsApp" arrow>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => share('whatsapp')}
+          sx={{
+            minWidth: 'auto',
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            borderColor: '#25D366',
+            color: '#25D366',
+            p: 0,
+            '&:hover': {
+              bgcolor: '#25D366',
+              color: 'white',
+              borderColor: '#25D366',
+              transform: 'scale(1.1)',
+            },
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <WhatsAppIcon fontSize="small" />
         </Button>
       </Tooltip>
     </Box>

@@ -1,4 +1,5 @@
 const Subscriber = require('./subscriber.model');
+const { sendWelcomeEmail } = require('../../shared/services/mail.service');
 
 async function subscribe(req, res, next) {
   try {
@@ -6,6 +7,7 @@ async function subscribe(req, res, next) {
     if (!email) return res.status(400).json({ success: false, message: 'Email required' });
     
     await Subscriber.create({ email });
+    sendWelcomeEmail({ email }).catch(() => {});
     res.json({ success: true, message: 'Subscribed successfully' });
   } catch (err) {
     if (err.code === 11000) return res.status(400).json({ success: false, message: 'Already subscribed' });

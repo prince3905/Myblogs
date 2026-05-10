@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider } from '@mui/material';
+import { Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider, FormControlLabel, Checkbox } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import ImageUpload from '../../../components/ImageUpload';
 import RichTextEditor from '../../../components/RichTextEditor';
@@ -18,7 +18,9 @@ const initialForm = {
   seoTitle: '',
   seoDescription: '',
   seoKeywords: '',
-  canonicalUrl: ''
+  canonicalUrl: '',
+  sponsored: false,
+  affiliateDisclosure: false
 };
 
 export default function PostEditorPage() {
@@ -181,6 +183,17 @@ export default function PostEditorPage() {
                   <MenuItem value="published">Published</MenuItem>
                 </Select>
               </FormControl>
+
+              <FormControlLabel
+                control={<Checkbox checked={form.sponsored} onChange={(e) => updateField('sponsored', e.target.checked)} />}
+                label="Sponsored post"
+                sx={{ mb: 1, color: 'text.secondary' }}
+              />
+              <FormControlLabel
+                control={<Checkbox checked={form.affiliateDisclosure} onChange={(e) => updateField('affiliateDisclosure', e.target.checked)} />}
+                label="Contains affiliate links"
+                sx={{ mb: 2, color: 'text.secondary' }}
+              />
 
               <TextField
                 fullWidth

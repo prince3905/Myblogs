@@ -35,7 +35,9 @@ function mapPayload(body) {
     seoDescription: `${body.seoDescription || ''}`.trim() || excerpt,
     seoKeywords: normalizeCsvOrArray(body.seoKeywords),
     canonicalUrl: `${body.canonicalUrl || ''}`.trim(),
-    readingTime: calculateReadingTime(content)
+    readingTime: calculateReadingTime(content),
+    sponsored: body.sponsored === true || body.sponsored === 'true',
+    affiliateDisclosure: body.affiliateDisclosure === true || body.affiliateDisclosure === 'true'
   };
 }
 
@@ -202,7 +204,11 @@ async function sitemap(req, res) {
     .map((post) => `<url><loc>${env.siteUrl}/blog/${post.slug}</loc><lastmod>${post.updatedAt.toISOString()}</lastmod></url>`)
     .join('');
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${env.siteUrl}</loc></url><url><loc>${env.siteUrl}/blog</loc></url>${urls}</urlset>`;
+  const staticPages = ['/about', '/contact', '/privacy', '/search', '/archive'].map(p =>
+    `<url><loc>${env.siteUrl}${p}</loc></url>`
+  ).join('');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${env.siteUrl}</loc></url><url><loc>${env.siteUrl}/blog</loc></url>${staticPages}${urls}</urlset>`;
   res.type('application/xml');
   return res.send(xml);
 }
@@ -238,6 +244,28 @@ async function rssFeed(req, res) {
   return res.send(xml);
 }
 
+async function searchPosts(req, res, next) {
+  try {
+    const { q = '', page = 1, limit = 10 } = req.query;
+    const trimmed = q.trim();
+    if (!trimmed) {
+      return res.json({ posts: [], total: 0, page: 1, pages: 0 });
+    }
+
+    const query = { status: 'published', $text: { $search: trimmed } };
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const total = await BlogPost.countDocuments(query);
+    const posts = await BlogPost.find(query, { score: { $meta: 'textScore' } })
+      .sort({ score: { $meta: 'textScore' } })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function likePost(req, res, next) {
   try {
     const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' });
@@ -271,5 +299,6 @@ module.exports = {
   sitemap,
   robots,
   rssFeed,
+  searchPosts,
   likePost
 };

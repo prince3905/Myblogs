@@ -8,6 +8,8 @@ import LikeButton from '../../../components/LikeButton';
 import CommentSection from '../components/CommentSection';
 import SocialShare from '../../../components/SocialShare';
 import TableOfContents from '../../../components/TableOfContents';
+import AdSlot from '../../../components/AdSlot';
+import { MonetizationOn, Info } from '@mui/icons-material';
 import { useEffect } from 'react';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
@@ -44,11 +46,28 @@ export default function PostPage() {
     <Layout>
        <ReadingProgress />
        <Seo 
-         title={post.seoTitle || post.title} 
-         description={post.seoDescription || post.excerpt}
-         image={post.featuredImage}
-         url={`${window.location.origin}/blog/${post.slug}`}
-       />
+          title={post.seoTitle || post.title} 
+          description={post.seoDescription || post.excerpt}
+          image={post.featuredImage}
+          url={`${window.location.origin}/blog/${post.slug}`}
+          canonical={post.canonicalUrl}
+          keywords={(post.seoKeywords || []).join(', ')}
+          jsonLd={{
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: post.seoTitle || post.title,
+            description: post.seoDescription || post.excerpt,
+            image: post.featuredImage,
+            datePublished: post.publishedAt,
+            dateModified: post.updatedAt,
+            author: { '@type': 'Person', name: 'Admin' },
+            publisher: { '@type': 'Organization', name: 'Digital Home' },
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': `${window.location.origin}/blog/${post.slug}`,
+            },
+          }}
+        />
       
       {/* Hero Image Section */}
        {post.featuredImage ? (
@@ -71,7 +90,12 @@ export default function PostPage() {
             background: 'rgba(0,0,0,0.5)',
           }} />
           <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, pb: 4 }}>
-            <Chip label={post.category} component={Link} to={`/category/${post.category}`} clickable sx={{ bgcolor: 'rgba(255,255,255,0.9)', color: 'primary.main', fontWeight: 600, mb: 2 }} />
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <Chip label={post.category} component={Link} to={`/category/${post.category}`} clickable sx={{ bgcolor: 'rgba(255,255,255,0.9)', color: 'primary.main', fontWeight: 600 }} />
+              {post.sponsored && (
+                <Chip icon={<MonetizationOn />} label="Sponsored" size="small" color="warning" sx={{ bgcolor: 'rgba(255,255,255,0.9)', fontWeight: 600 }} />
+              )}
+            </Box>
             <Typography variant="h2" sx={{ color: 'white', fontWeight: 700, mb: 2, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
               {post.title}
             </Typography>
@@ -94,13 +118,16 @@ export default function PostPage() {
            ← Back to blog
          </Button>
 
-         {/* Title (if no featured image) */}
-         {!post.featuredImage && (
-           <>
-              <Chip label={post.category} component={Link} to={`/category/${post.category}`} clickable sx={{ mb: 2 }} />
-             <Typography variant="h2" gutterBottom sx={{ fontWeight: 700, mb: 3, color: 'text.primary' }}>
-               {post.title}
-             </Typography>
+          {/* Title (if no featured image) */}
+          {!post.featuredImage && (
+            <>
+               <Chip label={post.category} component={Link} to={`/category/${post.category}`} clickable sx={{ mb: 2 }} />
+              {post.sponsored && (
+                <Chip icon={<MonetizationOn />} label="Sponsored" size="small" color="warning" sx={{ mb: 2, ml: 1, fontWeight: 600 }} />
+              )}
+              <Typography variant="h2" gutterBottom sx={{ fontWeight: 700, mb: 3, color: 'text.primary' }}>
+                {post.title}
+              </Typography>
              <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
                {new Date(post.publishedAt || post.createdAt).toLocaleDateString()} • {post.readingTime} min read • {post.views || 0} views
              </Typography>
@@ -123,6 +150,7 @@ export default function PostPage() {
               dangerouslySetInnerHTML={{ __html: post.content }} 
               style={{ lineHeight: 1.8, fontSize: '1.1rem', color: 'inherit' }}
             />
+            <AdSlot format="incontent" style={{ mt: 4 }} />
           </Paper>
 
         {/* Tags */}
@@ -133,6 +161,19 @@ export default function PostPage() {
             ))}
           </Box>
         ) : null}
+
+        {/* Affiliate Disclosure */}
+        {post.affiliateDisclosure && (
+          <Paper elevation={0} sx={{ p: 2.5, mb: 3, borderRadius: 3, bgcolor: 'warning.light', border: '1px solid', borderColor: 'warning.main', display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+            <Info color="warning" sx={{ mt: 0.2, flexShrink: 0 }} />
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+              This post may contain affiliate links. If you make a purchase through these links, we may earn a small commission at no extra cost to you.
+            </Typography>
+          </Paper>
+        )}
+
+        {/* After-post Ad */}
+        <AdSlot format="afterpost" style={{ mb: 3 }} />
 
         {/* Actions: Like + Share */}
         <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center' }}>

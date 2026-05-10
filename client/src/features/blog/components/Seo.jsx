@@ -1,51 +1,37 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 
-export default function Seo({ title, description, image, url }) {
-  useEffect(() => {
-    // Update title
-    document.title = title || 'Inkspire Blog';
-    
-    // Update or create meta tags
-    const updateMeta = (name, content, property = false) => {
-      let meta;
-      if (property) {
-        meta = document.querySelector(`meta[property="${name}"]`);
-        if (!meta) {
-          meta = document.createElement('meta');
-          meta.setAttribute('property', name);
-          document.head.appendChild(meta);
-        }
-      } else {
-        meta = document.querySelector(`meta[name="${name}"]`);
-        if (!meta) {
-          meta = document.createElement('meta');
-          meta.name = name;
-          document.head.appendChild(meta);
-        }
-      }
-      meta.content = content || '';
-    };
+export default function Seo({ title, description, image, url, canonical, keywords, jsonLd }) {
+  const siteName = 'Digital Home';
+  const fullTitle = title ? `${title} | ${siteName}` : siteName;
+  const desc = description || 'Premium AI consulting insights and modern web solutions.';
+  const pageUrl = url || window.location.href;
+  const canonicalUrl = canonical || pageUrl;
 
-    // Basic meta tags
-    updateMeta('description', description || 'Modern MERN blogging website.');
-    
-    // Open Graph tags for social preview
-    updateMeta('og:title', title || 'Inkspire Blog', true);
-    updateMeta('og:description', description || 'Modern MERN blogging website.', true);
-    updateMeta('og:type', 'website', true);
-    updateMeta('og:url', url || window.location.href, true);
-    if (image) {
-      updateMeta('og:image', image, true);
-    }
-    
-    // Twitter Card tags
-    updateMeta('twitter:card', 'summary_large_image');
-    updateMeta('twitter:title', title || 'Inkspire Blog');
-    updateMeta('twitter:description', description || 'Modern MERN blogging website.');
-    if (image) {
-      updateMeta('twitter:image', image);
-    }
-  }, [title, description, image, url]);
+  return (
+    <Helmet>
+      <title>{fullTitle}</title>
+      <link rel="canonical" href={canonicalUrl} />
+      <meta name="description" content={desc} />
+      {keywords && <meta name="keywords" content={keywords} />}
 
-  return null;
+      {/* Open Graph */}
+      <meta property="og:title" content={fullTitle} />
+      <meta property="og:description" content={desc} />
+      <meta property="og:type" content={jsonLd ? 'article' : 'website'} />
+      <meta property="og:url" content={pageUrl} />
+      <meta property="og:site_name" content={siteName} />
+      {image && <meta property="og:image" content={image} />}
+
+      {/* Twitter Card */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={fullTitle} />
+      <meta name="twitter:description" content={desc} />
+      {image && <meta name="twitter:image" content={image} />}
+
+      {/* JSON-LD Structured Data */}
+      {jsonLd && (
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      )}
+    </Helmet>
+  );
 }

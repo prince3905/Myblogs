@@ -11,6 +11,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import CalendarToday from '@mui/icons-material/CalendarToday';
 import TrendingUp from '@mui/icons-material/TrendingUp';
 import Mail from '@mui/icons-material/Mail';
+import AdSlot from '../../../components/AdSlot';
 
 export default function BlogListPage() {
   const [search, setSearch] = useState('');
@@ -214,14 +215,17 @@ export default function BlogListPage() {
                 fullWidth
                 size="small"
                 placeholder="Search insights..."
+                onClick={() => window.location.href = '/search'}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 3,
                     bgcolor: '#F9FAFB',
                     '& fieldset': { borderColor: '#ECECEC' },
                     height: 44,
+                    cursor: 'pointer',
                   }
                 }}
+                InputProps={{ readOnly: true }}
               />
             </Paper>
 
@@ -252,9 +256,7 @@ export default function BlogListPage() {
             </Paper>
 
             {/* Ad Slot */}
-            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: 'grey.50', border: '1px dashed #D1D5DB', textAlign: 'center', minHeight: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography variant="caption" color="text.secondary">Ad Space</Typography>
-            </Paper>
+            <AdSlot format="sidebar" />
 
             {/* Newsletter Card */}
             <Paper elevation={0} sx={{ 

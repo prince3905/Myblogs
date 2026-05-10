@@ -15,6 +15,7 @@ import AboutPage from '../features/blog/pages/AboutPage';
 import ContactPage from '../features/blog/pages/ContactPage';
 import PrivacyPage from '../features/blog/pages/PrivacyPage';
 import ArchivePage from '../features/blog/pages/ArchivePage';
+import SearchPage from '../features/blog/pages/SearchPage';
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/archive" element={<ArchivePage />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route index element={<AdminDashboardPage />} />

@@ -8,6 +8,7 @@ const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./modules/auth/auth.routes');
 const postRoutes = require('./modules/posts/post.routes');
 const adminRoutes = require('./modules/posts/admin-post.routes');
+const adminActivityRoutes = require('./modules/admin/admin.routes');
 const commentRoutes = require('./modules/comments/comment.routes');
 const uploadRoutes = require('./modules/uploads/upload.routes');
 const newsletterRoutes = require('./modules/newsletter/newsletter.routes');
@@ -31,6 +32,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api', postRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin', adminActivityRoutes);
 app.use('/api/admin', uploadRoutes);
 app.use('/api', newsletterRoutes);
 app.use('/api', commentRoutes);

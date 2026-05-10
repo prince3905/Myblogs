@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Box, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { Article, Mail, Comment, Add, Edit, Delete } from '@mui/icons-material';
+import { Article, Mail, Comment, Add, Edit, Delete, Forum, MarkEmailRead, Schedule, Visibility, TrendingUp } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
 import { request } from '../../../shared/lib/api';
 
@@ -10,6 +10,8 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
+  const [activity, setActivity] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [error, setError] = useState('');
 
@@ -21,7 +23,19 @@ export default function AdminDashboardPage() {
     request('/api/admin/subscribers').then(data => setSubscribers(data.subscribers || [])).catch(() => {});
   }
 
-  useEffect(() => { loadPosts(); loadSubscribers(); }, []);
+  function loadActivity() {
+    request('/api/admin/activity')
+      .then(data => setActivity(data))
+      .catch(() => {});
+  }
+
+  function loadAnalytics() {
+    request('/api/admin/analytics')
+      .then(data => setAnalytics(data))
+      .catch(() => {});
+  }
+
+  useEffect(() => { loadPosts(); loadSubscribers(); loadActivity(); loadAnalytics(); }, []);
 
   async function handleDelete() {
     await request(`/api/admin/posts/${deleteId}`, { method: 'DELETE' });
@@ -57,11 +71,13 @@ export default function AdminDashboardPage() {
         {error ? <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setError('')}>{error}</Alert> : null}
 
         {/* Stats */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3, mb: 4 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2,1fr)', md: 'repeat(5,1fr)' }, gap: 3, mb: 4 }}>
           {[
             { label: 'Total Posts', value: posts.length, icon: <Article />, color: '#4F46E5' },
             { label: 'Subscribers', value: subscribers.length, icon: <Mail />, color: '#059669' },
-            { label: 'Pending Comments', value: 0, icon: <Comment />, color: '#D97706' },
+            { label: 'Total Views', value: analytics?.totalViews ?? 0, icon: <Visibility />, color: '#0891B2' },
+            { label: 'Pending Comments', value: activity?.pendingComments ?? 0, icon: <Comment />, color: '#D97706' },
+            { label: 'Contact Messages', value: activity?.recentMessages?.length ?? 0, icon: <MarkEmailRead />, color: '#DC2626' },
           ].map(stat => (
             <Paper key={stat.label} elevation={0} sx={{
               p: 3, borderRadius: 3, border: '1px solid #ECECEC',
@@ -82,6 +98,126 @@ export default function AdminDashboardPage() {
             </Paper>
           ))}
         </Box>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4, mb: 4 }}>
+          {/* Recent Comments */}
+          <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #ECECEC', overflow: 'hidden' }}>
+            <Box sx={{ px: 3, py: 2, borderBottom: '1px solid #ECECEC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#111827', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Forum sx={{ fontSize: '1.2rem', color: '#4F46E5' }} /> Recent Comments
+              </Typography>
+              <Button component={Link} to="/admin/comments" size="small" sx={{ fontWeight: 600, fontSize: '0.75rem', color: '#4F46E5', borderRadius: 2 }}>View All</Button>
+            </Box>
+            <Box sx={{ maxHeight: 320, overflow: 'auto' }}>
+              {(activity?.recentComments || []).length === 0 ? (
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <Typography sx={{ color: '#9CA3AF', fontSize: '0.85rem' }}>No comments yet</Typography>
+                </Box>
+              ) : activity?.recentComments.map((c, i) => (
+                <Box key={c._id} sx={{
+                  px: 3, py: 2,
+                  borderBottom: i < activity.recentComments.length - 1 ? '1px solid #F3F4F6' : 'none',
+                  display: 'flex', gap: 1.5, alignItems: 'flex-start',
+                }}>
+                  <Box sx={{
+                    width: 32, height: 32, borderRadius: '50%', bgcolor: c.approved ? '#D1FAE5' : '#FEF3C7',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    color: c.approved ? '#065F46' : '#92400E', fontSize: '0.7rem', fontWeight: 700,
+                  }}>
+                    {c.name?.charAt(0) || '?'}
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#111827' }}>
+                      {c.name} <Typography component="span" sx={{ fontSize: '0.7rem', color: '#9CA3AF', fontWeight: 400 }}>
+                        on {c.post?.title || 'deleted post'}
+                      </Typography>
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.8rem', color: '#6B7280', mt: 0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {c.content}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.7rem', color: '#9CA3AF', mt: 0.3 }}>
+                      <Schedule sx={{ fontSize: '0.7rem', verticalAlign: 'middle', mr: 0.3 }} />
+                      {new Date(c.createdAt).toLocaleDateString()}
+                      {!c.approved && <Chip label="Pending" size="small" sx={{ ml: 1, fontWeight: 600, fontSize: '0.6rem', height: 18, bgcolor: '#FEF3C7', color: '#92400E' }} />}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Paper>
+
+          {/* Recent Contact Messages */}
+          <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #ECECEC', overflow: 'hidden' }}>
+            <Box sx={{ px: 3, py: 2, borderBottom: '1px solid #ECECEC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#111827', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <MarkEmailRead sx={{ fontSize: '1.2rem', color: '#DC2626' }} /> Contact Messages
+              </Typography>
+            </Box>
+            <Box sx={{ maxHeight: 320, overflow: 'auto' }}>
+              {(activity?.recentMessages || []).length === 0 ? (
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <Typography sx={{ color: '#9CA3AF', fontSize: '0.85rem' }}>No messages yet</Typography>
+                </Box>
+              ) : activity?.recentMessages.map((m, i) => (
+                <Box key={m._id} sx={{
+                  px: 3, py: 2,
+                  borderBottom: i < activity.recentMessages.length - 1 ? '1px solid #F3F4F6' : 'none',
+                }}>
+                  <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#111827' }}>
+                    {m.name} <Typography component="span" sx={{ fontSize: '0.7rem', color: '#9CA3AF', fontWeight: 400 }}>— {m.subject}</Typography>
+                  </Typography>
+                  <Typography sx={{ fontSize: '0.8rem', color: '#6B7280', mt: 0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {m.message}
+                  </Typography>
+                  <Typography sx={{ fontSize: '0.7rem', color: '#9CA3AF', mt: 0.3 }}>
+                    <Schedule sx={{ fontSize: '0.7rem', verticalAlign: 'middle', mr: 0.3 }} />
+                    {new Date(m.createdAt).toLocaleDateString()} — {m.email}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Paper>
+        </Box>
+
+        {/* Top Posts */}
+        {analytics?.topPosts?.length > 0 && (
+          <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #ECECEC', overflow: 'hidden', mb: 4 }}>
+            <Box sx={{ px: 3, py: 2, borderBottom: '1px solid #ECECEC' }}>
+              <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#111827', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TrendingUp sx={{ fontSize: '1.2rem', color: '#0891B2' }} /> Top Posts by Views
+              </Typography>
+            </Box>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ '& th': { color: '#6B7280', fontWeight: 600, fontSize: '0.75rem', py: 1.5, px: 3, borderBottom: '1px solid #ECECEC' } }}>
+                    <TableCell sx={{ width: '60%' }}>Title</TableCell>
+                    <TableCell sx={{ width: '20%' }}>Views</TableCell>
+                    <TableCell sx={{ width: '20%' }}>Likes</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {analytics.topPosts.map((p, i) => (
+                    <TableRow key={p._id} sx={{
+                      '& td': { py: 1.8, px: 3, borderBottom: i < analytics.topPosts.length - 1 ? '1px solid #ECECEC' : 'none' },
+                      '&:hover': { bgcolor: '#F9FAFB' },
+                    }}>
+                      <TableCell>
+                        <Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: '#111827' }}>{p.title}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography sx={{ fontSize: '0.875rem', color: '#0891B2', fontWeight: 700 }}>{p.views || 0}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography sx={{ fontSize: '0.875rem', color: '#6B7280' }}>{p.likes || 0}</Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        )}
 
         {/* Posts */}
         <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #ECECEC', overflow: 'hidden', mb: 4 }}>
