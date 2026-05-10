@@ -32,10 +32,10 @@ export default function BlogListPage() {
       {/* Filter Section */}
       <Paper elevation={0} sx={{ py: { xs: 2, md: 3 }, mb: 3, bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider' }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#111827', letterSpacing: '-0.02em' }}>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: 'text.primary', letterSpacing: '-0.02em' }}>
             All Insights
           </Typography>
-          <Typography variant="body2" color="#6B7280" sx={{ mb: 2, fontSize: '0.95rem' }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.95rem' }}>
             Search by title, excerpt, or tags and filter by category.
           </Typography>
 

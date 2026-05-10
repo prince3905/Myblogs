@@ -153,14 +153,11 @@ html {
 
 /* Dark mode */
 .dark {
-  color: #ffffff;
-  background: transparent;
+  color-scheme: dark;
 }
 
-
-.dark .MuiPaper-root,
-.dark .MuiCard-root {
-  background-color: #1e293b;
+.dark body {
+  background-color: #0a0a0a;
 }
 
 /* Selection */

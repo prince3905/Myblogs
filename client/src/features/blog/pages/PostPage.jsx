@@ -121,7 +121,7 @@ export default function PostPage() {
           <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, mb: 4, bgcolor: 'background.paper' }}>
             <div 
               dangerouslySetInnerHTML={{ __html: post.content }} 
-              style={{ lineHeight: 1.8, fontSize: '1.1rem', color: '#0f172a' }}
+              style={{ lineHeight: 1.8, fontSize: '1.1rem', color: 'inherit' }}
             />
           </Paper>
 

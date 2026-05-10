@@ -1,29 +1,15 @@
-import { useState, useEffect } from 'react';
-import { IconButton, Tooltip, Badge } from '@mui/material';
-import { LightMode, DarkMode, Brightness4 } from '@mui/icons-material';
+import { IconButton, Tooltip } from '@mui/material';
+import { LightMode, DarkMode } from '@mui/icons-material';
+import { useThemeMode } from '../features/theme/ThemeContext';
 
 export default function DarkModeToggle() {
-  const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    if (saved !== null) return saved === 'true';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  useEffect(() => {
-    if (dark) {
-      document.documentElement.classList.add('dark');
-      document.body.style.backgroundColor = '#0a0a0a';
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.body.style.backgroundColor = '#ffffff';
-    }
-    localStorage.setItem('darkMode', dark);
-  }, [dark]);
+  const { mode, toggleTheme } = useThemeMode();
+  const dark = mode === 'dark';
 
   return (
     <Tooltip title={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'} arrow>
-      <IconButton 
-        onClick={() => setDark(!dark)}
+      <IconButton
+        onClick={toggleTheme}
         sx={{
           transition: 'all 0.3s ease',
           bgcolor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',

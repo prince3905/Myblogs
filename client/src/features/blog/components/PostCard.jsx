@@ -29,14 +29,15 @@ export default function PostCard({ post }) {
         flexDirection: 'column',
         borderRadius: '28px',
         overflow: 'hidden',
-        border: '1px solid #F2F2F2',
+        border: '1px solid',
+        borderColor: 'divider',
         bgcolor: 'background.paper',
         transition: 'all 0.3s ease',
         boxShadow: '0 1px 2px rgba(0,0,0,0.02), 0 10px 40px rgba(0,0,0,0.04)',
         '&:hover': {
           transform: 'translateY(-6px)',
           boxShadow: '0 10px 50px rgba(0,0,0,0.08)',
-          borderColor: '#ECECEC',
+          borderColor: 'primary.light',
         }
       }}
     >
@@ -103,7 +104,7 @@ export default function PostCard({ post }) {
             fontSize: '1.1rem',
             lineHeight: 1.3,
             mb: 1,
-            color: '#111827',
+            color: 'text.primary',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -111,7 +112,7 @@ export default function PostCard({ post }) {
             minHeight: '2.2em',
             transition: 'color 0.2s',
             '&:hover': {
-              color: '#4F46E5',
+              color: 'primary.main',
             }
           }}
         >
@@ -124,7 +125,7 @@ export default function PostCard({ post }) {
             mb: 2,
             fontSize: '0.875rem',
             lineHeight: 1.5,
-            color: '#6B7280',
+            color: 'text.secondary',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -135,7 +136,7 @@ export default function PostCard({ post }) {
           {post.excerpt}
         </Typography>
         
-        <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid #F2F2F2' }}>
+        <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
           <Box 
             sx={{ 
               display: 'flex', 
@@ -145,22 +146,22 @@ export default function PostCard({ post }) {
           >
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-                <CalendarToday sx={{ fontSize: 12, color: '#9CA3AF' }} />
-                <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.75rem' }}>
+                <CalendarToday sx={{ fontSize: 12, color: 'text.secondary' }} />
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
                   {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-                <AccessTime sx={{ fontSize: 12, color: '#9CA3AF' }} />
-                <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.75rem' }}>
+                <AccessTime sx={{ fontSize: 12, color: 'text.secondary' }} />
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
                   {post.readingTime || 5}m
                 </Typography>
               </Box>
             </Box>
             
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-              <Visibility sx={{ fontSize: 12, color: '#9CA3AF' }} />
-              <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.75rem' }}>
+              <Visibility sx={{ fontSize: 12, color: 'text.secondary' }} />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
                 {post.views || 0}
               </Typography>
             </Box>
