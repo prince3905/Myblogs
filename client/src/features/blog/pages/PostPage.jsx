@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Container, Typography, Box, Button, Chip, Grid, CircularProgress, Alert, Divider, Paper } from '@mui/material';
+import { Container, Typography, Box, Button, Chip, Grid, CircularProgress, Alert, Divider, Paper, Avatar } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -7,6 +7,7 @@ import ReadingProgress from '../../../components/ReadingProgress';
 import LikeButton from '../../../components/LikeButton';
 import CommentSection from '../components/CommentSection';
 import SocialShare from '../../../components/SocialShare';
+import TableOfContents from '../../../components/TableOfContents';
 import { useEffect } from 'react';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
@@ -70,7 +71,7 @@ export default function PostPage() {
             background: 'rgba(0,0,0,0.5)',
           }} />
           <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, pb: 4 }}>
-            <Chip label={post.category} sx={{ bgcolor: 'rgba(255,255,255,0.9)', color: 'primary.main', fontWeight: 600, mb: 2 }} />
+            <Chip label={post.category} component={Link} to={`/category/${post.category}`} clickable sx={{ bgcolor: 'rgba(255,255,255,0.9)', color: 'primary.main', fontWeight: 600, mb: 2 }} />
             <Typography variant="h2" sx={{ color: 'white', fontWeight: 700, mb: 2, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
               {post.title}
             </Typography>
@@ -96,7 +97,7 @@ export default function PostPage() {
          {/* Title (if no featured image) */}
          {!post.featuredImage && (
            <>
-             <Chip label={post.category} sx={{ mb: 2 }} />
+              <Chip label={post.category} component={Link} to={`/category/${post.category}`} clickable sx={{ mb: 2 }} />
              <Typography variant="h2" gutterBottom sx={{ fontWeight: 700, mb: 3, color: 'text.primary' }}>
                {post.title}
              </Typography>
@@ -111,18 +112,25 @@ export default function PostPage() {
            {post.excerpt}
          </Typography>
 
-         {/* Content */}
-         <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, mb: 4, bgcolor: 'background.paper' }}>
-           <div 
-             dangerouslySetInnerHTML={{ __html: post.content }} 
-             style={{ lineHeight: 1.8, fontSize: '1.1rem', color: '#0f172a' }}
-           />
-         </Paper>
+          {/* Table of Contents */}
+          {post.content && post.content.includes('<h') && (
+            <TableOfContents content={post.content} />
+          )}
+
+          {/* Content */}
+          <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, mb: 4, bgcolor: 'background.paper' }}>
+            <div 
+              dangerouslySetInnerHTML={{ __html: post.content }} 
+              style={{ lineHeight: 1.8, fontSize: '1.1rem', color: '#0f172a' }}
+            />
+          </Paper>
 
         {/* Tags */}
         {post.tags?.length ? (
           <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            {post.tags.map((tag) => <Chip key={tag} label={`#${tag}`} size="small" />)}
+            {post.tags.map((tag) => (
+              <Chip key={tag} label={`#${tag}`} size="small" component={Link} to={`/tags/${tag}`} clickable />
+            ))}
           </Box>
         ) : null}
 
@@ -136,6 +144,20 @@ export default function PostPage() {
         
         {/* Comments */}
         <CommentSection slug={slug} />
+
+        {/* Author Bio */}
+        <Paper elevation={0} sx={{ p: 4, mt: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 3, alignItems: 'flex-start' }}>
+          <Avatar sx={{ width: 56, height: 56, bgcolor: 'primary.main', fontSize: '1.25rem', fontWeight: 700 }}>
+            {post.author?.charAt(0) || 'A'}
+          </Avatar>
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{post.author || 'Admin'}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.7 }}>
+              Tech enthusiast and full-stack developer sharing insights on AI, modern web development, 
+              and building products that matter. Writing about real projects and real solutions.
+            </Typography>
+          </Box>
+        </Paper>
       </Container>
 
       {/* Related Posts */}
