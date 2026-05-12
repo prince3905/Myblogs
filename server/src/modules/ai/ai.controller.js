@@ -52,6 +52,8 @@ function markdownToHtml(text) {
   h = h.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
   h = h.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
   h = h.replace(/^#\s+(.+)$/gm, '<h2>$1</h2>');
+  // Blockquotes
+  h = h.replace(/^>\s+(.+)$/gm, '<blockquote>$1</blockquote>');
   // Strip any remaining stray backticks
   h = h.replace(/`{1,3}/g, '');
   // Strip JSON fragments
@@ -73,7 +75,7 @@ function markdownToHtml(text) {
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<li') || trimmed.startsWith('</ul') || trimmed.startsWith('<p')) {
+    if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<li') || trimmed.startsWith('</ul') || trimmed.startsWith('<p') || trimmed.startsWith('<blockquote') || trimmed.startsWith('</blockquote') || trimmed.startsWith('<hr')) {
       result.push(trimmed);
     } else {
       result.push(`<p>${trimmed}</p>`);
@@ -221,7 +223,7 @@ async function generateAIContent(req, res) {
       long:   '5-6 sections with 2-3 paragraphs each, plus a bullet list and FAQ with 2-3 Q&A. Total ~800-1200 words.'
     };
 
-    const systemPrompt = `You are a blog writing AI for Inkspire Content Studio. Current year: 2026.
+    const systemPrompt = `You are a blog writing AI for Inkspire Content Studio — a premium media house like TechCrunch/The Verge. Current year: 2026.
 
 Return ONLY valid JSON. content field MUST be a single STRING (not an object) using ## for headings and - for lists.
 - No markdown, no backticks, no extra text.
@@ -233,17 +235,32 @@ Return ONLY valid JSON. content field MUST be a single STRING (not an object) us
 - imageTag: single hyphenated keyword for stock photo (e.g. "workspace-setup")
 - imageKeywords: comma-separated search-optimized words for stock photo (e.g. "bitcoin,investment,india", never generic)
 
-RULES for content:
-- ## for headings, ### for subheadings/FAQ
-- - for bullet points (one per line)
+CONTENT STRUCTURE (Mandatory):
+- Title ke baad seedha content mat start karo. Pehle 1 hook line (attention-grabbing), then ## Table of Contents (bullet list of headings), then ## Introduction.
+- Headings: ## for main, ### for sub/FAQ
 - Heading ke baad hamesha blank line. Heading aur paragraph kabhi merge mat karo.
+- ## Table of Contents — bullet list of all major h2 headings only (short 2-4 word labels)
 - NO putting sentences in double quotes unless it's an actual citation.
 - Content natural aur human-like hona chahiye. Robot jaisa mat likho.
+
+PARAGRAPH RULES (Critical for mobile):
+- Ek paragraph 3-4 lines se zyada bada nahi hona chahiye.
+- Har 200 words ke baad visual break — bullet points, <blockquote>, bold text, ya subheading.
+- Beech-beech mein **bold keywords** aur blockquote (>) use karo.
 - Har section mein 2-3 paragraphs ka explanation dalo. Ek line likh ke mat chhoro.
 - Real examples, use-cases, ya scenarios add karo jo reader ko value de.
-- "Introduction to React", "In this article", "Let's dive in", "In conclusion" jaise generic phrases repeat mat karo.
-- Short crisp headings (3-5 words). Poora paragraph heading mein mat dalo.
-- End with ## Conclusion`;
+
+FAQ RULES:
+- ### Question: [Question text] — direct heading, NO "Frequ01" labels.
+- Answer in normal paragraph below.
+- Har FAQ ke beech blank line.
+
+END OF CONTENT:
+- End with ## Key Takeaways — 4-5 bullet points summarizing the article.
+
+GENERIC PHRASES TO AVOID:
+- "Introduction to React", "In this article", "Let's dive in", "In conclusion", "Let's explore"`;
+
 
     const toneInstr = toneMap[tone] || toneMap.informative;
     const sectionInstr = sectionMap[length] || sectionMap.medium;
@@ -253,7 +270,7 @@ RULES for content:
 
     const userPrompt = `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}"
 
-Structure: ${sectionInstr}. Include FAQ with 2-3 questions using ### Question: format.${customInstr}
+Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr}
 
 Return ONLY JSON. The "content" value must be a STRING (not an object or array).`;
 
