@@ -1,6 +1,10 @@
 const axios = require('axios');
 
 const OLLAMA_CHAT_URL = 'http://127.0.0.1:11434/api/chat';
+const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const VALID_CATEGORIES = ['Technology', 'Career', 'Tutorial', 'News'];
 
 function matchCategory(text) {
@@ -44,8 +48,11 @@ function markdownToHtml(text) {
   let h = text;
   // Strip leading + prefix only (AI artifact for headings)
   h = h.replace(/^\+[ \t]*/gm, '');
-  // Strip markdown heading markers that aren't valid HTML
-  h = h.replace(/^#+\s*/gm, '');
+  // Convert markdown headings to HTML headings
+  h = h.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+  h = h.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+  h = h.replace(/^#\s+(.+)$/gm, '<h2>$1</h2>');
+  // Strip any remaining stray backticks
   h = h.replace(/`{1,3}/g, '');
   // Strip JSON fragments
   h = h.replace(/\{["\'].*?\}\s*$/s, '');
@@ -224,7 +231,7 @@ Return ONLY valid JSON. content field MUST be a single STRING (not an object) us
 - keywords: array of 5-8 tag strings
 - summary: exactly 2 sentences
 - imageTag: single hyphenated keyword for stock photo (e.g. "workspace-setup")
-- imageKeywords: 2-3 word search-optimized string for Unsplash (e.g. "bitcoin-investment-india", never generic)
+- imageKeywords: comma-separated search-optimized words for stock photo (e.g. "bitcoin,investment,india", never generic)
 
 RULES for content:
 - ## for headings, ### for subheadings/FAQ
@@ -251,28 +258,66 @@ Structure: ${sectionInstr}. Include FAQ with 2-3 questions using ### Question: f
 Return ONLY JSON. The "content" value must be a STRING (not an object or array).`;
 
     const aiModel = model || 'llama3.2:1b';
-    // Model-specific timeouts (llama is fastest, qwen medium, phi slowest)
-    const modelTimeout = aiModel.includes('llama') ? 60000 : aiModel.includes('qwen') ? 120000 : 180000;
+    const isOpenAI = aiModel.startsWith('gpt-');
+    const isGemini = aiModel.startsWith('gemini-');
+    const modelTimeout = isGemini ? 60000 : (isOpenAI ? 30000 : (aiModel.includes('llama') ? 60000 : aiModel.includes('qwen') ? 120000 : 180000));
 
-    const response = await axios.post(OLLAMA_CHAT_URL, {
-      model: aiModel,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      stream: false,
-      options: {
-        temperature: 0.7,
-        repeat_penalty: 1.15,
-        top_k: 40,
-        top_p: 0.9,
-        num_predict: tokenBudget
+    let text = '';
+
+    if (isGemini) {
+      if (!GEMINI_API_KEY) {
+        return res.status(400).json({ success: false, message: 'GEMINI_API_KEY not set in .env' });
       }
-    }, {
-      timeout: modelTimeout
-    });
-
-    let text = response.data?.message?.content || '';
+      const geminiResponse = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${GEMINI_API_KEY}`, {
+        contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: tokenBudget,
+          topP: 0.9
+        }
+      }, {
+        timeout: modelTimeout,
+        headers: { 'Content-Type': 'application/json' }
+      });
+      text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } else if (isOpenAI) {
+      if (!OPENAI_API_KEY) {
+        return res.status(400).json({ success: false, message: 'OPENAI_API_KEY not set in .env' });
+      }
+      const openaiResponse = await axios.post(OPENAI_CHAT_URL, {
+        model: aiModel,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+        max_tokens: tokenBudget,
+        top_p: 0.9
+      }, {
+        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+        timeout: modelTimeout
+      });
+      text = openaiResponse.data?.choices?.[0]?.message?.content || '';
+    } else {
+      const response = await axios.post(OLLAMA_CHAT_URL, {
+        model: aiModel,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        stream: false,
+        options: {
+          temperature: 0.7,
+          repeat_penalty: 1.15,
+          top_k: 40,
+          top_p: 0.9,
+          num_predict: tokenBudget
+        }
+      }, {
+        timeout: modelTimeout
+      });
+      text = response.data?.message?.content || '';
+    }
 
     // Strip code fences
     text = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
@@ -368,11 +413,12 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
       imageTag = makeSlug(title).split('-').slice(0, 2).join('-') || 'blog-post';
     }
 
-    // Extract imageKeywords for Unsplash (2-3 word search-optimized string)
+    // Extract imageKeywords for stock photo (comma-separated)
     let imageKeywords = '';
     if (parsed?.imagekeywords && typeof parsed.imagekeywords === 'string') {
-      const kw = stripHtml(parsed.imagekeywords).trim().toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-      if (kw && kw.split('-').length >= 2) {
+      const kw = stripHtml(parsed.imagekeywords).trim().toLowerCase()
+        .replace(/[^a-z0-9\s-,]/g, '').replace(/\s+/g, ',').replace(/,+/g, ',').replace(/^,|,$/g, '');
+      if (kw && kw.split(',').length >= 2) {
         imageKeywords = kw;
       }
     }
@@ -397,6 +443,27 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
       imageKeywords
     });
   } catch (error) {
+    if (error.response?.status === 401) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid OpenAI API key. Check your OPENAI_API_KEY in .env'
+      });
+    }
+
+    if (error.response?.status === 429 || error.response?.data?.error?.message?.includes('quota')) {
+      return res.status(429).json({
+        success: false,
+        message: 'API quota exceeded. Check your billing or use a different model.'
+      });
+    }
+
+    if (error.response?.status === 503 && error.response?.data?.error?.message?.includes('high demand')) {
+      return res.status(503).json({
+        success: false,
+        message: 'Gemini model busy right now, try again or switch to another model'
+      });
+    }
+
     if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
       return res.status(503).json({
         success: false,
@@ -405,16 +472,16 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
       });
     }
 
-    if (error.code === 'ETIMEDOUT' || error.message.includes('timeout')) {
+    if (error.code === 'ETIMEDOUT' || error.message.includes('timeout') || error.message.includes('TIMEOUT')) {
       return res.status(504).json({
         success: false,
-        message: 'Ollama is taking too long. Try again or use a shorter title.',
-        ollamaTimeout: true
+        message: 'AI is taking too long. Try again or use a shorter title.',
+        aiTimeout: true
       });
     }
 
     if (error.response) {
-      console.error('Ollama error response:', error.response.status, error.response.data);
+      console.error('AI error response:', error.response.status, error.response.data);
     } else {
       console.error('AI generation error:', error.message);
     }

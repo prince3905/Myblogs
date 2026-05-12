@@ -38,9 +38,9 @@
 
 ## 8. Image Logic
 - **imageTag:** Generate a specific search keyword (e.g., 'minimalist-workspace').
-- **imageKeywords:** Generate a specific, search-optimized string of 2-3 words for Unsplash. For example: 'bitcoin-investment-india', 'healthy-breakfast-recipe', 'remote-developer-setup'. This will be used to fetch the most relevant image from Unsplash.
-- **Implementation:** The frontend will use `https://source.unsplash.com/featured/?<imageKeywords>` for the hero image.
-- Fallback: If no imageKeywords, use `https://picsum.photos/seed/<imageTag>/1200/600`.
+- **imageKeywords:** Generate 2-3 search-optimized words. The first word from keywords array will be used to fetch a matching image from Pexels.
+- **Implementation:** The frontend sends the first keyword to the Pexels API backend endpoint (`POST /api/pexels/search`) which returns a matching HD image.
+- Fallback: If Pexels API key is missing, uses curated Unsplash HD photos.
 
 ## 9. Tone & Language
 - Language: Professional yet engaging.

@@ -79,20 +79,27 @@ export default function PostEditorPage() {
       updateField('seoTitle', data.seoTitle || title.slice(0, 70));
       updateField('seoDescription', data.seoDescription || data.summary || plainText.slice(0, 155));
       updateField('category', data.category || 'Technology');
-      if (data.imageTag) {
-        updateField('featuredImage', `https://picsum.photos/seed/${data.imageTag}/1200/600`);
-      }
-      if (data.imageKeywords) {
-        updateField('featuredImage', `https://source.unsplash.com/featured/?${data.imageKeywords}`);
-      }
       if (data.keywords?.length) {
         const kw = data.keywords.join(', ');
         updateField('tags', kw);
         updateField('seoKeywords', kw);
+        try {
+          const pexelRes = await request('/api/pexels/search', {
+            method: 'POST',
+            body: JSON.stringify({ query: data.keywords[0], page: Math.floor(Math.random() * 15) + 1 })
+          });
+          if (pexelRes?.imageUrl) updateField('featuredImage', pexelRes.imageUrl);
+        } catch {}
       }
       addToast('AI ne sab bhar diya! 🎉', 'success');
-    } catch {
-      addToast('Bhai, Ollama start karna bhool gaye kya?', 'error');
+    } catch (err) {
+      const msg = err?.message || 'Kuch gadbad hua';
+      if (msg.includes('Ollama is not running')) addToast('Ollama band hai, pehle start karo', 'error');
+      else if (msg.includes('API_KEY not set')) addToast('API key set nahi hai .env me', 'error');
+      else if (msg.includes('quota exceeded')) addToast('API quota khatam, billing check karo', 'error');
+      else if (msg.includes('high demand')) addToast('AI model busy hai, thodi der me try kar', 'error');
+      else if (msg.includes('timeout') || msg.includes('taking too long')) addToast('AI slow hai, dubara try kar', 'error');
+      else addToast(msg.slice(0, 80), 'error');
     } finally {
       setAiLoading(false);
     }
@@ -186,7 +193,7 @@ export default function PostEditorPage() {
                     <MenuItem value="critical">Critical/Op-ed</MenuItem>
                   </Select>
                 </FormControl>
-                <FormControl size="small" sx={{ minWidth: 130 }}>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
                   <InputLabel>Model</InputLabel>
                   <Select
                     value={aiModel}
@@ -196,6 +203,12 @@ export default function PostEditorPage() {
                     <MenuItem value="llama3.2:1b">Llama 3.2 1B ⚡</MenuItem>
                     <MenuItem value="qwen2.5:3b">Qwen 2.5 3B</MenuItem>
                     <MenuItem value="phi3:mini">Phi-3 Mini</MenuItem>
+                    <MenuItem disabled>— ChatGPT —</MenuItem>
+                    <MenuItem value="gpt-4o-mini">GPT-4o Mini 💬</MenuItem>
+                    <MenuItem value="gpt-4o">GPT-4o 💬</MenuItem>
+                    <MenuItem value="gpt-3.5-turbo">GPT-3.5 Turbo 💬</MenuItem>
+                    <MenuItem disabled>— Gemini (Free) —</MenuItem>
+                    <MenuItem value="gemini-flash-latest">Gemini Flash 🪐</MenuItem>
                   </Select>
                 </FormControl>
                 <FormControl size="small" sx={{ minWidth: 100 }}>
@@ -263,9 +276,31 @@ export default function PostEditorPage() {
 
               {/* Featured Image */}
               <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: 'text.secondary' }}>
-                  Featured Image
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    Featured Image
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={async () => {
+                      const tag = form.tags?.split(',')[0]?.trim() || form.title?.split(' ').slice(0, 2).join(' ') || 'blog';
+                      try {
+                        const pexelRes = await request('/api/pexels/search', {
+                          method: 'POST',
+                          body: JSON.stringify({ query: tag, page: Math.floor(Math.random() * 20) + 1 })
+                        });
+                        if (pexelRes?.imageUrl) updateField('featuredImage', pexelRes.imageUrl);
+                        else addToast('Image nahi mili, dubara try kar', 'error');
+                      } catch {
+                        addToast('Server se connect nahi ho paaya', 'error');
+                      }
+                    }}
+                    sx={{ minWidth: 80, height: 28, fontSize: '0.75rem', borderRadius: 2 }}
+                  >
+                    ✨ Magic
+                  </Button>
+                </Box>
                 <ImageUpload value={form.featuredImage} onChange={(val) => updateField('featuredImage', val)} />
               </Box>
 
