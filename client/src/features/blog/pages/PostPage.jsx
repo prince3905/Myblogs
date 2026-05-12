@@ -147,6 +147,7 @@ export default function PostPage() {
           {/* Content */}
           <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, mb: 4, bgcolor: 'background.paper' }}>
             <div 
+              className="blog-content"
               dangerouslySetInnerHTML={{ __html: post.content }} 
               style={{ lineHeight: 1.8, fontSize: '1.1rem', color: 'inherit' }}
             />

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider, FormControlLabel, Checkbox } from '@mui/material';
+import { Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider, FormControlLabel, Checkbox, CircularProgress } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import ImageUpload from '../../../components/ImageUpload';
 import RichTextEditor from '../../../components/RichTextEditor';
+import { useToast } from '../../../components/Toast';
 import { request } from '../../../shared/lib/api';
 
 const initialForm = {
@@ -26,8 +27,14 @@ const initialForm = {
 export default function PostEditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiModel, setAiModel] = useState('phi3:mini');
+  const [aiLength, setAiLength] = useState('medium');
+  const [aiTone, setAiTone] = useState('informative');
+  const [aiCommand, setAiCommand] = useState('');
   const isEdit = Boolean(id);
 
   useEffect(() => {
@@ -41,8 +48,48 @@ export default function PostEditorPage() {
       .catch((err) => setError(err.message));
   }, [id, isEdit]);
 
+  function makeSlug(str) {
+    return str.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  }
+  function stripHtml(html) {
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
   function updateField(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function handleAIWrite() {
+    if (!form.title.trim()) {
+      addToast('Pehle title to daal bhai!', 'error');
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const data = await request('/api/ai/generate', {
+        method: 'POST',
+        body: JSON.stringify({ title: form.title, model: aiModel, length: aiLength, tone: aiTone, command: aiCommand })
+      });
+      const title = form.title;
+      const plainText = stripHtml(data.content || '');
+
+      updateField('content', data.content || '');
+      updateField('slug', data.slug || makeSlug(title));
+      updateField('excerpt', data.summary || plainText.slice(0, 250));
+      updateField('seoTitle', data.seoTitle || title.slice(0, 70));
+      updateField('seoDescription', data.seoDescription || data.summary || plainText.slice(0, 155));
+      updateField('category', data.category || 'Technology');
+      if (data.keywords?.length) {
+        const kw = data.keywords.join(', ');
+        updateField('tags', kw);
+        updateField('seoKeywords', kw);
+      }
+      addToast('AI ne sab bhar diya! 🎉', 'success');
+    } catch {
+      addToast('Bhai, Ollama start karna bhool gaye kya?', 'error');
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   async function handleSubmit(event) {
@@ -99,14 +146,73 @@ export default function PostEditorPage() {
           {/* Left Column - Main Content */}
           <Grid item xs={12} md={8}>
             <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, mb: 3, borderRadius: 3 }}>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', mb: 3 }}>
+                <TextField
+                  fullWidth
+                  label="Post Title"
+                  value={form.title}
+                  onChange={(e) => updateField('title', e.target.value)}
+                  required
+                  InputProps={{ sx: { fontSize: '1.25rem', fontWeight: 500 } }}
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleAIWrite}
+                  disabled={aiLoading || !form.title.trim()}
+                  sx={{ minWidth: 120, height: 56, flexShrink: 0, borderRadius: 2 }}
+                >
+                  {aiLoading ? <CircularProgress size={20} /> : '✨ AI Write'}
+                </Button>
+              </Box>
+
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <InputLabel>Tone</InputLabel>
+                  <Select
+                    value={aiTone}
+                    label="Tone"
+                    onChange={(e) => setAiTone(e.target.value)}
+                  >
+                    <MenuItem value="informative">Informative</MenuItem>
+                    <MenuItem value="funny">Funny</MenuItem>
+                    <MenuItem value="professional">Professional</MenuItem>
+                    <MenuItem value="beginner">Beginner-friendly</MenuItem>
+                    <MenuItem value="critical">Critical/Op-ed</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl size="small" sx={{ minWidth: 130 }}>
+                  <InputLabel>Model</InputLabel>
+                  <Select
+                    value={aiModel}
+                    label="Model"
+                    onChange={(e) => setAiModel(e.target.value)}
+                  >
+                    <MenuItem value="phi3:mini">Phi-3 Mini ⭐</MenuItem>
+                    <MenuItem value="qwen2.5:3b">Qwen 2.5 3B</MenuItem>
+                    <MenuItem value="llama3.2:1b">Llama 3.2 1B</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl size="small" sx={{ minWidth: 100 }}>
+                  <InputLabel>Length</InputLabel>
+                  <Select
+                    value={aiLength}
+                    label="Length"
+                    onChange={(e) => setAiLength(e.target.value)}
+                  >
+                    <MenuItem value="short">Short</MenuItem>
+                    <MenuItem value="medium">Medium</MenuItem>
+                    <MenuItem value="long">Long</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
               <TextField
                 fullWidth
-                label="Post Title"
-                value={form.title}
-                onChange={(e) => updateField('title', e.target.value)}
-                required
+                size="small"
+                label="Custom prompt (optional)"
+                value={aiCommand}
+                onChange={(e) => setAiCommand(e.target.value)}
+                placeholder="e.g., Focus on React hooks, include real-world examples..."
                 sx={{ mb: 3 }}
-                InputProps={{ sx: { fontSize: '1.25rem', fontWeight: 500 } }}
               />
               
               <TextField

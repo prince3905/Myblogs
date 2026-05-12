@@ -18,6 +18,7 @@
 - Sitemap auto-generation (`/sitemap.xml`)
 - `robots.txt` endpoint
 - Open Graph / Twitter card meta tags for social previews
+- JSON-LD structured data (BlogPosting schema) on post pages
 
 ## ✅ 5. Email Notifications
 - Notify admin on new comment submission
@@ -26,4 +27,13 @@
 
 ## ✅ 6. Analytics
 - Page view counter per post (increment on fetch, display on card + post page)
-- Simple admin dashboard stats (total views, top posts, views over time)
+- Admin dashboard stats (total views, top posts by views)
+
+## ✅ 7. UI Polish
+- Sponsored post badge on PostPage
+- WhatsApp share button in SocialShare
+- AI-style gradient search bar on SearchPage
+- Breadcrumbs spacing reduced
+- Layout spacer reduced for tighter content area
+- Admin dashboard activity feed (recent comments, contact messages)
+- Admin dashboard top posts table

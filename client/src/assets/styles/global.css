@@ -172,6 +172,64 @@ html {
   outline-offset: 2px;
 }
 
+/* Blog content styling */
+.blog-content h2 {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.blog-content h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.blog-content p {
+  margin-bottom: 1rem;
+  line-height: 1.8;
+}
+
+.blog-content ul, .blog-content ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.blog-content li {
+  margin-bottom: 0.4rem;
+  line-height: 1.7;
+}
+
+.blog-content pre {
+  background: #f4f4f5;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.blog-content code {
+  background: #f4f4f5;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.dark .blog-content pre,
+.dark .blog-content code {
+  background: #1e293b;
+}
+
+.blog-content blockquote {
+  border-left: 4px solid #6366f1;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280;
+}
+
 /* Loading shimmer */
 @keyframes shimmer {
   0% {
