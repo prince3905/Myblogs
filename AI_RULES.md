@@ -6,7 +6,7 @@
 
 ## 2. Content Structure (HTML)
 - **Headings:** Use `<h2>` for main sections and `<h3>` for sub-sections.
-- **Spacing:** Always add a blank line between a heading and a paragraph to avoid merging.
+- **Spacing:** Heading ke baad hamesha EK BLANK LINE chhoro. Heading aur paragraph kabhi merge mat karo.
 - **Lists:** Use `<ul>` and `<li>` for readability.
 - **FAQs:** Format as `<h3>Question: [Question Text]</h3>` followed by `<p>Answer: [Answer Text]</p>`.
   - Strictly avoid labels like "Frequ01" or "Frequ02".
@@ -19,6 +19,9 @@
 - Har sentence ko double quotes (" ") me mat rakho.
 - Sirf actual quotes ya specific technical terms ke liye quotes use karo.
 - Content natural aur flow me hona chahiye, robot jaisa nahi.
+- "Introduction to React", "In this article", "Let's dive in" jaise generic intro phrases baar-baar repeat mat karo.
+- Har section mein 2-3 extra lines ka explanation dalo. Sirf 1 line likh ke mat chhoro.
+- Examples, use-cases, ya real-world scenarios add karo taake content valuable lage.
 
 ## 5. Heading Separation
 - Heading (`<h2>`, `<h3>`) aur paragraph ke beech hamesha ek proper space rakho.
@@ -35,8 +38,14 @@
 
 ## 8. Image Logic
 - **imageTag:** Generate a specific search keyword (e.g., 'minimalist-workspace').
-- **Implementation:** The frontend will use `https://loremflickr.com/800/400/<imageTag>` or `https://picsum.photos/seed/<imageTag>/800/400`.
+- **Implementation:** The frontend will use `https://picsum.photos/seed/<imageTag>/1200/600`.
 
 ## 9. Tone & Language
 - Language: Professional yet engaging.
 - Year Context: Always write considering the current year is 2026.
+- Content readable aur human-like hona chahiye. Boring ya robotic mat likho.
+
+## 10. Depth & Uniqueness
+- Har section mein kam se kam 2-3 paragraphs likho. Ek line likh ke next heading pe mat chale jao.
+- Repeated generic phrases avoid karo (e.g., "Introduction to React", "In conclusion", "Let's explore").
+- Real examples, comparisons, ya scenarios add karo jo reader ko value de.

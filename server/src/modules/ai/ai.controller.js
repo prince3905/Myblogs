@@ -227,9 +227,11 @@ Return ONLY valid JSON. content field MUST be a single STRING (not an object) us
 RULES for content:
 - ## for headings, ### for subheadings/FAQ
 - - for bullet points (one per line)
-- No "Frequ01", "interru01", "Q1" codes
-- No over-quoting
-- Short crisp headings (3-5 words)
+- Heading ke baad hamesha blank line. Heading aur paragraph kabhi merge mat karo.
+- Har section mein 2-3 paragraphs ka explanation dalo. Ek line likh ke mat chhoro.
+- Real examples ya scenarios add karo.
+- "Introduction to React", "In this article", "Let's dive in" jaise generic phrases repeat mat karo.
+- Short crisp headings (3-5 words). Poora paragraph heading mein mat dalo.
 - End with ## Conclusion`;
 
     const toneInstr = toneMap[tone] || toneMap.informative;
