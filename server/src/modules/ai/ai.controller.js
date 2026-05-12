@@ -287,6 +287,18 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
         norm[k.toLowerCase()] = v;
       }
       parsed = norm;
+      // Validate fields — discard parsed data if corrupt (phi3:mini artifact)
+      const fieldKeys = Object.keys(parsed);
+      const hasCorruptField = fieldKeys.some(k => {
+        const v = parsed[k];
+        if (typeof v === 'string' && v.length > 200) {
+          // Check if value contains other field names (leakage)
+          const otherFields = fieldKeys.filter(f => f !== k);
+          return otherFields.some(f => v.includes(`"${f}"`) || v.includes(`${f}:`));
+        }
+        return false;
+      });
+      if (hasCorruptField) parsed = null;
     }
 
     let content = '';
@@ -320,7 +332,9 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
     const plainText = stripHtml(content || '');
     const firstSentence = extractFirstSentence(plainText);
 
-    const slug = parsed?.slug ? parsed.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') : makeSlug(title);
+    const slug = (parsed?.slug && parsed.slug.length < 80 && !/\s/.test(parsed.slug)) 
+      ? parsed.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') 
+      : makeSlug(title);
 
     let summary = '';
     if (parsed?.summary && parsed.summary !== 'null' && parsed.summary !== 'undefined') {
@@ -331,7 +345,8 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
 
     let keywords;
     if (Array.isArray(parsed?.keywords)) {
-      keywords = parsed.keywords;
+      keywords = parsed.keywords.filter(k => typeof k === 'string' && k.length < 60);
+      if (keywords.length === 0) keywords = extractKeywords(plainText);
     } else if (typeof parsed?.keywords === 'string') {
       keywords = parsed.keywords.split(',').map(k => k.trim()).filter(Boolean);
     } else {
