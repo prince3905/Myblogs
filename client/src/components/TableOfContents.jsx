@@ -21,11 +21,17 @@ export default function TableOfContents({ content }) {
       const text = cleanHeading(el.textContent || '');
       if (!text) return null;
       const level = parseInt(el.tagName[1]);
-      const id = `toc-heading-${i}`;
-      el.id = id;
-      return { text, level, id };
+      return { text, level, id: `toc-heading-${i}` };
     }).filter(Boolean);
     setHeadings(items);
+
+    // Set matching IDs on actual DOM headings so scrollIntoView works
+    setTimeout(() => {
+      const container = document.querySelector('.blog-content');
+      if (!container) return;
+      const headings = container.querySelectorAll('h1, h2, h3');
+      headings.forEach((el, i) => el.id = `toc-heading-${i}`);
+    }, 50);
   }, [content]);
 
   if (headings.length < 2) return null;
