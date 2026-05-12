@@ -79,6 +79,9 @@ export default function PostEditorPage() {
       updateField('seoTitle', data.seoTitle || title.slice(0, 70));
       updateField('seoDescription', data.seoDescription || data.summary || plainText.slice(0, 155));
       updateField('category', data.category || 'Technology');
+      if (data.imageTag) {
+        updateField('featuredImage', `https://picsum.photos/seed/${data.imageTag}/1200/600`);
+      }
       if (data.keywords?.length) {
         const kw = data.keywords.join(', ');
         updateField('tags', kw);

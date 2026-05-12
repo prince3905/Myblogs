@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 
+function cleanHeading(text) {
+  let t = text.trim();
+  t = t.replace(/^[""']+|[""']+$/g, '');
+  t = t.replace(/\s+/g, ' ');
+  if (t.length > 60) t = t.slice(0, 57) + '...';
+  return t;
+}
+
 export default function TableOfContents({ content }) {
   const [headings, setHeadings] = useState([]);
 
@@ -10,12 +18,13 @@ export default function TableOfContents({ content }) {
     const doc = parser.parseFromString(content, 'text/html');
     const els = doc.querySelectorAll('h1, h2, h3');
     const items = Array.from(els).map((el, i) => {
-      const text = el.textContent || '';
+      const text = cleanHeading(el.textContent || '');
+      if (!text) return null;
       const level = parseInt(el.tagName[1]);
       const id = `toc-heading-${i}`;
       el.id = id;
       return { text, level, id };
-    });
+    }).filter(Boolean);
     setHeadings(items);
   }, [content]);
 

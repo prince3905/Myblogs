@@ -42,6 +42,14 @@ export default function PostPage() {
     return <Layout><Container sx={{ py: 4 }}><Alert severity="warning">Post not found</Alert></Container></Layout>;
   }
 
+  const fallbackImages = {
+    Technology: 'https://picsum.photos/seed/tech/1200/600',
+    Career: 'https://picsum.photos/seed/career/1200/600',
+    Tutorial: 'https://picsum.photos/seed/tutorial/1200/600',
+    News: 'https://picsum.photos/seed/news/1200/600',
+  };
+  const heroImage = post.featuredImage || fallbackImages[post.category] || 'https://picsum.photos/seed/blog/1200/600';
+
   return (
     <Layout>
        <ReadingProgress />
@@ -69,12 +77,11 @@ export default function PostPage() {
           }}
         />
       
-      {/* Hero Image Section */}
-       {post.featuredImage ? (
+       {/* Hero Image Section */}
         <Box sx={{ 
           width: '100%', 
           height: { xs: '40vh', md: '60vh' },
-          backgroundImage: `url(${post.featuredImage})`,
+          backgroundImage: `url(${heroImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           position: 'relative',
@@ -102,9 +109,8 @@ export default function PostPage() {
             <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)', mb: 2 }}>
               {new Date(post.publishedAt || post.createdAt).toLocaleDateString()} • {post.readingTime} min read • {post.views || 0} views
             </Typography>
-          </Container>
+           </Container>
         </Box>
-      ) : null}
 
        {/* Content Section */}
        <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
@@ -118,21 +124,7 @@ export default function PostPage() {
            ← Back to blog
          </Button>
 
-          {/* Title (if no featured image) */}
-          {!post.featuredImage && (
-            <>
-               <Chip label={post.category} component={Link} to={`/category/${post.category}`} clickable sx={{ mb: 2 }} />
-              {post.sponsored && (
-                <Chip icon={<MonetizationOn />} label="Sponsored" size="small" color="warning" sx={{ mb: 2, ml: 1, fontWeight: 600 }} />
-              )}
-              <Typography variant="h2" gutterBottom sx={{ fontWeight: 700, mb: 3, color: 'text.primary' }}>
-                {post.title}
-              </Typography>
-             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-               {new Date(post.publishedAt || post.createdAt).toLocaleDateString()} • {post.readingTime} min read • {post.views || 0} views
-             </Typography>
-           </>
-         )}
+
 
          {/* Excerpt */}
          <Typography variant="h6" color="text.secondary" sx={{ mb: 4, fontStyle: 'italic', lineHeight: 1.7, color: 'text.primary' }}>
