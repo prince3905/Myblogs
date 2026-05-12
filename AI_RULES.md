@@ -38,7 +38,9 @@
 
 ## 8. Image Logic
 - **imageTag:** Generate a specific search keyword (e.g., 'minimalist-workspace').
-- **Implementation:** The frontend will use `https://picsum.photos/seed/<imageTag>/1200/600`.
+- **imageKeywords:** Generate a specific, search-optimized string of 2-3 words for Unsplash. For example: 'bitcoin-investment-india', 'healthy-breakfast-recipe', 'remote-developer-setup'. This will be used to fetch the most relevant image from Unsplash.
+- **Implementation:** The frontend will use `https://source.unsplash.com/featured/?<imageKeywords>` for the hero image.
+- Fallback: If no imageKeywords, use `https://picsum.photos/seed/<imageTag>/1200/600`.
 
 ## 9. Tone & Language
 - Language: Professional yet engaging.

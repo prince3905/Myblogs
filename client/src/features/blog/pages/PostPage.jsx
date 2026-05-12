@@ -48,7 +48,10 @@ export default function PostPage() {
     Tutorial: 'https://picsum.photos/seed/tutorial/1200/600',
     News: 'https://picsum.photos/seed/news/1200/600',
   };
-  const heroImage = post.featuredImage || fallbackImages[post.category] || 'https://picsum.photos/seed/blog/1200/600';
+  const unsplashUrl = post.imageKeywords
+    ? `https://source.unsplash.com/featured/?${post.imageKeywords}`
+    : null;
+  const heroImage = unsplashUrl || post.featuredImage || fallbackImages[post.category] || 'https://picsum.photos/seed/blog/1200/600';
 
   return (
     <Layout>

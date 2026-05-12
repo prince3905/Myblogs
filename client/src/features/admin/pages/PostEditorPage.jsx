@@ -82,6 +82,9 @@ export default function PostEditorPage() {
       if (data.imageTag) {
         updateField('featuredImage', `https://picsum.photos/seed/${data.imageTag}/1200/600`);
       }
+      if (data.imageKeywords) {
+        updateField('featuredImage', `https://source.unsplash.com/featured/?${data.imageKeywords}`);
+      }
       if (data.keywords?.length) {
         const kw = data.keywords.join(', ');
         updateField('tags', kw);

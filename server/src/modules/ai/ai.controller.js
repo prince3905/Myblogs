@@ -223,7 +223,8 @@ Return ONLY valid JSON. content field MUST be a single STRING (not an object) us
 - slug: lowercase hyphenated keywords
 - keywords: array of 5-8 tag strings
 - summary: exactly 2 sentences
-- imageTag: single hyphenated keyword for stock photo
+- imageTag: single hyphenated keyword for stock photo (e.g. "workspace-setup")
+- imageKeywords: 2-3 word search-optimized string for Unsplash (e.g. "bitcoin-investment-india", never generic)
 
 RULES for content:
 - ## for headings, ### for subheadings/FAQ
@@ -367,6 +368,18 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
       imageTag = makeSlug(title).split('-').slice(0, 2).join('-') || 'blog-post';
     }
 
+    // Extract imageKeywords for Unsplash (2-3 word search-optimized string)
+    let imageKeywords = '';
+    if (parsed?.imagekeywords && typeof parsed.imagekeywords === 'string') {
+      const kw = stripHtml(parsed.imagekeywords).trim().toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+      if (kw && kw.split('-').length >= 2) {
+        imageKeywords = kw;
+      }
+    }
+    if (!imageKeywords) {
+      imageKeywords = imageTag; // fallback to same as imageTag
+    }
+
     if (!content) {
       return res.status(500).json({ success: false, message: 'AI returned empty content' });
     }
@@ -380,7 +393,8 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
       seoDescription: summary.slice(0, 155),
       keywords,
       category: matchCategory(title + ' ' + plainText),
-      imageTag
+      imageTag,
+      imageKeywords
     });
   } catch (error) {
     if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
