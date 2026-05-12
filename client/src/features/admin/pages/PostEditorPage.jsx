@@ -31,7 +31,7 @@ export default function PostEditorPage() {
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiModel, setAiModel] = useState('phi3:mini');
+  const [aiModel, setAiModel] = useState('llama3.2:1b');
   const [aiLength, setAiLength] = useState('medium');
   const [aiTone, setAiTone] = useState('informative');
   const [aiCommand, setAiCommand] = useState('');
@@ -190,9 +190,9 @@ export default function PostEditorPage() {
                     label="Model"
                     onChange={(e) => setAiModel(e.target.value)}
                   >
-                    <MenuItem value="phi3:mini">Phi-3 Mini ⭐</MenuItem>
+                    <MenuItem value="llama3.2:1b">Llama 3.2 1B ⚡</MenuItem>
                     <MenuItem value="qwen2.5:3b">Qwen 2.5 3B</MenuItem>
-                    <MenuItem value="llama3.2:1b">Llama 3.2 1B</MenuItem>
+                    <MenuItem value="phi3:mini">Phi-3 Mini</MenuItem>
                   </Select>
                 </FormControl>
                 <FormControl size="small" sx={{ minWidth: 100 }}>
