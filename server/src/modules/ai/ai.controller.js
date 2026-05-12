@@ -218,6 +218,7 @@ async function generateAIContent(req, res) {
 
 Return ONLY valid JSON. content field MUST be a single STRING (not an object) using ## for headings and - for lists.
 - No markdown, no backticks, no extra text.
+- STRICTLY NO codes like "Frequ01", "interru01", "Q1", or any alphanumeric codes inside content.
 - content: The FULL blog post using ## for section headings, - for bullet items, blank lines between sections.
 - slug: lowercase hyphenated keywords
 - keywords: array of 5-8 tag strings
@@ -228,9 +229,11 @@ RULES for content:
 - ## for headings, ### for subheadings/FAQ
 - - for bullet points (one per line)
 - Heading ke baad hamesha blank line. Heading aur paragraph kabhi merge mat karo.
+- NO putting sentences in double quotes unless it's an actual citation.
+- Content natural aur human-like hona chahiye. Robot jaisa mat likho.
 - Har section mein 2-3 paragraphs ka explanation dalo. Ek line likh ke mat chhoro.
-- Real examples ya scenarios add karo.
-- "Introduction to React", "In this article", "Let's dive in" jaise generic phrases repeat mat karo.
+- Real examples, use-cases, ya scenarios add karo jo reader ko value de.
+- "Introduction to React", "In this article", "Let's dive in", "In conclusion" jaise generic phrases repeat mat karo.
 - Short crisp headings (3-5 words). Poora paragraph heading mein mat dalo.
 - End with ## Conclusion`;
 
