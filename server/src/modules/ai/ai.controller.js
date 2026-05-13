@@ -7,13 +7,13 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const VALID_CATEGORIES = ['Technology', 'Career', 'Tutorial', 'News'];
+const VALID_CATEGORIES = ['Technology', 'Career', 'Tutorial', 'News', 'Finance', 'Lifestyle', 'Health'];
 const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
 
 function matchCategory(text) {
   if (!text) return 'Technology';
   const lower = text.toLowerCase();
-  const match = VALID_CATEGORIES.find(c => lower.includes(c.toLowerCase()) || c.toLowerCase().includes(lower));
+  const match = VALID_CATEGORIES.find(c => lower.includes(c.toLowerCase()));
   return match || 'Technology';
 }
 

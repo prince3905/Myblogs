@@ -9,10 +9,13 @@ const stats = [
 ];
 
 const categories = [
-  { title: 'Technology', desc: 'AI, quantum computing, smart devices, and the latest tech trends that are shaping our future.' },
+  { title: 'Technology', desc: 'AI, quantum computing, smart devices, and the latest tech trends shaping our future.' },
   { title: 'Tutorials', desc: 'Step-by-step guides on web development, software tools, and practical digital skills.' },
-  { title: 'Career & Finance', desc: 'Remote work tips, freelancing strategies, investment advice, and career growth insights.' },
-  { title: 'News & Trends', desc: 'Analysis of Google updates, industry shifts, and what they mean for you.' },
+  { title: 'Career', desc: 'Remote work tips, freelancing strategies, and career growth insights for professionals.' },
+  { title: 'Finance', desc: 'Investment tips, budgeting strategies, and financial planning for a secure future.' },
+  { title: 'Lifestyle', desc: 'Productivity hacks, digital wellness, and tips for a balanced modern life.' },
+  { title: 'Health', desc: 'Mental wellness, fitness guidance, and health tips for the digital age.' },
+  { title: 'News', desc: 'Analysis of Google updates, industry shifts, and what they mean for you.' },
 ];
 
 export default function AboutPage() {

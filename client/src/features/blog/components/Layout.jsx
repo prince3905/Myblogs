@@ -19,6 +19,9 @@ export default function Layout({ children }) {
     { label: 'Technology', path: '/category/Technology' },
     { label: 'Tutorial', path: '/category/Tutorial' },
     { label: 'Career', path: '/category/Career' },
+    { label: 'Finance', path: '/category/Finance' },
+    { label: 'Lifestyle', path: '/category/Lifestyle' },
+    { label: 'Health', path: '/category/Health' },
     { label: 'News', path: '/category/News' },
   ];
 

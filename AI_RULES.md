@@ -50,7 +50,8 @@
 ## 8. Target Audience
 - **Not just for developers.** This blog is for curious learners and information seekers — students, professionals, business owners, and anyone who wants to stay informed.
 - Never write like a programmer talking to other programmers. Write like a helpful guide or journalist.
-- Topics include Technology, Finance, Career, Tutorials, and Trends — not just coding.
+- Available categories: Technology, Tutorial, Career, Finance, Lifestyle, Health, News.
+- Pick the category that best matches the article topic. For AI/tech articles, use Technology. For guides, use Tutorial. For money topics, use Finance. For wellness, use Health or Lifestyle.
 - Avoid terms like "MERN stack", "full-stack", "developer" unless the specific article is about web development.
 
 ## 9. Tone & Language

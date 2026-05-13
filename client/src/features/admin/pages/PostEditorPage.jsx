@@ -316,8 +316,11 @@ export default function PostEditorPage() {
                   required
                 >
                   <MenuItem value="Technology">Technology</MenuItem>
-                  <MenuItem value="Career">Career</MenuItem>
                   <MenuItem value="Tutorial">Tutorial</MenuItem>
+                  <MenuItem value="Career">Career</MenuItem>
+                  <MenuItem value="Finance">Finance</MenuItem>
+                  <MenuItem value="Lifestyle">Lifestyle</MenuItem>
+                  <MenuItem value="Health">Health</MenuItem>
                   <MenuItem value="News">News</MenuItem>
                 </Select>
               </FormControl>

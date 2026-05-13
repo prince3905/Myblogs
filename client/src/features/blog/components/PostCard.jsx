@@ -10,6 +10,11 @@ const categoryColors = {
   'UI/UX Design': '#A78BFA',
   'SEO Optimization': '#60A5FA',
   'Technology': '#60A5FA',
+  'Tutorial': '#34D399',
+  'Career': '#F59E0B',
+  'Finance': '#10B981',
+  'Lifestyle': '#EC4899',
+  'Health': '#EF4444',
   'Design': '#A78BFA',
   'Business': '#34D399',
   'default': '#60A5FA'
