@@ -1,7 +1,8 @@
 import { Link, NavLink } from 'react-router-dom';
-import { Button, Container, Box, Typography, useTheme, Drawer, List, ListItem, ListItemButton, ListItemText, IconButton, Avatar } from '@mui/material';
+import { Button, Container, Box, Typography, useTheme, Drawer, List, ListItem, ListItemButton, ListItemText, IconButton, Avatar, Menu, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useState } from 'react';
 
 import NewsletterWidget from '../../../components/NewsletterWidget';
@@ -12,12 +13,17 @@ import BreadcrumbsNav from '../../../components/Breadcrumbs';
 export default function Layout({ children }) {
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [catAnchor, setCatAnchor] = useState(null);
 
-  const navItems = [
+  const categories = [
     { label: 'Technology', path: '/category/Technology' },
     { label: 'Tutorial', path: '/category/Tutorial' },
     { label: 'Career', path: '/category/Career' },
     { label: 'News', path: '/category/News' },
+  ];
+
+  const navItems = [
+    { label: 'Blog', path: '/blog' },
     { label: 'About', path: '/about' },
     { label: 'Contact', path: '/contact' },
     { label: 'Admin', path: '/admin' },
@@ -91,12 +97,11 @@ export default function Layout({ children }) {
             </Box>
             
             {/* Desktop Nav items */}
-             <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center', ml: 4 }}>
-              {navItems.map((item) => (
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center', ml: 4 }}>
+                
+                {/* Categories Dropdown */}
                 <Button
-                  key={item.label}
-                  component={NavLink}
-                  to={item.path}
+                  onClick={(e) => setCatAnchor(e.currentTarget)}
                   sx={{ 
                     color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#111827',
                     fontWeight: 500,
@@ -105,23 +110,67 @@ export default function Layout({ children }) {
                     py: 0.5,
                     borderRadius: '9999px',
                     minWidth: 'auto',
-                    '&.active': {
-                      color: theme.palette.primary.main,
-                      bgcolor: theme.palette.mode === 'dark'
-                        ? 'rgba(99, 102, 241, 0.2)'
-                        : 'rgba(99, 102, 241, 0.08)',
-                    },
                     '&:hover': {
                       bgcolor: theme.palette.mode === 'dark'
                         ? 'rgba(255, 255, 255, 0.1)'
                         : 'rgba(0, 0, 0, 0.04)',
                     }
                   }}
+                  endIcon={<ExpandMoreIcon sx={{ fontSize: 18 }} />}
                 >
-                  {item.label}
+                  Categories
                 </Button>
-              ))}
-             </Box>
+                <Menu
+                  anchorEl={catAnchor}
+                  open={Boolean(catAnchor)}
+                  onClose={() => setCatAnchor(null)}
+                  transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+                  anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+                  slotProps={{ paper: { sx: { borderRadius: 3, mt: 1, minWidth: 160 } } }}
+                >
+                  {categories.map((cat) => (
+                    <MenuItem
+                      key={cat.label}
+                      component={Link}
+                      to={cat.path}
+                      onClick={() => setCatAnchor(null)}
+                      sx={{ fontWeight: 500, fontSize: '0.9rem' }}
+                    >
+                      {cat.label}
+                    </MenuItem>
+                  ))}
+                </Menu>
+
+               {navItems.map((item) => (
+                 <Button
+                   key={item.label}
+                   component={NavLink}
+                   to={item.path}
+                   sx={{ 
+                     color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#111827',
+                     fontWeight: 500,
+                     fontSize: '0.875rem',
+                     px: 2,
+                     py: 0.5,
+                     borderRadius: '9999px',
+                     minWidth: 'auto',
+                     '&.active': {
+                       color: theme.palette.primary.main,
+                       bgcolor: theme.palette.mode === 'dark'
+                         ? 'rgba(99, 102, 241, 0.2)'
+                         : 'rgba(99, 102, 241, 0.08)',
+                     },
+                     '&:hover': {
+                       bgcolor: theme.palette.mode === 'dark'
+                         ? 'rgba(255, 255, 255, 0.1)'
+                         : 'rgba(0, 0, 0, 0.04)',
+                     }
+                   }}
+                 >
+                   {item.label}
+                 </Button>
+               ))}
+              </Box>
             
             {/* Search + Dark mode toggle */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -154,13 +203,31 @@ export default function Layout({ children }) {
           </Typography>
         </Box>
         <List>
+          <ListItem disablePadding>
+            <ListItemText primary="Categories" sx={{ px: 2, pt: 1, '& .MuiListItemText-primary': { fontWeight: 700, fontSize: '0.75rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' } }} />
+          </ListItem>
+          {categories.map((cat) => (
+            <ListItem key={cat.label} disablePadding>
+              <ListItemButton
+                component={Link}
+                to={cat.path}
+                onClick={() => setMobileOpen(false)}
+                sx={{ pl: 3, color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#111827' }}
+              >
+                <ListItemText primary={cat.label} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+          <ListItem disablePadding>
+            <ListItemText primary="Pages" sx={{ px: 2, pt: 1.5, '& .MuiListItemText-primary': { fontWeight: 700, fontSize: '0.75rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' } }} />
+          </ListItem>
           {navItems.map((item) => (
             <ListItem key={item.label} disablePadding>
               <ListItemButton
                 component={Link}
                 to={item.path}
                 onClick={() => setMobileOpen(false)}
-                sx={{ color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#111827' }}
+                sx={{ pl: 3, color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#111827' }}
               >
                 <ListItemText primary={item.label} />
               </ListItemButton>

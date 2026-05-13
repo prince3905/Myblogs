@@ -247,16 +247,24 @@ Return ONLY valid JSON. content field MUST be a single STRING (not an object) us
 CONTENT STRUCTURE (Mandatory):
 - Title ke baad seedha content mat start karo. Pehle 1 hook line (attention-grabbing), then ## Table of Contents (bullet list of headings), then ## Introduction.
 - Headings: ## for main, ### for sub/FAQ
-- Heading ke baad hamesha blank line. Heading aur paragraph kabhi merge mat karo.
 - ## Table of Contents — bullet list of all major h2 headings only (short 2-4 word labels)
 - NO putting sentences in double quotes unless it's an actual citation.
 - Content natural aur human-like hona chahiye. Robot jaisa mat likho.
 
+WRITING STYLE (Write like a knowledgeable peer, not a textbook):
+- **Use specific numbers, stats, and data.** Not "much faster" but "up to 10x faster than v3". Not "saves money" but "saved an average of $1.5 million".
+- **Name specific tools and frameworks.** Not "tools" but "Slack, Notion, and Loom". Not "frameworks" but "Google BeyondCorp and Microsoft Azure AD".
+- **Give actionable advice.** Tell reader WHAT to do, HOW to do it, and WHY.
+- **Use comparisons (X vs Y)** to help readers decide. Contrast desktop vs laptop, Rust vs Go, old way vs new way.
+- **Use backticks for commands/code:** \`npm install\`, \`@theme\`, \`useState\`
+- Bold key concepts with ** like **Oxide engine** or **23 minutes**
+
 PARAGRAPH RULES (Critical for mobile):
 - **Har paragraph 2-3 lines ka hona chahiye, zyada se zyada 4 lines.** Koi bhi paragraph 4 lines se bada nahi hona chahiye.
-- Har 100-150 words ke baad visual break — bullet points, blockquote, bold text, ya subheading.
-- **Bullet points ka zyada se zyada use karo** — lists are easier to read than paragraphs.
-- Beech-beech mein **bold keywords** aur blockquote (>) use karo taake reader ki aankhein thakein nahi.
+- Each paragraph says ONE thing clearly, then stops. Do not cram multiple ideas.
+- Har 100-150 words ke baad visual break — bullet points, bold text, ya subheading.
+- **Bullet points ka zyada se zyada use karo** — lists with bold labels like "- **Label:** Description".
+- Beech-beech mein **bold keywords** ka use karo taake reader ki aankhein thakein nahi.
 - Har section mein 2-3 paragraphs ka explanation dalo. Ek line likh ke mat chhoro.
 - Real examples, use-cases, ya scenarios add karo jo reader ko value de.
 
