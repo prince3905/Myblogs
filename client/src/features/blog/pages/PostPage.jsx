@@ -154,6 +154,29 @@ export default function PostPage() {
             <TableOfContents content={post.content} />
           )}
 
+          {/* Rating */}
+          {post.rating && (
+            <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body1" sx={{ fontWeight: 600 }}>Rating:</Typography>
+              {'★'.repeat(Math.floor(post.rating))}{post.rating % 1 ? '½' : ''}
+              <Typography variant="body2" color="text.secondary">({post.rating}/5)</Typography>
+            </Box>
+          )}
+
+          {/* YouTube Video */}
+          {post.videoUrl && (
+            <Box sx={{ mb: 4, borderRadius: 3, overflow: 'hidden', aspectRatio: '16/9' }}>
+              <iframe
+                src={post.videoUrl.replace('watch?v=', 'embed/').split('&')[0]}
+                title="YouTube video"
+                width="100%"
+                height="100%"
+                style={{ border: 'none' }}
+                allowFullScreen
+              />
+            </Box>
+          )}
+
           {/* Content */}
           <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, mb: 4, bgcolor: 'background.paper' }}>
             <div 

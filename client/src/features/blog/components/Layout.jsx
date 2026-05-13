@@ -22,6 +22,10 @@ export default function Layout({ children }) {
     { label: 'Finance', path: '/category/Finance' },
     { label: 'Lifestyle', path: '/category/Lifestyle' },
     { label: 'Health', path: '/category/Health' },
+    { label: 'Reviews', path: '/category/Reviews' },
+    { label: 'Education', path: '/category/Education' },
+    { label: 'YouTube', path: '/category/YouTube' },
+    { label: 'Promotions', path: '/category/Promotions' },
     { label: 'News', path: '/category/News' },
   ];
 

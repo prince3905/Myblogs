@@ -15,6 +15,10 @@ const categories = [
   { title: 'Finance', desc: 'Investment tips, budgeting strategies, and financial planning for a secure future.' },
   { title: 'Lifestyle', desc: 'Productivity hacks, digital wellness, and tips for a balanced modern life.' },
   { title: 'Health', desc: 'Mental wellness, fitness guidance, and health tips for the digital age.' },
+  { title: 'Reviews', desc: 'Honest product reviews with ratings, pros/cons, and buying recommendations.' },
+  { title: 'Education', desc: 'Learning resources, skill-building guides, and educational content for all ages.' },
+  { title: 'YouTube', desc: 'Curated video content, channel reviews, and video-based learning resources.' },
+  { title: 'Promotions', desc: 'Sponsored content and promotional features for products and services.' },
   { title: 'News', desc: 'Analysis of Google updates, industry shifts, and what they mean for you.' },
 ];
 

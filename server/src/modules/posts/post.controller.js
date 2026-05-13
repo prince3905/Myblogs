@@ -37,7 +37,9 @@ function mapPayload(body) {
     canonicalUrl: `${body.canonicalUrl || ''}`.trim(),
     readingTime: calculateReadingTime(content),
     sponsored: body.sponsored === true || body.sponsored === 'true',
-    affiliateDisclosure: body.affiliateDisclosure === true || body.affiliateDisclosure === 'true'
+    affiliateDisclosure: body.affiliateDisclosure === true || body.affiliateDisclosure === 'true',
+    rating: body.rating ? parseInt(body.rating) : null,
+    videoUrl: `${body.videoUrl || ''}`.trim()
   };
 }
 

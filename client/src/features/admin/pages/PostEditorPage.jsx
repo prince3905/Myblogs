@@ -21,7 +21,9 @@ const initialForm = {
   seoKeywords: '',
   canonicalUrl: '',
   sponsored: false,
-  affiliateDisclosure: false
+  affiliateDisclosure: false,
+  rating: '',
+  videoUrl: ''
 };
 
 export default function PostEditorPage() {
@@ -321,6 +323,10 @@ export default function PostEditorPage() {
                   <MenuItem value="Finance">Finance</MenuItem>
                   <MenuItem value="Lifestyle">Lifestyle</MenuItem>
                   <MenuItem value="Health">Health</MenuItem>
+                  <MenuItem value="Reviews">Reviews</MenuItem>
+                  <MenuItem value="Education">Education</MenuItem>
+                  <MenuItem value="YouTube">YouTube</MenuItem>
+                  <MenuItem value="Promotions">Promotions</MenuItem>
                   <MenuItem value="News">News</MenuItem>
                 </Select>
               </FormControl>
@@ -356,6 +362,30 @@ export default function PostEditorPage() {
                 placeholder="react, javascript, tutorial"
                 sx={{ mb: 3 }}
                 helperText="Separate tags with commas"
+              />
+
+              {form.category === 'Reviews' && (
+                <TextField
+                  fullWidth
+                  type="number"
+                  inputProps={{ min: 1, max: 5, step: 0.5 }}
+                  label="Rating (1-5)"
+                  value={form.rating}
+                  onChange={(e) => updateField('rating', e.target.value)}
+                  placeholder="4.5"
+                  sx={{ mb: 3 }}
+                  helperText="Product rating for review posts"
+                />
+              )}
+
+              <TextField
+                fullWidth
+                label="Video URL (YouTube)"
+                value={form.videoUrl}
+                onChange={(e) => updateField('videoUrl', e.target.value)}
+                placeholder="https://youtube.com/watch?v=..."
+                sx={{ mb: 3 }}
+                helperText="Embed a YouTube video in the post"
               />
 
               <Divider sx={{ my: 3 }} />

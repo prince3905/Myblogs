@@ -19,7 +19,9 @@ const blogPostSchema = new mongoose.Schema(
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
     sponsored: { type: Boolean, default: false },
-    affiliateDisclosure: { type: Boolean, default: false }
+    affiliateDisclosure: { type: Boolean, default: false },
+    rating: { type: Number, min: 1, max: 5, default: null },
+    videoUrl: { type: String, trim: true, default: '' }
   },
   { timestamps: true }
 );

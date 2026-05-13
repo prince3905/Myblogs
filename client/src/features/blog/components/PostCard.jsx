@@ -17,6 +17,11 @@ const categoryColors = {
   'Health': '#EF4444',
   'Design': '#A78BFA',
   'Business': '#34D399',
+  'Reviews': '#F97316',
+  'Education': '#6366F1',
+  'YouTube': '#FF0000',
+  'Promotions': '#8B5CF6',
+  'News': '#60A5FA',
   'default': '#60A5FA'
 };
 
