@@ -192,9 +192,9 @@ async function listCategories(req, res) {
 
 async function siteMeta(req, res) {
   return res.json({
-    siteName: 'Inkspire Blog',
+    siteName: 'Digital Home',
     siteUrl: env.siteUrl,
-    description: 'A modern MERN blogging website with SEO-first publishing tools.'
+    description: 'Your Daily Dose of Information & Insights — Technology, Finance, Career, Tutorials, and Trends.'
   });
 }
 
@@ -233,9 +233,9 @@ async function rssFeed(req, res) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Inkspire Blog</title>
+    <title>Digital Home</title>
     <link>${env.siteUrl}</link>
-    <description>A modern MERN blogging website with SEO-first publishing tools.</description>
+    <description>Your Daily Dose of Information & Insights — Technology, Finance, Career, Tutorials, and Trends.</description>
     ${items}
   </channel>
 </rss>`;

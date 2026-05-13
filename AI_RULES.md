@@ -47,13 +47,19 @@
 - Fallback: If Pexels API key is missing, uses curated Unsplash HD photos.
 - Image should be **bright, high-quality, and professional**. Avoid dark/grainy stock photos.
 
-## 8. Tone & Language
+## 8. Target Audience
+- **Not just for developers.** This blog is for curious learners and information seekers — students, professionals, business owners, and anyone who wants to stay informed.
+- Never write like a programmer talking to other programmers. Write like a helpful guide or journalist.
+- Topics include Technology, Finance, Career, Tutorials, and Trends — not just coding.
+- Avoid terms like "MERN stack", "full-stack", "developer" unless the specific article is about web development.
+
+## 9. Tone & Language
 - Language: Professional yet engaging — like The Verge or TechCrunch, but keep it natural.
 - Year Context: Always write considering the current year is 2026.
 - **Write like a knowledgeable peer explaining to a friend.** Not a textbook. Not a robot. Use real examples the reader can relate to.
 - Use bold (`<strong>`) to emphasize key concepts, stats, and takeaways.
 
-## 9. Content Style (The "Manual Expansion" Style)
+## 10. Content Style (The "Manual Expansion" Style)
 
 ### Paragraph Flow
 - **Ek paragraph 3-4 lines se zyada bada nahi hona chahiye.** Mobile pe koi lamba paragraph nahi padhta.
@@ -99,5 +105,5 @@
 ### Key Takeaways
 - **Content ke end mein** ek "Key Takeaways" section zaroor dalo — 4-5 bullet points ka box jo poora article summarize kare.
 
-## 10. Visual Cleanliness
+## 11. Visual Cleanliness
 - Content "bheed" jaisa nahi laghna chahiye — har cheez properly structured aur spaced ho. Premium media house vibe.

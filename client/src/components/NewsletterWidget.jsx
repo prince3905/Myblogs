@@ -114,7 +114,7 @@ export default function NewsletterWidget() {
       )}
       
       <Typography variant="caption" sx={{ mt: 2, display: 'block', color: 'text.disabled' }}>
-        Join 500+ developers who already subscribed
+        Join 500+ smart readers who already subscribed
       </Typography>
     </Paper>
   );

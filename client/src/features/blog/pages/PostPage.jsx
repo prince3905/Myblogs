@@ -205,8 +205,8 @@ export default function PostPage() {
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{post.author || 'Admin'}</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.7 }}>
-              Tech enthusiast and full-stack developer sharing insights on AI, modern web development, 
-              and building products that matter. Writing about real projects and real solutions.
+              Curious mind and lifelong learner sharing insights on technology, personal finance, career growth, 
+              and the trends shaping our world. Every article is researched and written for smart readers like you.
             </Typography>
           </Box>
         </Paper>

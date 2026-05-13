@@ -232,7 +232,7 @@ async function generateAIContent(req, res) {
       long:   '5-6 sections with 2-3 paragraphs each, plus a bullet list and FAQ with 2-3 Q&A. Total ~800-1200 words.'
     };
 
-    const systemPrompt = `You are a blog writing AI for Inkspire Content Studio — a premium media house like TechCrunch/The Verge. Current year: 2026.
+    const systemPrompt = `You are a blog writer for Digital Home — a universal information platform like TechCrunch meets The Verge. Current year: 2026. Your audience is curious learners and information seekers, NOT just developers.
 
 Return ONLY valid JSON. content field MUST be a single STRING (not an object) using ## for headings and - for lists.
 - No markdown, no backticks, no extra text.
