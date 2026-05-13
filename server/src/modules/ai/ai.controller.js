@@ -2,10 +2,13 @@ const axios = require('axios');
 
 const OLLAMA_CHAT_URL = 'http://127.0.0.1:11434/api/chat';
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
+const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const VALID_CATEGORIES = ['Technology', 'Career', 'Tutorial', 'News'];
+const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
 
 function matchCategory(text) {
   if (!text) return 'Technology';
@@ -277,7 +280,8 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
     const aiModel = model || 'llama3.2:1b';
     const isOpenAI = aiModel.startsWith('gpt-');
     const isGemini = aiModel.startsWith('gemini-');
-    const modelTimeout = isGemini ? 60000 : (isOpenAI ? 30000 : (aiModel.includes('llama') ? 60000 : aiModel.includes('qwen') ? 120000 : 180000));
+    const isGroq = GROQ_MODELS.includes(aiModel);
+    const modelTimeout = isGroq ? 60000 : (isGemini ? 60000 : (isOpenAI ? 30000 : (aiModel.includes('llama') ? 60000 : aiModel.includes('qwen') ? 120000 : 180000)));
 
     let text = '';
 
@@ -297,6 +301,24 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
         headers: { 'Content-Type': 'application/json' }
       });
       text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } else if (isGroq) {
+      if (!GROQ_API_KEY) {
+        return res.status(400).json({ success: false, message: 'GROQ_API_KEY not set in .env' });
+      }
+      const groqResponse = await axios.post(GROQ_CHAT_URL, {
+        model: aiModel,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+        max_tokens: tokenBudget,
+        top_p: 0.9
+      }, {
+        headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+        timeout: modelTimeout
+      });
+      text = groqResponse.data?.choices?.[0]?.message?.content || '';
     } else if (isOpenAI) {
       if (!OPENAI_API_KEY) {
         return res.status(400).json({ success: false, message: 'OPENAI_API_KEY not set in .env' });
