@@ -14,6 +14,7 @@ import CategoryPage from '../features/blog/pages/CategoryPage';
 import AboutPage from '../features/blog/pages/AboutPage';
 import ContactPage from '../features/blog/pages/ContactPage';
 import PrivacyPage from '../features/blog/pages/PrivacyPage';
+import TermsPage from '../features/blog/pages/TermsPage';
 import ArchivePage from '../features/blog/pages/ArchivePage';
 import SearchPage from '../features/blog/pages/SearchPage';
 
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="/archive" element={<ArchivePage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />

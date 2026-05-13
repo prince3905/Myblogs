@@ -190,6 +190,7 @@ export default function Layout({ children }) {
           <NewsletterWidget />
           <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', mt: 3 }}>
             <Link to="/privacy" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Privacy Policy</Link>
+            <Link to="/terms" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Terms & Disclaimer</Link>
             <Link to="/contact" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Contact</Link>
             <Link to="/about" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>About</Link>
           </Box>
