@@ -68,6 +68,10 @@ function markdownToHtml(text) {
   h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
   // Inline code
   h = h.replace(/`(.+?)`/g, '<code>$1</code>');
+  // Strip random brackets with numbers like [1], [2], [3]
+  h = h.replace(/\[\d+\]/g, '');
+  // Strip stray standalone brackets
+  h = h.replace(/[[\]]/g, '');
   // List items
   h = h.replace(/^[-*]\s*(.+)$/gm, '<li>$1</li>');
   // Wrap consecutive <li> in <ul>
@@ -95,6 +99,8 @@ function cleanHtml(html) {
   h = h.replace(/\[begin\{code\}.*?\[\/code\]/gs, '');
   h = h.replace(/Frequ\d+\s*[:.]?\s*/gi, '');
   h = h.replace(/\bQ\d+[:.]?\s*/gi, '');
+  h = h.replace(/\[\d+\]/g, '');
+  h = h.replace(/[[\]]/g, '');
   h = h.replace(/<li>\s*<\/li>/g, '');
   h = h.replace(/\n{3,}/g, '\n\n');
   h = h.replace(/<!--.*?-->/gs, '');
@@ -247,9 +253,10 @@ CONTENT STRUCTURE (Mandatory):
 - Content natural aur human-like hona chahiye. Robot jaisa mat likho.
 
 PARAGRAPH RULES (Critical for mobile):
-- Ek paragraph 3-4 lines se zyada bada nahi hona chahiye.
-- Har 200 words ke baad visual break — bullet points, <blockquote>, bold text, ya subheading.
-- Beech-beech mein **bold keywords** aur blockquote (>) use karo.
+- **Har paragraph 2-3 lines ka hona chahiye, zyada se zyada 4 lines.** Koi bhi paragraph 4 lines se bada nahi hona chahiye.
+- Har 100-150 words ke baad visual break — bullet points, blockquote, bold text, ya subheading.
+- **Bullet points ka zyada se zyada use karo** — lists are easier to read than paragraphs.
+- Beech-beech mein **bold keywords** aur blockquote (>) use karo taake reader ki aankhein thakein nahi.
 - Har section mein 2-3 paragraphs ka explanation dalo. Ek line likh ke mat chhoro.
 - Real examples, use-cases, ya scenarios add karo jo reader ko value de.
 
