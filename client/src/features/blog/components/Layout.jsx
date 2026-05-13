@@ -14,8 +14,10 @@ export default function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
-    { label: 'Insights', path: '/blog' },
-    { label: 'Search', path: '/search' },
+    { label: 'Technology', path: '/category/Technology' },
+    { label: 'Tutorial', path: '/category/Tutorial' },
+    { label: 'Career', path: '/category/Career' },
+    { label: 'News', path: '/category/News' },
     { label: 'About', path: '/about' },
     { label: 'Contact', path: '/contact' },
     { label: 'Admin', path: '/admin' },
