@@ -4,20 +4,24 @@ services:
     runtime: node
     repo: https://github.com/prince3905/Myblogs
     plan: free
-    buildCommand: npm install && cd client && npm install && npm run build
-    startCommand: cd server && node src/server.js
+    buildCommand: npm install && npm run build
+    startCommand: npm start
     envVars:
       - key: PORT
         value: 10000
       - key: NODE_ENV
         value: production
       - key: SITE_URL
-        value: https://your-app.onrender.com
-      - key: MONGO_URI
+        value: https://digital-home-blog.onrender.com
+      - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
         sync: false
       - key: GROQ_API_KEY
         sync: false
       - key: PEXELS_API_KEY
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
         sync: false
