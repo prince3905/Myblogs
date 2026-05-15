@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Box, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Box, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination } from '@mui/material';
 import { Article, Mail, Comment, Add, Edit, Delete, Forum, MarkEmailRead, Schedule, Visibility, TrendingUp } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
 import { request } from '../../../shared/lib/api';
@@ -13,10 +13,14 @@ export default function AdminDashboardPage() {
   const [activity, setActivity] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
+  const [page, setPage] = useState(1);
   const [error, setError] = useState('');
+  const perPage = 10;
+  const totalPages = Math.ceil(posts.length / perPage);
+  const pagePosts = posts.slice((page - 1) * perPage, page * perPage);
 
   function loadPosts() {
-    request('/api/admin/posts').then(setPosts).catch(err => setError(err.message));
+    request('/api/admin/posts').then(data => { setPosts(data); setPage(1); }).catch(err => setError(err.message));
   }
 
   function loadSubscribers() {
@@ -236,9 +240,9 @@ export default function AdminDashboardPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {posts.slice(0, 10).map((post, i) => (
+                {pagePosts.map((post, i) => (
                   <TableRow key={post._id} sx={{
-                    '& td': { py: 1.8, px: 3, borderBottom: i < Math.min(posts.length, 10) - 1 ? '1px solid #ECECEC' : 'none' },
+                    '& td': { py: 1.8, px: 3, borderBottom: i < pagePosts.length - 1 ? '1px solid #ECECEC' : 'none' },
                     '&:hover': { bgcolor: '#F9FAFB' },
                     transition: 'background 0.15s',
                   }}>
@@ -290,6 +294,11 @@ export default function AdminDashboardPage() {
               </TableBody>
             </Table>
           </TableContainer>
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+              <Pagination count={totalPages} page={page} onChange={(e, v) => setPage(v)} color="primary" />
+            </Box>
+          )}
         </Paper>
 
         {/* Subscribers */}
