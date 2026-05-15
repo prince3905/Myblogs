@@ -61,7 +61,7 @@ export default function Layout({ children }) {
               : 'rgba(255, 255, 255, 0.6)',
             borderRadius: '9999px',
             boxShadow: '0 8px 30px rgba(0, 0, 0, 0.05)',
-            px: { xs: 1.5, md: 3 },
+            px: { xs: 1, md: 3 },
             py: 0.5,
           }}
         >
@@ -71,17 +71,18 @@ export default function Layout({ children }) {
             {/* Mobile: Hamburger */}
             <IconButton
               onClick={() => setMobileOpen(true)}
+              size="small"
               sx={{ display: { md: 'none' }, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111827' }}
             >
               <MenuIcon />
             </IconButton>
 
             {/* Logo */}
-            <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none' }}>
+            <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none' }}>
               <Avatar
                 sx={{
-                  width: 32,
-                  height: 32,
+                  width: { xs: 28, md: 32 },
+                  height: { xs: 28, md: 32 },
                   bgcolor: 'primary.main',
                   fontSize: '0.85rem',
                   fontWeight: 800,
@@ -94,9 +95,10 @@ export default function Layout({ children }) {
                 variant="h5" 
                 sx={{ 
                   fontWeight: 700, 
-                  fontSize: { xs: '1.1rem', md: '1.3rem' },
+                  fontSize: { xs: '1rem', md: '1.3rem' },
                   color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111',
                   letterSpacing: '-0.02em',
+                  display: { xs: 'none', sm: 'block' },
                 }}
               >
                 Digital Home
@@ -180,13 +182,13 @@ export default function Layout({ children }) {
               </Box>
             
             {/* Search + Dark mode toggle */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, md: 0.5 } }}>
               <IconButton
                 component={Link}
                 to="/search"
-                sx={{ color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#6B7280' }}
+                sx={{ color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#6B7280', p: { xs: 0.75, md: 1 } }}
               >
-                <SearchIcon />
+                <SearchIcon sx={{ fontSize: { xs: '1.2rem', md: '1.5rem' } }} />
               </IconButton>
               <DarkModeToggle />
             </Box>

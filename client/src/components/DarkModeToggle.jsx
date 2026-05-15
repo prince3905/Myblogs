@@ -10,6 +10,7 @@ export default function DarkModeToggle() {
     <Tooltip title={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'} arrow>
       <IconButton
         onClick={toggleTheme}
+        size="small"
         sx={{
           transition: 'all 0.3s ease',
           bgcolor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
