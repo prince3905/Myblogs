@@ -150,7 +150,7 @@ export default function BlogListPage() {
                   {resultText}
                 </Typography>
                 
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', xl: 'repeat(3, 1fr)' }, gap: '20px' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: '20px' }}>
                   {posts.map((post) => (
                     <Box key={post._id}>
                       <PostCard post={post} />
