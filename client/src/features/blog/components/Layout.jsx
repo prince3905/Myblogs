@@ -43,13 +43,10 @@ export default function Layout({ children }) {
         sx={{
           position: 'sticky',
           top: 16,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: { xs: 'calc(100% - 32px)', md: '800px' },
           zIndex: 1100,
         }}
         >
-        <Box
+          <Box
           sx={{
             background: theme.palette.mode === 'dark' 
               ? 'rgba(17, 24, 39, 0.75)'
@@ -61,8 +58,12 @@ export default function Layout({ children }) {
               : 'rgba(255, 255, 255, 0.6)',
             borderRadius: '9999px',
             boxShadow: '0 8px 30px rgba(0, 0, 0, 0.05)',
+            width: { xs: '100%', md: '800px' },
+            maxWidth: '800px',
             px: { xs: 1, md: 3 },
             py: 0.5,
+            mx: 'auto',
+            overflow: 'hidden',
           }}
         >
           <Box sx={{ display: 'flex', justifyContent: { xs: 'space-between', md: 'center' }, alignItems: 'center', position: 'relative' }}>
@@ -78,7 +79,7 @@ export default function Layout({ children }) {
             </IconButton>
 
             {/* Logo */}
-            <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none' }}>
+            <Box component={Link} to="/" sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1, textDecoration: 'none' }}>
               <Avatar
                 sx={{
                   width: { xs: 28, md: 32 },
@@ -245,14 +246,14 @@ export default function Layout({ children }) {
         </List>
       </Drawer>
       
-      {/* Spacer for fixed navbar */}
-      <Box sx={{ height: { xs: 64, md: 72 } }} />
+      {/* Spacer for sticky navbar */}
+      <Box sx={{ height: { xs: 72, md: 72 } }} />
       
       <BreadcrumbsNav />
       
-      <Container maxWidth="lg" sx={{ flex: 1, py: { xs: 1.5, md: 2 } }}>
+      <Box sx={{ flex: 1, py: { xs: 1.5, md: 2 }, px: { xs: 0, md: 2 } }}>
         {children}
-      </Container>
+      </Box>
       
       <Box 
         component="footer" 

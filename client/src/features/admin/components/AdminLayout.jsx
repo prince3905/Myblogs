@@ -1,97 +1,131 @@
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Box, Typography, Button, Avatar } from '@mui/material';
-import { Article, Mail, Comment, Dashboard, Logout } from '@mui/icons-material';
-import { useAuth } from '../../auth/context/AuthContext';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import {
+  Box, Typography, Button, BottomNavigation, BottomNavigationAction, Paper,
+} from '@mui/material';
+import {
+  Dashboard as DashboardIcon, Article as ArticleIcon,
+  Forum as ForumIcon,
+} from '@mui/icons-material';
 
 const nav = [
-  { label: 'Dashboard', path: '/admin', icon: <Dashboard fontSize="small" /> },
-  { label: 'Posts', path: '/admin', icon: <Article fontSize="small" /> },
-  { label: 'Comments', path: '/admin/comments', icon: <Comment fontSize="small" /> },
+  { label: 'Dashboard', path: '/admin', icon: <DashboardIcon /> },
+  { label: 'Posts', path: '/admin/posts', icon: <ArticleIcon /> },
+  { label: 'Comments', path: '/admin/comments', icon: <ForumIcon /> },
 ];
 
 export default function AdminLayout() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
+
+  const activeIndex = nav.findIndex((item) => {
+    if (item.path === '/admin') return location.pathname === '/admin';
+    return location.pathname.startsWith(item.path);
+  });
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', bgcolor: '#F6F4F3' }}>
-      {/* Sidebar */}
-      <Box sx={{
-        width: 240,
-        bgcolor: '#111827',
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-      }}>
-        <Box sx={{ px: 3, py: 3, borderBottom: '1px solid', borderColor: 'rgba(255,255,255,0.08)' }}>
-          <Typography sx={{ color: 'white', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em' }}>
-            Inkspire
-          </Typography>
-          <Typography sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', mt: 0.3 }}>
-            Content Studio
-          </Typography>
-        </Box>
+      {/* Desktop Sidebar */}
+      <Box
+        sx={{
+          width: 240,
+          bgcolor: '#111827',
+          display: { xs: 'none', md: 'flex' },
+          flexDirection: 'column',
+          flexShrink: 0,
+          color: '#fff',
+          p: 3,
+        }}
+      >
+        <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', mb: 0.5 }}>
+          Inkspire
+        </Typography>
+        <Typography
+          sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', mb: 3 }}
+        >
+          Content Studio
+        </Typography>
 
-        <Box sx={{ flex: 1, px: 2, py: 2 }}>
-          {nav.map(item => (
+        {nav.map((item) => {
+          const isActive = item.path === '/admin'
+            ? location.pathname === '/admin'
+            : location.pathname.startsWith(item.path);
+          return (
             <Button
-              key={item.path + item.label}
+              key={item.label}
               component={Link}
               to={item.path}
               fullWidth
-              startIcon={item.icon}
               sx={{
                 justifyContent: 'flex-start',
                 px: 2,
-                py: 1.2,
+                py: 1,
                 mb: 0.5,
                 borderRadius: 2,
-                color: location.pathname === item.path ? 'white' : 'rgba(255,255,255,0.5)',
-                bgcolor: location.pathname === item.path ? 'rgba(255,255,255,0.1)' : 'transparent',
+                gap: 1.5,
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+                bgcolor: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
                 fontWeight: 500,
                 fontSize: '0.875rem',
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },
+                textTransform: 'none',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: '#fff' },
               }}
             >
+              {item.icon}
               {item.label}
             </Button>
-          ))}
-        </Box>
-
-        <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'rgba(255,255,255,0.08)' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: '#4F46E5', fontSize: '0.8rem', fontWeight: 700 }}>
-              {(user?.name || 'A').charAt(0)}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ color: 'white', fontSize: '0.8rem', fontWeight: 600 }}>{user?.name || 'Admin'}</Typography>
-            </Box>
-          </Box>
-          <Button
-            fullWidth
-            startIcon={<Logout fontSize="small" />}
-            onClick={() => { logout(); navigate('/admin/login'); }}
-            sx={{
-              color: 'rgba(255,255,255,0.4)',
-              fontSize: '0.8rem',
-              fontWeight: 500,
-              justifyContent: 'flex-start',
-              px: 2,
-              py: 0.8,
-              borderRadius: 2,
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: '#EF4444' },
-            }}
-          >
-            Sign Out
-          </Button>
-        </Box>
+          );
+        })}
       </Box>
 
-      {/* Content area */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Main Content */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          pb: { xs: '56px', md: 0 },
+        }}
+      >
         <Outlet />
       </Box>
+
+      {/* Mobile Bottom Nav */}
+      <Paper
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1200,
+          borderRadius: 0,
+        }}
+        elevation={8}
+      >
+        <BottomNavigation
+          value={activeIndex >= 0 ? activeIndex : 0}
+          showLabels
+          sx={{ bgcolor: '#111827', height: 56 }}
+        >
+          {nav.map((item) => (
+            <BottomNavigationAction
+              key={item.label}
+              label={item.label}
+              icon={item.icon}
+              component={Link}
+              to={item.path}
+              sx={{
+                color: 'rgba(255,255,255,0.4)',
+                '&.Mui-selected': { color: '#fff' },
+                '& .MuiBottomNavigationAction-label': {
+                  fontSize: '0.7rem',
+                  '&.Mui-selected': { fontSize: '0.7rem' },
+                },
+              }}
+            />
+          ))}
+        </BottomNavigation>
+      </Paper>
     </Box>
   );
 }

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
+import { Box, Paper } from '@mui/material';
 
 const ToastContext = createContext();
 
@@ -20,25 +21,27 @@ function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={{ addToast, removeToast }}>
       {children}
-      <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999 }}>
+      <Box sx={{ position: 'fixed', top: 20, right: { xs: 8, sm: 20 }, zIndex: 9999, maxWidth: { xs: '90vw', sm: 400 } }}>
         {toasts.map(toast => (
-          <div
+          <Paper
             key={toast.id}
+            elevation={3}
             onClick={() => removeToast(toast.id)}
-            style={{
-              padding: '12px 24px',
-              marginBottom: 8,
-              borderRadius: 4,
+            sx={{
+              p: '12px 24px',
+              mb: 1,
+              borderRadius: 1,
               color: '#fff',
-              backgroundColor: toast.type === 'error' ? '#f44336' : toast.type === 'success' ? '#4caf50' : '#2196f3',
               cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+              bgcolor: toast.type === 'error' ? '#f44336' : toast.type === 'success' ? '#4caf50' : '#2196f3',
+              wordBreak: 'break-word',
+              fontSize: { xs: '0.85rem', sm: '0.95rem' },
             }}
           >
             {toast.message}
-          </div>
+          </Paper>
         ))}
-      </div>
+      </Box>
     </ToastContext.Provider>
   );
 }

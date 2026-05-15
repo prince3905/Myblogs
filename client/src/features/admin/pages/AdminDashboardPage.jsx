@@ -55,9 +55,11 @@ export default function AdminDashboardPage() {
         borderBottom: '1px solid', borderColor: '#ECECEC',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
       }}>
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>Dashboard</Typography>
-          <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.3 }}>Welcome back, {user?.name || 'Admin'}</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>Dashboard</Typography>
+            <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.3 }}>Welcome back, {user?.name || 'Admin'}</Typography>
+          </Box>
         </Box>
         <Button
           component={Link}
@@ -136,7 +138,7 @@ export default function AdminDashboardPage() {
                         on {c.post?.title || 'deleted post'}
                       </Typography>
                     </Typography>
-                    <Typography sx={{ fontSize: '0.8rem', color: '#6B7280', mt: 0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <Typography sx={{ fontSize: '0.8rem', color: '#6B7280', mt: 0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: { xs: 'normal', sm: 'nowrap' } }}>
                       {c.content}
                     </Typography>
                     <Typography sx={{ fontSize: '0.7rem', color: '#9CA3AF', mt: 0.3 }}>
@@ -170,9 +172,9 @@ export default function AdminDashboardPage() {
                   <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#111827' }}>
                     {m.name} <Typography component="span" sx={{ fontSize: '0.7rem', color: '#9CA3AF', fontWeight: 400 }}>— {m.subject}</Typography>
                   </Typography>
-                  <Typography sx={{ fontSize: '0.8rem', color: '#6B7280', mt: 0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {m.message}
-                  </Typography>
+                    <Typography sx={{ fontSize: '0.8rem', color: '#6B7280', mt: 0.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: { xs: 'normal', sm: 'nowrap' } }}>
+                      {m.message}
+                    </Typography>
                   <Typography sx={{ fontSize: '0.7rem', color: '#9CA3AF', mt: 0.3 }}>
                     <Schedule sx={{ fontSize: '0.7rem', verticalAlign: 'middle', mr: 0.3 }} />
                     {new Date(m.createdAt).toLocaleDateString()} — {m.email}

@@ -31,12 +31,12 @@ export default function BlogListPage() {
       <Seo title="All Insights | Digital Home" description="Browse our latest AI consulting insights and articles." />
       
       {/* Filter Section */}
-      <Paper elevation={0} sx={{ py: { xs: 2, md: 3 }, mb: 3, bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider' }}>
+      <Paper elevation={0} sx={{ py: { xs: 1.5, md: 3 }, mb: { xs: 1.5, md: 3 }, bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider' }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: 'text.primary', letterSpacing: '-0.02em' }}>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: 'text.primary', letterSpacing: '-0.02em', fontSize: { xs: '1.5rem', md: '2.125rem' }, mb: { xs: 0.5, md: 1 } }}>
             All Insights
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.95rem' }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 1.5, md: 2 }, fontSize: { xs: '0.85rem', md: '0.95rem' } }}>
             Search by title, excerpt, or tags and filter by category.
           </Typography>
 
@@ -159,12 +159,13 @@ export default function BlogListPage() {
                 </Box>
 
                 {pages > 1 && (
-                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 4, mb: 3 }}>
+                  <Box sx={{ display: 'flex', gap: { xs: 0.5, md: 1 }, justifyContent: 'center', mt: 4, mb: 3, flexWrap: 'wrap' }}>
                     <Button
                       variant="outlined"
                       disabled={page <= 1}
                       onClick={() => setPage(page - 1)}
-                      sx={{ borderRadius: 2 }}
+                      size="small"
+                      sx={{ borderRadius: 2, fontSize: { xs: '0.75rem', md: '0.875rem' }, px: { xs: 1, md: 2 } }}
                     >
                       ← Prev
                     </Button>
@@ -176,9 +177,11 @@ export default function BlogListPage() {
                         size="small"
                         onClick={() => setPage(p)}
                         sx={{ 
-                          minWidth: 40, 
+                          minWidth: { xs: 32, md: 40 }, 
                           fontWeight: p === page ? 700 : 400,
                           borderRadius: 2,
+                          fontSize: { xs: '0.75rem', md: '0.875rem' },
+                          display: { xs: p === page || p === 1 || p === pages || Math.abs(p - page) <= 1 ? 'inline-flex' : 'none', md: 'inline-flex' },
                         }}
                       >
                         {p}
@@ -189,7 +192,8 @@ export default function BlogListPage() {
                       variant="outlined"
                       disabled={page >= pages}
                       onClick={() => setPage(page + 1)}
-                      sx={{ borderRadius: 2 }}
+                      size="small"
+                      sx={{ borderRadius: 2, fontSize: { xs: '0.75rem', md: '0.875rem' }, px: { xs: 1, md: 2 } }}
                     >
                       Next →
                     </Button>

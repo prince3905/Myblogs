@@ -37,7 +37,7 @@ export default function PostCard({ post }) {
         textDecoration: 'none',
         display: 'flex', 
         flexDirection: 'column',
-        borderRadius: '28px',
+        borderRadius: { xs: '16px', md: '28px' },
         overflow: 'hidden',
         border: '1px solid',
         borderColor: 'divider',
@@ -52,7 +52,7 @@ export default function PostCard({ post }) {
       }}
     >
       {/* Image section */}
-      <Box sx={{ position: 'relative', overflow: 'hidden', height: 160, flexShrink: 0 }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden', height: { xs: 130, md: 160 }, flexShrink: 0 }}>
         {post.featuredImage ? (
           <Box
             component="img"
@@ -104,22 +104,22 @@ export default function PostCard({ post }) {
         flex: 1, 
         display: 'flex', 
         flexDirection: 'column',
-        p: 2.5,
-        '&:last-child': { pb: 2.5 }
+        p: { xs: 1.5, md: 2.5 },
+        '&:last-child': { pb: { xs: 1.5, md: 2.5 } }
       }}>
         <Typography 
           variant="h6"
           sx={{ 
             fontWeight: 700,
-            fontSize: '1.1rem',
+            fontSize: { xs: '0.95rem', md: '1.1rem' },
             lineHeight: 1.3,
-            mb: 1,
+            mb: 0.5,
             color: 'text.primary',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            minHeight: '2.2em',
+            minHeight: { xs: '2.2em', md: '2.2em' },
             transition: 'color 0.2s',
             '&:hover': {
               color: 'primary.main',
@@ -132,12 +132,12 @@ export default function PostCard({ post }) {
         <Typography 
           variant="body2" 
           sx={{ 
-            mb: 2,
-            fontSize: '0.875rem',
+            mb: 1.5,
+            fontSize: { xs: '0.8rem', md: '0.875rem' },
             lineHeight: 1.5,
             color: 'text.secondary',
             display: '-webkit-box',
-            WebkitLineClamp: 2,
+            WebkitLineClamp: { xs: 1, md: 2 },
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
             flex: 1,
@@ -146,7 +146,7 @@ export default function PostCard({ post }) {
           {post.excerpt}
         </Typography>
         
-        <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ mt: 'auto', pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
           <Box 
             sx={{ 
               display: 'flex', 
@@ -154,24 +154,24 @@ export default function PostCard({ post }) {
               alignItems: 'center',
             }}
           >
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: { xs: 0.5, md: 1 }, alignItems: 'center' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-                <CalendarToday sx={{ fontSize: 12, color: 'text.secondary' }} />
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+                <CalendarToday sx={{ fontSize: { xs: 10, md: 12 }, color: 'text.secondary' }} />
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: { xs: '0.65rem', md: '0.75rem' } }}>
                   {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-                <AccessTime sx={{ fontSize: 12, color: 'text.secondary' }} />
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+                <AccessTime sx={{ fontSize: { xs: 10, md: 12 }, color: 'text.secondary' }} />
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: { xs: '0.65rem', md: '0.75rem' } }}>
                   {post.readingTime || 5}m
                 </Typography>
               </Box>
             </Box>
             
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-              <Visibility sx={{ fontSize: 12, color: 'text.secondary' }} />
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+              <Visibility sx={{ fontSize: { xs: 10, md: 12 }, color: 'text.secondary' }} />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: { xs: '0.65rem', md: '0.75rem' } }}>
                 {post.views || 0}
               </Typography>
             </Box>

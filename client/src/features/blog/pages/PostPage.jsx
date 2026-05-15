@@ -210,7 +210,7 @@ export default function PostPage() {
         <AdSlot format="afterpost" style={{ mb: 3 }} />
 
         {/* Actions: Like + Share */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center', flexWrap: 'wrap' }}>
           <LikeButton slug={slug} initialLikes={post.likes || 0} />
           <SocialShare title={post.title} slug={slug} />
         </Box>
@@ -221,11 +221,11 @@ export default function PostPage() {
         <CommentSection slug={slug} />
 
         {/* Author Bio */}
-        <Paper elevation={0} sx={{ p: 4, mt: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 3, alignItems: 'flex-start' }}>
-          <Avatar sx={{ width: 56, height: 56, bgcolor: 'primary.main', fontSize: '1.25rem', fontWeight: 700 }}>
+        <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, mt: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: { xs: 2, md: 3 }, alignItems: 'flex-start' }}>
+          <Avatar sx={{ width: { xs: 44, md: 56 }, height: { xs: 44, md: 56 }, bgcolor: 'primary.main', fontSize: '1.25rem', fontWeight: 700, flexShrink: 0 }}>
             {post.author?.charAt(0) || 'A'}
           </Avatar>
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{post.author || 'Admin'}</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.7 }}>
               Curious mind and lifelong learner sharing insights on technology, personal finance, career growth, 

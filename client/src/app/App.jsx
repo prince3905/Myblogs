@@ -36,6 +36,7 @@ export default function App() {
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route index element={<AdminDashboardPage />} />
+          <Route path="posts" element={<AdminDashboardPage />} />
           <Route path="comments" element={<AdminCommentsPage />} />
           <Route path="posts/new" element={<PostEditorPage />} />
           <Route path="posts/:id/edit" element={<PostEditorPage />} />

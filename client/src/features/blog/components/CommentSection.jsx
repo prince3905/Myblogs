@@ -39,7 +39,7 @@ const CommentCard = forwardRef(({ c, onReply, replyOpen, replyText, onReplyText,
 
       {/* Replies */}
       {c.replies?.length > 0 && (
-        <Box sx={{ ml: 5, mt: 2, pl: 2.5, borderLeft: '2px solid', borderColor: 'divider' }}>
+        <Box sx={{ ml: { xs: 1, sm: 5 }, mt: 2, pl: 2.5, borderLeft: '2px solid', borderColor: 'divider' }}>
           {c.replies.map(r => (
             <Box key={r._id} sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
               <Avatar sx={{ width: 28, height: 28, bgcolor: 'secondary.main', fontSize: '0.75rem' }}>
@@ -61,7 +61,7 @@ const CommentCard = forwardRef(({ c, onReply, replyOpen, replyText, onReplyText,
 
       {/* Reply form */}
       {replyOpen === c._id && (
-        <Box sx={{ ml: 5, mt: 2 }}>
+        <Box sx={{ ml: { xs: 0, sm: 5 }, mt: 2 }}>
           <Box sx={{ display: 'flex', gap: 1.5 }}>
             <TextField size="small" placeholder="Write a reply..." fullWidth multiline rows={2}
               value={replyText} onChange={e => onReplyText(e.target.value)} />

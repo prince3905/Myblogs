@@ -53,9 +53,11 @@ export default function AdminCommentsPage() {
         borderBottom: '1px solid', borderColor: '#ECECEC',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
       }}>
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>Comments</Typography>
-          <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.3 }}>Approve, reply, and manage reader comments</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>Comments</Typography>
+            <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.3 }}>Approve, reply, and manage reader comments</Typography>
+          </Box>
         </Box>
         <Button variant="outlined" startIcon={<Refresh />} onClick={loadComments} sx={{ fontWeight: 600, borderRadius: 2, px: { xs: 1.5, md: 3 }, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>Refresh</Button>
       </Box>
@@ -142,7 +144,8 @@ export default function AdminCommentsPage() {
 
       {/* Reply Dialog */}
       <Dialog open={Boolean(replyTo)} onClose={() => { setReplyTo(null); setReplyText(''); }}
-        PaperProps={{ sx: { borderRadius: 3, p: 1, width: 500 } }}>
+        maxWidth="sm" fullWidth
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
         <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Reply to Comment</DialogTitle>
         <DialogContent>
           <TextField autoFocus fullWidth multiline rows={4} placeholder="Write your reply..."

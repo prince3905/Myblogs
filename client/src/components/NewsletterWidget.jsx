@@ -71,7 +71,7 @@ export default function NewsletterWidget() {
           size="large"
           sx={{
             flex: 1,
-            minWidth: 250,
+            minWidth: { xs: '100%', sm: 250 },
             '& .MuiOutlinedInput-root': {
               bgcolor: 'background.paper',
               borderRadius: 2,
