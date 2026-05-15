@@ -138,7 +138,7 @@ export default function PostEditorPage() {
   return (
     <>
       <Box sx={{
-        px: 4, py: 2.5, bgcolor: 'white',
+        px: { xs: 2, md: 4 }, py: 2.5, bgcolor: 'white',
         borderBottom: '1px solid', borderColor: '#ECECEC',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
       }}>
@@ -153,7 +153,7 @@ export default function PostEditorPage() {
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, overflow: 'auto', p: 4 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 4 } }}>
         {error ? <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setError('')}>{error}</Alert> : null}
 
         <form onSubmit={handleSubmit}>

@@ -51,7 +51,7 @@ export default function AdminDashboardPage() {
     <>
       {/* Top bar */}
       <Box sx={{
-        px: 4, py: 2.5, bgcolor: 'white',
+        px: { xs: 2, md: 4 }, py: 2.5, bgcolor: 'white',
         borderBottom: '1px solid', borderColor: '#ECECEC',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
       }}>
@@ -64,14 +64,14 @@ export default function AdminDashboardPage() {
           to="/admin/posts/new"
           variant="contained"
           startIcon={<Add />}
-          sx={{ fontWeight: 600, borderRadius: 2, px: 3 }}
+          sx={{ fontWeight: 600, borderRadius: 2, px: { xs: 2, md: 3 }, fontSize: { xs: '0.8rem', md: '0.875rem' } }}
         >
           New Post
         </Button>
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflow: 'auto', p: 4 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 4 } }}>
         {error ? <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setError('')}>{error}</Alert> : null}
 
         {/* Stats */}
@@ -84,8 +84,8 @@ export default function AdminDashboardPage() {
             { label: 'Contact Messages', value: activity?.recentMessages?.length ?? 0, icon: <MarkEmailRead />, color: '#DC2626' },
           ].map(stat => (
             <Paper key={stat.label} elevation={0} sx={{
-              p: 3, borderRadius: 3, border: '1px solid #ECECEC',
-              display: 'flex', alignItems: 'center', gap: 3,
+              p: { xs: 2, md: 3 }, borderRadius: 3, border: '1px solid #ECECEC',
+              display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 3 },
             }}>
               <Box sx={{
                 width: 48, height: 48, borderRadius: 2.5,
@@ -95,9 +95,9 @@ export default function AdminDashboardPage() {
               }}>
                 {stat.icon}
               </Box>
-              <Box>
-                <Typography sx={{ color: '#6B7280', fontSize: '0.8rem', fontWeight: 500 }}>{stat.label}</Typography>
-                <Typography sx={{ color: '#111827', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1.2 }}>{stat.value}</Typography>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ color: '#6B7280', fontSize: '0.75rem', fontWeight: 500 }}>{stat.label}</Typography>
+                <Typography sx={{ color: '#111827', fontSize: { xs: '1.25rem', md: '1.75rem' }, fontWeight: 700, lineHeight: 1.2 }}>{stat.value}</Typography>
               </Box>
             </Paper>
           ))}

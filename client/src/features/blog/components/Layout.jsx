@@ -65,7 +65,7 @@ export default function Layout({ children }) {
             py: 0.5,
           }}
         >
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+          <Box sx={{ display: 'flex', justifyContent: { xs: 'space-between', md: 'center' }, alignItems: 'center', position: 'relative' }}>
 
 
             {/* Mobile: Hamburger */}
@@ -264,7 +264,7 @@ export default function Layout({ children }) {
       >
         <Container maxWidth="lg">
           <NewsletterWidget />
-          <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', mt: 3 }}>
+          <Box sx={{ display: 'flex', gap: { xs: 2, md: 3 }, justifyContent: 'center', mt: 3, flexWrap: 'wrap' }}>
             <Link to="/privacy" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Privacy Policy</Link>
             <Link to="/terms" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Terms & Disclaimer</Link>
             <Link to="/contact" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Contact</Link>

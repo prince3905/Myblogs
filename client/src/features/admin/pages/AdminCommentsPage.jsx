@@ -49,7 +49,7 @@ export default function AdminCommentsPage() {
   return (
     <>
       <Box sx={{
-        px: 4, py: 2.5, bgcolor: 'white',
+        px: { xs: 2, md: 4 }, py: 2.5, bgcolor: 'white',
         borderBottom: '1px solid', borderColor: '#ECECEC',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
       }}>
@@ -57,23 +57,23 @@ export default function AdminCommentsPage() {
           <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827' }}>Comments</Typography>
           <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.3 }}>Approve, reply, and manage reader comments</Typography>
         </Box>
-        <Button variant="outlined" startIcon={<Refresh />} onClick={loadComments} sx={{ fontWeight: 600, borderRadius: 2, px: 3 }}>Refresh</Button>
+        <Button variant="outlined" startIcon={<Refresh />} onClick={loadComments} sx={{ fontWeight: 600, borderRadius: 2, px: { xs: 1.5, md: 3 }, fontSize: { xs: '0.75rem', md: '0.875rem' } }}>Refresh</Button>
       </Box>
 
-      <Box sx={{ flex: 1, overflow: 'auto', p: 4 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 4 } }}>
         {error ? <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setError('')}>{error}</Alert> : null}
 
         {comments.map((c) => (
           <Paper key={c._id} elevation={0} sx={{ mb: 2, borderRadius: 3, border: '1px solid #ECECEC', overflow: 'hidden' }}>
             {/* Parent comment */}
-            <Box sx={{ p: 3, display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-              <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36, fontSize: '0.85rem' }}>
+            <Box sx={{ p: { xs: 2, md: 3 }, display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: { xs: 28, md: 36 }, height: { xs: 28, md: 36 }, fontSize: '0.85rem', flexShrink: 0 }}>
                 {c.name.charAt(0).toUpperCase()}
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#111827', display: 'inline' }}>{c.name}</Typography>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 0.5, gap: 0.5 }}>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#111827', display: 'inline', fontSize: { xs: '0.8rem', md: '0.875rem' } }}>{c.name}</Typography>
                     <Typography variant="caption" sx={{ color: '#6B7280', ml: 1 }}>{c.email}</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexShrink: 0 }}>
@@ -83,8 +83,8 @@ export default function AdminCommentsPage() {
                     <Typography variant="caption" sx={{ color: '#9CA3AF' }}>{new Date(c.createdAt).toLocaleDateString()}</Typography>
                   </Box>
                 </Box>
-                <Typography variant="body2" sx={{ color: '#374151', lineHeight: 1.6, mb: 1.5 }}>{c.content}</Typography>
-                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <Typography variant="body2" sx={{ color: '#374151', lineHeight: 1.6, mb: 1.5, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>{c.content}</Typography>
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                   {!c.approved && (
                     <Button size="small" onClick={() => handleApprove(c._id)}
                       sx={{ minWidth: 0, px: 1.5, py: 0.3, fontSize: '0.75rem', fontWeight: 600, color: '#059669', borderRadius: 1.5, '&:hover': { bgcolor: '#ECFDF5' } }}
