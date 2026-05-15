@@ -13,7 +13,7 @@ export function ThemeModeProvider({ children }) {
   const [mode, setMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
     if (saved !== null) return saved === 'true' ? 'dark' : 'light';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return 'light';
   });
 
   useEffect(() => {
