@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Container, Typography, Box, Paper, TextField, Button, Alert, Grid } from '@mui/material';
-import { Email, LocationOn, Send } from '@mui/icons-material';
+import { Container, Typography, Box, Paper, TextField, Button, Alert, Grid, Avatar } from '@mui/material';
+import { Email, LocationOn, Send, Schedule } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
 import { request } from '../../../shared/lib/api';
@@ -34,43 +34,69 @@ export default function ContactPage() {
     <Layout>
       <Seo title="Contact Us | Digital Home" description="Get in touch with the Digital Home team." />
 
-      <Box sx={{ pt: { xs: 6, md: 10 }, pb: { xs: 8, md: 12 } }}>
-        <Box sx={{ textAlign: 'center', mb: 8 }}>
-          <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>
+      <Box sx={{ pt: { xs: 6, md: 12 }, pb: { xs: 8, md: 12 } }}>
+        {/* Header */}
+        <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 10 } }}>
+          <Typography
+            variant="overline"
+            sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 3, fontSize: '0.75rem' }}
+          >
             Contact
           </Typography>
-          <Typography variant="h2" sx={{ fontWeight: 700, mt: 2, mb: 3, maxWidth: 600, mx: 'auto' }}>
+          <Typography
+            variant="h3"
+            sx={{ fontWeight: 800, mt: 1.5, mb: 2, fontSize: { xs: '1.75rem', md: '2.5rem' } }}
+          >
             Get in Touch
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 500, mx: 'auto' }}>
+          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 520, mx: 'auto', lineHeight: 1.7 }}>
             Have a question, suggestion, or want to collaborate? We'd love to hear from you.
           </Typography>
         </Box>
 
-        <Grid container spacing={{ xs: 4, md: 6 }} alignItems="flex-start">
+        <Grid container spacing={{ xs: 4, md: 8 }} alignItems="flex-start">
           {/* Form */}
           <Grid item xs={12} md={7}>
-            <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, borderRadius: 4, border: '1px solid', borderColor: 'divider' }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 3, md: 5 },
+                borderRadius: 4,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, display: { xs: 'block', md: 'none' } }}>
+                Send us a Message
+              </Typography>
               <form onSubmit={handleSubmit}>
                 <Grid container spacing={2.5}>
                   <Grid item xs={12} sm={6}>
-                    <TextField fullWidth label="Name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+                    <TextField fullWidth label="Your Name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField fullWidth label="Email" type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                    <TextField fullWidth label="Email Address" type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField fullWidth label="Subject" required value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} />
                   </Grid>
                   <Grid item xs={12}>
-                    <TextField fullWidth label="Message" multiline rows={5} required value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
+                    <TextField fullWidth label="Your Message" multiline rows={5} required value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
                   </Grid>
                 </Grid>
 
                 {error ? <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>{error}</Alert> : null}
                 {success ? <Alert severity="success" sx={{ mt: 2, borderRadius: 2 }}>{success}</Alert> : null}
 
-                <Button type="submit" variant="contained" size="large" disabled={submitting} endIcon={<Send />} sx={{ mt: 3, fontWeight: 600, px: 4, borderRadius: 2 }}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  disabled={submitting}
+                  endIcon={<Send />}
+                  sx={{ mt: 3, fontWeight: 600, px: 5, py: 1.4, borderRadius: 2, fontSize: '0.95rem' }}
+                >
                   {submitting ? 'Sending...' : 'Send Message'}
                 </Button>
               </form>
@@ -80,24 +106,41 @@ export default function ContactPage() {
           {/* Info */}
           <Grid item xs={12} md={5}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {[
-                { icon: <Email />, title: 'Email', desc: 'coolfire.prince0+blogs@gmail.com' },
-                { icon: <LocationOn />, title: 'Location', desc: 'Remote — Available Worldwide' },
-              ].map(item => (
-                <Paper key={item.title} elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 2.5 }}>
-                  <Box sx={{ color: 'primary.main', mt: 0.3, flexShrink: 0 }}>{item.icon}</Box>
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{item.title}</Typography>
-                    <Typography variant="body2" color="text.secondary">{item.desc}</Typography>
-                  </Box>
-                </Paper>
-              ))}
-
-              <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Response Time</Typography>
+              <Box sx={{ display: { xs: 'none', md: 'block' }, mb: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>Contact Information</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  We typically respond within 24-48 hours during business days.
+                  Choose the most convenient way to reach us.
                 </Typography>
+              </Box>
+
+              <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3.5 }, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 2.5, alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 44, height: 44 }}>
+                  <Email />
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Email</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>coolfire.prince0+blogs@gmail.com</Typography>
+                </Box>
+              </Paper>
+
+              <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3.5 }, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 2.5, alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: '#059669', width: 44, height: 44 }}>
+                  <LocationOn />
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Location</Typography>
+                  <Typography variant="body2" color="text.secondary">Remote — Available Worldwide</Typography>
+                </Box>
+              </Paper>
+
+              <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3.5 }, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 2.5, alignItems: 'center' }}>
+                <Avatar sx={{ bgcolor: '#D97706', width: 44, height: 44 }}>
+                  <Schedule />
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Response Time</Typography>
+                  <Typography variant="body2" color="text.secondary">Within 24-48 hours on business days</Typography>
+                </Box>
               </Paper>
             </Box>
           </Grid>
