@@ -4,13 +4,14 @@ import {
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon, Article as ArticleIcon,
-  Forum as ForumIcon,
+  Forum as ForumIcon, MonetizationOn as AdIcon,
 } from '@mui/icons-material';
 
 const nav = [
   { label: 'Dashboard', path: '/admin', icon: <DashboardIcon /> },
   { label: 'Posts', path: '/admin/posts', icon: <ArticleIcon /> },
   { label: 'Comments', path: '/admin/comments', icon: <ForumIcon /> },
+  { label: 'Ads', path: '/admin/ads', icon: <AdIcon /> },
 ];
 
 export default function AdminLayout() {

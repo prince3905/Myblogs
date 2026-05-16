@@ -15,6 +15,7 @@ const newsletterRoutes = require('./modules/newsletter/newsletter.routes');
 const contactRoutes = require('./modules/contact/contact.routes');
 const aiRoutes = require('./modules/ai/ai.routes');
 const pexelsRoutes = require('./modules/pexels/pexels.routes');
+const adRoutes = require('./modules/ads/ad.routes');
 const { sitemap, robots, rssFeed } = require('./modules/posts/post.controller');
 
 const app = express();
@@ -41,6 +42,8 @@ app.use('/api', commentRoutes);
 app.use('/api', contactRoutes);
 app.use('/api', aiRoutes);
 app.use('/api', pexelsRoutes);
+app.use('/api', adRoutes.public);
+app.use('/api/admin', adRoutes.admin);
 
 // SEO routes - before static files
 app.get('/sitemap.xml', sitemap);

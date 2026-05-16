@@ -5,6 +5,7 @@ import AdminLayout from '../features/admin/components/AdminLayout';
 import AdminLoginPage from '../features/auth/pages/AdminLoginPage';
 import AdminDashboardPage from '../features/admin/pages/AdminDashboardPage';
 import AdminCommentsPage from '../features/admin/pages/AdminCommentsPage';
+import AdminAdsPage from '../features/admin/pages/AdminAdsPage';
 import PostEditorPage from '../features/admin/pages/PostEditorPage';
 import HomePage from '../features/blog/pages/HomePage';
 import BlogListPage from '../features/blog/pages/BlogListPage';
@@ -38,6 +39,7 @@ export default function App() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="posts" element={<AdminDashboardPage />} />
           <Route path="comments" element={<AdminCommentsPage />} />
+          <Route path="ads" element={<AdminAdsPage />} />
           <Route path="posts/new" element={<PostEditorPage />} />
           <Route path="posts/:id/edit" element={<PostEditorPage />} />
         </Route>
