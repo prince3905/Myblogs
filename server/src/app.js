@@ -49,6 +49,10 @@ app.use('/api/admin', adRoutes.admin);
 app.get('/sitemap.xml', sitemap);
 app.get('/robots.txt', robots);
 app.get('/rss.xml', rssFeed);
+app.get('/ads.txt', (req, res) => {
+  res.type('text/plain');
+  res.send('google.com, pub-7044184444698366, DIRECT, f08c47fec0942fa0');
+});
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
