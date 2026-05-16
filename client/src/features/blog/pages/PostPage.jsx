@@ -240,9 +240,9 @@ export default function PostPage() {
         <Box sx={{ bgcolor: 'grey.50', py: 6 }}>
           <Container maxWidth="lg">
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, mb: 4 }}>Related Posts</Typography>
-            <Grid container spacing={3}>
+            <Grid container spacing={3} alignItems="stretch">
               {post.relatedPosts.map((item) => (
-                <Grid item xs={12} sm={6} md={4} key={item._id}>
+                <Grid item xs={12} sm={6} md={4} key={item._id} sx={{ display: 'flex' }}>
                   <PostCard post={item} />
                 </Grid>
               ))}

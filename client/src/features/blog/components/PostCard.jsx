@@ -37,6 +37,7 @@ export default function PostCard({ post }) {
         textDecoration: 'none',
         display: 'flex', 
         flexDirection: 'column',
+        height: '100%',
         borderRadius: { xs: '16px', md: '28px' },
         overflow: 'hidden',
         border: '1px solid',
