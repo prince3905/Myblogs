@@ -213,8 +213,8 @@ function robustJsonParse(text) {
 
 async function generateAIContent(req, res) {
   try {
-    const { title, model, length, tone, language, command } = req.body;
-    if (!title) {
+    const { title, model, length, tone, language, autoTrending, command } = req.body;
+    if (!title && !autoTrending) {
       return res.status(400).json({ message: 'Title is required' });
     }
 
@@ -244,7 +244,7 @@ async function generateAIContent(req, res) {
 
 **🚀 CRITICAL - TRENDING & TRAFFIC RULES (FOLLOW STRICTLY):**
 - This article MUST target HIGH-TRAFFIC, trending keywords for Google India 2026.
-- First research what Indians are currently searching for related to "${title}".
+- First research what Indians are currently searching for related to "${autoTrending ? '(auto-pick the BEST trending topic for maximum traffic in India right now)' : title}".
 - Include minimum 3 trending long-tail keywords in the content naturally.
 - Main keyword must appear in: Title, First Paragraph, and at least one H2 heading.
 - Write click-worthy SEO title under 60 characters that gets high CTR.
@@ -308,7 +308,9 @@ GENERIC PHRASES TO AVOID:
 
     const tokenBudget = length === 'short' ? 2048 : length === 'long' ? 4096 : 3072;
 
-    const userPrompt = `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}"
+    const userPrompt = autoTrending
+      ? `Pick the MOST TRENDING, HIGH-TRAFFIC topic in India right now (2026) and write a ${toneInstr.toLowerCase()} blog post about it. Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr} Return ONLY JSON. The "content" value must be a STRING (not an object or array).`
+      : `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}"
 
 Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr}
 

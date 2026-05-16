@@ -62,8 +62,8 @@ export default function PostEditorPage() {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  async function handleAIWrite() {
-    if (!form.title.trim()) {
+  async function handleAIWrite(autoTrending) {
+    if (!autoTrending && !form.title.trim()) {
       addToast('Pehle title to daal bhai!', 'error');
       return;
     }
@@ -71,9 +71,9 @@ export default function PostEditorPage() {
     try {
       const data = await request('/api/ai/generate', {
         method: 'POST',
-        body: JSON.stringify({ title: form.title, model: aiModel, length: aiLength, tone: aiTone, language: aiLanguage, command: aiCommand })
+        body: JSON.stringify({ title: form.title, model: aiModel, length: aiLength, tone: aiTone, language: aiLanguage, autoTrending, command: aiCommand })
       });
-      const title = form.title;
+      const title = autoTrending ? data.slug || 'Trending Post' : form.title;
       const plainText = stripHtml(data.content || '');
 
       updateField('content', data.content || '');
@@ -172,8 +172,16 @@ export default function PostEditorPage() {
                   InputProps={{ sx: { fontSize: '1.25rem', fontWeight: 500 } }}
                 />
                 <Button
+                  variant="contained"
+                  onClick={() => handleAIWrite(true)}
+                  disabled={aiLoading}
+                  sx={{ minWidth: 130, height: 56, flexShrink: 0, borderRadius: 2, fontWeight: 700, fontSize: '0.8rem' }}
+                >
+                  {aiLoading ? <CircularProgress size={20} /> : '🔥 Trending'}
+                </Button>
+                <Button
                   variant="outlined"
-                  onClick={handleAIWrite}
+                  onClick={() => handleAIWrite(false)}
                   disabled={aiLoading || !form.title.trim()}
                   sx={{ minWidth: 120, height: 56, flexShrink: 0, borderRadius: 2 }}
                 >
