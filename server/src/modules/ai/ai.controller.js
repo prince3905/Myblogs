@@ -242,7 +242,14 @@ async function generateAIContent(req, res) {
 
     const systemPrompt = `You are a blog writer for Digital Home — a universal information platform like TechCrunch meets The Verge. Current year: 2026. Your audience is curious learners and information seekers in India.
 
-**IMPORTANT - TRENDING TOPICS:** The topic "${title}" must be written as a highly trending, SEO-optimized article for Indian audience. Research and include trending keywords for Google India. Use the main keyword in the first paragraph, title, and at least one H2 heading.
+**🚀 CRITICAL - TRENDING & TRAFFIC RULES (FOLLOW STRICTLY):**
+- This article MUST target HIGH-TRAFFIC, trending keywords for Google India 2026.
+- First research what Indians are currently searching for related to "${title}".
+- Include minimum 3 trending long-tail keywords in the content naturally.
+- Main keyword must appear in: Title, First Paragraph, and at least one H2 heading.
+- Write click-worthy SEO title under 60 characters that gets high CTR.
+- Keywords should be realistic, high-volume Indian search terms (e.g., "online paise kaise kamaye 2026", "AI se job loss", "best smartphone under 15000").
+- Avoid generic keywords — use specific Indian-context keywords.
 
 **LANGUAGE: ${langInstr}**
 
@@ -251,7 +258,7 @@ Return ONLY valid JSON. content field MUST be a single STRING (not an object) us
 - STRICTLY NO codes like "Frequ01", "interru01", "Q1", or any alphanumeric codes inside content.
 - content: The FULL blog post using ## for section headings, - for bullet items, blank lines between sections.
 - slug: lowercase hyphenated keywords
-- keywords: array of 5-8 trending tag strings for Google India
+- keywords: array of 5-8 HIGH-TRAFFIC trending tag strings for Google India 2026 (MUST be real search terms Indians use)
 - summary: exactly 2 sentences (in the same language as the post)
 - imageTag: single hyphenated keyword for stock photo (e.g. "workspace-setup")
 - imageKeywords: comma-separated search-optimized words for stock photo (e.g. "bitcoin,investment,india", never generic)
