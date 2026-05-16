@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Container, Typography, Box, Button, Chip, Grid, CircularProgress, Alert, Divider, Paper, Avatar } from '@mui/material';
+import { Container, Typography, Box, Button, Chip, CircularProgress, Alert, Divider, Paper, Avatar } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -240,13 +240,13 @@ export default function PostPage() {
         <Box sx={{ bgcolor: 'grey.50', py: 6 }}>
           <Container maxWidth="lg">
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, mb: 4 }}>Related Posts</Typography>
-            <Grid container spacing={3} alignItems="stretch">
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: '20px' }}>
               {post.relatedPosts.map((item) => (
-                <Grid item xs={12} sm={6} md={4} key={item._id} sx={{ display: 'flex' }}>
+                <Box key={item._id} sx={{ display: 'flex' }}>
                   <PostCard post={item} />
-                </Grid>
+                </Box>
               ))}
-            </Grid>
+            </Box>
           </Container>
         </Box>
       )}
