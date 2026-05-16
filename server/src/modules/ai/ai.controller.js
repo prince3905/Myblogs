@@ -213,7 +213,7 @@ function robustJsonParse(text) {
 
 async function generateAIContent(req, res) {
   try {
-    const { title, model, length, tone, command } = req.body;
+    const { title, model, length, tone, language, command } = req.body;
     if (!title) {
       return res.status(400).json({ message: 'Title is required' });
     }
@@ -232,22 +232,37 @@ async function generateAIContent(req, res) {
       long:   '5-6 sections with 2-3 paragraphs each, plus a bullet list and FAQ with 2-3 Q&A. Total ~800-1200 words.'
     };
 
-    const systemPrompt = `You are a blog writer for Digital Home — a universal information platform like TechCrunch meets The Verge. Current year: 2026. Your audience is curious learners and information seekers, NOT just developers.
+    const langMap = {
+      hinglish: 'Write in Hinglish (Hindi in Latin script, conversational, like friends chat). Use simple Hinglish throughout. Key terms in English are fine.',
+      hindi: 'Write in Hindi (Devanagari script). Pure Hindi with simple wording.',
+      english: 'Write in English. Professional but conversational tone.',
+    };
+
+    const langInstr = langMap[language] || langMap.hinglish;
+
+    const systemPrompt = `You are a blog writer for Digital Home — a universal information platform like TechCrunch meets The Verge. Current year: 2026. Your audience is curious learners and information seekers in India.
+
+**IMPORTANT - TRENDING TOPICS:** The topic "${title}" must be written as a highly trending, SEO-optimized article for Indian audience. Research and include trending keywords for Google India. Use the main keyword in the first paragraph, title, and at least one H2 heading.
+
+**LANGUAGE: ${langInstr}**
 
 Return ONLY valid JSON. content field MUST be a single STRING (not an object) using ## for headings and - for lists.
 - No markdown, no backticks, no extra text.
 - STRICTLY NO codes like "Frequ01", "interru01", "Q1", or any alphanumeric codes inside content.
 - content: The FULL blog post using ## for section headings, - for bullet items, blank lines between sections.
 - slug: lowercase hyphenated keywords
-- keywords: array of 5-8 tag strings
-- summary: exactly 2 sentences
+- keywords: array of 5-8 trending tag strings for Google India
+- summary: exactly 2 sentences (in the same language as the post)
 - imageTag: single hyphenated keyword for stock photo (e.g. "workspace-setup")
 - imageKeywords: comma-separated search-optimized words for stock photo (e.g. "bitcoin,investment,india", never generic)
 
 CONTENT STRUCTURE (Mandatory):
-- Title ke baad seedha content mat start karo. Pehle 1 hook line (attention-grabbing), then ## Table of Contents (bullet list of headings), then ## Introduction.
-- Headings: ## for main, ### for sub/FAQ
+- Start with a hook question or surprising stat to grab attention.
 - ## Table of Contents — bullet list of all major h2 headings only (short 2-4 word labels)
+- ## Introduction — set context and promise value
+- Short, scannable paragraphs (max 3-4 sentences per paragraph) to increase Dwell Time.
+- Use bullet points, bold key phrases, and data tables wherever possible.
+- Headings: ## for main, ### for sub/FAQ
 - NO putting sentences in double quotes unless it's an actual citation.
 - Content natural aur human-like hona chahiye. Robot jaisa mat likho.
 
@@ -260,10 +275,10 @@ WRITING STYLE (Write like a knowledgeable peer, not a textbook):
 - Bold key concepts with ** like **Oxide engine** or **23 minutes**
 
 PARAGRAPH RULES (Critical for mobile):
-- **Har paragraph 2-3 lines ka hona chahiye, zyada se zyada 4 lines.** Koi bhi paragraph 4 lines se bada nahi hona chahiye.
+- Har paragraph 2-3 lines ka hona chahiye, zyada se zyada 4 lines. Koi bhi paragraph 4 lines se bada nahi hona chahiye.
 - Each paragraph says ONE thing clearly, then stops. Do not cram multiple ideas.
 - Har 100-150 words ke baad visual break — bullet points, bold text, ya subheading.
-- **Bullet points ka zyada se zyada use karo** — lists with bold labels like "- **Label:** Description".
+- Bullet points ka zyada se zyada use karo — lists with bold labels like "- **Label:** Description".
 - Beech-beech mein **bold keywords** ka use karo taake reader ki aankhein thakein nahi.
 - Har section mein 2-3 paragraphs ka explanation dalo. Ek line likh ke mat chhoro.
 - Real examples, use-cases, ya scenarios add karo jo reader ko value de.

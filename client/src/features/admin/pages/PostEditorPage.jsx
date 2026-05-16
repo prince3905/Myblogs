@@ -36,6 +36,7 @@ export default function PostEditorPage() {
   const [aiModel, setAiModel] = useState('llama3.2:1b');
   const [aiLength, setAiLength] = useState('medium');
   const [aiTone, setAiTone] = useState('informative');
+  const [aiLanguage, setAiLanguage] = useState('hinglish');
   const [aiCommand, setAiCommand] = useState('');
   const isEdit = Boolean(id);
 
@@ -70,7 +71,7 @@ export default function PostEditorPage() {
     try {
       const data = await request('/api/ai/generate', {
         method: 'POST',
-        body: JSON.stringify({ title: form.title, model: aiModel, length: aiLength, tone: aiTone, command: aiCommand })
+        body: JSON.stringify({ title: form.title, model: aiModel, length: aiLength, tone: aiTone, language: aiLanguage, command: aiCommand })
       });
       const title = form.title;
       const plainText = stripHtml(data.content || '');
@@ -181,6 +182,14 @@ export default function PostEditorPage() {
               </Box>
 
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
+                <FormControl size="small" sx={{ minWidth: 100 }}>
+                  <InputLabel>Language</InputLabel>
+                  <Select value={aiLanguage} label="Language" onChange={(e) => setAiLanguage(e.target.value)}>
+                    <MenuItem value="hinglish">Hinglish 🔥</MenuItem>
+                    <MenuItem value="hindi">Hindi</MenuItem>
+                    <MenuItem value="english">English</MenuItem>
+                  </Select>
+                </FormControl>
                 <FormControl size="small" sx={{ minWidth: 120 }}>
                   <InputLabel>Tone</InputLabel>
                   <Select
