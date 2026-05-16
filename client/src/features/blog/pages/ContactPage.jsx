@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Container, Typography, Box, Paper, TextField, Button, Alert, Grid, Avatar } from '@mui/material';
+import { Container, Typography, Box, Paper, TextField, Button, Alert, Avatar } from '@mui/material';
 import { Email, LocationOn, Send, Schedule } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
@@ -54,65 +54,56 @@ export default function ContactPage() {
           </Typography>
         </Box>
 
-        <Grid container spacing={{ xs: 4, md: 8 }} alignItems="flex-start">
-          {/* Form */}
-          <Grid item xs={12} md={7}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: { xs: 3, md: 5 },
-                borderRadius: 4,
-                border: '1px solid',
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, display: { xs: 'block', md: 'none' } }}>
-                Send us a Message
-              </Typography>
-              <form onSubmit={handleSubmit}>
-                <Grid container spacing={2.5}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField fullWidth label="Your Name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField fullWidth label="Email Address" type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField fullWidth label="Subject" required value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField fullWidth label="Your Message" multiline rows={5} required value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
-                  </Grid>
-                </Grid>
-
-                {error ? <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>{error}</Alert> : null}
-                {success ? <Alert severity="success" sx={{ mt: 2, borderRadius: 2 }}>{success}</Alert> : null}
-
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  disabled={submitting}
-                  endIcon={<Send />}
-                  sx={{ mt: 3, fontWeight: 600, px: 5, py: 1.4, borderRadius: 2, fontSize: '0.95rem' }}
-                >
-                  {submitting ? 'Sending...' : 'Send Message'}
-                </Button>
-              </form>
-            </Paper>
-          </Grid>
-
-          {/* Info */}
-          <Grid item xs={12} md={5}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <Box sx={{ display: { xs: 'none', md: 'block' }, mb: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>Contact Information</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Choose the most convenient way to reach us.
-                </Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '7fr 5fr' }, gap: { xs: 4, md: 8 }, alignItems: 'flex-start' }}>
+          {/* Form Column */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 5 },
+              borderRadius: 4,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+            }}
+          >
+            <form onSubmit={handleSubmit}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
+                <TextField fullWidth label="Your Name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+                <TextField fullWidth label="Email Address" type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                  <TextField fullWidth label="Subject" required value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} />
+                </Box>
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                  <TextField fullWidth label="Your Message" multiline rows={5} required value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
+                </Box>
               </Box>
 
+              {error ? <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>{error}</Alert> : null}
+              {success ? <Alert severity="success" sx={{ mt: 2, borderRadius: 2 }}>{success}</Alert> : null}
+
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={submitting}
+                endIcon={<Send />}
+                sx={{ mt: 3, fontWeight: 600, px: 5, py: 1.4, borderRadius: 2, fontSize: '0.95rem' }}
+              >
+                {submitting ? 'Sending...' : 'Send Message'}
+              </Button>
+            </form>
+          </Paper>
+
+          {/* Info Column */}
+          <Box>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>Contact Information</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Choose the most convenient way to reach us.
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
               <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3.5 }, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 2.5, alignItems: 'center' }}>
                 <Avatar sx={{ bgcolor: 'primary.main', width: 44, height: 44 }}>
                   <Email />
@@ -143,8 +134,8 @@ export default function ContactPage() {
                 </Box>
               </Paper>
             </Box>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Box>
     </Layout>
   );
