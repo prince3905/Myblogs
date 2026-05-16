@@ -251,9 +251,9 @@ export default function Layout({ children }) {
       
       <BreadcrumbsNav />
       
-      <Box sx={{ flex: 1, py: { xs: 1.5, md: 2 }, px: { xs: 0, md: 2 } }}>
+      <Container maxWidth="lg" sx={{ flex: 1, py: { xs: 1.5, md: 2 } }}>
         {children}
-      </Box>
+      </Container>
       
       <Box 
         component="footer" 

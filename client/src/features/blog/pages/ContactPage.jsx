@@ -81,7 +81,7 @@ export default function ContactPage() {
           <Grid item xs={12} md={5}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {[
-                { icon: <Email />, title: 'Email', desc: 'hello@digitalhome.blog' },
+                { icon: <Email />, title: 'Email', desc: 'coolfire.prince0+blogs@gmail.com' },
                 { icon: <LocationOn />, title: 'Location', desc: 'Remote — Available Worldwide' },
               ].map(item => (
                 <Paper key={item.title} elevation={0} sx={{ p: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 2.5 }}>
