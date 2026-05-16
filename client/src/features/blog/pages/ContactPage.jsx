@@ -47,7 +47,7 @@ export default function ContactPage() {
           </Typography>
         </Box>
 
-        <Grid container spacing={6} alignItems="flex-start">
+        <Grid container spacing={{ xs: 4, md: 6 }} alignItems="flex-start">
           {/* Form */}
           <Grid item xs={12} md={7}>
             <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, borderRadius: 4, border: '1px solid', borderColor: 'divider' }}>
@@ -84,8 +84,8 @@ export default function ContactPage() {
                 { icon: <Email />, title: 'Email', desc: 'coolfire.prince0+blogs@gmail.com' },
                 { icon: <LocationOn />, title: 'Location', desc: 'Remote — Available Worldwide' },
               ].map(item => (
-                <Paper key={item.title} elevation={0} sx={{ p: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 2.5 }}>
-                  <Box sx={{ color: 'primary.main', mt: 0.3 }}>{item.icon}</Box>
+                <Paper key={item.title} elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: 2.5 }}>
+                  <Box sx={{ color: 'primary.main', mt: 0.3, flexShrink: 0 }}>{item.icon}</Box>
                   <Box>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{item.title}</Typography>
                     <Typography variant="body2" color="text.secondary">{item.desc}</Typography>
@@ -93,7 +93,7 @@ export default function ContactPage() {
                 </Paper>
               ))}
 
-              <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+              <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Response Time</Typography>
                 <Typography variant="body2" color="text.secondary">
                   We typically respond within 24-48 hours during business days.
