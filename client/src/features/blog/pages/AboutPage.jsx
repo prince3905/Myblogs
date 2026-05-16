@@ -1,4 +1,4 @@
-import { Container, Typography, Box, Paper, Grid } from '@mui/material';
+import { Container, Typography, Box, Paper } from '@mui/material';
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
 
@@ -72,17 +72,15 @@ export default function AboutPage() {
         </Box>
 
         {/* What we cover */}
-        <Typography variant="h3" sx={{ fontWeight: 700, mb: 4 }}>What We Cover</Typography>
-        <Grid container spacing={3} sx={{ mb: 8 }}>
+        <Typography variant="h3" sx={{ fontWeight: 700, mb: 4, fontSize: { xs: '1.5rem', md: '2.125rem' } }}>What We Cover</Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }, gap: '20px', mb: 8 }}>
           {categories.map(item => (
-            <Grid item xs={12} sm={6} key={item.title}>
-              <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>{item.title}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>{item.desc}</Typography>
-              </Paper>
-            </Grid>
+            <Paper key={item.title} elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5, fontSize: { xs: '0.95rem', md: '1.1rem' } }}>{item.title}</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>{item.desc}</Typography>
+            </Paper>
           ))}
-        </Grid>
+        </Box>
 
         {/* Mission */}
         <Paper elevation={0} sx={{ p: { xs: 4, md: 6 }, borderRadius: 4, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
