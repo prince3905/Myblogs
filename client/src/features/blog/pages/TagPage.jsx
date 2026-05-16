@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { Container, Typography, Box, Grid, Chip, CircularProgress, Alert, Button } from '@mui/material';
+import { Container, Typography, Box, Chip, CircularProgress, Alert, Button } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -36,13 +36,13 @@ export default function TagPage() {
             <Button component={Link} to="/blog" variant="outlined" sx={{ mt: 2, fontWeight: 600 }}>Browse all posts</Button>
           </Box>
         ) : (
-          <Grid container spacing={3}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: '20px' }}>
             {posts.map(post => (
-              <Grid item xs={12} sm={6} md={4} key={post._id}>
+              <Box key={post._id} sx={{ display: 'flex' }}>
                 <PostCard post={post} />
-              </Grid>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         )}
       </Box>
     </Layout>
