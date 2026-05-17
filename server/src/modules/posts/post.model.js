@@ -21,7 +21,16 @@ const blogPostSchema = new mongoose.Schema(
     sponsored: { type: Boolean, default: false },
     affiliateDisclosure: { type: Boolean, default: false },
     rating: { type: Number, min: 1, max: 5, default: null },
-    videoUrl: { type: String, trim: true, default: '' }
+    videoUrl: { type: String, trim: true, default: '' },
+    translations: {
+      en: {
+        title: { type: String, default: '' },
+        content: { type: String, default: '' },
+        excerpt: { type: String, default: '' },
+        seoTitle: { type: String, default: '' },
+        seoDescription: { type: String, default: '' }
+      }
+    }
   },
   { timestamps: true }
 );

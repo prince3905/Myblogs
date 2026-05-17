@@ -111,13 +111,13 @@ async function listAdminPosts(req, res) {
 }
 
 async function getPostBySlug(req, res) {
-  const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' });
+  const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' }).lean();
   if (!post) {
     return res.status(404).json({ message: 'Post not found' });
   }
 
-  post.views = (post.views || 0) + 1;
-  await post.save();
+  // Increment views (fire-and-forget, no await needed for response)
+  BlogPost.updateOne({ _id: post._id }, { $inc: { views: 1 } }).catch(() => {});
 
   const relatedPosts = await BlogPost.find({
     _id: { $ne: post._id },
@@ -126,7 +126,18 @@ async function getPostBySlug(req, res) {
   })
     .sort({ publishedAt: -1 })
     .limit(3)
-    .select('title slug category featuredImage readingTime publishedAt');
+    .select('title slug category featuredImage readingTime publishedAt')
+    .lean();
+
+  // Geo-translate for non-Indian visitors
+  if (req.needsTranslation) {
+    const { translatePost } = require('../../shared/middleware/geoTranslate');
+    const [translatedPost, translatedRelated] = await Promise.all([
+      translatePost(post, req),
+      Promise.all(relatedPosts.map(rp => translatePost(rp, req)))
+    ]);
+    return res.json({ post: translatedPost, relatedPosts: translatedRelated });
+  }
 
   return res.json({ post, relatedPosts });
 }

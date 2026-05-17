@@ -16,6 +16,7 @@ const contactRoutes = require('./modules/contact/contact.routes');
 const aiRoutes = require('./modules/ai/ai.routes');
 const pexelsRoutes = require('./modules/pexels/pexels.routes');
 const adRoutes = require('./modules/ads/ad.routes');
+const { geoTranslateMiddleware } = require('./shared/middleware/geoTranslate');
 const { sitemap, robots, rssFeed } = require('./modules/posts/post.controller');
 
 const app = express();
@@ -30,6 +31,9 @@ app.use(requestLogger);
 app.get('/api/health', (req, res) => {
   res.json({ success: true, timestamp: new Date().toISOString() });
 });
+
+// Geo-translate middleware (detects country & translates for non-IN visitors)
+app.use('/api', geoTranslateMiddleware);
 
 // API Routes
 app.use('/api/auth', authRoutes);

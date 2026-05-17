@@ -308,8 +308,32 @@ GENERIC PHRASES TO AVOID:
 
     const tokenBudget = length === 'short' ? 2048 : length === 'long' ? 4096 : 3072;
 
+    const trendingCategories = [
+      'AI & automation tools for Indian businesses',
+      'Latest smartphone launches & budget phone comparison',
+      'Government schemes & digital India initiatives',
+      'Online education & career tips in 2026',
+      'Health & fitness trends in India',
+      'Stock market, crypto & investment tips for beginners',
+      'Electric vehicles & sustainable living in India',
+      'YouTube/Twitch content creation & monetization',
+      'Travel & weekend getaways from Indian cities',
+      'Startup ecosystem & freelancing opportunities in India',
+      'Cybersecurity tips for Indian internet users',
+      'Food, recipes & restaurant reviews in India',
+      'Fashion & lifestyle trends 2026',
+      'Real estate & home buying tips in Indian cities',
+      'Fitness equipment, yoga & mental health trends'
+    ];
+    const randomCategory = trendingCategories[Math.floor(Math.random() * trendingCategories.length)];
+    const dateSeed = Date.now().toString();
+
     const userPrompt = autoTrending
-      ? `Pick the MOST TRENDING, HIGH-TRAFFIC topic in India right now (2026) and write a ${toneInstr.toLowerCase()} blog post about it. Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr} Return ONLY JSON. The "content" value must be a STRING (not an object or array).`
+      ? `IMPORTANT: Pick a DIFFERENT trending topic than last time. Do NOT repeat "AI se paise kaise kamaye" or similar money-making topics every time. Choose from trending niche: "${randomCategory}".
+      
+Write a ${toneInstr.toLowerCase()} blog post about a UNIQUE trending topic from the "${randomCategory}" category that Indians are searching for in 2026. Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr} 
+
+Seed: ${dateSeed} — use this to randomize. Return ONLY JSON. The "content" value must be a STRING (not an object or array).`
       : `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}"
 
 Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr}
