@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Box, Container, Typography, Button, Card, CardContent,
   Paper, Chip, IconButton
@@ -7,6 +7,8 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import StarsIcon from '@mui/icons-material/Stars';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import CloseFullscreenIcon from '@mui/icons-material/CloseFullscreen';
 import Layout from '../../blog/components/Layout';
 import Seo from '../../blog/components/Seo';
 
@@ -142,12 +144,12 @@ function ShadowGame() {
     if (animal.name === current.name) {
       setScore(s => s + 1);
       setFeedback('correct');
-      playSound(true);
+      playSuccess();
       setRevealed(true);
       setLocked(true);
     } else {
       setFeedback('wrong');
-      playSound(false);
+      playError();
       setTimeout(() => setFeedback(null), 1200);
     }
   }, [current, locked]);
@@ -311,32 +313,61 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function playSound(success) {
+function playHappyVoice() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    if (success) {
-      osc.frequency.setValueAtTime(523, ctx.currentTime);
-      osc.frequency.setValueAtTime(659, ctx.currentTime + 0.12);
-      osc.frequency.setValueAtTime(784, ctx.currentTime + 0.24);
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.45);
-    } else {
-      osc.frequency.setValueAtTime(330, ctx.currentTime);
-      osc.frequency.setValueAtTime(262, ctx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.12, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.3);
-    }
+    const t = ctx.currentTime;
+    [523, 659, 784, 1047].forEach((freq, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, t + i * 0.1);
+      g.gain.setValueAtTime(0.13, t + i * 0.1);
+      g.gain.exponentialRampToValueAtTime(0.01, t + i * 0.1 + 0.2);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t + i * 0.1); o.stop(t + i * 0.1 + 0.2);
+    });
+    const o2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    o2.type = 'sawtooth';
+    o2.frequency.setValueAtTime(600, t + 0.1);
+    o2.frequency.linearRampToValueAtTime(1200, t + 0.35);
+    g2.gain.setValueAtTime(0.05, t + 0.1);
+    g2.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.start(t + 0.1); o2.stop(t + 0.5);
   } catch {}
 }
+
+function playSadVoice() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(440, t);
+    o.frequency.exponentialRampToValueAtTime(300, t + 0.15);
+    o.frequency.exponentialRampToValueAtTime(220, t + 0.35);
+    g.gain.setValueAtTime(0.1, t);
+    g.gain.linearRampToValueAtTime(0.06, t + 0.2);
+    g.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + 0.5);
+    const o2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    o2.type = 'sine';
+    o2.frequency.setValueAtTime(550, t + 0.05);
+    o2.frequency.exponentialRampToValueAtTime(350, t + 0.2);
+    g2.gain.setValueAtTime(0.04, t + 0.05);
+    g2.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.start(t + 0.05); o2.stop(t + 0.4);
+  } catch {}
+}
+
+function playSuccess() { playHappyVoice(); }
+function playError() { playSadVoice(); }
 
 function AlphabetQuiz() {
   const [round, setRound] = useState(0);
@@ -366,11 +397,11 @@ function AlphabetQuiz() {
     if (item.letter === current.letter) {
       setScore(s => s + 1);
       setFeedback('correct');
-      playSound(true);
+      playSuccess();
       setLocked(true);
     } else {
       setFeedback('wrong');
-      playSound(false);
+      playError();
       setTimeout(() => setFeedback(null), 1200);
     }
   }, [current, locked]);
@@ -528,12 +559,12 @@ function MathBooster() {
       setStreak(s => s + 1);
       setScore(s => s + 10 + (streak >= 2 ? 5 : 0));
       setFeedback('correct');
-      playSound(true);
+      playSuccess();
       setLocked(true);
     } else {
       setStreak(0);
       setFeedback('wrong');
-      playSound(false);
+      playError();
       setTimeout(() => setFeedback(null), 1200);
     }
   }, [problem, locked, streak]);
@@ -689,94 +720,176 @@ export default function GamesPage() {
   const [alphabetKey, setAlphabetKey] = useState(0);
   const [mathKey, setMathKey] = useState(0);
   const [shadowKey, setShadowKey] = useState(0);
+  const [fs, setFs] = useState(false);
+
+  const enterFs = useCallback(() => {
+    setFs(true);
+    document.body.style.overflow = 'hidden';
+    try { document.documentElement.requestFullscreen?.(); } catch {}
+  }, []);
+
+  const exitFs = useCallback(() => {
+    setFs(false);
+    document.body.style.overflow = '';
+    try { document.exitFullscreen?.(); } catch {}
+  }, []);
+
+  useEffect(() => {
+    const handler = () => { if (!document.fullscreenElement) { setFs(false); document.body.style.overflow = ''; } };
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const gameContent = (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: fs ? 6 : 5 }}>
+      <section aria-label="Alphabet Matching Quiz Game">
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+          <Typography variant={fs ? "h4" : "h5"} component="h2" fontWeight={800} sx={{ color: '#7C3AED' }}>
+            🔤 Alphabet Matching Quiz
+          </Typography>
+          {!fs && <ResetButton onReset={() => setAlphabetKey(k => k + 1)} />}
+        </Box>
+        {!fs && <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>Match the letter to the correct picture! Tap the right emoji to earn points.</Typography>}
+        <Box key={alphabetKey}>
+          <AlphabetQuiz />
+        </Box>
+      </section>
+
+      <section aria-label="Kids Math Booster Game">
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+          <Typography variant={fs ? "h4" : "h5"} component="h2" fontWeight={800} sx={{ color: '#059669' }}>
+            ➕ Kids Math Booster
+          </Typography>
+          {!fs && <ResetButton onReset={() => setMathKey(k => k + 1)} />}
+        </Box>
+        {!fs && <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>Solve fun addition & subtraction problems. Get streak bonuses for consecutive correct answers!</Typography>}
+        <Box key={mathKey}>
+          <MathBooster />
+        </Box>
+      </section>
+
+      <section aria-label="Guess the Animal Shadow and Sound Game">
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+          <Typography variant={fs ? "h4" : "h5"} component="h2" fontWeight={800} sx={{ color: '#D97706' }}>
+            👀 Guess the Animal Shadow & Sound
+          </Typography>
+          {!fs && <ResetButton onReset={() => setShadowKey(k => k + 1)} />}
+        </Box>
+        {!fs && <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>Look at the shadow silhouette, play the animal sound, and guess who it is! Tap the right answer to reveal the animal.</Typography>}
+        <Box key={shadowKey}>
+          <ShadowGame />
+        </Box>
+      </section>
+    </Box>
+  );
 
   return (
-    <Layout>
-      <Seo
-        title="Free Online Educational Games for Kids & Kindergarten - Digital Home"
-        description="Fun learning games for kids: alphabet matching (A for Apple), math booster (addition & subtraction), and guess the animal shadow & sound game. Play free online educational games for kindergarten children."
-        keywords="free online educational games for kids, kindergarten learning games, alphabet matching game, A for Apple, kids math booster, addition subtraction game, guess the animal shadow, animal sounds game, preschool learning"
-        jsonLd={seoSchema}
-      />
-      <Box sx={{ py: { xs: 2, md: 3 } }}>
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Typography
-            variant="h3"
-            fontWeight={900}
-            sx={{
-              fontSize: { xs: '1.8rem', md: '2.8rem' },
-              background: 'linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              mb: 1,
-            }}
-          >
-            🎮 Kids Educational Game Zone
-          </Typography>
-          <Typography variant="h6" sx={{ color: '#6B7280', fontWeight: 500, fontSize: { xs: '1rem', md: '1.2rem' } }}>
-            Learn ABCs, Math & Animals the fun way! 🚀
-          </Typography>
+    <>
+      {fs ? (
+        <Box sx={{
+          position: 'fixed', inset: 0, zIndex: 999999,
+          bgcolor: '#0f172a',
+          overflow: 'auto',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          <Box sx={{
+            position: 'sticky', top: 0, zIndex: 10, px: 2, py: 1,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            bgcolor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <Typography variant="h6" fontWeight={800} sx={{ color: '#ffffff', display: 'flex', alignItems: 'center', gap: 1 }}>
+              🎮 Full Screen Mode
+            </Typography>
+            <IconButton
+              onClick={exitFs}
+              aria-label="Exit full screen mode"
+              sx={{ color: '#ffffff', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}
+            >
+              <CloseFullscreenIcon />
+            </IconButton>
+          </Box>
+          <Box sx={{ flex: 1, px: { xs: 2, md: 6 }, py: { xs: 3, md: 4 }, maxWidth: 900, mx: 'auto', width: '100%' }}>
+            {gameContent}
+          </Box>
+          <Box sx={{ textAlign: 'center', pb: 3 }}>
+            <Button
+              onClick={exitFs}
+              variant="outlined"
+              startIcon={<CloseFullscreenIcon />}
+              sx={{ borderRadius: 6, color: '#94A3B8', borderColor: '#475569', textTransform: 'none', fontWeight: 600, '&:hover': { borderColor: '#94A3B8' } }}
+            >
+              Exit Full Screen (Esc)
+            </Button>
+          </Box>
         </Box>
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          <section aria-label="Alphabet Matching Quiz Game">
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#7C3AED' }}>
-                🔤 Alphabet Matching Quiz
+      ) : (
+        <Layout>
+          <Seo
+            title="Free Online Educational Games for Kids & Kindergarten - Digital Home"
+            description="Fun learning games for kids: alphabet matching (A for Apple), math booster (addition & subtraction), and guess the animal shadow & sound game. Play free online educational games for kindergarten children."
+            keywords="free online educational games for kids, kindergarten learning games, alphabet matching game, A for Apple, kids math booster, addition subtraction game, guess the animal shadow, animal sounds game, preschool learning"
+            jsonLd={seoSchema}
+          />
+          <Box sx={{ py: { xs: 2, md: 3 } }}>
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Typography
+                variant="h3"
+                fontWeight={900}
+                sx={{
+                  fontSize: { xs: '1.8rem', md: '2.8rem' },
+                  background: 'linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  mb: 1,
+                }}
+              >
+                🎮 Kids Educational Game Zone
               </Typography>
-              <ResetButton onReset={() => setAlphabetKey(k => k + 1)} />
-            </Box>
-            <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
-              Match the letter to the correct picture! Tap the right emoji to earn points.
-            </Typography>
-            <Box key={alphabetKey}>
-              <AlphabetQuiz />
-            </Box>
-          </section>
-
-          <section aria-label="Kids Math Booster Game">
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#059669' }}>
-                ➕ Kids Math Booster
+              <Typography variant="h6" sx={{ color: '#6B7280', fontWeight: 500, fontSize: { xs: '1rem', md: '1.2rem' } }}>
+                Learn ABCs, Math & Animals the fun way! 🚀
               </Typography>
-              <ResetButton onReset={() => setMathKey(k => k + 1)} />
+              <Button
+                onClick={enterFs}
+                variant="contained"
+                size="large"
+                startIcon={<FullscreenIcon />}
+                aria-label="Play games in full screen mode"
+                sx={{
+                  mt: 2, borderRadius: 6, px: 4, py: 1.2,
+                  fontSize: '1.1rem', fontWeight: 800,
+                  textTransform: 'none',
+                  background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                  boxShadow: '0 8px 24px rgba(139, 92, 246, 0.3)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #7C3AED, #DB2777)',
+                    transform: 'scale(1.03)',
+                    boxShadow: '0 12px 32px rgba(139, 92, 246, 0.4)',
+                  },
+                  transition: 'all 0.3s ease',
+                  animation: 'pulse 2s infinite',
+                }}
+              >
+                🎮 Full Screen Mode
+              </Button>
             </Box>
-            <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
-              Solve fun addition & subtraction problems. Get streak bonuses for consecutive correct answers!
-            </Typography>
-            <Box key={mathKey}>
-              <MathBooster />
-            </Box>
-          </section>
 
-          <section aria-label="Guess the Animal Shadow and Sound Game">
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#D97706' }}>
-                👀 Guess the Animal Shadow & Sound
+            {gameContent}
+
+            <Paper sx={{ mt: 5, p: 3, borderRadius: 4, bgcolor: '#FFFBEB', border: '1px solid #FDE68A' }}>
+              <Typography variant="h6" fontWeight={700} sx={{ color: '#92400E', mb: 1 }}>
+                🧸 Why Educational Games for Kids?
               </Typography>
-              <ResetButton onReset={() => setShadowKey(k => k + 1)} />
-            </Box>
-            <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
-              Look at the shadow silhouette, play the animal sound, and guess who it is! Tap the right answer to reveal the animal.
-            </Typography>
-            <Box key={shadowKey}>
-              <ShadowGame />
-            </Box>
-          </section>
-        </Box>
-
-        <Paper sx={{ mt: 5, p: 3, borderRadius: 4, bgcolor: '#FFFBEB', border: '1px solid #FDE68A' }}>
-          <Typography variant="h6" fontWeight={700} sx={{ color: '#92400E', mb: 1 }}>
-            🧸 Why Educational Games for Kids?
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#78350F' }}>
-            Free online educational games help kindergarten and preschool children develop essential skills 
-            like letter recognition, counting, problem-solving, and animal identification in a fun, interactive way. 
-            Our games use bright colors, emojis, synthesized sounds, and positive reinforcement to keep young learners 
-            engaged. No downloads, no sign-ups — just pure learning fun!
-          </Typography>
-        </Paper>
-      </Box>
-    </Layout>
+              <Typography variant="body2" sx={{ color: '#78350F' }}>
+                Free online educational games help kindergarten and preschool children develop essential skills 
+                like letter recognition, counting, problem-solving, and animal identification in a fun, interactive way. 
+                Our games use bright colors, emojis, synthesized sounds, and positive reinforcement to keep young learners 
+                engaged. No downloads, no sign-ups — just pure learning fun!
+              </Typography>
+            </Paper>
+          </Box>
+        </Layout>
+      )}
+    </>
   );
 }
