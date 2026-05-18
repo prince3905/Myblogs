@@ -1,11 +1,12 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   Box, Container, Typography, Button, Card, CardContent,
-  Paper, Chip
+  Paper, Chip, IconButton
 } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import StarsIcon from '@mui/icons-material/Stars';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import Layout from '../../blog/components/Layout';
 import Seo from '../../blog/components/Seo';
 
@@ -37,6 +38,265 @@ const alphabetData = [
   { letter: 'Y', word: 'Yacht', emoji: '⛵' },
   { letter: 'Z', word: 'Zebra', emoji: '🦓' },
 ];
+
+const animalData = [
+  { name: 'Lion', emoji: '🦁', category: 'bigCat' },
+  { name: 'Tiger', emoji: '🐯', category: 'bigCat' },
+  { name: 'Elephant', emoji: '🐘', category: 'giant' },
+  { name: 'Bear', emoji: '🐻', category: 'giant' },
+  { name: 'Dog', emoji: '🐕', category: 'pet' },
+  { name: 'Cat', emoji: '🐱', category: 'pet' },
+  { name: 'Monkey', emoji: '🐵', category: 'trickster' },
+  { name: 'Cow', emoji: '🐄', category: 'farm' },
+  { name: 'Horse', emoji: '🐴', category: 'farm' },
+  { name: 'Pig', emoji: '🐷', category: 'farm' },
+  { name: 'Sheep', emoji: '🐑', category: 'farm' },
+  { name: 'Duck', emoji: '🦆', category: 'bird' },
+  { name: 'Owl', emoji: '🦉', category: 'bird' },
+  { name: 'Frog', emoji: '🐸', category: 'trickster' },
+  { name: 'Giraffe', emoji: '🦒', category: 'giant' },
+  { name: 'Zebra', emoji: '🦓', category: 'giant' },
+  { name: 'Rabbit', emoji: '🐰', category: 'pet' },
+  { name: 'Fox', emoji: '🦊', category: 'trickster' },
+];
+
+function playAnimalSound(animal) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+
+    const t = ctx.currentTime;
+    const cat = animal.category;
+    if (cat === 'bigCat') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(70, t);
+      osc.frequency.exponentialRampToValueAtTime(130, t + 0.25);
+      osc.frequency.exponentialRampToValueAtTime(90, t + 0.4);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.55);
+      osc.start(t); osc.stop(t + 0.55);
+    } else if (cat === 'giant') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(110, t);
+      osc.frequency.setValueAtTime(160, t + 0.15);
+      osc.frequency.setValueAtTime(120, t + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+      osc.start(t); osc.stop(t + 0.5);
+    } else if (cat === 'pet') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, t);
+      osc.frequency.exponentialRampToValueAtTime(600, t + 0.1);
+      osc.frequency.exponentialRampToValueAtTime(450, t + 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+      osc.start(t); osc.stop(t + 0.3);
+    } else if (cat === 'farm') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, t);
+      osc.frequency.linearRampToValueAtTime(220, t + 0.2);
+      osc.frequency.linearRampToValueAtTime(190, t + 0.35);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.45);
+      osc.start(t); osc.stop(t + 0.45);
+    } else if (cat === 'bird') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, t);
+      osc.frequency.setValueAtTime(900, t + 0.08);
+      osc.frequency.setValueAtTime(700, t + 0.16);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+      osc.start(t); osc.stop(t + 0.25);
+    } else {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(250, t);
+      osc.frequency.linearRampToValueAtTime(350, t + 0.12);
+      osc.frequency.linearRampToValueAtTime(280, t + 0.25);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+      osc.start(t); osc.stop(t + 0.35);
+    }
+  } catch {}
+}
+
+function ShadowGame() {
+  const [round, setRound] = useState(0);
+  const [score, setScore] = useState(0);
+  const [feedback, setFeedback] = useState(null);
+  const [locked, setLocked] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const [current, setCurrent] = useState(() => pickRandom(animalData));
+
+  const others = animalData.filter(d => d.name !== current.name);
+  const wrong = shuffle(others).slice(0, 3);
+  const options = shuffle([current, ...wrong]);
+
+  const nextRound = useCallback(() => {
+    setRound(r => r + 1);
+    setCurrent(pickRandom(animalData));
+    setFeedback(null);
+    setRevealed(false);
+    setLocked(false);
+  }, []);
+
+  const handleAnswer = useCallback((animal) => {
+    if (locked) return;
+    if (animal.name === current.name) {
+      setScore(s => s + 1);
+      setFeedback('correct');
+      playSound(true);
+      setRevealed(true);
+      setLocked(true);
+    } else {
+      setFeedback('wrong');
+      playSound(false);
+      setTimeout(() => setFeedback(null), 1200);
+    }
+  }, [current, locked]);
+
+  return (
+    <Card sx={{
+      borderRadius: 6,
+      background: 'linear-gradient(135deg, #FEF9C3 0%, #FED7AA 100%)',
+      boxShadow: '0 8px 32px rgba(251, 146, 60, 0.15)',
+      overflow: 'visible',
+      position: 'relative',
+    }}>
+      <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#D97706', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <StarsIcon sx={{ color: '#FBBF24' }} /> Shadow & Sound
+          </Typography>
+          <Chip
+            icon={<EmojiEventsIcon />}
+            label={`Score: ${score}`}
+            sx={{ fontWeight: 700, fontSize: '1rem', bgcolor: '#FEF3C7', color: '#92400E', borderRadius: 4, px: 1 }}
+          />
+        </Box>
+
+        <Box sx={{ textAlign: 'center', py: 2 }}>
+          <Typography variant="body2" sx={{ color: '#6B7280', mb: 2, fontWeight: 500 }}>
+            Who hides behind the shadow? 👀
+          </Typography>
+
+          <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+            <Box sx={{
+              width: { xs: 160, md: 200 }, height: { xs: 160, md: 200 },
+              borderRadius: '50%', bgcolor: '#ffffff',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden', position: 'relative',
+            }}>
+              <Typography
+                sx={{
+                  fontSize: { xs: '5rem', md: '7rem' },
+                  lineHeight: 1,
+                  filter: revealed ? 'none' : 'brightness(0) contrast(1)',
+                  transition: 'filter 0.4s ease',
+                  animation: revealed ? 'puffIn 0.5s ease' : 'none',
+                }}
+                role="img"
+                aria-label={revealed ? current.name : 'Hidden animal shadow'}
+              >
+                {current.emoji}
+              </Typography>
+            </Box>
+
+            <IconButton
+              onClick={() => playAnimalSound(current)}
+              aria-label={`Play sound of ${current.name}`}
+              disabled={locked}
+              sx={{
+                position: 'absolute', bottom: -8, right: -8,
+                bgcolor: '#F59E0B', color: '#ffffff',
+                width: { xs: 48, md: 56 }, height: { xs: 48, md: 56 },
+                boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)',
+                '&:hover': { bgcolor: '#D97706', transform: 'scale(1.08)' },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <VolumeUpIcon sx={{ fontSize: { xs: '1.4rem', md: '1.7rem' } }} />
+            </IconButton>
+          </Box>
+
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, maxWidth: 480, mx: 'auto' }}>
+            {options.map((animal, i) => {
+              const label = String.fromCharCode(65 + i);
+              const isCorrect = animal.name === current.name;
+              let bg = '#ffffff', border = '#E5E7EB';
+              if (feedback === 'correct' && isCorrect) { bg = '#BBF7D0'; border = '#22C55E'; }
+              if (feedback === 'wrong' && isCorrect) { bg = '#FECACA'; border = '#EF4444'; }
+              return (
+                <Button
+                  key={animal.name}
+                  onClick={() => handleAnswer(animal)}
+                  disabled={locked}
+                  aria-label={`Option ${label}: ${animal.name}`}
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: 1,
+                    p: 1.5, borderRadius: 4, minHeight: 64,
+                    bgcolor: bg, color: '#1F2937',
+                    border: '2px solid', borderColor: border,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                    '&:hover': !locked ? {
+                      transform: 'translateY(-3px)',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                      borderColor: '#FBBF24',
+                      bgcolor: '#FFFBEB',
+                    } : {},
+                    transition: 'all 0.2s ease',
+                    textTransform: 'none',
+                    justifyContent: 'flex-start',
+                  }}
+                >
+                  <Typography variant="body2" fontWeight={800}
+                    sx={{ color: '#9CA3AF', minWidth: 24, fontSize: '0.85rem' }}>
+                    {label}.
+                  </Typography>
+                  <Typography sx={{ fontSize: '1.6rem', lineHeight: 1 }}>
+                    {animal.emoji}
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.9rem' }}>
+                    {animal.name}
+                  </Typography>
+                </Button>
+              );
+            })}
+          </Box>
+        </Box>
+
+        {feedback === 'correct' && (
+          <Box sx={{
+            textAlign: 'center', mt: 2, p: 2,
+            bgcolor: '#DCFCE7', borderRadius: 4,
+            animation: 'bounceIn 0.4s ease',
+          }}>
+            <Typography variant="h5" fontWeight={800} sx={{ color: '#16A34A' }}>
+              🎉 Correct! It's a {current.name}!
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={nextRound}
+              sx={{ mt: 1.5, borderRadius: 6, bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' }, textTransform: 'none', fontWeight: 700 }}
+            >
+              Next Animal →
+            </Button>
+          </Box>
+        )}
+
+        {feedback === 'wrong' && (
+          <Box sx={{
+            textAlign: 'center', mt: 2, p: 2,
+            bgcolor: '#FEF3C7', borderRadius: 4,
+            animation: 'shake 0.4s ease',
+          }}>
+            <Typography variant="h6" fontWeight={700} sx={{ color: '#D97706' }}>
+              ✨ Try again, you can do it!
+            </Typography>
+          </Box>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 function shuffle(a) {
   const arr = [...a];
@@ -418,9 +678,9 @@ const seoSchema = {
   '@context': 'https://schema.org',
   '@type': 'Game',
   name: 'Free Online Educational Games for Kids & Kindergarten',
-  description: 'Fun and interactive educational games for kids: Alphabet Matching Quiz (A for Apple) and Kids Math Booster (addition & subtraction). Play online free, no download needed.',
+  description: 'Fun and interactive educational games for kids: Alphabet Matching Quiz (A for Apple), Kids Math Booster (addition & subtraction), and Guess the Animal Shadow & Sound. Play online free, no download needed.',
   audience: { '@type': 'Audience', suggestedAge: '3-8 years' },
-  educationalRole: 'Alphabet recognition, basic arithmetic, counting skills',
+  educationalRole: 'Alphabet recognition, basic arithmetic, animal identification, sound recognition',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
   author: { '@type': 'Organization', name: 'Digital Home' },
 };
@@ -428,13 +688,14 @@ const seoSchema = {
 export default function GamesPage() {
   const [alphabetKey, setAlphabetKey] = useState(0);
   const [mathKey, setMathKey] = useState(0);
+  const [shadowKey, setShadowKey] = useState(0);
 
   return (
     <Layout>
       <Seo
         title="Free Online Educational Games for Kids & Kindergarten - Digital Home"
-        description="Fun learning games for kids: A for Apple alphabet matching quiz and math booster (addition & subtraction). Play free online educational games for kindergarten children."
-        keywords="free online educational games for kids, kindergarten learning games, alphabet matching game, A for Apple, kids math booster, addition subtraction game, preschool learning"
+        description="Fun learning games for kids: alphabet matching (A for Apple), math booster (addition & subtraction), and guess the animal shadow & sound game. Play free online educational games for kindergarten children."
+        keywords="free online educational games for kids, kindergarten learning games, alphabet matching game, A for Apple, kids math booster, addition subtraction game, guess the animal shadow, animal sounds game, preschool learning"
         jsonLd={seoSchema}
       />
       <Box sx={{ py: { xs: 2, md: 3 } }}>
@@ -453,7 +714,7 @@ export default function GamesPage() {
             🎮 Kids Educational Game Zone
           </Typography>
           <Typography variant="h6" sx={{ color: '#6B7280', fontWeight: 500, fontSize: { xs: '1rem', md: '1.2rem' } }}>
-            Learn ABCs & Math the fun way! 🚀
+            Learn ABCs, Math & Animals the fun way! 🚀
           </Typography>
         </Box>
 
@@ -487,6 +748,21 @@ export default function GamesPage() {
               <MathBooster />
             </Box>
           </section>
+
+          <section aria-label="Guess the Animal Shadow and Sound Game">
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+              <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#D97706' }}>
+                👀 Guess the Animal Shadow & Sound
+              </Typography>
+              <ResetButton onReset={() => setShadowKey(k => k + 1)} />
+            </Box>
+            <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
+              Look at the shadow silhouette, play the animal sound, and guess who it is! Tap the right answer to reveal the animal.
+            </Typography>
+            <Box key={shadowKey}>
+              <ShadowGame />
+            </Box>
+          </section>
         </Box>
 
         <Paper sx={{ mt: 5, p: 3, borderRadius: 4, bgcolor: '#FFFBEB', border: '1px solid #FDE68A' }}>
@@ -495,9 +771,9 @@ export default function GamesPage() {
           </Typography>
           <Typography variant="body2" sx={{ color: '#78350F' }}>
             Free online educational games help kindergarten and preschool children develop essential skills 
-            like letter recognition, counting, and problem-solving in a fun, interactive way. Our games use 
-            bright colors, emojis, and positive reinforcement to keep young learners engaged. No downloads, 
-            no sign-ups — just pure learning fun!
+            like letter recognition, counting, problem-solving, and animal identification in a fun, interactive way. 
+            Our games use bright colors, emojis, synthesized sounds, and positive reinforcement to keep young learners 
+            engaged. No downloads, no sign-ups — just pure learning fun!
           </Typography>
         </Paper>
       </Box>
