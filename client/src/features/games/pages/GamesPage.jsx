@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, createContext, useContext } from 'react';
 import {
-  Box, Container, Typography, Button, Card, CardContent,
+  Box, Typography, Button, Card, CardContent,
   Paper, Chip, IconButton
 } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -719,8 +719,6 @@ function ResetButton({ onReset }) {
   );
 }
 
-import { createContext, useContext } from 'react';
-
 const FullscreenCtx = createContext(null);
 
 function GameFullscreen({ children }) {
@@ -748,32 +746,40 @@ function GameFullscreen({ children }) {
     return (
       <Box sx={{
         position: 'fixed', inset: 0, zIndex: 999999,
-        bgcolor: '#0f172a', overflow: 'auto',
+        background: 'linear-gradient(135deg, #F0F9FF 0%, #FFF0F5 50%, #FEF3C7 100%)',
+        overflow: 'auto',
         display: 'flex', flexDirection: 'column',
       }}>
         <Box sx={{
-          position: 'sticky', top: 0, zIndex: 10, px: { xs: 2, md: 4 }, py: 1,
+          position: 'sticky', top: 0, zIndex: 10, px: { xs: 1.5, sm: 3 }, py: 0.8,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          bgcolor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          bgcolor: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(8px)',
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
         }}>
-          <Typography variant="subtitle2" sx={{ color: '#94A3B8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <FullscreenIcon sx={{ fontSize: 18 }} /> Full Screen
+          <Typography variant="subtitle2" sx={{ color: '#6B7280', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.5, fontSize: { xs: '0.75rem', sm: '0.85rem' } }}>
+            <FullscreenIcon sx={{ fontSize: { xs: 16, sm: 18 } }} /> Full Screen
           </Typography>
           <Button
             onClick={close}
             size="small"
             startIcon={<CloseFullscreenIcon />}
-            sx={{ borderRadius: 6, color: '#ffffff', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' }, textTransform: 'none', fontWeight: 600 }}
+            sx={{ borderRadius: 6, color: '#4B5563', bgcolor: '#F3F4F6', '&:hover': { bgcolor: '#E5E7EB' }, textTransform: 'none', fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.85rem' } }}
           >
             Exit
           </Button>
         </Box>
         <Box sx={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          px: { xs: 1, sm: 2, md: 4 }, py: { xs: 1, md: 2 },
+          px: { xs: 0.5, sm: 2, md: 4 }, py: { xs: 0.5, sm: 2, md: 3 },
+          minHeight: { xs: 'calc(100vh - 48px)', sm: 'calc(100vh - 56px)' },
         }}>
-          <Box sx={{ width: '100%', maxWidth: { xs: '100%', sm: 500, md: 600 } }}>
+          <Box sx={{
+            width: '100%',
+            maxWidth: { xs: '100%', sm: 480, md: 580, lg: 620 },
+            mx: 'auto',
+            transform: { xs: 'scale(0.92)', sm: 'scale(0.96)', md: 'scale(1)' },
+            transformOrigin: 'center center',
+          }}>
             {children}
           </Box>
         </Box>
