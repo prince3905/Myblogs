@@ -155,6 +155,7 @@ function ShadowGame() {
   }, [current, locked]);
 
   return (
+    <GameFullscreen>
     <Card sx={{
       borderRadius: 6,
       background: 'linear-gradient(135deg, #FEF9C3 0%, #FED7AA 100%)',
@@ -167,11 +168,14 @@ function ShadowGame() {
           <Typography variant="h6" fontWeight={800} sx={{ color: '#D97706', display: 'flex', alignItems: 'center', gap: 1 }}>
             <StarsIcon sx={{ color: '#FBBF24' }} /> Shadow & Sound
           </Typography>
-          <Chip
-            icon={<EmojiEventsIcon />}
-            label={`Score: ${score}`}
-            sx={{ fontWeight: 700, fontSize: '1rem', bgcolor: '#FEF3C7', color: '#92400E', borderRadius: 4, px: 1 }}
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              icon={<EmojiEventsIcon />}
+              label={`Score: ${score}`}
+              sx={{ fontWeight: 700, fontSize: '1rem', bgcolor: '#FEF3C7', color: '#92400E', borderRadius: 4, px: 1 }}
+            />
+            <GameFullscreenButton />
+          </Box>
         </Box>
 
         <Box sx={{ textAlign: 'center', py: 2 }}>
@@ -297,6 +301,7 @@ function ShadowGame() {
         )}
       </CardContent>
     </Card>
+    </GameFullscreen>
   );
 }
 
@@ -407,6 +412,7 @@ function AlphabetQuiz() {
   }, [current, locked]);
 
   return (
+    <GameFullscreen>
     <Card sx={{
       borderRadius: 6,
       background: 'linear-gradient(135deg, #FFF0F5 0%, #E6E6FA 100%)',
@@ -419,11 +425,14 @@ function AlphabetQuiz() {
           <Typography variant="h6" fontWeight={800} sx={{ color: '#8B5CF6', display: 'flex', alignItems: 'center', gap: 1 }}>
             <StarsIcon sx={{ color: '#FBBF24' }} /> Alphabet Quiz
           </Typography>
-          <Chip
-            icon={<EmojiEventsIcon />}
-            label={`Score: ${score}`}
-            sx={{ fontWeight: 700, fontSize: '1rem', bgcolor: '#FEF3C7', color: '#92400E', borderRadius: 4, px: 1 }}
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              icon={<EmojiEventsIcon />}
+              label={`Score: ${score}`}
+              sx={{ fontWeight: 700, fontSize: '1rem', bgcolor: '#FEF3C7', color: '#92400E', borderRadius: 4, px: 1 }}
+            />
+            <GameFullscreenButton />
+          </Box>
         </Box>
 
         <Box sx={{ textAlign: 'center', py: 2 }}>
@@ -513,6 +522,7 @@ function AlphabetQuiz() {
         )}
       </CardContent>
     </Card>
+    </GameFullscreen>
   );
 }
 
@@ -572,6 +582,7 @@ function MathBooster() {
   const visualCount = problem.a > 12 ? `${problem.a}` : '🍎'.repeat(problem.a);
 
   return (
+    <GameFullscreen>
     <Card sx={{
       borderRadius: 6,
       background: 'linear-gradient(135deg, #F0FFF0 0%, #E0F4FF 100%)',
@@ -584,7 +595,7 @@ function MathBooster() {
           <Typography variant="h6" fontWeight={800} sx={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 1 }}>
             <StarsIcon sx={{ color: '#FBBF24' }} /> Math Booster
           </Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <Chip
               label={`Score: ${score}`}
               sx={{ fontWeight: 700, fontSize: '0.9rem', bgcolor: '#DCFCE7', color: '#166534', borderRadius: 4 }}
@@ -596,6 +607,7 @@ function MathBooster() {
                 sx={{ fontWeight: 700, fontSize: '0.9rem', bgcolor: '#FEF3C7', color: '#92400E', borderRadius: 4 }}
               />
             )}
+            <GameFullscreenButton />
           </Box>
         </Box>
 
@@ -685,6 +697,7 @@ function MathBooster() {
         )}
       </CardContent>
     </Card>
+    </GameFullscreen>
   );
 }
 
@@ -699,9 +712,99 @@ function ResetButton({ onReset }) {
         '&:hover': { bgcolor: '#F3F4F6' },
       }}
       variant="outlined"
+      size="small"
     >
-      Reset Game
+      Reset
     </Button>
+  );
+}
+
+import { createContext, useContext } from 'react';
+
+const FullscreenCtx = createContext(null);
+
+function GameFullscreen({ children }) {
+  const [active, setActive] = useState(false);
+
+  const open = useCallback(() => {
+    setActive(true);
+    document.body.style.overflow = 'hidden';
+    try { document.documentElement.requestFullscreen?.(); } catch {}
+  }, []);
+
+  const close = useCallback(() => {
+    setActive(false);
+    document.body.style.overflow = '';
+    try { document.exitFullscreen?.(); } catch {}
+  }, []);
+
+  useEffect(() => {
+    const h = () => { if (!document.fullscreenElement) { setActive(false); document.body.style.overflow = ''; } };
+    document.addEventListener('fullscreenchange', h);
+    return () => document.removeEventListener('fullscreenchange', h);
+  }, []);
+
+  if (active) {
+    return (
+      <Box sx={{
+        position: 'fixed', inset: 0, zIndex: 999999,
+        bgcolor: '#0f172a', overflow: 'auto',
+        display: 'flex', flexDirection: 'column',
+      }}>
+        <Box sx={{
+          position: 'sticky', top: 0, zIndex: 10, px: { xs: 2, md: 4 }, py: 1,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          bgcolor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          <Typography variant="subtitle2" sx={{ color: '#94A3B8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FullscreenIcon sx={{ fontSize: 18 }} /> Full Screen
+          </Typography>
+          <Button
+            onClick={close}
+            size="small"
+            startIcon={<CloseFullscreenIcon />}
+            sx={{ borderRadius: 6, color: '#ffffff', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' }, textTransform: 'none', fontWeight: 600 }}
+          >
+            Exit
+          </Button>
+        </Box>
+        <Box sx={{
+          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          px: { xs: 1, sm: 2, md: 4 }, py: { xs: 1, md: 2 },
+        }}>
+          <Box sx={{ width: '100%', maxWidth: { xs: '100%', sm: 500, md: 600 } }}>
+            {children}
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <FullscreenCtx.Provider value={{ open, close }}>
+      {children}
+    </FullscreenCtx.Provider>
+  );
+}
+
+function GameFullscreenButton() {
+  const ctx = useContext(FullscreenCtx);
+  if (!ctx) return null;
+  return (
+    <IconButton
+      onClick={ctx.open}
+      aria-label="Play in full screen"
+      size="small"
+      sx={{
+        color: '#8B5CF6', bgcolor: 'rgba(139, 92, 246, 0.08)',
+        borderRadius: 2, p: 0.5,
+        '&:hover': { bgcolor: 'rgba(139, 92, 246, 0.2)', transform: 'scale(1.1)' },
+        transition: 'all 0.2s ease',
+      }}
+    >
+      <FullscreenIcon sx={{ fontSize: 20 }} />
+    </IconButton>
   );
 }
 
@@ -720,176 +823,94 @@ export default function GamesPage() {
   const [alphabetKey, setAlphabetKey] = useState(0);
   const [mathKey, setMathKey] = useState(0);
   const [shadowKey, setShadowKey] = useState(0);
-  const [fs, setFs] = useState(false);
-
-  const enterFs = useCallback(() => {
-    setFs(true);
-    document.body.style.overflow = 'hidden';
-    try { document.documentElement.requestFullscreen?.(); } catch {}
-  }, []);
-
-  const exitFs = useCallback(() => {
-    setFs(false);
-    document.body.style.overflow = '';
-    try { document.exitFullscreen?.(); } catch {}
-  }, []);
-
-  useEffect(() => {
-    const handler = () => { if (!document.fullscreenElement) { setFs(false); document.body.style.overflow = ''; } };
-    document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
-  }, []);
-
-  const gameContent = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: fs ? 6 : 5 }}>
-      <section aria-label="Alphabet Matching Quiz Game">
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-          <Typography variant={fs ? "h4" : "h5"} component="h2" fontWeight={800} sx={{ color: '#7C3AED' }}>
-            🔤 Alphabet Matching Quiz
-          </Typography>
-          {!fs && <ResetButton onReset={() => setAlphabetKey(k => k + 1)} />}
-        </Box>
-        {!fs && <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>Match the letter to the correct picture! Tap the right emoji to earn points.</Typography>}
-        <Box key={alphabetKey}>
-          <AlphabetQuiz />
-        </Box>
-      </section>
-
-      <section aria-label="Kids Math Booster Game">
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-          <Typography variant={fs ? "h4" : "h5"} component="h2" fontWeight={800} sx={{ color: '#059669' }}>
-            ➕ Kids Math Booster
-          </Typography>
-          {!fs && <ResetButton onReset={() => setMathKey(k => k + 1)} />}
-        </Box>
-        {!fs && <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>Solve fun addition & subtraction problems. Get streak bonuses for consecutive correct answers!</Typography>}
-        <Box key={mathKey}>
-          <MathBooster />
-        </Box>
-      </section>
-
-      <section aria-label="Guess the Animal Shadow and Sound Game">
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-          <Typography variant={fs ? "h4" : "h5"} component="h2" fontWeight={800} sx={{ color: '#D97706' }}>
-            👀 Guess the Animal Shadow & Sound
-          </Typography>
-          {!fs && <ResetButton onReset={() => setShadowKey(k => k + 1)} />}
-        </Box>
-        {!fs && <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>Look at the shadow silhouette, play the animal sound, and guess who it is! Tap the right answer to reveal the animal.</Typography>}
-        <Box key={shadowKey}>
-          <ShadowGame />
-        </Box>
-      </section>
-    </Box>
-  );
 
   return (
-    <>
-      {fs ? (
-        <Box sx={{
-          position: 'fixed', inset: 0, zIndex: 999999,
-          bgcolor: '#0f172a',
-          overflow: 'auto',
-          display: 'flex', flexDirection: 'column',
-        }}>
-          <Box sx={{
-            position: 'sticky', top: 0, zIndex: 10, px: 2, py: 1,
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            bgcolor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(8px)',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
-          }}>
-            <Typography variant="h6" fontWeight={800} sx={{ color: '#ffffff', display: 'flex', alignItems: 'center', gap: 1 }}>
-              🎮 Full Screen Mode
-            </Typography>
-            <IconButton
-              onClick={exitFs}
-              aria-label="Exit full screen mode"
-              sx={{ color: '#ffffff', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}
-            >
-              <CloseFullscreenIcon />
-            </IconButton>
-          </Box>
-          <Box sx={{ flex: 1, px: { xs: 2, md: 6 }, py: { xs: 3, md: 4 }, maxWidth: 900, mx: 'auto', width: '100%' }}>
-            {gameContent}
-          </Box>
-          <Box sx={{ textAlign: 'center', pb: 3 }}>
-            <Button
-              onClick={exitFs}
-              variant="outlined"
-              startIcon={<CloseFullscreenIcon />}
-              sx={{ borderRadius: 6, color: '#94A3B8', borderColor: '#475569', textTransform: 'none', fontWeight: 600, '&:hover': { borderColor: '#94A3B8' } }}
-            >
-              Exit Full Screen (Esc)
-            </Button>
-          </Box>
+    <Layout>
+      <Seo
+        title="Free Online Educational Games for Kids & Kindergarten - Digital Home"
+        description="Fun learning games for kids: alphabet matching (A for Apple), math booster (addition & subtraction), and guess the animal shadow & sound game. Play free online educational games for kindergarten children."
+        keywords="free online educational games for kids, kindergarten learning games, alphabet matching game, A for Apple, kids math booster, addition subtraction game, guess the animal shadow, animal sounds game, preschool learning"
+        jsonLd={seoSchema}
+      />
+      <Box sx={{ py: { xs: 2, md: 3 } }}>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Typography
+            variant="h3"
+            fontWeight={900}
+            sx={{
+              fontSize: { xs: '1.8rem', md: '2.8rem' },
+              background: 'linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              mb: 1,
+            }}
+          >
+            🎮 Kids Educational Game Zone
+          </Typography>
+          <Typography variant="h6" sx={{ color: '#6B7280', fontWeight: 500, fontSize: { xs: '1rem', md: '1.2rem' } }}>
+            Learn ABCs, Math & Animals the fun way! 🚀
+          </Typography>
         </Box>
-      ) : (
-        <Layout>
-          <Seo
-            title="Free Online Educational Games for Kids & Kindergarten - Digital Home"
-            description="Fun learning games for kids: alphabet matching (A for Apple), math booster (addition & subtraction), and guess the animal shadow & sound game. Play free online educational games for kindergarten children."
-            keywords="free online educational games for kids, kindergarten learning games, alphabet matching game, A for Apple, kids math booster, addition subtraction game, guess the animal shadow, animal sounds game, preschool learning"
-            jsonLd={seoSchema}
-          />
-          <Box sx={{ py: { xs: 2, md: 3 } }}>
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Typography
-                variant="h3"
-                fontWeight={900}
-                sx={{
-                  fontSize: { xs: '1.8rem', md: '2.8rem' },
-                  background: 'linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  mb: 1,
-                }}
-              >
-                🎮 Kids Educational Game Zone
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <section aria-label="Alphabet Matching Quiz Game">
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+              <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#7C3AED' }}>
+                🔤 Alphabet Matching Quiz
               </Typography>
-              <Typography variant="h6" sx={{ color: '#6B7280', fontWeight: 500, fontSize: { xs: '1rem', md: '1.2rem' } }}>
-                Learn ABCs, Math & Animals the fun way! 🚀
-              </Typography>
-              <Button
-                onClick={enterFs}
-                variant="contained"
-                size="large"
-                startIcon={<FullscreenIcon />}
-                aria-label="Play games in full screen mode"
-                sx={{
-                  mt: 2, borderRadius: 6, px: 4, py: 1.2,
-                  fontSize: '1.1rem', fontWeight: 800,
-                  textTransform: 'none',
-                  background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
-                  boxShadow: '0 8px 24px rgba(139, 92, 246, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #7C3AED, #DB2777)',
-                    transform: 'scale(1.03)',
-                    boxShadow: '0 12px 32px rgba(139, 92, 246, 0.4)',
-                  },
-                  transition: 'all 0.3s ease',
-                  animation: 'pulse 2s infinite',
-                }}
-              >
-                🎮 Full Screen Mode
-              </Button>
+              <ResetButton onReset={() => setAlphabetKey(k => k + 1)} />
             </Box>
+            <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
+              Match the letter to the correct picture! Tap the right emoji to earn points.
+            </Typography>
+            <Box key={alphabetKey}>
+              <AlphabetQuiz />
+            </Box>
+          </section>
 
-            {gameContent}
+          <section aria-label="Kids Math Booster Game">
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+              <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#059669' }}>
+                ➕ Kids Math Booster
+              </Typography>
+              <ResetButton onReset={() => setMathKey(k => k + 1)} />
+            </Box>
+            <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
+              Solve fun addition & subtraction problems. Get streak bonuses for consecutive correct answers!
+            </Typography>
+            <Box key={mathKey}>
+              <MathBooster />
+            </Box>
+          </section>
 
-            <Paper sx={{ mt: 5, p: 3, borderRadius: 4, bgcolor: '#FFFBEB', border: '1px solid #FDE68A' }}>
-              <Typography variant="h6" fontWeight={700} sx={{ color: '#92400E', mb: 1 }}>
-                🧸 Why Educational Games for Kids?
+          <section aria-label="Guess the Animal Shadow and Sound Game">
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+              <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#D97706' }}>
+                👀 Guess the Animal Shadow & Sound
               </Typography>
-              <Typography variant="body2" sx={{ color: '#78350F' }}>
-                Free online educational games help kindergarten and preschool children develop essential skills 
-                like letter recognition, counting, problem-solving, and animal identification in a fun, interactive way. 
-                Our games use bright colors, emojis, synthesized sounds, and positive reinforcement to keep young learners 
-                engaged. No downloads, no sign-ups — just pure learning fun!
-              </Typography>
-            </Paper>
-          </Box>
-        </Layout>
-      )}
-    </>
+              <ResetButton onReset={() => setShadowKey(k => k + 1)} />
+            </Box>
+            <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
+              Look at the shadow silhouette, play the animal sound, and guess who it is! Tap the right answer to reveal the animal.
+            </Typography>
+            <Box key={shadowKey}>
+              <ShadowGame />
+            </Box>
+          </section>
+        </Box>
+
+        <Paper sx={{ mt: 5, p: 3, borderRadius: 4, bgcolor: '#FFFBEB', border: '1px solid #FDE68A' }}>
+          <Typography variant="h6" fontWeight={700} sx={{ color: '#92400E', mb: 1 }}>
+            🧸 Why Educational Games for Kids?
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#78350F' }}>
+            Free online educational games help kindergarten and preschool children develop essential skills 
+            like letter recognition, counting, problem-solving, and animal identification in a fun, interactive way. 
+            Our games use bright colors, emojis, synthesized sounds, and positive reinforcement to keep young learners 
+            engaged. No downloads, no sign-ups — just pure learning fun!
+          </Typography>
+        </Paper>
+      </Box>
+    </Layout>
   );
 }
