@@ -19,6 +19,7 @@ import TermsPage from '../features/blog/pages/TermsPage';
 import ArchivePage from '../features/blog/pages/ArchivePage';
 import SearchPage from '../features/blog/pages/SearchPage';
 import ToolsPage from '../features/tools/pages/ToolsPage';
+import GamesPage from '../features/games/pages/GamesPage';
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/archive" element={<ArchivePage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/tools" element={<ToolsPage />} />
+        <Route path="/games" element={<GamesPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route index element={<AdminDashboardPage />} />
