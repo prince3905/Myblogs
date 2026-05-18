@@ -59,15 +59,14 @@ export default function Layout({ children }) {
               : 'rgba(255, 255, 255, 0.6)',
             borderRadius: '9999px',
             boxShadow: '0 8px 30px rgba(0, 0, 0, 0.05)',
-            width: { xs: '100%', md: '800px' },
-            maxWidth: '800px',
-            px: { xs: 1, md: 3 },
+            width: { xs: '100%', md: '940px' },
+            maxWidth: '940px',
+            px: { xs: 1, md: 2 },
             py: 0.5,
             mx: 'auto',
-            overflow: 'hidden',
           }}
         >
-          <Box sx={{ display: 'flex', justifyContent: { xs: 'space-between', md: 'center' }, alignItems: 'center', position: 'relative' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
 
 
             {/* Mobile: Hamburger */}
@@ -80,13 +79,13 @@ export default function Layout({ children }) {
             </IconButton>
 
             {/* Logo */}
-            <Box component={Link} to="/" sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1, textDecoration: 'none' }}>
+            <Box component={Link} to="/" sx={{ display: { xs: 'flex', md: 'flex' }, alignItems: 'center', gap: 0.5, textDecoration: 'none' }}>
               <Avatar
                 sx={{
-                  width: { xs: 28, md: 32 },
-                  height: { xs: 28, md: 32 },
+                  width: 26,
+                  height: 26,
                   bgcolor: 'primary.main',
-                  fontSize: '0.85rem',
+                  fontSize: '0.75rem',
                   fontWeight: 800,
                   color: 'white',
                 }}
@@ -97,10 +96,10 @@ export default function Layout({ children }) {
                 variant="h5" 
                 sx={{ 
                   fontWeight: 700, 
-                  fontSize: { xs: '1rem', md: '1.3rem' },
+                  fontSize: { xs: '0.85rem', md: '1rem' },
                   color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111',
                   letterSpacing: '-0.02em',
-                  display: { xs: 'none', sm: 'block' },
+                  whiteSpace: 'nowrap',
                 }}
               >
                 Digital Home
@@ -108,7 +107,7 @@ export default function Layout({ children }) {
             </Box>
             
             {/* Desktop Nav items */}
-              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center', ml: 4 }}>
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 0.3, alignItems: 'center', ml: 1 }}>
                 
                 {/* Categories Dropdown */}
                 <Button
@@ -116,18 +115,19 @@ export default function Layout({ children }) {
                   sx={{ 
                     color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#111827',
                     fontWeight: 500,
-                    fontSize: '0.875rem',
-                    px: 2,
-                    py: 0.5,
+                    fontSize: '0.8rem',
+                    px: 1.2,
+                    py: 0.3,
                     borderRadius: '9999px',
                     minWidth: 'auto',
+                    whiteSpace: 'nowrap',
                     '&:hover': {
                       bgcolor: theme.palette.mode === 'dark'
                         ? 'rgba(255, 255, 255, 0.1)'
                         : 'rgba(0, 0, 0, 0.04)',
                     }
                   }}
-                  endIcon={<ExpandMoreIcon sx={{ fontSize: 18 }} />}
+                  endIcon={<ExpandMoreIcon sx={{ fontSize: 16 }} />}
                 >
                   Categories
                 </Button>
@@ -153,31 +153,32 @@ export default function Layout({ children }) {
                 </Menu>
 
                {navItems.map((item) => (
-                 <Button
-                   key={item.label}
-                   component={NavLink}
-                   to={item.path}
-                   sx={{ 
-                     color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#111827',
-                     fontWeight: 500,
-                     fontSize: '0.875rem',
-                     px: 2,
-                     py: 0.5,
-                     borderRadius: '9999px',
-                     minWidth: 'auto',
-                     '&.active': {
-                       color: theme.palette.primary.main,
-                       bgcolor: theme.palette.mode === 'dark'
-                         ? 'rgba(99, 102, 241, 0.2)'
-                         : 'rgba(99, 102, 241, 0.08)',
-                     },
-                     '&:hover': {
-                       bgcolor: theme.palette.mode === 'dark'
-                         ? 'rgba(255, 255, 255, 0.1)'
-                         : 'rgba(0, 0, 0, 0.04)',
-                     }
-                   }}
-                 >
+                  <Button
+                    key={item.label}
+                    component={NavLink}
+                    to={item.path}
+                    sx={{ 
+                      color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#111827',
+                      fontWeight: 500,
+                      fontSize: '0.8rem',
+                      px: 1.2,
+                      py: 0.3,
+                      borderRadius: '9999px',
+                      minWidth: 'auto',
+                      whiteSpace: 'nowrap',
+                      '&.active': {
+                        color: theme.palette.primary.main,
+                        bgcolor: theme.palette.mode === 'dark'
+                          ? 'rgba(99, 102, 241, 0.2)'
+                          : 'rgba(99, 102, 241, 0.08)',
+                      },
+                      '&:hover': {
+                        bgcolor: theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.1)'
+                          : 'rgba(0, 0, 0, 0.04)',
+                      }
+                    }}
+                  >
                    {item.label}
                  </Button>
                ))}
