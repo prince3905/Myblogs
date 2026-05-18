@@ -816,12 +816,15 @@ function GameFullscreenButton() {
 
 const seoSchema = {
   '@context': 'https://schema.org',
-  '@type': 'Game',
-  name: 'Free Online Educational Games for Kids & Kindergarten',
-  description: 'Fun and interactive educational games for kids: Alphabet Matching Quiz (A for Apple), Kids Math Booster (addition & subtraction), and Guess the Animal Shadow & Sound. Play online free, no download needed.',
-  audience: { '@type': 'Audience', suggestedAge: '3-8 years' },
-  educationalRole: 'Alphabet recognition, basic arithmetic, animal identification, sound recognition',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+  '@type': 'SoftwareApplication',
+  name: 'Kids Educational Game Zone',
+  operatingSystem: 'All',
+  applicationCategory: 'EducationalGame',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  audience: {
+    '@type': 'Audience',
+    audienceType: 'Kindergarten children, Toddlers, Parents'
+  },
   author: { '@type': 'Organization', name: 'Digital Home' },
 };
 
@@ -833,9 +836,9 @@ export default function GamesPage() {
   return (
     <Layout>
       <Seo
-        title="Free Online Educational Games for Kids & Kindergarten - Digital Home"
-        description="Fun learning games for kids: alphabet matching (A for Apple), math booster (addition & subtraction), and guess the animal shadow & sound game. Play free online educational games for kindergarten children."
-        keywords="free online educational games for kids, kindergarten learning games, alphabet matching game, A for Apple, kids math booster, addition subtraction game, guess the animal shadow, animal sounds game, preschool learning"
+        title="Free Interactive Educational Games for Kids & Kindergarten | Digital Home"
+        description="Play free online educational games for toddlers and kindergarteners. Features fun alphabet matching, animal shadow guessing, and simple math puzzles. No downloads required!"
+        keywords="free educational games for kids, kindergarten learning games online, toddler games free, alphabet matching game, math games for kids, animal sound game, preschool learning activities, interactive games for children, US educational games, UK kids games"
         jsonLd={seoSchema}
       />
       <Box sx={{ py: { xs: 2, md: 3 } }}>
@@ -854,7 +857,7 @@ export default function GamesPage() {
             🎮 Kids Educational Game Zone
           </Typography>
           <Typography variant="h6" sx={{ color: '#6B7280', fontWeight: 500, fontSize: { xs: '1rem', md: '1.2rem' } }}>
-            Learn ABCs, Math & Animals the fun way! 🚀
+            Fun learning games for toddlers and kindergarteners worldwide 🌎
           </Typography>
         </Box>
 
@@ -905,15 +908,20 @@ export default function GamesPage() {
           </section>
         </Box>
 
-        <Paper sx={{ mt: 5, p: 3, borderRadius: 4, bgcolor: '#FFFBEB', border: '1px solid #FDE68A' }}>
-          <Typography variant="h6" fontWeight={700} sx={{ color: '#92400E', mb: 1 }}>
-            🧸 Why Educational Games for Kids?
+        <Paper sx={{ mt: 5, p: { xs: 2.5, md: 3.5 }, borderRadius: 4, bgcolor: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+          <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#0369A1', mb: 1.5, fontSize: { xs: '1.2rem', md: '1.4rem' } }}>
+            Why Parents Trust Our Free Online Toddler Games
           </Typography>
-          <Typography variant="body2" sx={{ color: '#78350F' }}>
-            Free online educational games help kindergarten and preschool children develop essential skills 
-            like letter recognition, counting, problem-solving, and animal identification in a fun, interactive way. 
-            Our games use bright colors, emojis, synthesized sounds, and positive reinforcement to keep young learners 
-            engaged. No downloads, no sign-ups — just pure learning fun!
+          <Typography variant="body2" sx={{ color: '#0C4A6E', lineHeight: 1.8 }}>
+            Our interactive learning platform is designed to boost cognitive skills in preschool kids. 
+            With animal sound recognition, visual counting math blocks, and letter association, learning 
+            becomes purely play-based. Every game uses bright colors, positive audio reinforcement, and 
+            gentle error feedback so children stay motivated without frustration. Parents appreciate that 
+            there are no ads, no sign-ups, and no downloads — just safe, browser-based educational play 
+            that works on any device. Whether your child is learning the alphabet for the first time, 
+            practicing simple addition, or discovering animals through shadows and sounds, our games 
+            adapt to their pace and make screen time meaningful. Trusted by families in the US, UK, 
+            Canada, and across the world for quality early childhood education.
           </Typography>
         </Paper>
       </Box>
