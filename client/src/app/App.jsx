@@ -18,6 +18,7 @@ import PrivacyPage from '../features/blog/pages/PrivacyPage';
 import TermsPage from '../features/blog/pages/TermsPage';
 import ArchivePage from '../features/blog/pages/ArchivePage';
 import SearchPage from '../features/blog/pages/SearchPage';
+import ToolsPage from '../features/tools/pages/ToolsPage';
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/archive" element={<ArchivePage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/tools" element={<ToolsPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route index element={<AdminDashboardPage />} />
