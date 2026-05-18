@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Box, Container, Typography, Tabs, Tab, Button, Slider, IconButton,
   Card, CardContent, TextField, LinearProgress, Alert, Select, MenuItem,
-  FormControl, InputLabel, Tooltip
+  FormControl, InputLabel, Tooltip, Grid
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -18,9 +18,12 @@ import SwapIcon from '@mui/icons-material/SwapHoriz';
 import BrushIcon from '@mui/icons-material/Brush';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import imageCompression from 'browser-image-compression';
 import { jsPDF } from 'jspdf';
+import Layout from '../../blog/components/Layout';
 import Seo from '../../blog/components/Seo';
+import PostCard from '../../blog/components/PostCard';
 
 function TabPanel({ children, value, index }) {
   return value === index && <Box sx={{ py: 3 }}>{children}</Box>;
@@ -38,6 +41,38 @@ const tools = [
   { label: 'Age Calculator', icon: <CalendarMonthIcon /> },
 ];
 
+function TopPosts() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/posts?limit=6&fields=title,slug,excerpt,featuredImage,category')
+      .then(r => r.json())
+      .then(d => { setPosts(d.posts || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading || posts.length === 0) return null;
+
+  return (
+    <Box sx={{ mt: 8 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+        <TrendingUpIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+        <Typography variant="h5" fontWeight={800} sx={{ color: 'text.primary' }}>
+          Top Trending Posts
+        </Typography>
+      </Box>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+        {posts.map((post) => (
+          <Card key={post._id} sx={{ cursor: 'pointer' }}>
+            <PostCard post={post} />
+          </Card>
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
 export default function ToolsPage() {
   const [tab, setTab] = useState(0);
 
@@ -50,142 +85,138 @@ export default function ToolsPage() {
     operatingSystem: 'Web Browser',
     browserRequirements: 'Requires JavaScript',
     description: 'Free online student utility tools for Indian government exam forms: photo compressor under 20KB, passport size photo cropper 3.5x4.5 cm, age calculator for government forms, image to PDF converter, signature maker, and PDF compressor. All tools work offline in your browser.',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'INR'
-    },
-    author: {
-      '@type': 'Organization',
-      name: 'Digital Home'
-    }
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+    author: { '@type': 'Organization', name: 'Digital Home' }
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Layout>
       <Seo
         title="Free Student Utility Tools - Photo Compressor, Passport Cropper, Age Calculator"
         description="Free online tools for government exam students: compress photo to 20KB, passport size photo cropper 3.5x4.5 cm, age calculator for government forms, image to PDF converter, and PDF compressor. All browser-based, no upload needed."
         keywords="photo compressor under 20kb, passport size photo resizer online, age calculator for government forms, image to pdf converter free, pdf compressor, signature maker, image format converter, ssc photo resize tool"
         jsonLd={seoSchema}
       />
-      <Typography variant="h4" fontWeight={800} gutterBottom>
-        📋 Student Utility Tools
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Sarkari form mein chahe photo resize karna ho, PDF banana ho, signature chahiye — sab kuch yahin free me karo.
-      </Typography>
-      <Typography variant="h5" fontWeight={700} gutterBottom>
-        Free Online Tools for Government Exam Students
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Sarkari exams jaise SSC, UPSC, Railway aur Banking ke form bharte waqt students ko photo size 20KB se kam karna, signature crop karna, documents ko PDF me badalna aur exact age calculate karna hota hai. Yeh saare tools aapke browser mein locally chalte hain — koi server upload nahi, koi data leak nahi. Har tool strictly government form standards ke hisaab se design kiya gaya hai.
-      </Typography>
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto" sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        {tools.map((t, i) => (
-          <Tab key={i} icon={t.icon} label={t.label} sx={{ minHeight: 56, textTransform: 'none', fontWeight: 600 }} />
-        ))}
-      </Tabs>
-      <TabPanel value={tab} index={0}><PhotoCompressor /></TabPanel>
-      <TabPanel value={tab} index={1}><ImageToPdf /></TabPanel>
-      <TabPanel value={tab} index={2}><PassportCropper /></TabPanel>
-      <TabPanel value={tab} index={3}><PdfCompressor /></TabPanel>
-      <TabPanel value={tab} index={4}><SignatureMaker /></TabPanel>
-      <TabPanel value={tab} index={5}><MergePdf /></TabPanel>
-      <TabPanel value={tab} index={6}><FormatConverter /></TabPanel>
-      <TabPanel value={tab} index={7}><BgWhitener /></TabPanel>
-      <TabPanel value={tab} index={8}><AgeCalculator /></TabPanel>
+      <Box sx={{ py: { xs: 4, md: 5 }, px: { xs: 2, md: 3 } }}>
+        <Container maxWidth="lg" disableGutters>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h4" fontWeight={800} gutterBottom>
+              📋 Student Utility Tools
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+              Sarkari form mein chahe photo resize karna ho, PDF banana ho, signature chahiye — sab kuch yahin free me karo.
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Sarkari exams jaise SSC, UPSC, Railway aur Banking ke form bharte waqt students ko photo size 20KB se kam karna, signature crop karna, documents ko PDF me badalna aur exact age calculate karna hota hai. Yeh saare tools aapke browser mein locally chalte hain — koi server upload nahi, koi data leak nahi.
+            </Typography>
+          </Box>
+          <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto" sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            {tools.map((t, i) => (
+              <Tab key={i} icon={t.icon} label={t.label} sx={{ minHeight: 56, textTransform: 'none', fontWeight: 600 }} />
+            ))}
+          </Tabs>
+          <TabPanel value={tab} index={0}><PhotoCompressor /></TabPanel>
+          <TabPanel value={tab} index={1}><ImageToPdf /></TabPanel>
+          <TabPanel value={tab} index={2}><PassportCropper /></TabPanel>
+          <TabPanel value={tab} index={3}><PdfCompressor /></TabPanel>
+          <TabPanel value={tab} index={4}><SignatureMaker /></TabPanel>
+          <TabPanel value={tab} index={5}><MergePdf /></TabPanel>
+          <TabPanel value={tab} index={6}><FormatConverter /></TabPanel>
+          <TabPanel value={tab} index={7}><BgWhitener /></TabPanel>
+          <TabPanel value={tab} index={8}><AgeCalculator /></TabPanel>
 
-      {/* SEO Content - visible on all tabs */}
-      <Box sx={{ mt: 4, px: 1 }}>
-        <Typography variant="h5" fontWeight={700} gutterBottom>
-          {tab === 0 && 'How to Compress Photo to 20KB for Government Forms'}
-          {tab === 1 && 'How to Convert Images to PDF for SSC & UPSC Forms'}
-          {tab === 2 && 'Passport Size Photo Cropper 3.5 x 4.5 cm Guide'}
-          {tab === 3 && 'How to Compress PDF for Online Applications'}
-          {tab === 4 && 'How to Create Signature for Digital Forms'}
-          {tab === 5 && 'How to Merge Multiple PDF Files for Exams'}
-          {tab === 6 && 'Convert Image Format for Government Portals'}
-          {tab === 7 && 'Remove Photo Background for Passport Applications'}
-          {tab === 8 && 'Age Calculator for Government Forms Guide'}
-        </Typography>
-        {tab === 0 && (
-          <Typography variant="body2" color="text.secondary">
-            Government exam forms require photos under specific KB limits — usually 20KB, 50KB, or 100KB. 
-            Our <strong>photo compressor for govt exams</strong> uses aggressive compression to meet exact size targets. 
-            Upload your photo, use the quick presets like <strong>"Passport Photo (≤50 KB)"</strong> or <strong>"Signature (≤20 KB)"</strong>, 
-            and download directly. All processing happens in your browser — no server upload, no privacy risk.
-          </Typography>
-        )}
-        {tab === 1 && (
-          <Typography variant="body2" color="text.secondary">
-            SSC, UPSC, Railway aur Banking forms mein aadhar card, marksheet, caste certificate sabhi documents 
-            ki scanned copy ek hi PDF me upload karni hoti hai. Yeh <strong>image to PDF converter</strong> aapko 
-            multiple photos ko A4 size PDF mein combine karne deta hai. Arrow buttons se images ko reorder bhi kar 
-            sakte hain taaki sequence sahi rahe.
-          </Typography>
-        )}
-        {tab === 2 && (
-          <Typography variant="body2" color="text.secondary">
-            HAR <strong>passport size photo cropper 3.5 x 4.5 cm</strong> form ka standard size hai. Chahe SSC 
-            ho ya UPSC Police, photo ka exact ratio 3.5cm by 4.5cm hona chahiye. Yeh tool aapko blue box drag 
-            karke face ko adjust karne deta hai, phir automatically 413×531 pixels (300 DPI) ki image JPEG format 
-            mein download hoti hai — ready for upload.
-          </Typography>
-        )}
-        {tab === 3 && (
-          <Typography variant="body2" color="text.secondary">
-            Kafi portals pe PDF size 500KB se 1MB se upar nahi hona chahiye. Hamara <strong>PDF compressor</strong> 
-            har page ko re-render karta hai, images ko downsample karta hai aur metadata strip karta hai. 
-            Four presets hain — Maximum se 80%+ compression, Low se 15-30% reduction. Quality bar adjust karke 
-            perfect balance paayein.
-          </Typography>
-        )}
-        {tab === 4 && (
-          <Typography variant="body2" color="text.secondary">
-            Digital signatures ke liye ab kisi app ki zaroorat nahi. Yeh <strong>signature maker</strong> tool 
-            mouse ya finger se sign draw karne deta hai, phir JPEG format mein white background ke saath download 
-            karta hai. Govt forms transparent signatures reject karte hain, isliye background white rakha gaya hai. 
-            Stroke bold (3.5px) hai taaki form me clear dikhe.
-          </Typography>
-        )}
-        {tab === 5 && (
-          <Typography variant="body2" color="text.secondary">
-            Multiple PDF files (jaise aadhar, marksheet, certificates) ko ek single PDF mein merge karna 
-            sarkari forms ke liye zaroori hota hai. Yeh <strong>merge PDF tool</strong> aapko up/down arrows 
-            se files reorder karne deta hai, phir exact usi sequence mein merged PDF generate karta hai.
-          </Typography>
-        )}
-        {tab === 6 && (
-          <Typography variant="body2" color="text.secondary">
-            Kuch government portals sirf JPG format accept karte hain, kuch sirf PNG. Yeh <strong>image format converter</strong> 
-            PNG ↔ JPG ↔ WebP me badalta hai. Transparent PNG ko JPG me convert karte waqt white background auto add 
-            hota hai (black bg nahi aayega). Quality slider se file size control karein.
-          </Typography>
-        )}
-        {tab === 7 && (
-          <Typography variant="body2" color="text.secondary">
-            Passport aur government forms ke liye white background wali photo chahiye hoti hai. Yeh <strong>AI background remover</strong> 
-            browser mein hi TensorFlow.js chalata hai — free, koi server cost nahi. Model pehli baar ~40MB download hota hai, 
-            phir cached rehta hai. Background remove hone ke baad pure white (#FFFFFF) background pe composite hota hai 
-            aur 413×531px JPEG download hota hai.
-          </Typography>
-        )}
-        {tab === 8 && (
-          <Typography variant="body2" color="text.secondary">
-            Sarkari forms mein exact age years, months aur days me likhni hoti hai. Yeh <strong>age calculator for government forms</strong> 
-            birth date dalne par correct age count karta hai — months me days borrow karte waqt saari edge cases handle ki gayi hain 
-            (jaise Jan 31 se March 1). "As on" date bhi daal sakte hain agar form me kisi specific date tak age chahiye.
-          </Typography>
-        )}
+          <Box sx={{ mt: 4, px: 1 }}>
+            <Typography variant="h5" fontWeight={700} gutterBottom>
+              {tab === 0 && 'How to Compress Photo to 20KB for Government Forms'}
+              {tab === 1 && 'How to Convert Images to PDF for SSC & UPSC Forms'}
+              {tab === 2 && 'Passport Size Photo Cropper 3.5 x 4.5 cm Guide'}
+              {tab === 3 && 'How to Compress PDF for Online Applications'}
+              {tab === 4 && 'How to Create Signature for Digital Forms'}
+              {tab === 5 && 'How to Merge Multiple PDF Files for Exams'}
+              {tab === 6 && 'Convert Image Format for Government Portals'}
+              {tab === 7 && 'Remove Photo Background for Passport Applications'}
+              {tab === 8 && 'Age Calculator for Government Forms Guide'}
+            </Typography>
+            {tab === 0 && (
+              <Typography variant="body2" color="text.secondary">
+                Government exam forms require photos under specific KB limits — usually 20KB, 50KB, or 100KB.
+                Our <strong>photo compressor for govt exams</strong> uses aggressive compression to meet exact size targets.
+                Upload your photo, use the quick presets like <strong>"Passport Photo (≤50 KB)"</strong> or <strong>"Signature (≤20 KB)"</strong>,
+                and download directly. All processing happens in your browser — no server upload, no privacy risk.
+              </Typography>
+            )}
+            {tab === 1 && (
+              <Typography variant="body2" color="text.secondary">
+                SSC, UPSC, Railway aur Banking forms mein aadhar card, marksheet, caste certificate sabhi documents
+                ki scanned copy ek hi PDF me upload karni hoti hai. Yeh <strong>image to PDF converter</strong> aapko
+                multiple photos ko A4 size PDF mein combine karne deta hai. Arrow buttons se images ko reorder bhi kar
+                sakte hain taaki sequence sahi rahe.
+              </Typography>
+            )}
+            {tab === 2 && (
+              <Typography variant="body2" color="text.secondary">
+                HAR <strong>passport size photo cropper 3.5 x 4.5 cm</strong> form ka standard size hai. Chahe SSC
+                ho ya UPSC Police, photo ka exact ratio 3.5cm by 4.5cm hona chahiye. Yeh tool aapko blue box drag
+                karke face ko adjust karne deta hai, phir automatically 413×531 pixels (300 DPI) ki image JPEG format
+                mein download hoti hai — ready for upload.
+              </Typography>
+            )}
+            {tab === 3 && (
+              <Typography variant="body2" color="text.secondary">
+                Kafi portals pe PDF size 500KB se 1MB se upar nahi hona chahiye. Hamara <strong>PDF compressor</strong>
+                har page ko re-render karta hai, images ko downsample karta hai aur metadata strip karta hai.
+                Four presets hain — Maximum se 80%+ compression, Low se 15-30% reduction. Quality bar adjust karke
+                perfect balance paayein.
+              </Typography>
+            )}
+            {tab === 4 && (
+              <Typography variant="body2" color="text.secondary">
+                Digital signatures ke liye ab kisi app ki zaroorat nahi. Yeh <strong>signature maker</strong> tool
+                mouse ya finger se sign draw karne deta hai, phir JPEG format mein white background ke saath download
+                karta hai. Govt forms transparent signatures reject karte hain, isliye background white rakha gaya hai.
+                Stroke bold (3.5px) hai taaki form me clear dikhe.
+              </Typography>
+            )}
+            {tab === 5 && (
+              <Typography variant="body2" color="text.secondary">
+                Multiple PDF files (jaise aadhar, marksheet, certificates) ko ek single PDF mein merge karna
+                sarkari forms ke liye zaroori hota hai. Yeh <strong>merge PDF tool</strong> aapko up/down arrows
+                se files reorder karne deta hai, phir exact usi sequence mein merged PDF generate karta hai.
+              </Typography>
+            )}
+            {tab === 6 && (
+              <Typography variant="body2" color="text.secondary">
+                Kuch government portals sirf JPG format accept karte hain, kuch sirf PNG. Yeh <strong>image format converter</strong>
+                PNG ↔ JPG ↔ WebP me badalta hai. Transparent PNG ko JPG me convert karte waqt white background auto add
+                hota hai (black bg nahi aayega). Quality slider se file size control karein.
+              </Typography>
+            )}
+            {tab === 7 && (
+              <Typography variant="body2" color="text.secondary">
+                Passport aur government forms ke liye white background wali photo chahiye hoti hai. Yeh <strong>AI background remover</strong>
+                browser mein hi TensorFlow.js chalata hai — free, koi server cost nahi. Model pehli baar ~40MB download hota hai,
+                phir cached rehta hai. Background remove hone ke baad pure white (#FFFFFF) background pe composite hota hai
+                aur 413×531px JPEG download hota hai.
+              </Typography>
+            )}
+            {tab === 8 && (
+              <Typography variant="body2" color="text.secondary">
+                Sarkari forms mein exact age years, months aur days me likhni hoti hai. Yeh <strong>age calculator for government forms</strong>
+                birth date dalne par correct age count karta hai — months me days borrow karte waqt saari edge cases handle ki gayi hain
+                (jaise Jan 31 se March 1). "As on" date bhi daal sakte hain agar form me kisi specific date tak age chahiye.
+              </Typography>
+            )}
+          </Box>
+
+          <TopPosts />
+        </Container>
       </Box>
-    </Container>
+    </Layout>
   );
 }
 
 const formatBytes = (b) => b < 1024 ? `${b} B` : `${(b / 1024).toFixed(1)} KB`;
 
-/* ─── Tool 1: Photo Compressor (aggressive recursive scaling) ─── */
 function PhotoCompressor() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -219,12 +250,10 @@ function PhotoCompressor() {
         }
         currentFile = out;
       } catch {}
-      // Reduce dimensions progressively
       maxDim = Math.floor(maxDim * 0.75);
       quality = Math.max(0.15, quality - 0.12);
       iteration++;
     }
-    // Fallback: canvas-based extreme scaling
     try {
       const img = new Image();
       img.src = URL.createObjectURL(f);
@@ -273,15 +302,9 @@ function PhotoCompressor() {
         <Typography variant="h6" fontWeight={700} gutterBottom>Photo / Sign Resizer</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Photo ko exact KB me resize karein: <strong>{targetSize} KB</strong></Typography>
         <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-          <Button size="small" variant={targetSize === 50 ? 'contained' : 'outlined'} onClick={() => quickResize(50)} sx={{ borderRadius: 4, textTransform: 'none' }}>
-            📷 Passport Photo (≤50 KB)
-          </Button>
-          <Button size="small" variant={targetSize === 20 ? 'contained' : 'outlined'} onClick={() => quickResize(20)} sx={{ borderRadius: 4, textTransform: 'none' }}>
-            ✍️ Signature (≤20 KB)
-          </Button>
-          <Button size="small" variant={targetSize === 10 ? 'contained' : 'outlined'} onClick={() => quickResize(10)} sx={{ borderRadius: 4, textTransform: 'none' }}>
-            📄 Sign (≤10 KB)
-          </Button>
+          <Button size="small" variant={targetSize === 50 ? 'contained' : 'outlined'} onClick={() => quickResize(50)} sx={{ borderRadius: 4, textTransform: 'none' }}>📷 Passport Photo (≤50 KB)</Button>
+          <Button size="small" variant={targetSize === 20 ? 'contained' : 'outlined'} onClick={() => quickResize(20)} sx={{ borderRadius: 4, textTransform: 'none' }}>✍️ Signature (≤20 KB)</Button>
+          <Button size="small" variant={targetSize === 10 ? 'contained' : 'outlined'} onClick={() => quickResize(10)} sx={{ borderRadius: 4, textTransform: 'none' }}>📄 Sign (≤10 KB)</Button>
         </Box>
         <Slider value={targetSize} onChange={handleSlider} min={3} max={200} step={1} valueLabelDisplay="auto" valueLabelFormat={v => `${v} KB`} sx={{ mb: 2 }} />
         <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
@@ -292,17 +315,11 @@ function PhotoCompressor() {
         {preview && (
           <Box sx={{ mt: 2 }}>
             <img src={preview} alt="preview" style={{ maxWidth: 200, maxHeight: 200, borderRadius: 8 }} />
-            <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-              Original: {formatBytes(origSize)} {compressed && ` → Compressed: ${formatBytes(compressed.size)} ✅`}
-            </Typography>
+            <Typography variant="caption" display="block" sx={{ mt: 1 }}>Original: {formatBytes(origSize)} {compressed && ` → Compressed: ${formatBytes(compressed.size)} ✅`}</Typography>
             {compressed && (
-              <Button variant="contained" startIcon={<DownloadIcon />} href={URL.createObjectURL(compressed)} download={`compressed.${compressed.name.split('.').pop() || 'jpg'}`} sx={{ mt: 1 }}>
-                Download ({formatBytes(compressed.size)})
-              </Button>
+              <Button variant="contained" startIcon={<DownloadIcon />} href={URL.createObjectURL(compressed)} download={`compressed.${compressed.name.split('.').pop() || 'jpg'}`} sx={{ mt: 1 }}>Download ({formatBytes(compressed.size)})</Button>
             )}
-            <IconButton color="error" onClick={() => { setFile(null); setPreview(null); setCompressed(null); }} sx={{ ml: 1, mt: 1 }}>
-              <DeleteIcon />
-            </IconButton>
+            <IconButton color="error" onClick={() => { setFile(null); setPreview(null); setCompressed(null); }} sx={{ ml: 1, mt: 1 }}><DeleteIcon /></IconButton>
           </Box>
         )}
       </CardContent>
@@ -310,7 +327,6 @@ function PhotoCompressor() {
   );
 }
 
-/* ─── Tool 2: Image to PDF (with reorder) ─── */
 function ImageToPdf() {
   const [images, setImages] = useState([]);
   const [previews, setPreviews] = useState([]);
@@ -358,18 +374,14 @@ function ImageToPdf() {
     <Card>
       <CardContent>
         <Typography variant="h6" fontWeight={700} gutterBottom>📄 Image to PDF Converter</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Documents/photos ko ek PDF me combine karein. Images ko drag/arrow se reorder karein.
-        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Documents/photos ko ek PDF me combine karein. Images ko drag/arrow se reorder karein.</Typography>
         <Button variant="outlined" component="label" startIcon={<AddPhotoAlternateIcon />}>
           Add Images
           <input hidden type="file" accept="image/*" multiple onChange={handleAdd} />
         </Button>
         {images.length > 0 && (
           <>
-            <Typography variant="caption" sx={{ mt: 1.5, display: 'block', fontWeight: 600 }}>
-              {images.length} image(s) — Arrow buttons se order badle, PDF usi sequence me banega:
-            </Typography>
+            <Typography variant="caption" sx={{ mt: 1.5, display: 'block', fontWeight: 600 }}>{images.length} image(s) — Arrow buttons se order badle, PDF usi sequence me banega:</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
               {previews.map((url, i) => (
                 <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
@@ -385,9 +397,7 @@ function ImageToPdf() {
                 </Box>
               ))}
             </Box>
-            <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={generatePdf} sx={{ mt: 2 }}>
-              Download PDF ({images.length} pages)
-            </Button>
+            <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={generatePdf} sx={{ mt: 2 }}>Download PDF ({images.length} pages)</Button>
           </>
         )}
       </CardContent>
@@ -395,7 +405,6 @@ function ImageToPdf() {
   );
 }
 
-/* ─── Tool 3: Passport Cropper (413×531 JPEG) ─── */
 function PassportCropper() {
   const [preview, setPreview] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -415,10 +424,9 @@ function PassportCropper() {
     const canvas = canvasRef.current;
     if (!img || !canvas) return;
     const ctx = canvas.getContext('2d');
-    const tw = 413, th = 531; // 3.5cm x 4.5cm @ 300 DPI
+    const tw = 413, th = 531;
     canvas.width = tw;
     canvas.height = th;
-    // Fill white background first (JPEG doesn't support transparency)
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, tw, th);
     const dw = img.clientWidth, dh = img.clientHeight;
@@ -455,14 +463,9 @@ function PassportCropper() {
         </Button>
         {preview && (
           <Box sx={{ mt: 2, textAlign: 'center' }}>
-            <Box sx={{ position: 'relative', display: 'inline-block', overflow: 'hidden', borderRadius: 2, border: '2px dashed #aaa', cursor: 'crosshair' }}
-              onMouseMove={handleMouseMove}>
+            <Box sx={{ position: 'relative', display: 'inline-block', overflow: 'hidden', borderRadius: 2, border: '2px dashed #aaa', cursor: 'crosshair' }} onMouseMove={handleMouseMove}>
               <img ref={imgRef} src={preview} alt="" draggable={false} style={{ maxWidth: '100%', maxHeight: 400, display: 'block' }} />
-              <Box sx={{
-                position: 'absolute', border: '2px solid #1976d2', bgcolor: 'rgba(25,118,210,0.08)',
-                pointerEvents: 'none', borderRadius: 1, boxShadow: '0 0 8px rgba(25,118,210,0.5)',
-                left: crop.x, top: crop.y, width: boxSize, height: boxSize,
-              }} />
+              <Box sx={{ position: 'absolute', border: '2px solid #1976d2', bgcolor: 'rgba(25,118,210,0.08)', pointerEvents: 'none', borderRadius: 1, boxShadow: '0 0 8px rgba(25,118,210,0.5)', left: crop.x, top: crop.y, width: boxSize, height: boxSize }} />
             </Box>
             <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>Blue box ko face ke around drag karein → Crop & Download</Typography>
             <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleCrop} sx={{ mt: 1 }}>Crop & Download</Button>
@@ -475,7 +478,6 @@ function PassportCropper() {
   );
 }
 
-/* ─── Tool 4: PDF Compressor (canvas re-render) ─── */
 function PdfCompressor() {
   const [file, setFile] = useState(null);
   const [compressedUrl, setCompressedUrl] = useState(null);
@@ -486,6 +488,7 @@ function PdfCompressor() {
   const [totalPages, setTotalPages] = useState(0);
   const [quality, setQuality] = useState(0.5);
   const [scale, setScale] = useState(0.7);
+  const [preset, setPreset] = useState(2);
 
   const qualityPresets = [
     { label: 'Maximum', scale: 0.4, quality: 0.25, desc: 'Smallest size (>80% reduction)' },
@@ -493,62 +496,43 @@ function PdfCompressor() {
     { label: 'Medium',  scale: 0.7, quality: 0.5, desc: 'Balanced (40-60% smaller)' },
     { label: 'Low',     scale: 1.0, quality: 0.7, desc: 'Light (15-30% smaller)' },
   ];
-  const [preset, setPreset] = useState(2); // Medium default
 
-  const applyPreset = (idx) => {
-    setPreset(idx);
-    setScale(qualityPresets[idx].scale);
-    setQuality(qualityPresets[idx].quality);
-  };
+  const applyPreset = (idx) => { setPreset(idx); setScale(qualityPresets[idx].scale); setQuality(qualityPresets[idx].quality); };
 
   const handleUpload = useCallback(async (e) => {
     const f = e.target.files?.[0];
     if (!f || f.type !== 'application/pdf') return alert('Only PDF files allowed');
-    setFile(f);
-    setOrigSize(f.size);
-    setCompressedUrl(null);
-    setProgress(0);
-    setTotalPages(0);
-
+    setFile(f); setOrigSize(f.size); setCompressedUrl(null); setProgress(0); setTotalPages(0);
     setLoading(true);
     try {
       const pdfjsLib = await import('pdfjs-dist');
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.7.284/build/pdf.worker.min.mjs';
-
       const data = await f.arrayBuffer();
       const doc = await pdfjsLib.getDocument({ data }).promise;
       const numPages = doc.numPages;
       setTotalPages(numPages);
-
       const { jsPDF } = await import('jspdf');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pw = pdf.internal.pageSize.getWidth();
       const ph = pdf.internal.pageSize.getHeight();
-      const margin = 5;
-      const maxW = pw - margin * 2;
-      const maxH = ph - margin * 2;
-
+      const margin = 5, maxW = pw - margin * 2, maxH = ph - margin * 2;
       for (let i = 1; i <= numPages; i++) {
         setProgress(i);
         const page = await doc.getPage(i);
-        const vp = page.getViewport({ scale: scale });
+        const vp = page.getViewport({ scale });
         const canvas = document.createElement('canvas');
         canvas.width = vp.width;
         canvas.height = vp.height;
         const ctx = canvas.getContext('2d');
-        // White bg
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         await page.render({ canvasContext: ctx, viewport: vp }).promise;
-
         if (i > 1) pdf.addPage();
         const aspect = canvas.width / canvas.height;
         let w = maxW, h = w / aspect;
         if (h > maxH) { h = maxH; w = h * aspect; }
         pdf.addImage(canvas.toDataURL('image/jpeg', quality), 'JPEG', margin, margin, w, h);
-        // Cleanup
-        canvas.width = 0;
-        canvas.height = 0;
+        canvas.width = 0; canvas.height = 0;
       }
       const blob = pdf.output('blob');
       setCompressedUrl(URL.createObjectURL(blob));
@@ -562,19 +546,11 @@ function PdfCompressor() {
       <CardContent>
         <Typography variant="h6" fontWeight={700} gutterBottom>📦 PDF Compressor</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>PDF ko aggressively compress karein — 2MB+ PDF ko 200-500KB me badle</Typography>
-
-        {/* Quality presets */}
         <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
           {qualityPresets.map((p, i) => (
-            <Button key={i} size="small" variant={preset === i ? 'contained' : 'outlined'} onClick={() => applyPreset(i)}
-              sx={{ borderRadius: 4, textTransform: 'none', fontSize: '0.75rem' }}
-            >
-              {p.label}
-            </Button>
+            <Button key={i} size="small" variant={preset === i ? 'contained' : 'outlined'} onClick={() => applyPreset(i)} sx={{ borderRadius: 4, textTransform: 'none', fontSize: '0.75rem' }}>{p.label}</Button>
           ))}
         </Box>
-
-        {/* Fine-tuning sliders */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="caption">Image Scale: {(scale * 100).toFixed(0)}%</Typography>
           <Slider value={scale} onChange={(_, v) => { setScale(v); setPreset(-1); }} min={0.2} max={1.5} step={0.05} valueLabelDisplay="auto" valueLabelFormat={v => `${(v * 100).toFixed(0)}%`} size="small" />
@@ -583,7 +559,6 @@ function PdfCompressor() {
           <Typography variant="caption">JPEG Quality: {(quality * 100).toFixed(0)}%</Typography>
           <Slider value={quality} onChange={(_, v) => { setQuality(v); setPreset(-1); }} min={0.1} max={1} step={0.05} valueLabelDisplay="auto" valueLabelFormat={v => `${(v * 100).toFixed(0)}%`} size="small" />
         </Box>
-
         <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
           Upload PDF
           <input hidden type="file" accept="application/pdf" onChange={handleUpload} />
@@ -597,11 +572,7 @@ function PdfCompressor() {
         {file && !loading && <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>Original: {formatBytes(origSize)}</Typography>}
         {compressedUrl && (
           <Box sx={{ mt: 1 }}>
-            <Typography variant="caption" display="block" fontWeight={600}>
-              Compressed: {formatBytes(compSize)} <span style={{ color: compSize < origSize ? 'green' : 'red' }}>
-                ({(100 - compSize / origSize * 100).toFixed(1)}% smaller)
-              </span>
-            </Typography>
+            <Typography variant="caption" display="block" fontWeight={600}>Compressed: {formatBytes(compSize)} <span style={{ color: compSize < origSize ? 'green' : 'red' }}>({(100 - compSize / origSize * 100).toFixed(1)}% smaller)</span></Typography>
             <Button variant="contained" startIcon={<DownloadIcon />} href={compressedUrl} download="compressed.pdf" sx={{ mt: 1 }}>Download</Button>
           </Box>
         )}
@@ -610,7 +581,6 @@ function PdfCompressor() {
   );
 }
 
-/* ─── Tool 5: Signature Maker ─── */
 function SignatureMaker() {
   const canvasRef = useRef(null);
   const drawing = useRef(false);
@@ -651,11 +621,7 @@ function SignatureMaker() {
 
   const end = useCallback(() => { drawing.current = false; }, []);
 
-  const clear = () => {
-    const c = canvasRef.current;
-    c.getContext('2d').clearRect(0, 0, c.width, c.height);
-    setHasContent(false);
-  };
+  const clear = () => { canvasRef.current.getContext('2d').clearRect(0, 0, canvasRef.current.width, canvasRef.current.height); setHasContent(false); };
 
   const download = () => {
     const c = canvasRef.current;
@@ -694,23 +660,13 @@ function SignatureMaker() {
   );
 }
 
-/* ─── Tool 6: Merge PDF ─── */
 function MergePdf() {
   const [files, setFiles] = useState([]);
   const [merging, setMerging] = useState(false);
 
-  const handleAdd = useCallback((e) => {
-    setFiles(prev => [...prev, ...Array.from(e.target.files || [])]);
-    e.target.value = '';
-  }, []);
-
+  const handleAdd = useCallback((e) => { setFiles(prev => [...prev, ...Array.from(e.target.files || [])]); e.target.value = ''; }, []);
   const remove = (i) => setFiles(prev => prev.filter((_, idx) => idx !== i));
-
-  const move = (i, dir) => {
-    const j = i + dir;
-    if (j < 0 || j >= files.length) return;
-    setFiles(prev => { const a = [...prev]; [a[i], a[j]] = [a[j], a[i]]; return a; });
-  };
+  const move = (i, dir) => { const j = i + dir; if (j < 0 || j >= files.length) return; setFiles(prev => { const a = [...prev]; [a[i], a[j]] = [a[j], a[i]]; return a; }); };
 
   const merge = async () => {
     if (files.length < 2) return alert('Kam se kam 2 PDF files chahiye');
@@ -757,9 +713,7 @@ function MergePdf() {
               ))}
             </Box>
             {merging && <LinearProgress sx={{ mt: 1 }} />}
-            <Button variant="contained" startIcon={<DownloadIcon />} onClick={merge} disabled={merging || files.length < 2} sx={{ mt: 2 }}>
-              Merge & Download ({files.length} files)
-            </Button>
+            <Button variant="contained" startIcon={<DownloadIcon />} onClick={merge} disabled={merging || files.length < 2} sx={{ mt: 2 }}>Merge & Download ({files.length} files)</Button>
           </>
         )}
       </CardContent>
@@ -767,7 +721,6 @@ function MergePdf() {
   );
 }
 
-/* ─── Tool 7: Image Format Converter ─── */
 function FormatConverter() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -794,7 +747,6 @@ function FormatConverter() {
     c.width = img.naturalWidth;
     c.height = img.naturalHeight;
     const ctx = c.getContext('2d');
-    // White background (fixes transparent PNG → black bg bug in JPG)
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, c.width, c.height);
     ctx.drawImage(img, 0, 0);
@@ -834,17 +786,11 @@ function FormatConverter() {
               )}
             </Box>
             {loading && <LinearProgress sx={{ mt: 1 }} />}
-            <Button variant="contained" startIcon={<DownloadIcon />} onClick={convert} disabled={loading} sx={{ mt: 1 }}>
-              Convert & Download
-            </Button>
+            <Button variant="contained" startIcon={<DownloadIcon />} onClick={convert} disabled={loading} sx={{ mt: 1 }}>Convert & Download</Button>
             {convertedUrl && (
-              <Button variant="outlined" startIcon={<DownloadIcon />} href={convertedUrl} download={`converted.${format}`} sx={{ mt: 1, ml: 1 }}>
-                Save
-              </Button>
+              <Button variant="outlined" startIcon={<DownloadIcon />} href={convertedUrl} download={`converted.${format}`} sx={{ mt: 1, ml: 1 }}>Save</Button>
             )}
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Note: Government application forms ke liye <strong>JPG/JPEG</strong> format select karein
-            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>Note: Government application forms ke liye <strong>JPG/JPEG</strong> format select karein</Typography>
           </Box>
         )}
       </CardContent>
@@ -852,7 +798,6 @@ function FormatConverter() {
   );
 }
 
-/* ─── Tool 8: Background Remover (AI-powered) ─── */
 function BgWhitener() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -874,38 +819,29 @@ function BgWhitener() {
     setStatus('Loading AI model (first time may take ~10s)...');
     try {
       const { removeBackground } = await import('@imgly/background-removal');
-
       const resultBlob = await removeBackground(preview, {
         progress: (key, current, total) => {
           const pct = total > 0 ? Math.round((current / total) * 100) : '';
           setStatus(key === 'download' ? `Downloading model... ${pct}%` : `Processing... ${pct}%`);
         }
       });
-
       setStatus('Compositing on white background...');
-
-      // Load the transparent result
       const img = new Image();
       img.src = URL.createObjectURL(resultBlob);
       await new Promise(r => { img.onload = r; });
-
-      // Draw on canvas with passport dimensions + white bg
       const c = document.createElement('canvas');
-      const tw = 413, th = 531; // 3.5cm x 4.5cm @ 300 DPI
+      const tw = 413, th = 531;
       c.width = tw;
       c.height = th;
       const ctx = c.getContext('2d');
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, tw, th);
-
-      // Center the image maintaining aspect ratio
       const r = img.naturalWidth / img.naturalHeight;
       let dw, dh;
       if (r > tw / th) { dw = tw; dh = dw / r; } else { dh = th; dw = dh * r; }
       const dx = (tw - dw) / 2;
       const dy = (th - dh) / 2;
       ctx.drawImage(img, dx, dy, dw, dh);
-
       c.toBlob(b => {
         setProcessedUrl(URL.createObjectURL(b));
         setLoading(false);
@@ -922,9 +858,7 @@ function BgWhitener() {
     <Card>
       <CardContent>
         <Typography variant="h6" fontWeight={700} gutterBottom>☀️ Photo Background Remover</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          AI automatic background remove karein → pure white background → passport ready JPEG
-        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>AI automatic background remove karein → pure white background → passport ready JPEG</Typography>
         <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
           Upload Photo
           <input hidden type="file" accept="image/*" onChange={handleUpload} />
@@ -944,13 +878,9 @@ function BgWhitener() {
               </Box>
             )}
             <Box>
-              <Button variant="contained" startIcon={<BrushIcon />} onClick={whiten} disabled={loading} sx={{ display: 'block' }}>
-                {loading ? 'Processing...' : 'Remove & Whiten Background'}
-              </Button>
+              <Button variant="contained" startIcon={<BrushIcon />} onClick={whiten} disabled={loading} sx={{ display: 'block' }}>{loading ? 'Processing...' : 'Remove & Whiten Background'}</Button>
               {processedUrl && (
-                <Button variant="outlined" startIcon={<DownloadIcon />} href={processedUrl} download="passport-white-bg.jpg" sx={{ mt: 1, display: 'block' }}>
-                  Download JPEG
-                </Button>
+                <Button variant="outlined" startIcon={<DownloadIcon />} href={processedUrl} download="passport-white-bg.jpg" sx={{ mt: 1, display: 'block' }}>Download JPEG</Button>
               )}
             </Box>
             <IconButton color="error" onClick={() => { setFile(null); setPreview(null); setProcessedUrl(null); }}><DeleteIcon /></IconButton>
@@ -961,31 +891,20 @@ function BgWhitener() {
   );
 }
 
-/* ─── Tool 9: Age Calculator (govt-exam accurate) ─── */
 function AgeCalculator() {
   const [dob, setDob] = useState('');
   const [targetDate, setTargetDate] = useState('');
   const [age, setAge] = useState(null);
 
-  // Robust age calc: handles edge cases like Jan 31 → March 1
   const calcAge = (birth, asOn) => {
     let y = asOn.getFullYear() - birth.getFullYear();
     let m = asOn.getMonth() - birth.getMonth();
     let d = asOn.getDate() - birth.getDate();
-
-    // Borrow days repeatedly until non-negative (handles all edge cases)
     let safety = 0;
-    while (d < 0 && safety < 3) {
-      m--;
-      d += new Date(asOn.getFullYear(), asOn.getMonth() - 1 - safety, 0).getDate();
-      safety++;
-    }
+    while (d < 0 && safety < 3) { m--; d += new Date(asOn.getFullYear(), asOn.getMonth() - 1 - safety, 0).getDate(); safety++; }
     if (d < 0) d = 0;
-
-    // Borrow months repeatedly
     while (m < 0) { y--; m += 12; }
     while (m >= 12) { y++; m -= 12; }
-
     return { years: y, months: m, days: d };
   };
 
@@ -1012,18 +931,10 @@ function AgeCalculator() {
         <Button variant="contained" startIcon={<CalendarMonthIcon />} onClick={calculate} fullWidth>Calculate Age</Button>
         {age && (
           <Alert severity="success" sx={{ mt: 2, textAlign: 'center' }}>
-            <Typography variant="h4" fontWeight={800}>
-              {age.years}y {age.months}m {age.days}d
-            </Typography>
-            <Typography variant="body1">
-              {age.years} years, {age.months} months, {age.days} days
-            </Typography>
-            <Typography variant="body2">
-              {age.years} saal, {age.months} mahine, {age.days} din
-            </Typography>
-            <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-              Form me likho: {age.years} Years {age.months} Months {age.days} Days
-            </Typography>
+            <Typography variant="h4" fontWeight={800}>{age.years}y {age.months}m {age.days}d</Typography>
+            <Typography variant="body1">{age.years} years, {age.months} months, {age.days} days</Typography>
+            <Typography variant="body2">{age.years} saal, {age.months} mahine, {age.days} din</Typography>
+            <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>Form me likho: {age.years} Years {age.months} Months {age.days} Days</Typography>
           </Alert>
         )}
       </CardContent>
