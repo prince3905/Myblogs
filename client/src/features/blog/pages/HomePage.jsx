@@ -16,116 +16,66 @@ export default function HomePage() {
       
       {/* Hero Section - Featured Article */}
       {featuredPost && (
-        <Box sx={{ pt: { xs: 10, md: 18 }, pb: { xs: 8, md: 12 }, minHeight: { md: 600 }, display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ pt: { xs: 10, md: 18 }, pb: { xs: 8, md: 12 } }}>
           <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-            <Box sx={{ 
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' },
-              gap: { xs: 4, md: 5 },
-              alignItems: 'center',
-            }}>
-              {/* Left: Text content */}
-              <Box>
-                <Typography
-                  variant="overline"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: '0.75rem',
-                    color: '#4F46E5',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                    mb: 2,
-                    display: 'block',
-                  }}
-                >
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {/* Image */}
+              <Link to={`/blog/${featuredPost.slug}`} style={{ textDecoration: 'none' }}>
+                <Box sx={{ position: 'relative', borderRadius: '32px', overflow: 'hidden', boxShadow: '0 10px 50px rgba(0,0,0,0.08)' }}>
+                  {featuredPost.featuredImage ? (
+                    <Box
+                      component="img"
+                      src={featuredPost.featuredImage}
+                      alt={featuredPost.title}
+                      sx={{
+                        width: '100%',
+                        height: { xs: 300, md: 520 },
+                        objectFit: 'cover',
+                        display: 'block',
+                        transition: 'transform 0.4s ease',
+                        '&:hover': { transform: 'scale(1.02)' },
+                      }}
+                    />
+                  ) : (
+                    <Box sx={{ width: '100%', height: { xs: 300, md: 520 }, bgcolor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>{featuredPost.category}</Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Link>
+              
+              {/* Content below image */}
+              <Box sx={{ mt: { xs: 3, md: 4 }, maxWidth: 800 }}>
+                <Typography variant="overline" sx={{ fontWeight: 700, fontSize: '0.75rem', color: '#4F46E5', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 1, display: 'block' }}>
                   {featuredPost.category}
                 </Typography>
-                <Typography
-                  variant="h1"
-                  sx={{
-                    fontWeight: 700,
-                    mb: 3,
-                    fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem' },
-                    lineHeight: { xs: 1.1, md: '78px' },
-                    color: '#4F46E5',
-                    letterSpacing: { xs: '-0.02em', md: '-3px' },
-                    maxWidth: { md: 700 },
-                  }}
-                >
-                  {featuredPost.title}
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    mb: 4,
-                    color: '#6B7280',
-                    fontSize: { xs: '1rem', md: '1.375rem' },
-                    lineHeight: 1.6,
-                    maxWidth: { md: 600 },
-                  }}
-                >
+                <Link to={`/blog/${featuredPost.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <Typography variant="h1" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '2rem', sm: '2.8rem', md: '3.5rem' }, lineHeight: 1.15, color: '#4F46E5', letterSpacing: { xs: '-0.02em', md: '-2px' }, '&:hover': { opacity: 0.85 } }}>
+                    {featuredPost.title}
+                  </Typography>
+                </Link>
+                <Typography variant="body1" sx={{ mb: 3, color: '#6B7280', fontSize: { xs: '1rem', md: '1.2rem' }, lineHeight: 1.7 }}>
                   {featuredPost.excerpt}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <Avatar
-                    sx={{ width: 48, height: 48, bgcolor: '#4F46E5', fontSize: '1rem', fontWeight: 600 }}
-                  >
+                  <Avatar sx={{ width: 44, height: 44, bgcolor: '#4F46E5', fontSize: '1rem', fontWeight: 600 }}>
                     {featuredPost.author?.charAt(0) || 'A'}
                   </Avatar>
                   <Box>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827', fontSize: '0.95rem' }}>
                       {featuredPost.author || 'Admin'}
                     </Typography>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 0.5 }}>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 0.3 }}>
                       <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 500, fontSize: '0.8rem' }}>
                         {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </Typography>
                       <Typography variant="caption" sx={{ color: '#6B7280' }}>•</Typography>
-                      <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.8rem' }}>
-                        {featuredPost.readingTime || 5} min read
-                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.8rem' }}>{featuredPost.readingTime || 5} min read</Typography>
                       <Typography variant="caption" sx={{ color: '#6B7280' }}>•</Typography>
-                      <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.8rem' }}>
-                        {featuredPost.views || 0} views
-                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.8rem' }}>{featuredPost.views || 0} views</Typography>
                     </Box>
                   </Box>
                 </Box>
-              </Box>
-              
-              {/* Right: Featured Image */}
-              <Box>
-                {featuredPost.featuredImage ? (
-                  <Box
-                    component="img"
-                    src={featuredPost.featuredImage}
-                    alt={featuredPost.title}
-                    sx={{
-                      width: '100%',
-                      height: { xs: 300, md: 480 },
-                      objectFit: 'cover',
-                      borderRadius: '32px',
-                      boxShadow: '0 10px 50px rgba(0,0,0,0.08)',
-                    }}
-                  />
-                ) : (
-                  <Box
-                    sx={{
-                      width: '100%',
-                      height: { xs: 300, md: 480 },
-                      bgcolor: '#4F46E5',
-                      borderRadius: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 10px 50px rgba(0,0,0,0.08)',
-                    }}
-                  >
-                    <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>
-                      {featuredPost.category}
-                    </Typography>
-                  </Box>
-                )}
               </Box>
             </Box>
           </Container>
