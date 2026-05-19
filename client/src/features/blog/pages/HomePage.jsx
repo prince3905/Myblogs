@@ -102,7 +102,7 @@ export default function HomePage() {
                     alt={featuredPost.title}
                     sx={{
                       width: '100%',
-                      aspectRatio: { xs: '4/3', md: '16/9' },
+                      height: { xs: 300, md: 480 },
                       objectFit: 'cover',
                       borderRadius: '32px',
                       boxShadow: '0 10px 50px rgba(0,0,0,0.08)',
@@ -112,7 +112,7 @@ export default function HomePage() {
                   <Box
                     sx={{
                       width: '100%',
-                      aspectRatio: { xs: '4/3', md: '16/9' },
+                      height: { xs: 300, md: 480 },
                       bgcolor: '#4F46E5',
                       borderRadius: '32px',
                       display: 'flex',
