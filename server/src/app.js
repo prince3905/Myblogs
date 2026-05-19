@@ -59,7 +59,6 @@ app.get('/ads.txt', (req, res) => {
 });
 
 // Serve static files
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 app.use(express.static(publicPath));
 
 // Handle client-side routing (React Router) - only if file doesn't exist
