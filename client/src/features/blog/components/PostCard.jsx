@@ -53,7 +53,7 @@ export default function PostCard({ post }) {
       }}
     >
       {/* Image section */}
-      <Box sx={{ position: 'relative', overflow: 'hidden', height: { xs: 130, md: 160 }, flexShrink: 0 }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '16/9', flexShrink: 0 }}>
         {post.featuredImage ? (
           <Box
             component="img"
