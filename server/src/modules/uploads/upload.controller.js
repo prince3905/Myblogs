@@ -2,6 +2,12 @@ const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 
+cloudinary.config({
+  cloud_name: 'drkm1wo9o',
+  api_key: '479412262566892',
+  api_secret: '_J0pP4VbLy-TL5vAVoRpaFjJFxg',
+});
+
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
