@@ -1,7 +1,6 @@
 const axios = require('axios');
 const { processAIOutput } = require('./aiPostProcessor');
 
-const OLLAMA_CHAT_URL = 'http://127.0.0.1:11434/api/chat';
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
 const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -349,11 +348,11 @@ Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeawa
 
 Return ONLY JSON. The "content" value must be a STRING (not an object or array).`;
 
-    const aiModel = model || 'llama3.2:1b';
+    const aiModel = model || 'gpt-4o-mini';
     const isOpenAI = aiModel.startsWith('gpt-');
     const isGemini = aiModel.startsWith('gemini-');
     const isGroq = GROQ_MODELS.includes(aiModel);
-    const modelTimeout = isGroq ? 60000 : (isGemini ? 60000 : (isOpenAI ? 30000 : (aiModel.includes('llama') ? 60000 : aiModel.includes('qwen') ? 120000 : 180000)));
+    const modelTimeout = isGroq ? 60000 : (isGemini ? 60000 : 30000);
 
     let text = '';
 
@@ -410,24 +409,7 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
       });
       text = openaiResponse.data?.choices?.[0]?.message?.content || '';
     } else {
-      const response = await axios.post(OLLAMA_CHAT_URL, {
-        model: aiModel,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        stream: false,
-        options: {
-          temperature: 0.7,
-          repeat_penalty: 1.15,
-          top_k: 40,
-          top_p: 0.9,
-          num_predict: tokenBudget
-        }
-      }, {
-        timeout: modelTimeout
-      });
-      text = response.data?.message?.content || '';
+      return res.status(400).json({ success: false, message: 'Invalid model specified. Use GPT, Gemini, or Groq models.' });
     }
 
     // Strip code fences
@@ -447,7 +429,7 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
         norm[k.toLowerCase()] = v;
       }
       parsed = norm;
-      // Validate fields — discard parsed data if corrupt (phi3:mini artifact)
+      // Validate fields — discard parsed data if corrupt
       const fieldKeys = Object.keys(parsed);
       const hasCorruptField = fieldKeys.some(k => {
         const v = parsed[k];
@@ -463,7 +445,6 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
 
     let content = '';
     if (parsed?.content) {
-      // Handle case where content is an object (phi3:mini artifact)
       let raw = parsed.content;
       if (typeof raw === 'object' && !Array.isArray(raw)) {
         raw = Object.values(raw).filter(v => typeof v === 'string').join('\n\n');
@@ -580,14 +561,6 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
       return res.status(503).json({
         success: false,
         message: 'Gemini model busy right now, try again or switch to another model'
-      });
-    }
-
-    if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
-      return res.status(503).json({
-        success: false,
-        message: 'Ollama is not running. Please start Ollama and try again.',
-        ollamaOffline: true
       });
     }
 

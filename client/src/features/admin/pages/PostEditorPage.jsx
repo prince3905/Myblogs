@@ -33,7 +33,7 @@ export default function PostEditorPage() {
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiModel, setAiModel] = useState('llama3.2:1b');
+  const [aiModel, setAiModel] = useState('gpt-4o-mini');
   const [aiLength, setAiLength] = useState('medium');
   const [aiTone, setAiTone] = useState('informative');
   const [aiLanguage, setAiLanguage] = useState('hinglish');
@@ -97,8 +97,7 @@ export default function PostEditorPage() {
       addToast('AI ne sab bhar diya! 🎉', 'success');
     } catch (err) {
       const msg = err?.message || 'Kuch gadbad hua';
-      if (msg.includes('Ollama is not running')) addToast('Ollama band hai, pehle start karo', 'error');
-      else if (msg.includes('API_KEY not set')) addToast('API key set nahi hai .env me', 'error');
+      if (msg.includes('API_KEY not set')) addToast('API key set nahi hai .env me', 'error');
       else if (msg.includes('quota exceeded')) addToast('API quota khatam, billing check karo', 'error');
       else if (msg.includes('high demand')) addToast('AI model busy hai, thodi der me try kar', 'error');
       else if (msg.includes('timeout') || msg.includes('taking too long')) addToast('AI slow hai, dubara try kar', 'error');
@@ -219,9 +218,6 @@ export default function PostEditorPage() {
                     label="Model"
                     onChange={(e) => setAiModel(e.target.value)}
                   >
-                    <MenuItem value="llama3.2:1b">Llama 3.2 1B ⚡</MenuItem>
-                    <MenuItem value="qwen2.5:3b">Qwen 2.5 3B</MenuItem>
-                    <MenuItem value="phi3:mini">Phi-3 Mini</MenuItem>
                     <MenuItem disabled>— ChatGPT —</MenuItem>
                     <MenuItem value="gpt-4o-mini">GPT-4o Mini 💬</MenuItem>
                     <MenuItem value="gpt-4o">GPT-4o 💬</MenuItem>
