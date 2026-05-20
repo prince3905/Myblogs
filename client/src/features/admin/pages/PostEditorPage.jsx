@@ -33,7 +33,7 @@ export default function PostEditorPage() {
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiModel, setAiModel] = useState('gpt-4o-mini');
+  const [aiModel, setAiModel] = useState('gemini-flash-latest');
   const [aiLength, setAiLength] = useState('medium');
   const [aiTone, setAiTone] = useState('informative');
   const [aiLanguage, setAiLanguage] = useState('hinglish');

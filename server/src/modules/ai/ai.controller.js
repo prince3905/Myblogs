@@ -348,7 +348,7 @@ Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeawa
 
 Return ONLY JSON. The "content" value must be a STRING (not an object or array).`;
 
-    const aiModel = model || 'gpt-4o-mini';
+    const aiModel = model || 'gemini-flash-latest';
     const isOpenAI = aiModel.startsWith('gpt-');
     const isGemini = aiModel.startsWith('gemini-');
     const isGroq = GROQ_MODELS.includes(aiModel);
