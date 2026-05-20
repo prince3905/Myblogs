@@ -213,8 +213,8 @@ function robustJsonParse(text) {
 
 async function generateAIContent(req, res) {
   try {
-    const { title, model, length, tone, language, autoTrending, command } = req.body;
-    if (!title && !autoTrending) {
+    const { title, model, length, tone, language, command } = req.body;
+    if (!title) {
       return res.status(400).json({ message: 'Title is required' });
     }
 
@@ -244,7 +244,7 @@ async function generateAIContent(req, res) {
 
 **🚀 CRITICAL - TRENDING & TRAFFIC RULES (FOLLOW STRICTLY):**
 - This article MUST target HIGH-TRAFFIC, trending keywords for Google India 2026.
-- First research what Indians are currently searching for related to "${autoTrending ? '(auto-pick the BEST trending topic for maximum traffic in India right now)' : title}".
+- First research what Indians are currently searching for related to "${title}".
 - Include minimum 3 trending long-tail keywords in the content naturally.
 - Main keyword must appear in: Title, First Paragraph, and at least one H2 heading.
 - Write click-worthy SEO title under 60 characters that gets high CTR.
@@ -316,33 +316,7 @@ GENERIC PHRASES TO AVOID:
 
     const tokenBudget = length === 'short' ? 2048 : length === 'long' ? 4096 : 3072;
 
-    const trendingCategories = [
-      'AI & automation tools for Indian businesses',
-      'Latest smartphone launches & budget phone comparison',
-      'Government schemes & digital India initiatives',
-      'Online education & career tips in 2026',
-      'Health & fitness trends in India',
-      'Stock market, crypto & investment tips for beginners',
-      'Electric vehicles & sustainable living in India',
-      'YouTube/Twitch content creation & monetization',
-      'Travel & weekend getaways from Indian cities',
-      'Startup ecosystem & freelancing opportunities in India',
-      'Cybersecurity tips for Indian internet users',
-      'Food, recipes & restaurant reviews in India',
-      'Fashion & lifestyle trends 2026',
-      'Real estate & home buying tips in Indian cities',
-      'Fitness equipment, yoga & mental health trends'
-    ];
-    const randomCategory = trendingCategories[Math.floor(Math.random() * trendingCategories.length)];
-    const dateSeed = Date.now().toString();
-
-    const userPrompt = autoTrending
-      ? `IMPORTANT: Pick a DIFFERENT trending topic than last time. Do NOT repeat "AI se paise kaise kamaye" or similar money-making topics every time. Choose from trending niche: "${randomCategory}".
-      
-Write a ${toneInstr.toLowerCase()} blog post about a UNIQUE trending topic from the "${randomCategory}" category that Indians are searching for in 2026. Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr} 
-
-Seed: ${dateSeed} — use this to randomize. Return ONLY JSON. The "content" value must be a STRING (not an object or array).`
-      : `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}"
+    const userPrompt = `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}"
 
 Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr}
 
