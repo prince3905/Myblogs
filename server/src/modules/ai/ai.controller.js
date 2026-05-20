@@ -393,8 +393,8 @@ Return ONLY the blog post content directly. Do NOT wrap in JSON, do NOT output c
     let text = '';
 
     if (isGemini) {
-      const primaryKey = aiModel === 'gemini-2.0-flash' ? GEMINI_API_KEY_2 : GEMINI_API_KEY;
-      const fallbackKey = aiModel === 'gemini-2.0-flash' ? GEMINI_API_KEY : GEMINI_API_KEY_2;
+      const primaryKey = aiModel === 'gemini-1.5-flash' ? GEMINI_API_KEY_2 : GEMINI_API_KEY;
+      const fallbackKey = aiModel === 'gemini-1.5-flash' ? GEMINI_API_KEY : GEMINI_API_KEY_2;
       if (!primaryKey && !fallbackKey) {
         return res.status(400).json({ success: false, message: 'No Gemini API key set in .env' });
       }
@@ -412,8 +412,8 @@ Return ONLY the blog post content directly. Do NOT wrap in JSON, do NOT output c
         });
         text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       } catch (geminiErr) {
-        // If 429 (quota) and fallback key exists, retry with fallback
-        if (geminiErr.response?.status === 429 && fallbackKey && fallbackKey !== primaryKey) {
+        // If 429 (quota) or 503 (busy) and fallback key exists, retry with fallback
+        if ((geminiErr.response?.status === 429 || geminiErr.response?.status === 503) && fallbackKey && fallbackKey !== primaryKey) {
           try {
             const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${fallbackKey}`, {
               contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
