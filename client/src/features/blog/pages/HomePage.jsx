@@ -5,36 +5,10 @@ import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
 import { usePosts } from '../../../hooks/usePosts';
 
-const trendingTopicIcons = {
-  'Technology': '💻',
-  'Career': '💼',
-  'Finance': '💰',
-  'Health': '🏥',
-  'Education': '📚',
-  'Business': '🏢',
-  'Lifestyle': '🌟',
-  'AI Strategy': '🤖',
-  'Web Development': '🌐',
-  'MERN Stack': '⚛️',
-  'Tutorial': '📖',
-  'Reviews': '⭐',
-};
-
 export default function HomePage() {
   const { posts, loading, error } = usePosts({ limit: 10 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = posts.length > 1 ? posts.slice(1) : [];
-
-  // Group posts by category for trending topics
-  const categoryGroups = {};
-  regularPosts.forEach(p => {
-    const cat = p.category;
-    if (cat) {
-      if (!categoryGroups[cat]) categoryGroups[cat] = [];
-      if (categoryGroups[cat].length < 3) categoryGroups[cat].push(p);
-    }
-  });
-  const trendingEntries = Object.entries(categoryGroups).slice(0, 4);
 
   return (
     <Layout>
@@ -134,79 +108,6 @@ export default function HomePage() {
                   </Box>
                 </Box>
               </Box>
-            </Box>
-          </Container>
-        </Box>
-      )}
-
-      {/* Trending Topics Section */}
-      {trendingEntries.length > 0 && (
-        <Box component="section" sx={{ py: { xs: 4, md: 6 } }}>
-          <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-            <Typography
-              variant="h2"
-              sx={{
-                fontWeight: 700, color: '#111827', letterSpacing: '-0.02em', mb: 3,
-                fontSize: { xs: '1.4rem', md: '1.75rem' }
-              }}
-            >
-              🔥 Trending Topics
-            </Typography>
-
-            {/* Topic Cards */}
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 4 }}>
-              {trendingEntries.map(([category, catPosts]) => (
-                <Link
-                  key={category}
-                  to={`/blog?category=${encodeURIComponent(category)}`}
-                  style={{ textDecoration: 'none' }}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex', alignItems: 'center', gap: 1.5,
-                      px: 2.5, py: 1.5,
-                      borderRadius: '16px',
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      bgcolor: 'white',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        borderColor: '#4F46E5',
-                        boxShadow: '0 4px 20px rgba(79,70,229,0.1)',
-                        transform: 'translateY(-2px)',
-                      }
-                    }}
-                  >
-                    <Typography sx={{ fontSize: '1.3rem' }}>
-                      {trendingTopicIcons[category] || '📌'}
-                    </Typography>
-                    <Box>
-                      <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#111827' }}>
-                        {category}
-                      </Typography>
-                      <Typography sx={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                        {catPosts.length} {catPosts.length === 1 ? 'article' : 'articles'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Link>
-              ))}
-            </Box>
-
-            {/* Blog Cards Below Trending Topics */}
-            <Box sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-              gap: '20px',
-            }}>
-              {trendingEntries.flatMap(([category, catPosts]) =>
-                catPosts.slice(0, 2).map(post => (
-                  <Box key={post._id} component="article" sx={{ minWidth: 0 }}>
-                    <PostCard post={post} headingLevel="h3" />
-                  </Box>
-                ))
-              )}
             </Box>
           </Container>
         </Box>

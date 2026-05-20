@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Chip, Divider } from '@mui/material';
+import { Link, useMemo, useState } from 'react';
+import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Divider } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -9,7 +9,6 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import CalendarToday from '@mui/icons-material/CalendarToday';
-import TrendingUp from '@mui/icons-material/TrendingUp';
 import Mail from '@mui/icons-material/Mail';
 import AdSlot from '../../../components/AdSlot';
 
@@ -25,6 +24,24 @@ export default function BlogListPage() {
   const theme = useTheme();
 
   const resultText = useMemo(() => `${total} article${total === 1 ? '' : 's'} found`, [total]);
+
+  // Group posts by category for trending topics
+  const categoryGroups = {};
+  posts.forEach(p => {
+    const cat = p.category;
+    if (cat) {
+      if (!categoryGroups[cat]) categoryGroups[cat] = [];
+      if (categoryGroups[cat].length < 3) categoryGroups[cat].push(p);
+    }
+  });
+  const trendingEntries = Object.entries(categoryGroups).slice(0, 4);
+
+  const trendingTopicIcons = {
+    'Technology': '💻', 'Career': '💼', 'Finance': '💰',
+    'Health': '🏥', 'Education': '📚', 'Business': '🏢',
+    'Lifestyle': '🌟', 'AI Strategy': '🤖', 'Web Development': '🌐',
+    'MERN Stack': '⚛️', 'Tutorial': '📖', 'Reviews': '⭐',
+  };
 
   return (
     <Layout>
@@ -133,6 +150,79 @@ export default function BlogListPage() {
         </Container>
       </Paper>
 
+      {/* Trending Topics Section */}
+      {!postsLoading && trendingEntries.length > 0 && (
+        <Box component="section" sx={{ py: { xs: 4, md: 5 } }}>
+          <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+            <Typography
+              variant="h2"
+              sx={{
+                fontWeight: 700, color: '#111827', letterSpacing: '-0.02em', mb: 3,
+                fontSize: { xs: '1.4rem', md: '1.75rem' }
+              }}
+            >
+              🔥 Trending Topics
+            </Typography>
+
+            {/* Topic Cards */}
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 4 }}>
+              {trendingEntries.map(([cat, catPosts]) => (
+                <Link
+                  key={cat}
+                  to={`/blog?category=${encodeURIComponent(cat)}`}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex', alignItems: 'center', gap: 1.5,
+                      px: 2.5, py: 1.5,
+                      borderRadius: '16px',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        borderColor: '#4F46E5',
+                        boxShadow: '0 4px 20px rgba(79,70,229,0.1)',
+                        transform: 'translateY(-2px)',
+                      }
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '1.3rem' }}>
+                      {trendingTopicIcons[cat] || '📌'}
+                    </Typography>
+                    <Box>
+                      <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#111827' }}>
+                        {cat}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                        {catPosts.length} {catPosts.length === 1 ? 'article' : 'articles'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Link>
+              ))}
+            </Box>
+
+            {/* Blog Cards Below Trending Topics */}
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+              gap: '20px',
+            }}>
+              {trendingEntries.flatMap(([cat, catPosts]) =>
+                catPosts.slice(0, 2).map(post => (
+                  <Box key={post._id} component="article" sx={{ minWidth: 0 }}>
+                    <PostCard post={post} headingLevel="h3" />
+                  </Box>
+                ))
+              )}
+            </Box>
+          </Container>
+        </Box>
+      )}
+
       {/* Main Content + Sidebar */}
       <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 0.9fr' }, gap: '24px' }}>
@@ -231,32 +321,6 @@ export default function BlogListPage() {
                 }}
                 InputProps={{ readOnly: true }}
               />
-            </Paper>
-
-            {/* Trending Topics */}
-            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid #F2F2F2' }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: '#111827' }}>
-                <TrendingUp sx={{ mr: 1, fontSize: 20, color: '#4F46E5' }} />
-                Trending Topics
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {['AI Strategy', 'Web Development', 'MERN Stack', 'UI/UX Design', 'SEO Optimization'].map((topic) => (
-                  <Chip 
-                    key={topic}
-                    label={topic}
-                    size="small"
-                    sx={{ 
-                      bgcolor: '#F8F8F8',
-                      color: '#4B5563',
-                      borderRadius: '9999px',
-                      fontSize: '0.8rem',
-                      fontWeight: 500,
-                      px: 1.5,
-                      py: 0.5,
-                    }}
-                  />
-                ))}
-              </Box>
             </Paper>
 
             {/* Ad Slot */}
