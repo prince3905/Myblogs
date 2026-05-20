@@ -161,35 +161,38 @@ function stripInstructions(raw) {
   return keep.join('\n').trim() || raw;
 }
 
-// Safety net: remove any instruction/preface text from the final content
+// Safety net: remove any instruction/preface/meta-labels from the final content
 function cleanExtractedContent(raw) {
   if (!raw) return raw;
-  const html = raw;
-  // Check if content starts with instruction-like text (plain text before any heading)
-  const stripPatterns = [
-    /^(?:<p>)?\s*(act as|you are|write a|strict instructions?|do not|structure the|here (?:is|are)|sure|certainly|absolutely|okay|i will|i have|i've|the following|this is a)/i,
-  ];
-  // Try to find first real heading in the raw HTML content
-  const lines = html.split('\n');
-  let startIdx = -1;
-  for (let i = 0; i < lines.length; i++) {
-    const t = lines[i].trim().replace(/<\/?[^>]+>/g, ''); // strip HTML tags for inspection
-    // First non-empty line that starts a heading = real content
+  const lines = raw.split('\n');
+  let startIdx = 0;
+  // Scan for lines that are metadata labels (slug:, keywords:, summary:, imageTag:, seoTitle:, etc.)
+  // or instruction patterns — skip them, start from first heading
+  for (let i = 0; i < Math.min(lines.length, 20); i++) {
+    const t = lines[i].trim().replace(/<\/?[^>]+>/g, '');
+    if (!t) continue;
+    const lower = t.toLowerCase();
+    // Heading found = content starts here
     if (/^(#{1,3}\s+|<h[234]>)/i.test(t)) {
       startIdx = i;
       break;
     }
-    // If first non-empty line doesn't look like instructions, keep everything
-    if (t && !stripPatterns.some(p => p.test(t))) {
-      startIdx = 0;
-      break;
+    // Metadata label line (e.g. "slug: value  keywords: value  summary: value")
+    if (/^(slug|keywords?|summary|image[- ]?tag|image[- ]?keywords?|seo[- ]?title|seo[- ]?description)\s*[:：]/i.test(lower) ||
+        /\b(slug|keywords?|summary|image[- ]?tag|image[- ]?keywords?|seo[- ]?title|seo[- ]?description)\s*[:：]/i.test(lower)) {
+      continue; // skip this line
     }
+    // Instruction patterns
+    if (/(?:^(?:<p>)?\s*(act as|you are|write a|strict instructions?|do not|structure the|here (?:is|are)|sure|certainly|absolutely|okay|i will|i have|i've|the following|this is a))/i.test(t)) {
+      continue; // skip this line
+    }
+    // Non-empty line that doesn't match above — keep everything from here
+    startIdx = i;
+    break;
   }
-  // If all leading lines were instruction-like, strip them
-  if (startIdx > 0) {
-    return cleanHtml(lines.slice(startIdx).join('\n'));
-  }
-  return html;
+  const result = lines.slice(startIdx).join('\n').trim();
+  if (result && startIdx > 0) return cleanHtml(result);
+  return raw;
 }
 
 function robustJsonParse(text) {
@@ -502,7 +505,7 @@ Return ONLY the blog post content directly. Do NOT wrap in JSON, do NOT output c
       content = cleanHtml(stripInstructions(text));
     }
 
-    // Safety net: ensure content doesn't contain instruction text
+    // Safety net: ensure content doesn't contain instruction/metadata text
     content = cleanExtractedContent(content);
 
     const plainText = stripHtml(content || '');
