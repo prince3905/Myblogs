@@ -134,6 +134,33 @@ function cleanHtml(html) {
   return h.trim();
 }
 
+// Strip instruction/preface text that Gemini sometimes returns before the actual content
+function stripInstructions(raw) {
+  if (!raw) return '';
+  // Find first markdown or HTML heading
+  const headingMatch = raw.match(/^(?:#{1,3}\s+|<h[234]>)/m);
+  if (headingMatch && headingMatch.index > 0) {
+    // Check if text before heading looks like instruction/preface
+    const before = raw.slice(0, headingMatch.index).trim();
+    if (before.length < 200 && /(?:here|okay|sure|certainly|absolutely|write|article|blog|post|content|below|following|this|i('ve| have| would| will)|you requested)/i.test(before)) {
+      return raw.slice(headingMatch.index);
+    }
+  }
+  // Remove instruction lines at the very start
+  const lines = raw.split('\n');
+  const keep = [];
+  let started = false;
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t || /^```/.test(t)) continue;
+    if (/^(#{1,3}\s+|<h[234]>)/.test(t)) started = true;
+    if (!started && /(?:^(?:here|okay|sure|certainly|absolutely|yes|act as|you are|write a|strict instructions|do not|structure the|i will|i have|i've|the following|this is a))/i.test(t)) continue;
+    if (t) started = true;
+    keep.push(line);
+  }
+  return keep.join('\n').trim() || raw;
+}
+
 function robustJsonParse(text) {
   if (!text) return null;
   try {
@@ -441,7 +468,7 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
     }
     // Last resort: treat entire AI output as content
     if (!content) {
-      content = cleanHtml(text);
+      content = cleanHtml(stripInstructions(text));
     }
 
     const plainText = stripHtml(content || '');
