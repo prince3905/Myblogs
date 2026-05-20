@@ -6,6 +6,7 @@ const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY_2 = process.env.GEMINI_API_KEY_2;
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const VALID_CATEGORIES = ['Technology', 'Career', 'Tutorial', 'News', 'Finance', 'Lifestyle', 'Health', 'Reviews', 'Education', 'YouTube', 'Promotions'];
 const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
@@ -392,21 +393,47 @@ Return ONLY the blog post content directly. Do NOT wrap in JSON, do NOT output c
     let text = '';
 
     if (isGemini) {
-      if (!GEMINI_API_KEY) {
-        return res.status(400).json({ success: false, message: 'GEMINI_API_KEY not set in .env' });
+      const primaryKey = aiModel === 'gemini-3-2' ? GEMINI_API_KEY_2 : GEMINI_API_KEY;
+      const fallbackKey = aiModel === 'gemini-3-2' ? GEMINI_API_KEY : GEMINI_API_KEY_2;
+      if (!primaryKey && !fallbackKey) {
+        return res.status(400).json({ success: false, message: 'No Gemini API key set in .env' });
       }
-      const geminiResponse = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${GEMINI_API_KEY}`, {
-        contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: tokenBudget,
-          topP: 0.9
+      try {
+        const geminiResponse = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${primaryKey}`, {
+          contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: tokenBudget,
+            topP: 0.9
+          }
+        }, {
+          timeout: modelTimeout,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      } catch (geminiErr) {
+        // If 429 (quota) and fallback key exists, retry with fallback
+        if (geminiErr.response?.status === 429 && fallbackKey && fallbackKey !== primaryKey) {
+          try {
+            const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${fallbackKey}`, {
+              contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: tokenBudget,
+                topP: 0.9
+              }
+            }, {
+              timeout: modelTimeout,
+              headers: { 'Content-Type': 'application/json' }
+            });
+            text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          } catch (fallbackErr) {
+            throw fallbackErr; // Let the outer catch handle it
+          }
+        } else {
+          throw geminiErr;
         }
-      }, {
-        timeout: modelTimeout,
-        headers: { 'Content-Type': 'application/json' }
-      });
-      text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      }
     } else if (isGroq) {
       if (!GROQ_API_KEY) {
         return res.status(400).json({ success: false, message: 'GROQ_API_KEY not set in .env' });
