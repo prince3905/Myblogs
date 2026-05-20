@@ -393,8 +393,8 @@ Return ONLY the blog post content directly. Do NOT wrap in JSON, do NOT output c
     let text = '';
 
     if (isGemini) {
-      const primaryKey = aiModel === 'gemini-3-2' ? GEMINI_API_KEY_2 : GEMINI_API_KEY;
-      const fallbackKey = aiModel === 'gemini-3-2' ? GEMINI_API_KEY : GEMINI_API_KEY_2;
+      const primaryKey = aiModel === 'gemini-2.0-flash' ? GEMINI_API_KEY_2 : GEMINI_API_KEY;
+      const fallbackKey = aiModel === 'gemini-2.0-flash' ? GEMINI_API_KEY : GEMINI_API_KEY_2;
       if (!primaryKey && !fallbackKey) {
         return res.status(400).json({ success: false, message: 'No Gemini API key set in .env' });
       }
