@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { processAIOutput } = require('./aiPostProcessor');
 
 const OLLAMA_CHAT_URL = 'http://127.0.0.1:11434/api/chat';
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
@@ -268,10 +269,15 @@ CONTENT STRUCTURE (Mandatory):
 - ## Table of Contents — bullet list of all major h2 headings only (short 2-4 word labels)
 - ## Introduction — set context and promise value
 - Short, scannable paragraphs (max 3-4 sentences per paragraph) to increase Dwell Time.
-- Use bullet points, bold key phrases, and data tables wherever possible.
+- **Prefer paragraphs over bullet points.** News websites rank better with paragraph format. Use bullets ONLY in Key Takeaways and Table of Contents.
+- ## [Main Section] — Include an informational table (Job Overview for govt jobs, Specs table for tech). Table must have at least 6 rows with key data points.
 - Headings: ## for main, ### for sub/FAQ
 - NO putting sentences in double quotes unless it's an actual citation.
 - Content natural aur human-like hona chahiye. Robot jaisa mat likho.
+- NO bold formatting on every key phrase. Use bold sparingly — only for extremely important terms (max 3-4 per article).
+- NO horizontal lines (--- or ___ or <hr>).
+- Include your focus/target keyword naturally 8-10 times in the content. Make sure it appears in: Title, First paragraph, at least one H2 heading, and evenly spread throughout.
+- Include 2-3 LSI/related keywords naturally in headings and paragraphs (Google search bar ke niche dikhte hain wale keywords).
 
 WRITING STYLE (Write like a knowledgeable peer, not a textbook):
 - **Use specific numbers, stats, and data.** Not "much faster" but "up to 10x faster than v3". Not "saves money" but "saved an average of $1.5 million".
@@ -284,11 +290,14 @@ WRITING STYLE (Write like a knowledgeable peer, not a textbook):
 PARAGRAPH RULES (Critical for mobile):
 - Har paragraph 2-3 lines ka hona chahiye, zyada se zyada 4 lines. Koi bhi paragraph 4 lines se bada nahi hona chahiye.
 - Each paragraph says ONE thing clearly, then stops. Do not cram multiple ideas.
-- Har 100-150 words ke baad visual break — bullet points, bold text, ya subheading.
-- Bullet points ka zyada se zyada use karo — lists with bold labels like "- **Label:** Description".
-- Beech-beech mein **bold keywords** ka use karo taake reader ki aankhein thakein nahi.
+- Har 100-150 words ke baad visual break — subheading ya bold text (but bold sparingly).
+- **Prefer paragraph format over bullet points.** Bullet points sirf Key Takeaways aur Table of Contents ke liye use karo. Baaki jagah paragraphs mein explain karo.
+- Beech-beech mein natural keywords ka use karo — force mat karo.
 - Har section mein 2-3 paragraphs ka explanation dalo. Ek line likh ke mat chhoro.
 - Real examples, use-cases, ya scenarios add karo jo reader ko value de.
+- Hinjlish mix rakho: Hindi words in Latin script + English sentences. Jaise "aap is form ko online bhar sakte hain" ya "ye exam 2026 mein hoga".
+- Job/Exam articles mein "Job Overview" table hona chahiye jisme Organization, Post, Vacancy, Fee, Date, Website ho.
+- Tech articles mein "Specs Overview" table hona chahiye jisme Price, RAM, Storage, Camera etc ho.
 
 FAQ RULES:
 - ### Question: [Question text] — direct heading, NO "Frequ01" labels.
@@ -532,15 +541,23 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
       return res.status(500).json({ success: false, message: 'AI returned empty content' });
     }
 
+    // ─── Post-processing: Apply all SEO rules ─────────────────────
+    const processed = await processAIOutput({
+      title,
+      content,
+      keywords,
+      category: matchCategory(title + ' ' + plainText),
+    });
+
     res.json({
       success: true,
-      content,
+      content: processed.content,
       slug,
       summary: summary.slice(0, 300),
       seoTitle: title.length > 70 ? title.slice(0, 67) + '...' : title,
       seoDescription: summary.slice(0, 155),
-      keywords,
-      category: matchCategory(title + ' ' + plainText),
+      keywords: processed.tags || keywords,
+      category: processed.category || matchCategory(title + ' ' + plainText),
       imageTag,
       imageKeywords
     });
