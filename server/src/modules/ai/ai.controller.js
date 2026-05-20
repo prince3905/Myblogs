@@ -161,6 +161,37 @@ function stripInstructions(raw) {
   return keep.join('\n').trim() || raw;
 }
 
+// Safety net: remove any instruction/preface text from the final content
+function cleanExtractedContent(raw) {
+  if (!raw) return raw;
+  const html = raw;
+  // Check if content starts with instruction-like text (plain text before any heading)
+  const stripPatterns = [
+    /^(?:<p>)?\s*(act as|you are|write a|strict instructions?|do not|structure the|here (?:is|are)|sure|certainly|absolutely|okay|i will|i have|i've|the following|this is a)/i,
+  ];
+  // Try to find first real heading in the raw HTML content
+  const lines = html.split('\n');
+  let startIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim().replace(/<\/?[^>]+>/g, ''); // strip HTML tags for inspection
+    // First non-empty line that starts a heading = real content
+    if (/^(#{1,3}\s+|<h[234]>)/i.test(t)) {
+      startIdx = i;
+      break;
+    }
+    // If first non-empty line doesn't look like instructions, keep everything
+    if (t && !stripPatterns.some(p => p.test(t))) {
+      startIdx = 0;
+      break;
+    }
+  }
+  // If all leading lines were instruction-like, strip them
+  if (startIdx > 0) {
+    return cleanHtml(lines.slice(startIdx).join('\n'));
+  }
+  return html;
+}
+
 function robustJsonParse(text) {
   if (!text) return null;
   try {
@@ -280,10 +311,10 @@ async function generateAIContent(req, res) {
 
 **LANGUAGE: ${langInstr}**
 
-Return ONLY valid JSON. content field MUST be a single STRING (not an object) using ## for headings and - for lists.
-- No markdown, no backticks, no extra text.
+Write content directly using ## for headings and - for lists.
+- No markdown code blocks, no backticks, no extra text before or after the content.
 - STRICTLY NO codes like "Frequ01", "interru01", "Q1", or any alphanumeric codes inside content.
-- content: The FULL blog post using ## for section headings, - for bullet items, blank lines between sections.
+- Start directly with the first heading (##). Do NOT add any introductory text or explanations.
 - slug: lowercase hyphenated keywords
 - keywords: array of 5-8 HIGH-TRAFFIC trending tag strings for Google India 2026 (MUST be real search terms Indians use)
 - summary: exactly 2 sentences (in the same language as the post)
@@ -347,7 +378,7 @@ GENERIC PHRASES TO AVOID:
 
 Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr}
 
-Return ONLY JSON. The "content" value must be a STRING (not an object or array).`;
+Return ONLY the blog post content directly. Do NOT wrap in JSON, do NOT output code blocks, do NOT add extra text before or after. Start directly with ## First Heading.`;
 
     const aiModel = model || 'gemini-flash-latest';
     const isOpenAI = aiModel.startsWith('gpt-');
@@ -470,6 +501,9 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
     if (!content) {
       content = cleanHtml(stripInstructions(text));
     }
+
+    // Safety net: ensure content doesn't contain instruction text
+    content = cleanExtractedContent(content);
 
     const plainText = stripHtml(content || '');
     const firstSentence = extractFirstSentence(plainText);
