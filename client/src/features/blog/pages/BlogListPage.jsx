@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Chip, Divider } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
@@ -256,6 +257,41 @@ export default function BlogListPage() {
                     }}
                   />
                 ))}
+              </Box>
+            </Paper>
+
+            {/* Trending Blogs */}
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid #F2F2F2' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: '#111827' }}>
+                📈 Trending Blogs
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {posts.slice(0, 5).map((post) => (
+                  <Link
+                    key={post._id}
+                    to={`/blog/${post.slug}`}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#4B5563',
+                        fontWeight: 500,
+                        fontSize: '0.85rem',
+                        lineHeight: 1.4,
+                        transition: 'color 0.2s',
+                        '&:hover': { color: '#4F46E5' },
+                      }}
+                    >
+                      {post.title}
+                    </Typography>
+                  </Link>
+                ))}
+                {posts.length === 0 && (
+                  <Typography variant="caption" sx={{ color: '#9CA3AF' }}>
+                    No posts yet
+                  </Typography>
+                )}
               </Box>
             </Paper>
 
