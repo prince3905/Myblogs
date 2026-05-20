@@ -25,7 +25,7 @@ const categoryColors = {
   'default': '#60A5FA'
 };
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, headingLevel = 'h6' }) {
   const theme = useTheme();
   const categoryColor = categoryColors[post.category] || categoryColors.default;
   
@@ -109,7 +109,8 @@ export default function PostCard({ post }) {
         '&:last-child': { pb: { xs: 1.5, md: 2.5 } }
       }}>
         <Typography 
-          variant="h6"
+          variant={headingLevel}
+          component={headingLevel}
           sx={{ 
             fontWeight: 700,
             fontSize: { xs: '0.95rem', md: '1.1rem' },
