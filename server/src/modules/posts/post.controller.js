@@ -217,11 +217,11 @@ async function sitemap(req, res) {
     .map((post) => `<url><loc>${env.siteUrl}/blog/${post.slug}</loc><lastmod>${post.updatedAt.toISOString()}</lastmod></url>`)
     .join('');
 
-  const staticPages = ['/about', '/contact', '/privacy', '/search', '/archive'].map(p =>
-    `<url><loc>${env.siteUrl}${p}</loc></url>`
+  const staticPages = ['/about', '/contact', '/privacy', '/search', '/archive', '/tools', '/games', '/terms'].map(p =>
+    `<url><loc>${env.siteUrl}${p}</loc><priority>0.8</priority></url>`
   ).join('');
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${env.siteUrl}</loc></url><url><loc>${env.siteUrl}/blog</loc></url>${staticPages}${urls}</urlset>`;
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${env.siteUrl}</loc><priority>1.0</priority></url><url><loc>${env.siteUrl}/blog</loc><priority>0.9</priority></url>${staticPages}${urls}</urlset>`;
   res.type('application/xml');
   return res.send(xml);
 }

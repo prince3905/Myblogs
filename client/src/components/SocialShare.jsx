@@ -21,7 +21,7 @@ export default function SocialShare({ title, slug }) {
       twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-      whatsapp: `https://wa.me/?text=${encodedTitle}%0A${encodedUrl}`
+      whatsapp: `https://api.whatsapp.com/send?text=${encodedTitle}%0A${encodedUrl}`
     };
     
     window.open(links[platform], '_blank', 'width=600,height=400');

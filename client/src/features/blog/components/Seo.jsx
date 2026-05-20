@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 export default function Seo({ title, description, image, url, canonical, keywords, jsonLd }) {
   const siteName = 'Digital Home';
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
-  const desc = description || 'Premium AI consulting insights and modern web solutions.';
+  const desc = description || 'Technology, Finance, Career, Tutorials, and Trends — researched and explained in simple language.';
   const pageUrl = url || window.location.href;
   const canonicalUrl = canonical || pageUrl;
 
@@ -21,6 +21,8 @@ export default function Seo({ title, description, image, url, canonical, keyword
       <meta property="og:url" content={pageUrl} />
       <meta property="og:site_name" content={siteName} />
       {image && <meta property="og:image" content={image} />}
+      {jsonLd?.datePublished && <meta property="article:published_time" content={jsonLd.datePublished} />}
+      {jsonLd?.dateModified && <meta property="article:modified_time" content={jsonLd.dateModified} />}
 
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
