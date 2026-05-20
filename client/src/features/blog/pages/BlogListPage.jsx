@@ -1,4 +1,5 @@
-import { Link, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Divider } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
