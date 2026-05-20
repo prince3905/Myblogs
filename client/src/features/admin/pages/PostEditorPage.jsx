@@ -171,16 +171,8 @@ export default function PostEditorPage() {
                   InputProps={{ sx: { fontSize: '1.25rem', fontWeight: 500 } }}
                 />
                 <Button
-                  variant="contained"
-                  onClick={handleAIWrite}
-                  disabled={aiLoading || !form.title.trim()}
-                  sx={{ minWidth: 130, height: 56, flexShrink: 0, borderRadius: 2, fontWeight: 700, fontSize: '0.8rem' }}
-                >
-                  {aiLoading ? <CircularProgress size={20} /> : '🤖 Generate'}
-                </Button>
-                <Button
                   variant="outlined"
-                  onClick={() => handleAIWrite(false)}
+                  onClick={handleAIWrite}
                   disabled={aiLoading || !form.title.trim()}
                   sx={{ minWidth: 120, height: 56, flexShrink: 0, borderRadius: 2 }}
                 >
