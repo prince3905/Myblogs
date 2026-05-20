@@ -6,7 +6,7 @@ import Seo from '../components/Seo';
 import { usePosts } from '../../../hooks/usePosts';
 
 export default function HomePage() {
-  const { posts, loading, error } = usePosts({ limit: 7 });
+  const { posts, loading, error } = usePosts({ limit: 10 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = posts.length > 1 ? posts.slice(1) : [];
 
