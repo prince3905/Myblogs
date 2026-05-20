@@ -1,6 +1,10 @@
 const axios = require('axios');
 const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
 
+function stripHtml(html) {
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function generateTags(title, content, keywords, category) {
   const tags = new Set();
 
@@ -185,10 +189,33 @@ async function processAIOutput(data) {
   processedContent = ensureKeywordFrequency(processedContent, title);
   const tags = generateTags(title, processedContent, keywords, category);
 
+  // Generate SEO-friendly fallbacks for all fields
+  const cat = category || 'Technology';
+  const firstWords = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').split(/\s+/).filter(Boolean);
+  const topTag = tags.length > 0 ? tags[0].toLowerCase().replace(/\s+/g, '-') : (firstWords[0] || 'blog');
+
+  const fallbackImageTag = cat.toLowerCase() === 'career' || cat.toLowerCase() === 'education'
+    ? 'exam-preparation'
+    : cat.toLowerCase() === 'technology'
+    ? 'tech-gadgets'
+    : cat.toLowerCase() === 'finance'
+    ? 'investment-money'
+    : cat.toLowerCase() === 'health'
+    ? 'fitness-health'
+    : firstWords.slice(0, 2).join('-') || 'blog-post';
+
+  const fallbackImageKeywords = tags.slice(0, 5).join(', ') || (title + ', ' + cat);
+  const fallbackSummary = stripHtml(processedContent).split(/[.!?\n]/).slice(0, 2).join('. ') + '.';
+
   return {
     ...data,
     content: processedContent,
     tags,
+    imageTag: data.imageTag || fallbackImageTag,
+    imageKeywords: data.imageKeywords || fallbackImageKeywords,
+    summary: data.summary || fallbackSummary.slice(0, 300),
+    seoTitle: data.seoTitle || (title.length > 70 ? title.slice(0, 67) + '...' : title),
+    seoDescription: data.seoDescription || fallbackSummary.slice(0, 155),
   };
 }
 

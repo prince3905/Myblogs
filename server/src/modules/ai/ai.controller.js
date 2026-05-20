@@ -528,19 +528,24 @@ Return ONLY JSON. The "content" value must be a STRING (not an object or array).
       content,
       keywords,
       category: matchCategory(title + ' ' + plainText),
+      imageTag,
+      imageKeywords,
+      summary,
+      seoTitle: title.length > 70 ? title.slice(0, 67) + '...' : title,
+      seoDescription: summary.slice(0, 155),
     });
 
     res.json({
       success: true,
       content: processed.content,
       slug,
-      summary: summary.slice(0, 300),
-      seoTitle: title.length > 70 ? title.slice(0, 67) + '...' : title,
-      seoDescription: summary.slice(0, 155),
+      summary: processed.summary,
+      seoTitle: processed.seoTitle,
+      seoDescription: processed.seoDescription,
       keywords: processed.tags || keywords,
       category: processed.category || matchCategory(title + ' ' + plainText),
-      imageTag,
-      imageKeywords
+      imageTag: processed.imageTag,
+      imageKeywords: processed.imageKeywords
     });
   } catch (error) {
     if (error.response?.status === 401) {
