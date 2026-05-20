@@ -145,40 +145,28 @@ function addInfoTable(content, category, title) {
 function ensureKeywordFrequency(content, title) {
   if (!content || !title) return content;
 
-  const stopwords = new Set(['the', 'a', 'an', 'in', 'of', 'to', 'for', 'and', 'or', 'is', 'are', 'was', 'were', 'ka', 'ke', 'ki', 'mein', 'se', 'ko', 'kaise', 'kya', 'hai', 'aur', 'yeh', 'woh', 'ek', 'par', 'kar', 'dena', 'lena', 'hota', 'ho']);
-  const titleWords = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').split(/\s+/).filter(w => w.length > 2 && !stopwords.has(w));
+  // Use the full title as the keyword phrase
+  const phrase = title.toLowerCase().trim();
+  // Skip very short/numeric titles (not meaningful as keywords)
+  if (phrase.length < 8) return content;
 
-  if (titleWords.length === 0) return content;
-
-  const primary = titleWords[0];
-  const phrase = titleWords.slice(0, 3).join(' ');
-
+  // Count occurrences with word boundaries
+  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const plainText = content.replace(/<[^>]*>/g, ' ').toLowerCase();
-  const primaryCount = (plainText.match(new RegExp(primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
-  const phraseCount = (plainText.match(new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+  const count = (plainText.match(new RegExp('\\b' + escaped + '\\b', 'gi')) || []).length;
 
-  const primaryNeeded = Math.max(0, 8 - primaryCount);
-  const phraseNeeded = Math.max(0, 3 - phraseCount);
+  // AI prompt already requests 8-10 occurrences; trust the AI
+  // Only inject if count is very low (0-1) — AI probably forgot
+  if (count >= 2) return content; // AI already handled it
 
-  if (primaryNeeded <= 0 && phraseNeeded <= 0) return content;
-
+  // Gently insert once or twice in natural places
   let c = content;
-  const paragraphs = c.match(/<p>(.*?)<\/p>/g) || [];
+  const insertText = '\n<p>' + title + ' is a topic that many people search for online. If you are also looking for information on ' + phrase + ', you have come to the right place.</p>\n';
 
-  for (let i = 0; i < primaryNeeded && i < paragraphs.length; i++) {
-    const idx = Math.min(i, paragraphs.length - 1);
-    const oldP = paragraphs[idx];
-    const newP = oldP.replace('</p>', ' ' + primary + '.</p>');
-    c = c.replace(oldP, newP);
-    paragraphs[idx] = newP;
-  }
-
-  for (let i = 0; i < phraseNeeded && i < paragraphs.length; i++) {
-    const idx = Math.min(i, paragraphs.length - 1);
-    const oldP = paragraphs[idx];
-    const newP = oldP.replace('</p>', ' ' + phrase + '.</p>');
-    c = c.replace(oldP, newP);
-    paragraphs[idx] = newP;
+  // Insert after first </p> (after introduction paragraph)
+  const firstP = c.indexOf('</p>');
+  if (firstP > 0) {
+    c = c.slice(0, firstP + 4) + insertText + c.slice(firstP + 4);
   }
 
   return c;
