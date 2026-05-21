@@ -319,11 +319,6 @@ Write content directly using ## for headings and - for lists.
 - No markdown code blocks, no backticks, no extra text before or after the content.
 - STRICTLY NO codes like "Frequ01", "interru01", "Q1", or any alphanumeric codes inside content.
 - Start directly with the first heading (##). Do NOT add any introductory text or explanations.
-- slug: lowercase hyphenated keywords
-- keywords: array of 5-8 HIGH-TRAFFIC trending tag strings for Google India 2026 (MUST be real search terms Indians use)
-- summary: exactly 2 sentences (in the same language as the post)
-- imageTag: single hyphenated keyword for stock photo (e.g. "workspace-setup")
-- imageKeywords: comma-separated search-optimized words for stock photo (e.g. "bitcoin,investment,india", never generic)
 
 CONTENT STRUCTURE (Mandatory):
 - Start with a hook question or surprising stat to grab attention.
