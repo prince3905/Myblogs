@@ -252,9 +252,9 @@ export default function PostEditorPage() {
               
               <TextField
                 fullWidth
-                label="Slug (auto-generated if empty)"
+                disabled
+                label="Slug (auto-generated)"
                 value={form.slug}
-                onChange={(e) => updateField('slug', e.target.value)}
                 placeholder="leave-empty-for-auto-generation"
                 sx={{ mb: 3 }}
               />
