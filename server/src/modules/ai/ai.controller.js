@@ -356,69 +356,36 @@ async function generateAIContent(req, res) {
 
     const langInstr = langMap[language] || langMap.hinglish;
 
-    const systemPrompt = `You are a blog writer for Digital Home — a universal information platform like TechCrunch meets The Verge. Current year: 2026. Your audience is curious learners and information seekers in India.
-
-**🚀 CRITICAL - TRENDING & TRAFFIC RULES (FOLLOW STRICTLY):**
-- This article MUST target HIGH-TRAFFIC, trending keywords for Google India 2026.
-- First research what Indians are currently searching for related to "${title}".
-- Include minimum 3 trending long-tail keywords in the content naturally.
-- Main keyword must appear in: Title, First Paragraph, and at least one H2 heading.
-- Write click-worthy SEO title under 60 characters that gets high CTR.
-- Keywords should be realistic, high-volume Indian search terms (e.g., "online paise kaise kamaye 2026", "AI se job loss", "best smartphone under 15000").
-- Avoid generic keywords — use specific Indian-context keywords.
+    const systemPrompt = `You are a blog writer for Digital Home, an Indian information platform. Current year: 2026.
 
 **LANGUAGE: ${langInstr}**
 
-Write content directly using ## for headings and - for lists.
-- No markdown code blocks, no backticks, no extra text before or after the content.
-- STRICTLY NO codes like "Frequ01", "interru01", "Q1", or any alphanumeric codes inside content.
-- Start directly with the first heading (##). Do NOT add any introductory text or explanations.
+Return ONLY valid JSON with these fields:
+- content: Full blog post using ## for headings, - for lists, blank lines between sections
+- slug: lowercase hyphenated URL slug (e.g., "best-phone-2026")
+- keywords: array of 5-8 SEO tags/strings
+- summary: exactly 2 sentences
+- imageTag: single hyphenated keyword for stock photo search
+- imagetag: same as imageTag (lowercase)
+- seoTitle: click-worthy title under 60 chars for Google India
+- seoDescription: 1-2 sentence meta description under 155 chars
 
-CONTENT STRUCTURE (Mandatory):
-- Start with a hook question or surprising stat to grab attention.
-- ## Table of Contents — bullet list of all major h2 headings only (short 2-4 word labels)
-- ## Introduction — set context and promise value
-- Short, scannable paragraphs (max 3-4 sentences per paragraph) to increase Dwell Time.
-- **Prefer paragraphs over bullet points.** News websites rank better with paragraph format. Use bullets ONLY in Key Takeaways and Table of Contents.
-- ## [Main Section] — Include an informational table (Job Overview for govt jobs, Specs table for tech). Table must have at least 6 rows with key data points.
-- Headings: ## for main, ### for sub/FAQ
-- NO putting sentences in double quotes unless it's an actual citation.
-- Content natural aur human-like hona chahiye. Robot jaisa mat likho.
-- NO bold formatting on every key phrase. Use bold sparingly — only for extremely important terms (max 3-4 per article).
-- NO horizontal lines (--- or ___ or <hr>).
-- Include your focus/target keyword naturally 8-10 times in the content. Make sure it appears in: Title, First paragraph, at least one H2 heading, and evenly spread throughout.
-- Include 2-3 LSI/related keywords naturally in headings and paragraphs (Google search bar ke niche dikhte hain wale keywords).
+CONTENT RULES:
+- ## for main headings, ### for subheadings/FAQ
+- Start with hook question or surprising stat
+- Short paragraphs (2-4 lines max), one idea per paragraph
+- Prefer paragraphs over bullet points. Use bullets ONLY in Key Takeaways
+- Include target keyword 8-10 times naturally (in Title, First Paragraph, at least one H2)
+- Include 2-3 LSI keywords naturally in headings and paragraphs
+- Write like a knowledgeable peer, not a textbook
+- Use specific numbers, stats, data, real examples
+- Avoid: "Frequ01", "interru01", "Q1" codes, horizontal lines (---, ___)
+- Use bold sparingly (max 3-4 per article)
+- No over-quoting, no generic phrases like "In this article" or "Let's dive in"
+- ## Introduction section mandatory
+- FAQ with 2-3 questions using ### Question: format
+- ## Key Takeaways with 4-5 bullets at end`;
 
-WRITING STYLE (Write like a knowledgeable peer, not a textbook):
-- **Use specific numbers, stats, and data.** Not "much faster" but "up to 10x faster than v3". Not "saves money" but "saved an average of $1.5 million".
-- **Name specific tools and frameworks.** Not "tools" but "Slack, Notion, and Loom". Not "frameworks" but "Google BeyondCorp and Microsoft Azure AD".
-- **Give actionable advice.** Tell reader WHAT to do, HOW to do it, and WHY.
-- **Use comparisons (X vs Y)** to help readers decide. Contrast desktop vs laptop, Rust vs Go, old way vs new way.
-- **Use backticks for commands/code:** \`npm install\`, \`@theme\`, \`useState\`
-- Bold key concepts with ** like **Oxide engine** or **23 minutes**
-
-PARAGRAPH RULES (Critical for mobile):
-- Har paragraph 2-3 lines ka hona chahiye, zyada se zyada 4 lines. Koi bhi paragraph 4 lines se bada nahi hona chahiye.
-- Each paragraph says ONE thing clearly, then stops. Do not cram multiple ideas.
-- Har 100-150 words ke baad visual break — subheading ya bold text (but bold sparingly).
-- **Prefer paragraph format over bullet points.** Bullet points sirf Key Takeaways aur Table of Contents ke liye use karo. Baaki jagah paragraphs mein explain karo.
-- Beech-beech mein natural keywords ka use karo — force mat karo.
-- Har section mein 2-3 paragraphs ka explanation dalo. Ek line likh ke mat chhoro.
-- Real examples, use-cases, ya scenarios add karo jo reader ko value de.
-- Hinjlish mix rakho: Hindi words in Latin script + English sentences. Jaise "aap is form ko online bhar sakte hain" ya "ye exam 2026 mein hoga".
-- Job/Exam articles mein "Job Overview" table hona chahiye jisme Organization, Post, Vacancy, Fee, Date, Website ho.
-- Tech articles mein "Specs Overview" table hona chahiye jisme Price, RAM, Storage, Camera etc ho.
-
-FAQ RULES:
-- ### Question: [Question text] — direct heading, NO "Frequ01" labels.
-- Answer in normal paragraph below.
-- Har FAQ ke beech blank line.
-
-END OF CONTENT:
-- End with ## Key Takeaways — 4-5 bullet points summarizing the article.
-
-GENERIC PHRASES TO AVOID:
-- "Introduction to React", "In this article", "Let's dive in", "In conclusion", "Let's explore"`;
 
 
     const toneInstr = toneMap[tone] || toneMap.informative;
@@ -431,7 +398,7 @@ GENERIC PHRASES TO AVOID:
 
 Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr}
 
-Return ONLY the blog post content directly. Do NOT wrap in JSON, do NOT output code blocks, do NOT add extra text before or after. Start directly with ## First Heading.`;
+Return ONLY valid JSON with fields: content (string with ##/## headings), slug, keywords (array), summary (2 sentences), imageTag, imagetag, seoTitle, seoDescription. "content" must be a STRING, not an object or array.`;
 
     const aiModel = model || 'gemini-flash-latest';
     const isOpenAI = aiModel.startsWith('gpt-');
