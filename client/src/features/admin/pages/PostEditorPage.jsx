@@ -40,13 +40,6 @@ export default function PostEditorPage() {
   const [aiCommand, setAiCommand] = useState('');
   const isEdit = Boolean(id);
 
-  // Auto-fill slug from title when creating new post
-  useEffect(() => {
-    if (!isEdit && form.title) {
-      updateField('slug', makeSlug(form.title));
-    }
-  }, [form.title]);
-
   useEffect(() => {
     if (!isEdit) return;
     request(`/api/admin/posts/${id}`)
@@ -173,7 +166,10 @@ export default function PostEditorPage() {
                   fullWidth
                   label="Post Title"
                   value={form.title}
-                  onChange={(e) => updateField('title', e.target.value)}
+                  onChange={(e) => {
+                    updateField('title', e.target.value);
+                    if (!isEdit) updateField('slug', makeSlug(e.target.value));
+                  }}
                   required
                   InputProps={{ sx: { fontSize: '1.25rem', fontWeight: 500 } }}
                 />
