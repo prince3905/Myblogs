@@ -52,7 +52,9 @@ export default function PostEditorPage() {
   }, [id, isEdit]);
 
   function makeSlug(str) {
-    return str.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    let slug = str.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    if (!slug || slug.length < 2) slug = 'post-' + Date.now().toString(36);
+    return slug;
   }
   function stripHtml(html) {
     return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();

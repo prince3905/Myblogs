@@ -48,7 +48,9 @@ function stripHtml(html) {
 }
 
 function makeSlug(str) {
-  return str.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  let slug = str.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  if (!slug || slug.length < 2) slug = 'post-' + Date.now().toString(36);
+  return slug;
 }
 
 function extractKeywords(text, count = 6) {
