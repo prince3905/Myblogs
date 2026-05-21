@@ -42,7 +42,7 @@ export default function PostEditorPage() {
 
   // Auto-fill slug from title when creating new post
   useEffect(() => {
-    if (!isEdit && form.title && !form.slug) {
+    if (!isEdit && form.title) {
       updateField('slug', makeSlug(form.title));
     }
   }, [form.title]);
