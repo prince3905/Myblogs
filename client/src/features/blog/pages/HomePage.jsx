@@ -113,6 +113,76 @@ export default function HomePage() {
         </Box>
       )}
 
+      {/* Explore Tools & Games Section (H2) */}
+      <Box component="section" sx={{ py: { xs: 6, md: 10 } }}>
+        <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: 700, color: '#111827', letterSpacing: '-0.02em', mb: 4,
+              fontSize: { xs: '1.5rem', md: '2rem' }
+            }}
+          >
+            Explore More
+          </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: '24px' }}>
+            {/* Tools Card */}
+            <Link to="/tools" style={{ textDecoration: 'none' }}>
+              <Box
+                sx={{
+                  p: { xs: 3, md: 4 }, borderRadius: '24px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white', height: '100%',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  cursor: 'pointer',
+                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 20px 60px rgba(102,126,234,0.3)' }
+                }}
+              >
+                <Typography sx={{ fontSize: '2.5rem', mb: 1.5 }}>🛠️</Typography>
+                <Typography variant="h3" sx={{ fontWeight: 700, fontSize: '1.5rem', mb: 1, color: 'white' }}>
+                  Student Utility Tools
+                </Typography>
+                <Typography sx={{ opacity: 0.9, lineHeight: 1.6, fontSize: '0.95rem' }}>
+                  Photo compressor under 20KB, PDF tools, passport size maker, signature creator, image to PDF converter, and more — all free, all in your browser.
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+                  <Chip label="Photo Compressor" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 500 }} />
+                  <Chip label="PDF Tools" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 500 }} />
+                  <Chip label="Passport Size" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 500 }} />
+                </Box>
+              </Box>
+            </Link>
+
+            {/* Games Card */}
+            <Link to="/games" style={{ textDecoration: 'none' }}>
+              <Box
+                sx={{
+                  p: { xs: 3, md: 4 }, borderRadius: '24px',
+                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                  color: 'white', height: '100%',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  cursor: 'pointer',
+                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 20px 60px rgba(245,87,108,0.3)' }
+                }}
+              >
+                <Typography sx={{ fontSize: '2.5rem', mb: 1.5 }}>🎮</Typography>
+                <Typography variant="h3" sx={{ fontWeight: 700, fontSize: '1.5rem', mb: 1, color: 'white' }}>
+                  Kids Educational Games
+                </Typography>
+                <Typography sx={{ opacity: 0.9, lineHeight: 1.6, fontSize: '0.95rem' }}>
+                  Fun learning games for kids — alphabet matching, math booster, animal shadow & sound quiz. Playful way to learn while having fun!
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+                  <Chip label="Alphabet Quiz" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 500 }} />
+                  <Chip label="Math Booster" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 500 }} />
+                  <Chip label="Animal Sounds" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 500 }} />
+                </Box>
+              </Box>
+            </Link>
+          </Box>
+        </Container>
+      </Box>
+
       {/* Latest Insights Section (H2) */}
       <Box component="section" sx={{ py: { xs: 6, md: 10 }, bgcolor: '#F9FAFB' }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
