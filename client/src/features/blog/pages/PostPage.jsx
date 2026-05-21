@@ -86,7 +86,7 @@ export default function PostPage() {
             image: post.featuredImage,
             datePublished: post.publishedAt,
             dateModified: post.updatedAt,
-            author: { '@type': 'Person', name: 'Admin' },
+            author: { '@type': 'Person', name: 'Harry Prince' },
             publisher: { '@type': 'Organization', name: 'Digital Home' },
             mainEntityOfPage: {
               '@type': 'WebPage',
@@ -223,10 +223,10 @@ export default function PostPage() {
         {/* Author Bio */}
         <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, mt: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', gap: { xs: 2, md: 3 }, alignItems: 'flex-start' }}>
           <Avatar sx={{ width: { xs: 44, md: 56 }, height: { xs: 44, md: 56 }, bgcolor: 'primary.main', fontSize: '1.25rem', fontWeight: 700, flexShrink: 0 }}>
-            {post.author?.charAt(0) || 'A'}
+            {post.author?.charAt(0) || 'H'}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{post.author || 'Admin'}</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{post.author || 'Harry Prince'}</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.7 }}>
               Curious mind and lifelong learner sharing insights on technology, personal finance, career growth, 
               and the trends shaping our world. Every article is researched and written for smart readers like you.

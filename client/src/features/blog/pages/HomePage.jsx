@@ -95,11 +95,11 @@ export default function HomePage() {
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                   <Avatar sx={{ width: 40, height: 40, bgcolor: '#4F46E5', fontSize: '0.9rem', fontWeight: 600 }}>
-                    {featuredPost.author?.charAt(0) || 'A'}
+                    {featuredPost.author?.charAt(0) || 'H'}
                   </Avatar>
                   <Box>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827', fontSize: '0.9rem' }}>
-                      {featuredPost.author || 'Admin'}
+                      {featuredPost.author || 'Harry Prince'}
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 500, fontSize: '0.75rem' }}>
                       {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

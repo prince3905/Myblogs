@@ -21,6 +21,7 @@ const blogPostSchema = new mongoose.Schema(
     sponsored: { type: Boolean, default: false },
     affiliateDisclosure: { type: Boolean, default: false },
     rating: { type: Number, min: 1, max: 5, default: null },
+    author: { type: String, trim: true, default: 'Harry Prince' },
     videoUrl: { type: String, trim: true, default: '' },
     translations: {
       en: {
