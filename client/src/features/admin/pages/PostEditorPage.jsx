@@ -69,13 +69,15 @@ export default function PostEditorPage() {
       addToast('Pehle title to daal bhai!', 'error');
       return;
     }
+    const finalTitle = form.title.replace(/\b\w/g, c => c.toUpperCase());
+    updateField('title', finalTitle);
     setAiLoading(true);
     try {
       const data = await request('/api/ai/generate', {
         method: 'POST',
-        body: JSON.stringify({ title: form.title, model: aiModel, length: aiLength, tone: aiTone, language: aiLanguage, command: aiCommand })
+        body: JSON.stringify({ title: finalTitle, model: aiModel, length: aiLength, tone: aiTone, language: aiLanguage, command: aiCommand })
       });
-      const title = form.title;
+      const title = finalTitle;
       const plainText = stripHtml(data.content || '');
 
       updateField('content', data.content || '');
@@ -171,6 +173,11 @@ export default function PostEditorPage() {
                   onChange={(e) => {
                     updateField('title', e.target.value);
                     if (!isEdit) updateField('slug', makeSlug(e.target.value));
+                  }}
+                  onBlur={(e) => {
+                    const val = e.target.value.replace(/\b\w/g, c => c.toUpperCase());
+                    updateField('title', val);
+                    if (!isEdit) updateField('slug', makeSlug(val));
                   }}
                   required
                   InputProps={{ sx: { fontSize: '1.25rem', fontWeight: 500 } }}
