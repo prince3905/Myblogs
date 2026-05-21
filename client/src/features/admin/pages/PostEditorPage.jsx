@@ -250,14 +250,14 @@ export default function PostEditorPage() {
                 sx={{ mb: 3 }}
               />
               
-              <TextField
-                fullWidth
-                disabled
-                label="Slug (auto-generated)"
-                value={form.slug}
-                placeholder="leave-empty-for-auto-generation"
-                sx={{ mb: 3 }}
-              />
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                  SLUG (auto-generated)
+                </Typography>
+                <Typography variant="body1" sx={{ color: form.slug ? 'primary.main' : 'text.disabled', fontFamily: 'monospace', mt: 0.5 }}>
+                  {form.slug || '/'}
+                </Typography>
+              </Box>
 
               <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
                 Content
