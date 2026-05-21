@@ -356,28 +356,29 @@ async function generateAIContent(req, res) {
 **LANGUAGE: ${langInstr}**
 
 **OFFICIAL CATEGORIES (pick the BEST match for the topic):**
-1. Sarkari Jobs & Exams (recruitment, online forms, results, syllabus)
-2. Health & Wellness (human body charts, medical conditions, fitness, diet)
-3. Tech & Tutorials (coding guides, next.js, development, tech concepts)
-4. AI & Web Tools (AI prompts, earning via AI, digital tools, calculators)
-5. News & Trends (sports, IPL points tables, current viral internet topics)
-6. Finance & Business (saving habits, investment, earning guides)
+1. Sarkari Jobs & Exams (recruitment, online forms, results, syllabus, answer keys)
+2. Health & Wellness (human body charts, medical conditions, sugar/BP charts, fitness, diet)
+3. Tech & Tutorials (coding guides, next.js, development, tech concepts, software guides)
+4. AI & Web Tools (AI prompts, earning via AI, digital tools, custom calculators)
+5. News & Trends (sports, IPL points tables, current viral internet topics, daily news)
+6. Finance & Business (saving habits, investment, earning guides, personal finance)
 
 **STRICT OUTPUT FORMAT — RETURN ONLY VALID JSON:**
 - category: Selected category name from the list above (exact match)
-- content: Full blog post using ## for headings, paragraphs (3-4 lines each), minimize bullets, include 1 data table if applicable
+- content: Full blog post using ## for headings, dense 3-4 line paragraphs, minimize bullets, include 1 relevant data table (overview/stats/chart), FAQ section with 3-4 highly searched questions at end
 - slug: Short lowercase hyphenated URL slug with core keywords only (no stop words). E.g. "ipl-2026-points-table"
+- permalink: "digitalhomeblog.in/{category-name}/{slug}" (category-name in lowercase, spaces replaced with hyphens)
 - keywords: array of 5-8 SEO tags/strings
-- summary: 140-160 character meta description in Hinglish with a call-to-action (e.g., जानिए, Check karein)
+- summary: professional 140-160 character meta description in Hinglish with a clear call-to-action (e.g., जानिए, Check karein, पढ़ें)
 - imageTag: single hyphenated keyword for stock photo search
 - imagetag: same as imageTag (lowercase)
 - seoTitle: click-worthy title under 60 chars for Google India
 - seoDescription: 1-2 sentence meta description under 155 chars
 
 **CONTENT RULES:**
-- ## for main headings, ### for subheadings/FAQ. NO heading markdown inside bullet lists or tables.
+- ## for main headings, ### for subheadings/FAQ. NO heading markdown (## or ###) inside bullet lists, numbered lists, or tables. Keep all lists plain text.
 - Start with hook question or surprising stat
-- Short paragraphs (3-4 lines max), one idea per paragraph
+- Dense paragraphs (3-4 lines max), one idea per paragraph. Write in natural Hinglish.
 - Prefer paragraphs over bullet points. Use bullets ONLY in Key Takeaways
 - Include target keyword 8-10 times naturally (in Title, First Paragraph, at least one H2)
 - Include 2-3 LSI keywords naturally in headings and paragraphs
@@ -385,7 +386,8 @@ async function generateAIContent(req, res) {
 - Avoid: "Frequ01", "interru01", "Q1" codes, horizontal lines (---, ___)
 - Use bold sparingly (max 3-4 per article). No over-quoting, no generic phrases
 - ## Introduction section mandatory
-- FAQ with 2-3 questions using ### Question: format
+- FAQ with 3-4 highly searched questions using ### Question: format
+- Include one relevant data table (overview, stats comparison, or reference chart)
 - ## Key Takeaways with 4-5 bullets at end`;
 
 
@@ -400,9 +402,9 @@ async function generateAIContent(req, res) {
 
 First, SELECT the best category from: Sarkari Jobs & Exams, Health & Wellness, Tech & Tutorials, AI & Web Tools, News & Trends, Finance & Business.
 
-Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr}
+Structure: ${sectionInstr}. Include 1 relevant data table and FAQ with 3-4 questions. End with Key Takeaways.${customInstr}
 
-Return ONLY valid JSON with fields: category, content (string with ## headings), slug (no stop words), keywords (array), summary (140-160 chars Hinglish with CTA), imageTag, imagetag, seoTitle, seoDescription. "content" must be a STRING, not an object or array.`;
+Return ONLY valid JSON with fields: category, content (string with ## headings), slug (no stop words), permalink (digitalhomeblog.in/{category}/{slug}), keywords (array), summary (140-160 chars Hinglish with CTA), imageTag, imagetag, seoTitle, seoDescription. "content" must be a STRING, not an object or array. No heading markdown inside lists or tables. Dense 3-4 line paragraphs. Natural Hinglish.`;
 
     const aiModel = model || 'gemini-flash-latest';
     const isOpenAI = aiModel.startsWith('gpt-');
@@ -620,15 +622,19 @@ Return ONLY valid JSON with fields: category, content (string with ## headings),
       seoDescription: summary.slice(0, 155),
     });
 
+    const category = processed.category || matchCategory(title + ' ' + plainText);
+    const permalink = 'digitalhomeblog.in/' + category.toLowerCase().replace(/\s+/g, '-') + '/' + slug;
+
     res.json({
       success: true,
       content: processed.content,
       slug,
+      permalink,
       summary: processed.summary,
       seoTitle: processed.seoTitle,
       seoDescription: processed.seoDescription,
       keywords: processed.tags || keywords,
-      category: processed.category || matchCategory(title + ' ' + plainText),
+      category,
       imageTag: processed.imageTag,
       imageKeywords: processed.imageKeywords
     });
