@@ -216,7 +216,7 @@ export default function PostEditorPage() {
                     <MenuItem value="gpt-3.5-turbo">GPT-3.5 Turbo 💬</MenuItem>
                     <MenuItem disabled>— Gemini (Free) —</MenuItem>
                     <MenuItem value="gemini-flash-latest">Gemini Flash 🪐</MenuItem>
-                    <MenuItem value="gemini-1.5-flash">Gemini Flash 3.2 🪐</MenuItem>
+                    <MenuItem value="gemini-2.0-flash">Gemini Flash 3.2 🪐</MenuItem>
                     <MenuItem disabled>— Groq (Free) —</MenuItem>
                     <MenuItem value="llama-3.3-70b-versatile">Groq Llama 3.3 70B ⚡</MenuItem>
                     <MenuItem value="llama-3.1-8b-instant">Groq Llama 3.1 8B ⚡</MenuItem>
