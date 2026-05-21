@@ -8,26 +8,21 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_KEY_2 = process.env.GEMINI_API_KEY_2;
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const VALID_CATEGORIES = ['Technology', 'Career', 'Tutorial', 'News', 'Finance', 'Lifestyle', 'Health', 'Reviews', 'Education', 'YouTube', 'Promotions'];
+const VALID_CATEGORIES = ['Sarkari Jobs & Exams', 'Health & Wellness', 'Tech & Tutorials', 'AI & Web Tools', 'News & Trends', 'Finance & Business'];
 const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
 
 function matchCategory(text) {
-  if (!text) return 'Technology';
+  if (!text) return 'Tech & Tutorials';
   const lower = text.toLowerCase();
   const catKeywords = {
-    'Career': ['job', 'exam', 'career', 'salary', 'interview', 'resume', 'recruitment', 'vacancy', 'government', 'sarkari', 'apply online', 'result', 'admit card', 'syllabus', 'eligibility', 'placement', 'promotion', 'work from home', 'freelancing'],
-    'Finance': ['finance', 'money', 'investment', 'tax', 'budget', 'loan', 'insurance', 'saving', 'mutual fund', 'stock market', 'crypto', 'gold', 'price', 'income', 'payment', 'credit card', 'loan'],
-    'Health': ['health', 'fitness', 'yoga', 'diet', 'disease', 'hospital', 'medicine', 'workout', 'nutrition', 'mental health', 'exercise', 'weight', 'doctor', 'treatment', 'illness'],
-    'Education': ['education', 'college', 'university', 'school', 'admission', 'scholarship', 'course', 'degree', 'study', 'learn', 'online class', 'entrance', 'board exam', 'competition'],
-    'Technology': ['technology', 'tech', 'smartphone', 'laptop', 'phone', 'gadget', 'app', 'software', 'computer', 'ai', '5g', 'digital', 'online tool', 'device', 'android', 'ios', 'windows'],
-    'Tutorial': ['tutorial', 'how to', 'guide', 'step by step', 'tips', 'beginner', 'learn', 'easy method', 'trick', 'hack', 'diy'],
-    'News': ['news', 'breaking', 'update', 'today', 'latest', 'current affairs', 'announcement', 'notification'],
-    'Reviews': ['review', 'unboxing', 'vs', 'comparison', 'best', 'top', 'rating', 'opinion'],
-    'Lifestyle': ['lifestyle', 'fashion', 'travel', 'food', 'recipe', 'home decor', 'beauty', 'relationship', 'parenting'],
-    'YouTube': ['youtube', 'video', 'channel', 'subscribe', 'vlog'],
-    'Promotions': ['promotion', 'offer', 'discount', 'deal', 'coupon', 'free', 'sponsored'],
+    'Sarkari Jobs & Exams': ['sarkari', 'job', 'exam', 'recruitment', 'vacancy', 'apply online', 'online form', 'result', 'syllabus', 'admit card', 'government', 'upsc', 'ssc', 'bank', 'railway', 'defence', 'police', 'answer key', 'cutoff', 'merit list', 'eligibility', 'registration'],
+    'Health & Wellness': ['health', 'wellness', 'fitness', 'diet', 'yoga', 'workout', 'disease', 'medical', 'hospital', 'medicine', 'doctor', 'treatment', 'body chart', 'human body', 'weight loss', 'nutrition', 'exercise', 'mental health', 'illness', 'symptom'],
+    'Tech & Tutorials': ['tutorial', 'coding', 'programming', 'next.js', 'react', 'javascript', 'python', 'developer', 'web development', 'software', 'app', 'tech', 'technology', 'guide', 'how to', 'step by step', 'learn', 'beginner', 'energy', 'battery', 'electric'],
+    'AI & Web Tools': ['ai', 'artificial intelligence', 'chatgpt', 'prompt', 'earning', 'online earning', 'digital tool', 'calculator', 'tool', 'website', 'seo tool', 'keyword', 'content generator', 'image generator', 'automation', 'make money online', 'gpt', 'gemini'],
+    'News & Trends': ['news', 'trending', 'viral', 'ipl', 'cricket', 'sports', 'today', 'latest', 'update', 'current affairs', 'breaking', 'score', 'match', 'points table', 'league', 'tournament', 'football', 'olympic'],
+    'Finance & Business': ['finance', 'money', 'investment', 'saving', 'earning', 'business', 'loan', 'insurance', 'tax', 'budget', 'income', 'mutual fund', 'stock market', 'crypto', 'credit card', 'payment', 'profit', 'startup'],
   };
-  let bestCat = 'Technology';
+  let bestCat = 'Tech & Tutorials';
   let bestScore = 0;
   for (const [cat, keywords] of Object.entries(catKeywords)) {
     let score = 0;
@@ -356,32 +351,39 @@ async function generateAIContent(req, res) {
 
     const langInstr = langMap[language] || langMap.hinglish;
 
-    const systemPrompt = `You are a blog writer for Digital Home, an Indian information platform. Current year: 2026.
+    const systemPrompt = `You are a blog writer for Digital Home, an Indian multi-niche information platform. Current year: 2026.
 
 **LANGUAGE: ${langInstr}**
 
-Return ONLY valid JSON with these fields:
-- content: Full blog post using ## for headings, - for lists, blank lines between sections
-- slug: lowercase hyphenated URL slug (e.g., "best-phone-2026")
+**OFFICIAL CATEGORIES (pick the BEST match for the topic):**
+1. Sarkari Jobs & Exams (recruitment, online forms, results, syllabus)
+2. Health & Wellness (human body charts, medical conditions, fitness, diet)
+3. Tech & Tutorials (coding guides, next.js, development, tech concepts)
+4. AI & Web Tools (AI prompts, earning via AI, digital tools, calculators)
+5. News & Trends (sports, IPL points tables, current viral internet topics)
+6. Finance & Business (saving habits, investment, earning guides)
+
+**STRICT OUTPUT FORMAT — RETURN ONLY VALID JSON:**
+- category: Selected category name from the list above (exact match)
+- content: Full blog post using ## for headings, paragraphs (3-4 lines each), minimize bullets, include 1 data table if applicable
+- slug: Short lowercase hyphenated URL slug with core keywords only (no stop words). E.g. "ipl-2026-points-table"
 - keywords: array of 5-8 SEO tags/strings
-- summary: exactly 2 sentences
+- summary: 140-160 character meta description in Hinglish with a call-to-action (e.g., जानिए, Check karein)
 - imageTag: single hyphenated keyword for stock photo search
 - imagetag: same as imageTag (lowercase)
 - seoTitle: click-worthy title under 60 chars for Google India
 - seoDescription: 1-2 sentence meta description under 155 chars
 
-CONTENT RULES:
-- ## for main headings, ### for subheadings/FAQ
+**CONTENT RULES:**
+- ## for main headings, ### for subheadings/FAQ. NO heading markdown inside bullet lists or tables.
 - Start with hook question or surprising stat
-- Short paragraphs (2-4 lines max), one idea per paragraph
+- Short paragraphs (3-4 lines max), one idea per paragraph
 - Prefer paragraphs over bullet points. Use bullets ONLY in Key Takeaways
 - Include target keyword 8-10 times naturally (in Title, First Paragraph, at least one H2)
 - Include 2-3 LSI keywords naturally in headings and paragraphs
-- Write like a knowledgeable peer, not a textbook
-- Use specific numbers, stats, data, real examples
+- Write like a knowledgeable peer, not a textbook. Use specific numbers, stats, data, real examples
 - Avoid: "Frequ01", "interru01", "Q1" codes, horizontal lines (---, ___)
-- Use bold sparingly (max 3-4 per article)
-- No over-quoting, no generic phrases like "In this article" or "Let's dive in"
+- Use bold sparingly (max 3-4 per article). No over-quoting, no generic phrases
 - ## Introduction section mandatory
 - FAQ with 2-3 questions using ### Question: format
 - ## Key Takeaways with 4-5 bullets at end`;
@@ -396,9 +398,11 @@ CONTENT RULES:
 
     const userPrompt = `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}"
 
+First, SELECT the best category from: Sarkari Jobs & Exams, Health & Wellness, Tech & Tutorials, AI & Web Tools, News & Trends, Finance & Business.
+
 Structure: ${sectionInstr}. Include FAQ with 2-3 questions. End with Key Takeaways.${customInstr}
 
-Return ONLY valid JSON with fields: content (string with ##/## headings), slug, keywords (array), summary (2 sentences), imageTag, imagetag, seoTitle, seoDescription. "content" must be a STRING, not an object or array.`;
+Return ONLY valid JSON with fields: category, content (string with ## headings), slug (no stop words), keywords (array), summary (140-160 chars Hinglish with CTA), imageTag, imagetag, seoTitle, seoDescription. "content" must be a STRING, not an object or array.`;
 
     const aiModel = model || 'gemini-flash-latest';
     const isOpenAI = aiModel.startsWith('gpt-');

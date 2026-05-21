@@ -85,7 +85,7 @@ export default function PostEditorPage() {
       updateField('excerpt', data.summary || plainText.slice(0, 250));
       updateField('seoTitle', data.seoTitle || title.slice(0, 70));
       updateField('seoDescription', data.seoDescription || data.summary || plainText.slice(0, 155));
-      updateField('category', data.category || 'Technology');
+      updateField('category', data.category || 'Tech & Tutorials');
       if (data.keywords?.length) {
         const kw = data.keywords.join(', ');
         updateField('tags', kw);
@@ -335,17 +335,12 @@ export default function PostEditorPage() {
                   onChange={(e) => updateField('category', e.target.value)}
                   required
                 >
-                  <MenuItem value="Technology">Technology</MenuItem>
-                  <MenuItem value="Tutorial">Tutorial</MenuItem>
-                  <MenuItem value="Career">Career</MenuItem>
-                  <MenuItem value="Finance">Finance</MenuItem>
-                  <MenuItem value="Lifestyle">Lifestyle</MenuItem>
-                  <MenuItem value="Health">Health</MenuItem>
-                  <MenuItem value="Reviews">Reviews</MenuItem>
-                  <MenuItem value="Education">Education</MenuItem>
-                  <MenuItem value="YouTube">YouTube</MenuItem>
-                  <MenuItem value="Promotions">Promotions</MenuItem>
-                  <MenuItem value="News">News</MenuItem>
+                  <MenuItem value="Sarkari Jobs & Exams">Sarkari Jobs & Exams</MenuItem>
+                  <MenuItem value="Health & Wellness">Health & Wellness</MenuItem>
+                  <MenuItem value="Tech & Tutorials">Tech & Tutorials</MenuItem>
+                  <MenuItem value="AI & Web Tools">AI & Web Tools</MenuItem>
+                  <MenuItem value="News & Trends">News & Trends</MenuItem>
+                  <MenuItem value="Finance & Business">Finance & Business</MenuItem>
                 </Select>
               </FormControl>
 
@@ -381,20 +376,6 @@ export default function PostEditorPage() {
                 sx={{ mb: 3 }}
                 helperText="Separate tags with commas"
               />
-
-              {form.category === 'Reviews' && (
-                <TextField
-                  fullWidth
-                  type="number"
-                  inputProps={{ min: 1, max: 5, step: 0.5 }}
-                  label="Rating (1-5)"
-                  value={form.rating}
-                  onChange={(e) => updateField('rating', e.target.value)}
-                  placeholder="4.5"
-                  sx={{ mb: 3 }}
-                  helperText="Product rating for review posts"
-                />
-              )}
 
               <TextField
                 fullWidth

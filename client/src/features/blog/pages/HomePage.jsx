@@ -12,7 +12,7 @@ export default function HomePage() {
 
   return (
     <Layout>
-      <Seo title="Digital Home | Your Daily Dose of Information & Insights" description="Technology, Finance, Career, Tutorials, and Trends — researched and explained in simple language." keywords="technology blog, information hub, digital home, tech trends, tutorials" />
+      <Seo title="Digital Home | Your Daily Dose of Information & Insights" description="Sarkari Jobs, Health, Tech, AI Tools, News & Finance — researched and explained in simple language." keywords="information blog, digital home, tech tutorials, sarkari jobs, ai tools" />
 
       {/* Hero Section - Featured Article (H1) */}
       {featuredPost && (

@@ -16,17 +16,12 @@ export default function Layout({ children }) {
   const [catAnchor, setCatAnchor] = useState(null);
 
   const categories = [
-    { label: 'Technology', path: '/category/Technology' },
-    { label: 'Tutorial', path: '/category/Tutorial' },
-    { label: 'Career', path: '/category/Career' },
-    { label: 'Finance', path: '/category/Finance' },
-    { label: 'Lifestyle', path: '/category/Lifestyle' },
-    { label: 'Health', path: '/category/Health' },
-    { label: 'Reviews', path: '/category/Reviews' },
-    { label: 'Education', path: '/category/Education' },
-    { label: 'YouTube', path: '/category/YouTube' },
-    { label: 'Promotions', path: '/category/Promotions' },
-    { label: 'News', path: '/category/News' },
+    { label: 'Sarkari Jobs & Exams', path: '/category/Sarkari Jobs & Exams' },
+    { label: 'Health & Wellness', path: '/category/Health & Wellness' },
+    { label: 'Tech & Tutorials', path: '/category/Tech & Tutorials' },
+    { label: 'AI & Web Tools', path: '/category/AI & Web Tools' },
+    { label: 'News & Trends', path: '/category/News & Trends' },
+    { label: 'Finance & Business', path: '/category/Finance & Business' },
   ];
 
   const navItems = [
