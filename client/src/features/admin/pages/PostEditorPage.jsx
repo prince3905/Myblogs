@@ -257,14 +257,14 @@ export default function PostEditorPage() {
                 sx={{ mb: 3 }}
               />
               
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                  SLUG (auto-generated)
-                </Typography>
-                <Typography variant="body1" sx={{ color: form.slug ? 'primary.main' : 'text.disabled', fontFamily: 'monospace', mt: 0.5 }}>
-                  {form.slug || '/'}
-                </Typography>
-              </Box>
+              <TextField
+                fullWidth
+                label="Slug (auto-generated, editable)"
+                value={form.slug}
+                onChange={(e) => updateField('slug', e.target.value)}
+                placeholder="leave-empty-for-auto-generation"
+                sx={{ mb: 3 }}
+              />
 
               <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
                 Content
