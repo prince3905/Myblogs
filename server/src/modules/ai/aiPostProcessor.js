@@ -115,37 +115,6 @@ async function addInternalLinks(content, category) {
   }
 }
 
-function addInfoTable(content, category, title) {
-  if (!content) return content;
-
-  const lowerTitle = (title || '').toLowerCase();
-  const lowerCat = (category || '').toLowerCase();
-  const isGovtJob = /(up police|ssc|upsc|rrb|bank|railway|patwari|lekhpal|ctet|utet|government|sarkari|result|exam|recruitment|vacancy|form)/i.test(lowerTitle + ' ' + lowerCat);
-
-  let tableHtml = '';
-
-  if (isGovtJob) {
-    tableHtml = '<h2>Job Overview / नौकरी का विवरण</h2>\n<table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;">\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Organization / संगठन</strong></td><td style="border:1px solid #ddd;padding:8px;">[Organization Name]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Post Name / पद का नाम</strong></td><td style="border:1px solid #ddd;padding:8px;">[Post Name]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Total Vacancies / कुल रिक्तियां</strong></td><td style="border:1px solid #ddd;padding:8px;">[Number]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Application Mode / आवेदन का तरीका</strong></td><td style="border:1px solid #ddd;padding:8px;">Online</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Eligibility / पात्रता</strong></td><td style="border:1px solid #ddd;padding:8px;">[Eligibility Criteria]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Application Fee / आवेदन शुल्क</strong></td><td style="border:1px solid #ddd;padding:8px;">[Fee Details]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Last Date / अंतिम तिथि</strong></td><td style="border:1px solid #ddd;padding:8px;">[Last Date]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Official Website / आधिकारिक वेबसाइट</strong></td><td style="border:1px solid #ddd;padding:8px;">[Website URL]</td></tr>\n</table>';
-  }
-
-  if (lowerCat === 'technology' || /(smartphone|laptop|phone|mobile|gadget|tablet|watch)/i.test(lowerTitle)) {
-    tableHtml = '<h2>Specifications Overview</h2>\n<table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;">\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Brand / Model</strong></td><td style="border:1px solid #ddd;padding:8px;">[Brand Name]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Price in India</strong></td><td style="border:1px solid #ddd;padding:8px;">[Price]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Processor</strong></td><td style="border:1px solid #ddd;padding:8px;">[Processor]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>RAM / Storage</strong></td><td style="border:1px solid #ddd;padding:8px;">[RAM / Storage]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Display</strong></td><td style="border:1px solid #ddd;padding:8px;">[Display Size & Type]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Battery</strong></td><td style="border:1px solid #ddd;padding:8px;">[Battery Capacity]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Camera</strong></td><td style="border:1px solid #ddd;padding:8px;">[Camera Details]</td></tr>\n  <tr><td style="border:1px solid #ddd;padding:8px;"><strong>Warranty</strong></td><td style="border:1px solid #ddd;padding:8px;">[Warranty Period]</td></tr>\n</table>';
-  }
-
-  if (!tableHtml) return content;
-
-  const insertAfter = content.indexOf('</h2>');
-  if (insertAfter > 0) {
-    const pos = content.indexOf('</p>', insertAfter);
-    if (pos > 0) {
-      const insertPos = pos + 4;
-      return content.slice(0, insertPos) + '\n' + tableHtml + '\n' + content.slice(insertPos);
-    }
-  }
-
-  return content;
-}
-
 function ensureKeywordFrequency(content, title) {
   if (!content || !title) return content;
 
@@ -184,7 +153,6 @@ async function processAIOutput(data) {
   let processedContent = content;
 
   processedContent = cleanContent(processedContent);
-  processedContent = addInfoTable(processedContent, category, title);
   processedContent = await addInternalLinks(processedContent, category);
   processedContent = ensureKeywordFrequency(processedContent, title);
   const tags = generateTags(title, processedContent, keywords, category);
@@ -219,4 +187,4 @@ async function processAIOutput(data) {
   };
 }
 
-module.exports = { processAIOutput, generateTags, cleanContent, addInfoTable, addInternalLinks, ensureKeywordFrequency };
+module.exports = { processAIOutput, generateTags, cleanContent, addInternalLinks, ensureKeywordFrequency };
