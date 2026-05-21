@@ -8,14 +8,14 @@ function stripHtml(html) {
 function generateTags(title, content, keywords, category) {
   const tags = new Set();
 
+  // Title as primary tag
+  if (title) tags.add(title.toLowerCase());
+
   if (Array.isArray(keywords)) {
     keywords.slice(0, 5).forEach(k => tags.add(k));
   } else if (typeof keywords === 'string') {
     keywords.split(',').slice(0, 5).forEach(k => tags.add(k.trim()));
   }
-
-  const focusWords = title.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
-  focusWords.slice(0, 3).forEach(w => tags.add(w));
 
   if (category) tags.add(category);
 
@@ -32,11 +32,17 @@ function generateTags(title, content, keywords, category) {
     lsiTags[category].slice(0, 4).forEach(t => tags.add(t));
   }
 
-  const contentWords = (content || '').toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
-  const freq = {};
-  contentWords.forEach(w => { freq[w] = (freq[w] || 0) + 1; });
-  const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 8).map(e => e[0]);
-  sorted.slice(0, 3).forEach(w => tags.add(w));
+  const contentWords = (content || '').toLowerCase().replace(/<[^>]*>/g, '').match(/\b[a-z]{3,}\b/g) || [];
+  const stopwords = new Set(['the', 'and', 'for', 'are', 'not', 'but', 'has', 'was', 'all', 'can', 'you', 'its', 'our', 'per', 'with', 'this', 'that', 'from', 'they', 'will', 'have', 'been', 'were', 'their', 'what', 'about', 'which', 'there', 'into', 'would', 'could', 'should', 'after', 'other', 'being', 'than', 'then', 'your', 'time', 'also', 'more', 'some', 'them', 'when', 'each', 'over', 'such', 'only', 'just', 'very', 'most', 'much']);
+  // Score bigrams from content
+  const bigrams = {};
+  for (let i = 0; i < contentWords.length - 1; i++) {
+    if (!stopwords.has(contentWords[i]) && !stopwords.has(contentWords[i + 1])) {
+      const phrase = contentWords[i] + ' ' + contentWords[i + 1];
+      bigrams[phrase] = (bigrams[phrase] || 0) + 1;
+    }
+  }
+  Object.entries(bigrams).sort((a, b) => b[1] - a[1]).slice(0, 3).forEach(([p]) => tags.add(p));
 
   return Array.from(tags).filter(Boolean).slice(0, 10);
 }

@@ -14,8 +14,33 @@ const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
 function matchCategory(text) {
   if (!text) return 'Technology';
   const lower = text.toLowerCase();
-  const match = VALID_CATEGORIES.find(c => lower.includes(c.toLowerCase()));
-  return match || 'Technology';
+  const catKeywords = {
+    'Career': ['job', 'exam', 'career', 'salary', 'interview', 'resume', 'recruitment', 'vacancy', 'government', 'sarkari', 'apply online', 'result', 'admit card', 'syllabus', 'eligibility', 'placement', 'promotion', 'work from home', 'freelancing'],
+    'Finance': ['finance', 'money', 'investment', 'tax', 'budget', 'loan', 'insurance', 'saving', 'mutual fund', 'stock market', 'crypto', 'gold', 'price', 'income', 'payment', 'credit card', 'loan'],
+    'Health': ['health', 'fitness', 'yoga', 'diet', 'disease', 'hospital', 'medicine', 'workout', 'nutrition', 'mental health', 'exercise', 'weight', 'doctor', 'treatment', 'illness'],
+    'Education': ['education', 'college', 'university', 'school', 'admission', 'scholarship', 'course', 'degree', 'study', 'learn', 'online class', 'entrance', 'board exam', 'competition'],
+    'Technology': ['technology', 'tech', 'smartphone', 'laptop', 'phone', 'gadget', 'app', 'software', 'computer', 'ai', '5g', 'digital', 'online tool', 'device', 'android', 'ios', 'windows'],
+    'Tutorial': ['tutorial', 'how to', 'guide', 'step by step', 'tips', 'beginner', 'learn', 'easy method', 'trick', 'hack', 'diy'],
+    'News': ['news', 'breaking', 'update', 'today', 'latest', 'current affairs', 'announcement', 'notification'],
+    'Reviews': ['review', 'unboxing', 'vs', 'comparison', 'best', 'top', 'rating', 'opinion'],
+    'Lifestyle': ['lifestyle', 'fashion', 'travel', 'food', 'recipe', 'home decor', 'beauty', 'relationship', 'parenting'],
+    'YouTube': ['youtube', 'video', 'channel', 'subscribe', 'vlog'],
+    'Promotions': ['promotion', 'offer', 'discount', 'deal', 'coupon', 'free', 'sponsored'],
+  };
+  let bestCat = 'Technology';
+  let bestScore = 0;
+  for (const [cat, keywords] of Object.entries(catKeywords)) {
+    let score = 0;
+    for (const kw of keywords) {
+      const regex = new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      if (regex.test(lower)) score += kw.length;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestCat = cat;
+    }
+  }
+  return bestCat;
 }
 
 function stripHtml(html) {
@@ -27,15 +52,42 @@ function makeSlug(str) {
 }
 
 function extractKeywords(text, count = 6) {
-  const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+  const lower = text.toLowerCase().replace(/<[^>]*>/g, '');
+  const words = lower.match(/\b[a-z]{3,}\b/g) || [];
+  const stopwords = new Set(['the', 'and', 'for', 'are', 'not', 'but', 'has', 'was', 'all', 'can', 'you', 'its', 'our', 'per', 'with', 'this', 'that', 'from', 'they', 'will', 'have', 'been', 'were', 'their', 'what', 'about', 'which', 'there', 'into', 'would', 'could', 'should', 'after', 'other', 'being', 'than', 'then', 'your', 'time', 'also', 'more', 'some', 'them', 'when', 'each', 'over', 'such', 'only', 'just', 'very', 'most', 'much']);
+
+  // Score bigrams (two-word phrases)
+  const bigrams = {};
+  for (let i = 0; i < words.length - 1; i++) {
+    if (!stopwords.has(words[i]) && !stopwords.has(words[i + 1])) {
+      const phrase = words[i] + ' ' + words[i + 1];
+      bigrams[phrase] = (bigrams[phrase] || 0) + 1;
+    }
+  }
+
+  // Score single words
   const freq = {};
-  words.forEach(w => { freq[w] = (freq[w] || 0) + 1; });
-  const stopwords = new Set(['with', 'this', 'that', 'from', 'they', 'will', 'have', 'been', 'were', 'their', 'what', 'about', 'which', 'there', 'into', 'would', 'could', 'should', 'after', 'other', 'being', 'than', 'then', 'your', 'time', 'also', 'more', 'some', 'them', 'when', 'each', 'over', 'such', 'only', 'just', 'very', 'most', 'much']);
-  return Object.entries(freq)
-    .filter(([w]) => !stopwords.has(w))
+  words.forEach(w => {
+    if (!stopwords.has(w)) freq[w] = (freq[w] || 0) + 1;
+  });
+
+  // Prefer bigrams, fallback to single words
+  const sortedBigrams = Object.entries(bigrams).sort((a, b) => b[1] - a[1]).slice(0, count).map(e => e[0]);
+  if (sortedBigrams.length >= count) return sortedBigrams;
+
+  const sortedWords = Object.entries(freq)
     .sort((a, b) => b[1] - a[1])
+    .filter(([w]) => w.length > 3)
     .slice(0, count)
     .map(e => e[0]);
+
+  // Mix: prefer bigrams, fill rest with words
+  const result = [...sortedBigrams];
+  for (const w of sortedWords) {
+    if (result.length >= count) break;
+    if (!result.some(r => r.includes(w))) result.push(w);
+  }
+  return result;
 }
 
 function extractFirstSentence(text) {
