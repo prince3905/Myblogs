@@ -6,6 +6,7 @@ import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
 import { usePosts } from '../../../hooks/usePosts';
 import { useCategories } from '../../../hooks/useCategories';
+import { postUrl } from '../../../shared/lib/category';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -269,7 +270,7 @@ export default function BlogListPage() {
                 {posts.slice(0, 5).map((post) => (
                   <Link
                     key={post._id}
-                    to={`/blog/${post.slug}`}
+                    to={postUrl(post)}
                     style={{ textDecoration: 'none' }}
                   >
                     <Typography

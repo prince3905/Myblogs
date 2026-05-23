@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
 import { usePosts } from '../../../hooks/usePosts';
+import { postUrl } from '../../../shared/lib/category';
 
 export default function HomePage() {
   const { posts, loading, error } = usePosts({ limit: 10 });
@@ -25,7 +26,7 @@ export default function HomePage() {
               alignItems: { md: 'center' }
             }}>
               {/* Image (left side) */}
-              <Link to={`/blog/${featuredPost.slug}`} style={{ textDecoration: 'none', flex: { md: '0 0 55%' }, display: 'block' }}>
+              <Link to={postUrl(featuredPost)} style={{ textDecoration: 'none', flex: { md: '0 0 55%' }, display: 'block' }}>
                 <Box sx={{ position: 'relative', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
                   {featuredPost.featuredImage ? (
                     <Box
@@ -62,7 +63,7 @@ export default function HomePage() {
 
               {/* Content (right side) */}
               <Box sx={{ flex: { md: '0 0 40%' }, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <Link to={`/blog/${featuredPost.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Link to={postUrl(featuredPost)} style={{ textDecoration: 'none', color: 'inherit' }}>
                   <Typography
                     variant="h1"
                     sx={{

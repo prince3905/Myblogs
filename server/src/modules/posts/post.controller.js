@@ -2,6 +2,15 @@ const BlogPost = require('./post.model');
 const env = require('../../config/env');
 const { makeSlug, normalizeCsvOrArray, calculateReadingTime } = require('../../shared/utils/post.helpers');
 
+function catUrlSlug(category) {
+  if (!category) return 'blog';
+  return category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'blog';
+}
+
+function postUrl(post) {
+  return `${env.siteUrl}/blog/${catUrlSlug(post.category)}/${post.slug}`;
+}
+
 async function ensureUniqueSlug(baseSlug, currentId = null) {
   let slug = baseSlug;
   let counter = 1;
@@ -160,7 +169,7 @@ async function createPost(req, res) {
   const baseSlug = makeSlug(req.body.slug || payload.title);
   payload.slug = await ensureUniqueSlug(baseSlug);
   payload.publishedAt = payload.status === 'published' ? new Date() : null;
-  payload.canonicalUrl = payload.canonicalUrl || `${env.siteUrl}/blog/${payload.slug}`;
+  payload.canonicalUrl = payload.canonicalUrl || postUrl(payload);
 
   const post = await BlogPost.create(payload);
   return res.status(201).json(post);
@@ -183,7 +192,7 @@ async function updatePost(req, res) {
   payload.publishedAt = payload.status === 'published'
     ? existing.publishedAt || new Date()
     : null;
-  payload.canonicalUrl = payload.canonicalUrl || `${env.siteUrl}/blog/${payload.slug}`;
+  payload.canonicalUrl = payload.canonicalUrl || postUrl(payload);
 
   Object.assign(existing, payload);
   await existing.save();
@@ -207,14 +216,14 @@ async function siteMeta(req, res) {
   return res.json({
     siteName: 'Digital Home',
     siteUrl: env.siteUrl,
-    description: 'Your Daily Dose of Information & Insights — Technology, Finance, Career, Tutorials, and Trends.'
+    description: 'Your Daily Dose of Information & Insights — Sarkari Jobs, Health, Tech, AI Tools, News & Finance.'
   });
 }
 
 async function sitemap(req, res) {
   const posts = await BlogPost.find({ status: 'published' }).sort({ updatedAt: -1 });
   const urls = posts
-    .map((post) => `<url><loc>${env.siteUrl}/blog/${post.slug}</loc><lastmod>${post.updatedAt.toISOString()}</lastmod></url>`)
+    .map((post) => `<url><loc>${postUrl(post)}</loc><lastmod>${post.updatedAt.toISOString()}</lastmod></url>`)
     .join('');
 
   const staticPages = ['/about', '/contact', '/privacy', '/search', '/archive', '/tools', '/games', '/terms'].map(p =>
@@ -236,10 +245,10 @@ async function rssFeed(req, res) {
   const items = posts.map(p => `
     <item>
       <title>${p.title}</title>
-      <link>${env.siteUrl}/blog/${p.slug}</link>
+      <link>${postUrl(p)}</link>
       <pubDate>${new Date(p.publishedAt || p.createdAt).toUTCString()}</pubDate>
       <description>${p.excerpt}</description>
-      <guid>${env.siteUrl}/blog/${p.slug}</guid>
+      <guid>${postUrl(p)}</guid>
     </item>
   `).join('');
 

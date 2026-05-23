@@ -1,27 +1,16 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, Typography, Chip, Box, useTheme } from '@mui/material';
 import { CalendarToday, AccessTime, Visibility } from '@mui/icons-material';
+import { postUrl } from '../../../shared/lib/category';
 
-// Category color mapping per spec
+// Category color mapping
 const categoryColors = {
-  'AI Strategy': '#60A5FA',
-  'Web Development': '#EC4899', 
-  'MERN Stack': '#34D399',
-  'UI/UX Design': '#A78BFA',
-  'SEO Optimization': '#60A5FA',
-  'Technology': '#60A5FA',
-  'Tutorial': '#34D399',
-  'Career': '#F59E0B',
-  'Finance': '#10B981',
-  'Lifestyle': '#EC4899',
-  'Health': '#EF4444',
-  'Design': '#A78BFA',
-  'Business': '#34D399',
-  'Reviews': '#F97316',
-  'Education': '#6366F1',
-  'YouTube': '#FF0000',
-  'Promotions': '#8B5CF6',
-  'News': '#60A5FA',
+  'Sarkari Jobs & Exams': '#F59E0B',
+  'Health & Wellness': '#EF4444',
+  'Tech & Tutorials': '#60A5FA',
+  'AI & Web Tools': '#A78BFA',
+  'News & Trends': '#34D399',
+  'Finance & Business': '#10B981',
   'default': '#60A5FA'
 };
 
@@ -32,7 +21,7 @@ export default function PostCard({ post, headingLevel = 'h6' }) {
   return (
     <Card 
       component={Link} 
-      to={`/blog/${post.slug}`} 
+      to={postUrl(post)} 
       sx={{ 
         textDecoration: 'none',
         display: 'flex', 

@@ -6,12 +6,14 @@ import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import ShareIcon from '@mui/icons-material/Share';
 
-export default function SocialShare({ title, slug }) {
+import { postUrl } from '../shared/lib/category';
+
+export default function SocialShare({ title, slug, category }) {
   const [url, setUrl] = useState('');
 
   useEffect(() => {
-    setUrl(`${window.location.origin}/blog/${slug}`);
-  }, [slug]);
+    setUrl(`${window.location.origin}${postUrl({ slug, category })}`);
+  }, [slug, category]);
 
   function share(platform) {
     const encodedUrl = encodeURIComponent(url);

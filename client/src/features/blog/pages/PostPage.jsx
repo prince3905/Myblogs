@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, Navigate } from 'react-router-dom';
 import { Container, Typography, Box, Button, Chip, CircularProgress, Alert, Divider, Paper, Avatar } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
@@ -17,6 +17,7 @@ import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-jsx';
 import { usePost } from '../../../hooks/usePost';
+import { postUrl } from '../../../shared/lib/category';
 
 const HERO_PHOTOS = [
   'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=1200&q=80',
@@ -43,7 +44,7 @@ function pickHero(title) {
 }
 
 export default function PostPage() {
-  const { slug } = useParams();
+  const { slug, category } = useParams();
   const { post, loading, error } = usePost(slug);
 
   useEffect(() => {
@@ -53,6 +54,11 @@ export default function PostPage() {
       }, 100);
     }
   }, [post]);
+
+  // Redirect old /blog/:slug to new /blog/:category/:slug
+  if (post && !category) {
+    return <Navigate to={postUrl(post)} replace />;
+  }
 
   if (loading) {
     return <Layout><Container sx={{ py: 8, textAlign: 'center' }}><CircularProgress size={60} /></Container></Layout>;
@@ -75,7 +81,7 @@ export default function PostPage() {
           title={post.seoTitle || post.title} 
           description={post.seoDescription || post.excerpt}
           image={post.featuredImage}
-          url={`${window.location.origin}/blog/${post.slug}`}
+          url={`${window.location.origin}${postUrl(post)}`}
           canonical={post.canonicalUrl}
           keywords={(post.seoKeywords || []).join(', ')}
           jsonLd={{
@@ -90,7 +96,7 @@ export default function PostPage() {
             publisher: { '@type': 'Organization', name: 'Digital Home' },
             mainEntityOfPage: {
               '@type': 'WebPage',
-              '@id': `${window.location.origin}/blog/${post.slug}`,
+              '@id': `${window.location.origin}${postUrl(post)}`,
             },
           }}
         />
@@ -212,7 +218,7 @@ export default function PostPage() {
         {/* Actions: Like + Share */}
         <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center', flexWrap: 'wrap' }}>
           <LikeButton slug={slug} initialLikes={post.likes || 0} />
-          <SocialShare title={post.title} slug={slug} />
+          <SocialShare title={post.title} slug={slug} category={post.category} />
         </Box>
 
         <Divider sx={{ my: 4 }} />

@@ -4,6 +4,7 @@ import { Container, Typography, Box, Paper, List, ListItem, ListItemText, Circul
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
 import { request } from '../../../shared/lib/api';
+import { postUrl } from '../../../shared/lib/category';
 
 export default function ArchivePage() {
   const [archive, setArchive] = useState({});
@@ -111,7 +112,7 @@ export default function ArchivePage() {
                   <Box key={post._id}>
                     <ListItem 
                       component={Link} 
-                      to={`/blog/${post.slug}`} 
+                      to={postUrl(post)} 
                       sx={{ 
                         px: 0, 
                         py: 2,
