@@ -371,7 +371,7 @@ In the JSON output, include at the very top:
 - permalink: "digitalhomeblog.in/{category-url-slug}/{post-slug}"
 
 **SEO METADATA:**
-- slug: Short lowercase hyphenated URL slug using only core keywords. NO stop words (is, the, for, etc). E.g. "ipl-2026-points-table"
+- slug: SHORT slug — max 2-4 core keywords, hyphenated, NO stop words. ULTRA-SHORT preferred. E.g. "react-guide", "ipl-2026-points-table", NOT "how-to-learn-react-js-in-2026-step-by-step"
 - summary: Professional 140-160 character meta description in natural Hinglish with a call-to-action (जानिए, Check karein, पढ़ें)
 - seoTitle: Click-worthy title under 60 characters for Google India
 - seoDescription: 1-2 sentence meta description under 155 chars
