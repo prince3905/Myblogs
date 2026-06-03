@@ -119,7 +119,7 @@ export default function HomePage() {
       )}
 
       {/* Explore Tools & Games Section (H2) */}
-      <Box component="section" sx={{ py: { xs: 6, md: 10 } }}>
+      <Box component="section" sx={{ py: { xs: 6, md: 10 }, minHeight: { xs: 380, md: 420 } }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
           <Typography
             variant="h2"

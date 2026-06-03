@@ -45,7 +45,7 @@ async function searchPexelsImage(req, res) {
         if (photos && photos.length > 0) {
           const idx = Math.abs(page) % photos.length;
           imageUrl = (photos[idx].src.large || photos[idx].src.medium)
-            .replace(/h=\d+/g, 'h=500').replace(/w=\d+/g, 'w=700');
+            .replace(/h=\d+/g, 'h=350').replace(/w=\d+/g, 'w=500');
         }
       } catch (err) {
         console.error('Pexels API error:', err.message);

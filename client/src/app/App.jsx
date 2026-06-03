@@ -11,6 +11,7 @@ import PostEditorPage from '../features/admin/pages/PostEditorPage';
 import HomePage from '../features/blog/pages/HomePage';
 import BlogListPage from '../features/blog/pages/BlogListPage';
 import PostPage from '../features/blog/pages/PostPage';
+import BlogRedirectPage from '../features/blog/pages/BlogRedirectPage';
 import TagPage from '../features/blog/pages/TagPage';
 import CategoryPage from '../features/blog/pages/CategoryPage';
 import AboutPage from '../features/blog/pages/AboutPage';
@@ -29,7 +30,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/:category/:slug" element={<PostPage />} />
-        <Route path="/blog/:slug" element={<PostPage />} />
+        <Route path="/blog/:slug" element={<BlogRedirectPage />} />
         <Route path="/tags/:tag" element={<TagPage />} />
         <Route path="/category/:category" element={<CategoryPage />} />
         <Route path="/about" element={<AboutPage />} />

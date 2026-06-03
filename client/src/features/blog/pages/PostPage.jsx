@@ -1,4 +1,4 @@
-import { Link, useParams, Navigate } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Container, Typography, Box, Button, Chip, CircularProgress, Alert, Divider, Paper, Avatar } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
@@ -55,11 +55,6 @@ export default function PostPage() {
       }, 100);
     }
   }, [post]);
-
-  // Redirect old /blog/:slug to new /blog/:category/:slug
-  if (post && !category) {
-    return <Navigate to={postUrl(post)} replace />;
-  }
 
   if (loading) {
     return <Layout><Container sx={{ py: 8, textAlign: 'center' }}><CircularProgress size={60} /></Container></Layout>;
