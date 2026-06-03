@@ -26,11 +26,16 @@ export function optimizeImage(url, width = 500) {
   }
 
   if (url.includes('images.unsplash.com')) {
-    return url.replace(/w=\d+/g, `w=${width}`).replace(/q=\d+/g, 'q=80');
+    // Replace width/quality and append webp format
+    let res = url.replace(/w=\d+/g, `w=${width}`).replace(/q=\d+/g, 'q=60');
+    if (!res.includes('fm=')) {
+      res += '&fm=webp';
+    }
+    return res;
   }
   if (url.includes('images.pexels.com')) {
     const base = url.split('?')[0];
-    return `${base}?w=450&fit=crop`;
+    return `${base}?w=${width}&fit=crop&auto=compress&cs=tinysrgb&fm=webp&q=60`;
   }
   return url;
 }
