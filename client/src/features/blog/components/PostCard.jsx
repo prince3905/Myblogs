@@ -15,9 +15,10 @@ const categoryColors = {
   'default': '#60A5FA'
 };
 
-export default function PostCard({ post, headingLevel = 'h6' }) {
+export default function PostCard({ post, headingLevel = 'h6', index }) {
   const theme = useTheme();
   const categoryColor = categoryColors[post.category] || categoryColors.default;
+  const isFirst = index === 0;
   
   return (
     <Card 
@@ -51,7 +52,8 @@ export default function PostCard({ post, headingLevel = 'h6' }) {
             alt={post.title}
             width="700"
             height="394"
-            loading="lazy"
+            loading={isFirst ? "eager" : "lazy"}
+            {...(isFirst ? { fetchpriority: "high" } : {})}
             sx={{
               width: '100%',
               height: '100%',

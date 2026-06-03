@@ -292,7 +292,9 @@ async function searchPosts(req, res, next) {
     const posts = await BlogPost.find(query, { score: { $meta: 'textScore' } })
       .sort({ score: { $meta: 'textScore' } })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .select('title slug category featuredImage excerpt views createdAt')
+      .lean();
 
     res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
   } catch (err) {

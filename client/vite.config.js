@@ -21,6 +21,7 @@ export default defineConfig({
               id.includes('@mui/material') ||
               id.includes('@mui/system') ||
               id.includes('@mui/styled-engine') ||
+              id.includes('@mui/x-date-pickers') ||
               id.includes('@emotion')
             ) {
               return 'vendor-mui';
