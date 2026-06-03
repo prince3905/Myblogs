@@ -10,25 +10,5 @@ export default defineConfig({
   build: {
     outDir: '../server/public',
     emptyOutDir: true,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('@mui/icons-material')) {
-              return 'vendor-mui-icons';
-            }
-            if (
-              id.includes('@mui/material') ||
-              id.includes('@mui/system') ||
-              id.includes('@mui/styled-engine') ||
-              id.includes('@mui/x-date-pickers') ||
-              id.includes('@emotion')
-            ) {
-              return 'vendor-mui';
-            }
-          }
-        }
-      }
-    }
   },
 })
