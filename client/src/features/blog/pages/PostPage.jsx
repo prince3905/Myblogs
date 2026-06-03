@@ -68,7 +68,7 @@ export default function PostPage() {
     return <Layout><Container sx={{ py: 4 }}><Alert severity="warning">Post not found</Alert></Container></Layout>;
   }
 
-  const heroImage = optimizeImage(post.featuredImage || pickHero(post.title), 700);
+  const heroImage = optimizeImage(post.featuredImage || pickHero(post.title), 1000, 600);
 
   return (
     <Layout>
@@ -102,9 +102,6 @@ export default function PostPage() {
           width: '100%', 
           height: { xs: '40vh', md: '60vh' },
           minHeight: { xs: 280, md: 400 },
-          backgroundImage: `url(${heroImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
           position: 'relative',
           display: 'flex',
           alignItems: 'flex-end',
@@ -112,12 +109,31 @@ export default function PostPage() {
           borderRadius: '32px',
           overflow: 'hidden',
         }}>
+          <Box
+            component="img"
+            src={heroImage}
+            alt={post.title}
+            loading="eager"
+            fetchpriority="high"
+            crossOrigin="anonymous"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              zIndex: 0,
+            }}
+          />
           <Box sx={{ 
             position: 'absolute', 
             top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.5)',
+            zIndex: 1,
           }} />
-          <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, pb: 4 }}>
+          <Container maxWidth="md" sx={{ position: 'relative', zIndex: 2, pb: 4 }}>
             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
               <Chip label={post.category} component={Link} to={`/category/${post.category}`} clickable sx={{ bgcolor: 'rgba(255,255,255,0.9)', color: 'primary.main', fontWeight: 600 }} />
               {post.sponsored && (

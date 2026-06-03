@@ -70,7 +70,16 @@ export default function HomePage() {
               alignItems: { md: 'center' }
             }}>
               {/* Image (left side) */}
-              <Link to={postUrl(featuredPost)} style={{ textDecoration: 'none', flex: { md: '0 0 55%' }, display: 'block' }}>
+              <Box 
+                component={Link} 
+                to={postUrl(featuredPost)} 
+                sx={{ 
+                  textDecoration: 'none', 
+                  flex: { md: '0 0 55%' }, 
+                  display: 'block',
+                  width: '100%'
+                }}
+              >
                 <Box sx={{ position: 'relative', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
                   {featuredPost.featuredImage ? (
                     <Box
@@ -81,6 +90,7 @@ export default function HomePage() {
                       height="380"
                       loading="eager"
                       fetchPriority="high"
+                      crossOrigin="anonymous"
                       sx={{
                         width: '100%',
                         height: { xs: 240, md: 380 },
@@ -107,7 +117,7 @@ export default function HomePage() {
                     }}
                   />
                 </Box>
-              </Link>
+              </Box>
 
               {/* Content (right side) */}
               <Box sx={{ flex: { md: '0 0 40%' }, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>

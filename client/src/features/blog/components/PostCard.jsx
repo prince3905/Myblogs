@@ -48,12 +48,13 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
         {post.featuredImage ? (
           <Box
             component="img"
-            src={optimizeImage(post.featuredImage)}
+            src={optimizeImage(post.featuredImage, 400)}
             alt={post.title}
             width="700"
             height="394"
             loading={isFirst ? "eager" : "lazy"}
             {...(isFirst ? { fetchpriority: "high" } : {})}
+            crossOrigin="anonymous"
             sx={{
               width: '100%',
               height: '100%',
