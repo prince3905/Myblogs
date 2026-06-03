@@ -119,7 +119,7 @@ export default function HomePage() {
       )}
 
       {/* Explore Tools & Games Section (H2) */}
-      <Box component="section" sx={{ py: { xs: 6, md: 10 }, minHeight: { xs: 260, md: 260 }, contain: 'layout-size', display: 'block' }}>
+      <div id="inkspire-utility-box" style={{ minHeight: '260px', contain: 'layout size', display: 'block', padding: '48px 0' }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
           <Typography
             variant="h2"
@@ -186,7 +186,7 @@ export default function HomePage() {
             </Link>
           </Box>
         </Container>
-      </Box>
+      </div>
 
       {/* Latest Insights Section (H2) */}
       <Box component="section" sx={{ py: { xs: 6, md: 10 }, bgcolor: '#F9FAFB' }}>
