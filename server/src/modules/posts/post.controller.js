@@ -109,13 +109,18 @@ async function listPublishedPosts(req, res) {
   const posts = await BlogPost.find(query)
     .sort({ publishedAt: -1, createdAt: -1 })
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit))
+    .select('title slug category featuredImage excerpt views createdAt publishedAt readingTime tags')
+    .lean();
 
   return res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
 }
 
 async function listAdminPosts(req, res) {
-  const posts = await BlogPost.find().sort({ updatedAt: -1 });
+  const posts = await BlogPost.find()
+    .sort({ updatedAt: -1 })
+    .select('title slug category featuredImage excerpt views createdAt updatedAt status')
+    .lean();
   return res.json(posts);
 }
 
