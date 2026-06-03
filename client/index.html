@@ -8,7 +8,9 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       window.addEventListener('load', function() {
-        setTimeout(function() {
+        var injectScripts = function() {
+          if (window.scriptsInjected) return;
+          window.scriptsInjected = true;
           var g = document.createElement('script');
           g.async = true; g.src = 'https://www.googletagmanager.com/gtag/js?id=G-8F13NDY5QS';
           document.head.appendChild(g);
@@ -17,15 +19,20 @@
           var a = document.createElement('script');
           a.async = true; a.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7044184444698366';
           a.crossOrigin = 'anonymous'; document.head.appendChild(a);
-        }, 1500);
+        };
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(function() {
+            setTimeout(injectScripts, 2000);
+          });
+        } else {
+          setTimeout(injectScripts, 3500);
+        }
       });
     </script>
     <title>Digital Home — Your Daily Dose of Information & Insights</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.pexels.com" crossorigin>
-    <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
-    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
     <noscript>
