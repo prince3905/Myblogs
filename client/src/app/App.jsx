@@ -3,6 +3,24 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import ToastProvider from '../components/Toast';
 import AdminRoute from '../features/auth/components/AdminRoute';
 
+// Static import for the primary entry page (HomePage) to prevent network waterfalls on initial load:
+import HomePage from '../features/blog/pages/HomePage';
+
+// Lazy load secondary/heavy public pages
+const BlogListPage = lazy(() => import('../features/blog/pages/BlogListPage'));
+const PostPage = lazy(() => import('../features/blog/pages/PostPage'));
+const BlogRedirectPage = lazy(() => import('../features/blog/pages/BlogRedirectPage'));
+const TagPage = lazy(() => import('../features/blog/pages/TagPage'));
+const CategoryPage = lazy(() => import('../features/blog/pages/CategoryPage'));
+const AboutPage = lazy(() => import('../features/blog/pages/AboutPage'));
+const ContactPage = lazy(() => import('../features/blog/pages/ContactPage'));
+const PrivacyPage = lazy(() => import('../features/blog/pages/PrivacyPage'));
+const TermsPage = lazy(() => import('../features/blog/pages/TermsPage'));
+const ArchivePage = lazy(() => import('../features/blog/pages/ArchivePage'));
+const SearchPage = lazy(() => import('../features/blog/pages/SearchPage'));
+const ToolsPage = lazy(() => import('../features/tools/pages/ToolsPage'));
+const GamesPage = lazy(() => import('../features/games/pages/GamesPage'));
+
 // Lazy load admin features
 const AdminLayout = lazy(() => import('../features/admin/components/AdminLayout'));
 const AdminLoginPage = lazy(() => import('../features/auth/pages/AdminLoginPage'));
@@ -11,21 +29,6 @@ const AdminCommentsPage = lazy(() => import('../features/admin/pages/AdminCommen
 const AdminAdsPage = lazy(() => import('../features/admin/pages/AdminAdsPage'));
 const KeywordResearchPage = lazy(() => import('../features/admin/pages/KeywordResearchPage'));
 const PostEditorPage = lazy(() => import('../features/admin/pages/PostEditorPage'));
-
-import HomePage from '../features/blog/pages/HomePage';
-import BlogListPage from '../features/blog/pages/BlogListPage';
-import PostPage from '../features/blog/pages/PostPage';
-import BlogRedirectPage from '../features/blog/pages/BlogRedirectPage';
-import TagPage from '../features/blog/pages/TagPage';
-import CategoryPage from '../features/blog/pages/CategoryPage';
-import AboutPage from '../features/blog/pages/AboutPage';
-import ContactPage from '../features/blog/pages/ContactPage';
-import PrivacyPage from '../features/blog/pages/PrivacyPage';
-import TermsPage from '../features/blog/pages/TermsPage';
-import ArchivePage from '../features/blog/pages/ArchivePage';
-import SearchPage from '../features/blog/pages/SearchPage';
-import ToolsPage from '../features/tools/pages/ToolsPage';
-import GamesPage from '../features/games/pages/GamesPage';
 
 const AdminLoading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontFamily: 'sans-serif', color: '#666' }}>
@@ -40,8 +43,26 @@ const AdminLoading = () => (
   </div>
 );
 
+const PublicLoading = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+    <div style={{ border: '3px solid #f3f3f3', borderTop: '3px solid #4F46E5', borderRadius: '50%', width: '32px', height: '32px', animation: 'spin 1s linear infinite' }} />
+    <style>{`
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `}</style>
+  </div>
+);
+
 const withAdminSuspense = (Component) => (props) => (
   <Suspense fallback={<AdminLoading />}>
+    <Component {...props} />
+  </Suspense>
+);
+
+const withPublicSuspense = (Component) => (props) => (
+  <Suspense fallback={<PublicLoading />}>
     <Component {...props} />
   </Suspense>
 );
@@ -54,24 +75,38 @@ const AdminAdsPageSuspense = withAdminSuspense(AdminAdsPage);
 const KeywordResearchPageSuspense = withAdminSuspense(KeywordResearchPage);
 const PostEditorPageSuspense = withAdminSuspense(PostEditorPage);
 
+const BlogListPageSuspense = withPublicSuspense(BlogListPage);
+const PostPageSuspense = withPublicSuspense(PostPage);
+const BlogRedirectPageSuspense = withPublicSuspense(BlogRedirectPage);
+const TagPageSuspense = withPublicSuspense(TagPage);
+const CategoryPageSuspense = withPublicSuspense(CategoryPage);
+const AboutPageSuspense = withPublicSuspense(AboutPage);
+const ContactPageSuspense = withPublicSuspense(ContactPage);
+const PrivacyPageSuspense = withPublicSuspense(PrivacyPage);
+const TermsPageSuspense = withPublicSuspense(TermsPage);
+const ArchivePageSuspense = withPublicSuspense(ArchivePage);
+const SearchPageSuspense = withPublicSuspense(SearchPage);
+const ToolsPageSuspense = withPublicSuspense(ToolsPage);
+const GamesPageSuspense = withPublicSuspense(GamesPage);
+
 export default function App() {
   return (
     <ToastProvider>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/blog" element={<BlogListPage />} />
-        <Route path="/blog/:category/:slug" element={<PostPage />} />
-        <Route path="/blog/:slug" element={<BlogRedirectPage />} />
-        <Route path="/tags/:tag" element={<TagPage />} />
-        <Route path="/category/:category" element={<CategoryPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/archive" element={<ArchivePage />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/tools" element={<ToolsPage />} />
-        <Route path="/games" element={<GamesPage />} />
+        <Route path="/blog" element={<BlogListPageSuspense />} />
+        <Route path="/blog/:category/:slug" element={<PostPageSuspense />} />
+        <Route path="/blog/:slug" element={<BlogRedirectPageSuspense />} />
+        <Route path="/tags/:tag" element={<TagPageSuspense />} />
+        <Route path="/category/:category" element={<CategoryPageSuspense />} />
+        <Route path="/about" element={<AboutPageSuspense />} />
+        <Route path="/contact" element={<ContactPageSuspense />} />
+        <Route path="/privacy" element={<PrivacyPageSuspense />} />
+        <Route path="/terms" element={<TermsPageSuspense />} />
+        <Route path="/archive" element={<ArchivePageSuspense />} />
+        <Route path="/search" element={<SearchPageSuspense />} />
+        <Route path="/tools" element={<ToolsPageSuspense />} />
+        <Route path="/games" element={<GamesPageSuspense />} />
         <Route path="/admin/login" element={<AdminLoginPageSuspense />} />
         <Route path="/admin" element={<AdminRoute><AdminLayoutSuspense /></AdminRoute>}>
           <Route index element={<AdminDashboardPageSuspense />} />

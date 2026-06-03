@@ -16,8 +16,51 @@ export default function HomePage() {
     <Layout>
       <Seo title="Digital Home | Your Daily Dose of Information & Insights" description="Sarkari Jobs, Health, Tech, AI Tools, News & Finance — researched and explained in simple language." keywords="information blog, digital home, tech tutorials, sarkari jobs, ai tools" />
 
-      {/* Hero Section - Featured Article (H1) */}
-      {featuredPost && (
+      {/* Hero Section - Featured Article (H1) or Loading Skeleton to prevent CLS */}
+      {loading ? (
+        <Box component="section" sx={{ pt: { xs: 8, md: 14 }, pb: { xs: 4, md: 8 } }}>
+          <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+            <Box sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: { xs: 3, md: 5 },
+              alignItems: { md: 'center' }
+            }}>
+              {/* Skeleton Image */}
+              <Box sx={{ flex: { md: '0 0 55%' }, width: '100%' }}>
+                <Box sx={{
+                  width: '100%',
+                  height: { xs: 240, md: 380 },
+                  bgcolor: '#ECECEC',
+                  borderRadius: '24px',
+                  animation: 'pulse 1.5s infinite ease-in-out'
+                }} />
+              </Box>
+              {/* Skeleton Content */}
+              <Box sx={{ flex: { md: '0 0 40%' }, width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <Box sx={{ height: 36, bgcolor: '#ECECEC', borderRadius: '8px', mb: 2, width: '90%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1, width: '100%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1, width: '95%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 3, width: '70%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#ECECEC', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ height: 16, bgcolor: '#ECECEC', borderRadius: '4px', mb: 0.5, width: '40%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                    <Box sx={{ height: 12, bgcolor: '#ECECEC', borderRadius: '4px', width: '30%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Container>
+          <style>{`
+            @keyframes pulse {
+              0% { opacity: 0.6; }
+              50% { opacity: 1; }
+              100% { opacity: 0.6; }
+            }
+          `}</style>
+        </Box>
+      ) : featuredPost ? (
         <Box component="section" sx={{ pt: { xs: 8, md: 14 }, pb: { xs: 4, md: 8 } }}>
           <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
             <Box sx={{
@@ -117,7 +160,7 @@ export default function HomePage() {
             </Box>
           </Container>
         </Box>
-      )}
+      ) : null}
 
       {/* Explore Tools & Games Section (H2) */}
       <div style={{ minHeight: '280px', contain: 'layout', display: 'block', padding: '48px 0px' }} id="inkspire-utility-box">
