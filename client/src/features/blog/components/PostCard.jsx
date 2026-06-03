@@ -47,7 +47,7 @@ export default function PostCard({ post, headingLevel = 'h6' }) {
         {post.featuredImage ? (
           <Box
             component="img"
-            src={optimizeImage(post.featuredImage, 700)}
+            src={optimizeImage(post.featuredImage)}
             alt={post.title}
             width="700"
             height="394"
