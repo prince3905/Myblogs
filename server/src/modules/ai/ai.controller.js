@@ -1,5 +1,7 @@
 const axios = require('axios');
 const { processAIOutput } = require('./aiPostProcessor');
+const { aggregateKeywordData } = require('./keywordResearchService');
+const { newsRssUrl, extractRssTitles } = require('./topicDiscoveryService');
 
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
 const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -10,6 +12,126 @@ const GEMINI_API_KEY_2 = process.env.GEMINI_API_KEY_2;
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const VALID_CATEGORIES = ['Sarkari Jobs & Exams', 'Health & Wellness', 'Tech & Tutorials', 'AI & Web Tools', 'News & Trends', 'Finance & Business'];
 const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+
+const CATEGORY_FRAMEWORKS = {
+  'Sarkari Jobs & Exams': {
+    heading: 'जर्नलिज्म / रिपोर्टिंग फ्रेमवर्क',
+    prompt: `**JOURNALISM/REPORTING FRAMEWORK — MANDATORY FOR THIS CATEGORY:**
+Structure the post like a Sarkari result announcement or exam notification article. Natural Hinglish headings ONLY from this list — DO NOT use any other heading patterns:
+• परिणाम और महत्वपूर्ण आंकड़े (Results & Key Statistics)
+• स्टेप-बाय-स्टेप प्रोसेस (Step-by-Step Process)
+• योग्यता और पात्रता (Eligibility Criteria)
+• आवेदन कैसे करें (How to Apply — with official portal links)
+• चयन प्रक्रिया (Selection Process — exam/interview/merit)
+• महत्वपूर्ण तिथियाँ (Important Dates — apply start/end, exam date, result date)
+• पिछले वर्ष के आंकड़े (Previous Year Trends — cutoff, vacancies)
+• अक्सर पूछे जाने वाले सवाल (Frequently Asked Questions)
+- Focus on: official notifications, eligibility, deadlines, exam patterns, vacancy analysis.
+- Include exact numbers: vacancy count, application fees, salary range, age limit.
+- STRICTLY BANNED from this category: "How it works", "Key Benefits", "What is", "Step-by-Step Guide" (English), "Overview".`
+  },
+  'Health & Wellness': {
+    heading: 'हेल्थ एडवाइजरी फ्रेमवर्क',
+    prompt: `**HEALTH ADVISORY FRAMEWORK — MANDATORY FOR THIS CATEGORY:**
+Structure like a medical awareness article. Natural Hinglish headings ONLY from this list:
+• लक्षण और कारण (Symptoms & Causes)
+• इलाज के तरीके (Treatment Options — home remedies + medical)
+• बचाव के उपाय (Prevention Tips)
+• डॉक्टर से कब मिलें (When to See a Doctor)
+• सही समय पर देखभाल (Timely Care Guide)
+• आम मिथक और सच्चाई (Common Myths & Facts)
+- Use authoritative tone (reference medical sources).
+- STRICTLY BANNED: "What is [Topic]?", "Benefits of [Topic]", "How it works".`
+  },
+  'Tech & Tutorials': {
+    heading: 'टेक ट्यूटोरियल फ्रेमवर्क',
+    prompt: `**TECH TUTORIAL FRAMEWORK — MANDATORY FOR THIS CATEGORY:**
+Structure like a how-to tech guide. Natural Hinglish headings from this list:
+• How It Works (technical explanation)
+• Key Features (specs, capabilities)
+• Step-by-Step Guide (numbered steps with code/screenshots in mind)
+• Tips & Tricks (productivity hacks)
+• Common Mistakes to Avoid
+• Best Tools & Alternatives
+- Use beginner-friendly Hinglish. Explain jargon.
+- NO banned patterns (standard tech structure allowed).`
+  },
+  'AI & Web Tools': {
+    heading: 'डिजिटल टूल्स फ्रेमवर्क',
+    prompt: `**DIGITAL TOOLS FRAMEWORK — MANDATORY FOR THIS CATEGORY:**
+Structure like a tool review / earnings guide. Natural Hinglish headings from this list:
+• Key Features (what does it do?)
+• How to Use (step-by-step setup)
+• Benefits & Limitations (honest pros/cons)
+• Pricing & Plans (free vs paid tiers)
+• Best Alternatives (competitor comparison)
+• Real User Experience (tips from actual usage)
+- Include earning potential numbers where relevant.
+- NO banned patterns (standard tool review structure allowed).`
+  },
+  'News & Trends': {
+    heading: 'जर्नलिज्म फ्रेमवर्क',
+    prompt: `**JOURNALISM FRAMEWORK — MANDATORY FOR THIS CATEGORY:**
+Structure like a breaking news report. Natural Hinglish headings ONLY from this list:
+• क्या है पूरा मामला? (What's the Full Story?)
+• महत्वपूर्ण अपडेट (Key Updates / Timeline)
+• प्रभाव और आगे की राह (Impact & Road Ahead)
+• विशेषज्ञ की राय (Expert Opinion / Official Statement)
+• आंकड़ों में समझें (Understanding Through Data — table/chart)
+• सोशल मीडिया रिएक्शन (Social Media Buzz)
+- STRICTLY BANNED from this category: "How it works", "Key Benefits", "What is [Topic]?", "Overview", "Conclusion".
+- Write in live-news style: concise, factual, timestamp-aware.`
+  },
+  'Finance & Business': {
+    heading: 'फाइनेंशियल एडवाइजरी फ्रेमवर्क',
+    prompt: `**FINANCIAL ADVISORY FRAMEWORK — MANDATORY FOR THIS CATEGORY:**
+Structure like a personal finance guide. Natural Hinglish headings from this list:
+• निवेश के फायदे (Investment Benefits)
+• जोखिम और सावधानियां (Risks & Precautions)
+• कैसे शुरू करें (How to Get Started)
+• टैक्स और नियम (Tax & Regulatory Aspects)
+• पिछला प्रदर्शन (Past Performance — historical returns/data)
+• एक्सपर्ट टिप्स (Expert Tips for Beginners)
+- Include real numbers: interest rates, returns %, fees, tax brackets.
+- STRICTLY BANNED: "What is [Topic]?", "Benefits of [Topic]".`
+  }
+};
+
+const ADSENSE_CONSTRAINTS = `**ADSENSE COMPLIANCE — NEGATIVE CONSTRAINTS (STRICT — FOLLOW FOR EVERY POST):**
+1. NEVER use these exact phrases as headings or section starters:
+   - "What is [Topic]?" (or any variation like "What is...")
+   - "Benefits of [Topic]"
+   - "Introduction", "Overview", "Conclusion" (boring generic labels — use creative alternatives)
+2. NEVER start a paragraph with robotic transitions:
+   - "In conclusion", "To summarize", "It is important to note that", "Furthermore", "Moreover"
+   - Instead use natural Hinglish connectors: "तो", "अब बात करते हैं", "चलिए जानते हैं", "वैसे ही", "इसके अलावा"
+3. AVOID generic AI layout markers:
+   - Don't label sections as "Section 1", "Part A"
+   - Don't use "Here are some", "There are many"
+   - Don't use "Frequ01", "interru01", "Q1"/"Q2" codes
+4. FLUID TRANSITIONS between sections — every section must connect naturally to the next. Never突兀 (abruptly) jump topics.
+   - End each section with a hook/setup for the next section.
+5. EVERY paragraph must be substantive — no filler sentences like "This is a great topic to explore" or "Let's dive deeper".
+   - If a paragraph doesn't add unique value, remove it.
+6. THIN CONTENT ZERO TOLERANCE — No generic advice without specific numbers, examples, or data. Every claim needs backing.`;
+
+async function fetchNewsContext(topic) {
+  if (!topic || topic.length < 3) return '';
+  try {
+    const res = await axios.get(newsRssUrl(topic), {
+      timeout: 8000,
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+    });
+    const items = extractRssTitles(res.data);
+    if (!items || items.length === 0) return '';
+    const headlines = items.slice(0, 5).map((i, idx) =>
+      `[${idx + 1}] ${i.sourceName ? i.sourceName + ' — ' : ''}"${i.title}"`
+    ).join('\n');
+    return `\n\n**REAL NEWS CONTEXT — Use as factual reference (incorporate relevant data/numbers naturally, DO NOT copy verbatim):**\n${headlines}`;
+  } catch {
+    return '';
+  }
+}
 
 function matchCategory(text) {
   if (!text) return 'Tech & Tutorials';
@@ -351,24 +473,60 @@ async function generateAIContent(req, res) {
 
     const langInstr = langMap[language] || langMap.hinglish;
 
+    const detectedCategory = req.body.category || matchCategory(title);
+    const framework = CATEGORY_FRAMEWORKS[detectedCategory] || CATEGORY_FRAMEWORKS['Tech & Tutorials'];
+    const categoryFrameworkInstr = framework.prompt;
+
     const systemPrompt = `You are a Permanent Advanced SEO Content Specialist for Digital Home, an Indian multi-niche platform. Current year: 2026.
 
 **PERMANENT RULES — FOLLOW FOR EVERY POST, ALL MODELS.**
 
 **LANGUAGE: ${langInstr}**
 
-**CATEGORY & URL SETUP:**
-Always choose the best category from these 6:
-1. Sarkari Jobs & Exams (recruitment, online forms, results, syllabus, answer keys)
-2. Health & Wellness (human body charts, medical conditions, sugar/BP charts, fitness, diet)
-3. Tech & Tutorials (coding guides, next.js, development, tech concepts, software guides)
-4. AI & Web Tools (AI prompts, earning via AI, digital tools, custom calculators)
-5. News & Trends (sports, IPL points tables, current viral internet topics, daily news)
-6. Finance & Business (saving habits, investment, earning guides, personal finance)
+**CATEGORY: ${detectedCategory}**
 
-In the JSON output, include at the very top:
-- category: Selected category name (exact match from list)
-- permalink: "digitalhomeblog.in/{category-url-slug}/{post-slug}"
+**CATEGORY-SPECIFIC FRAMEWORK:**
+${categoryFrameworkInstr}
+
+**KEYWORD RESEARCH RULES (MANDATORY FOR EVERY POST):**
+- Before writing, simulate a full India-focused keyword research table with these columns:
+  | Serial No | Keyword Type (Short-Tail / Mid-Tail / Long-Tail / LSI / Question-Based) | Keyword | Est. Search Volume (India) | SEO Difficulty KD% (Target ≤35%) | Purpose/Placement in Post |
+- Always include minimum 5 keywords covering all 5 types across the table.
+- Short-Tail: 1 high-volume broad keyword (title + URL)
+- Mid-Tail: 1-2 moderate competition keywords (H2 headings)
+- Long-Tail: 1-2 low-difficulty specific phrases (body paragraphs)
+- LSI: 1 semantically related keyword (natural throughout)
+- Question-Based: 1 "how/what/why" keyword (FAQ section)
+- KD% for every keyword must be 35% or below. If KD is high, pick an alternative.
+- Est. Search Volume must be realistic for India (500-50000 range depending on keyword type).
+- Keyword research table is for YOUR internal use only to guide content writing. Do NOT include it in the content field. Readers should NOT see the keyword table.
+
+${ADSENSE_CONSTRAINTS}
+
+**PAGE SPEED 100/100 RULES (MANDATORY):**
+- IMAGES: NEVER include raw JPEG/PNG in content. All images must use <picture> element with WebP format.
+  - First/hero image at top: fetchpriority="high" — NO loading="lazy"
+  - All other images: loading="lazy" + width="800" height="450" + style="width:100%; height:auto; object-fit:cover;
+  - Required format: <picture><source srcset="[CLOUDINARY-WEBP-URL]" type="image/webp" /><img src="[CLOUDINARY-JPG-FALLBACK-URL]" alt="[SEO-Alt]" width="800" height="450" loading="lazy" style="width:100%; height:auto; object-fit:cover;" fetchpriority="high" /></picture>
+  - Reminder in first line of output: "Bhai, is post ki image ko compress karke .webp format mein hi upload karna!"
+- ZERO BACKGROUND SCRIPTS: content MUST NOT contain any script tags, iframes, crypto widgets, OKX API calls, useEffect hooks, fetch calls to external APIs, or any JavaScript execution code. Page must be 100% clean static content only.
+- Keep the output clean HTML with no embedded scripts, no external resource calls.
+
+**JSON-LD SCHEMA MARKUP (MANDATORY):**
+- The blog post content MUST include a complete JSON-LD Article Schema at the very bottom, wrapped in <script type="application/ld+json"> tags.
+- Schema fields:
+  - @context: "https://schema.org"
+  - @type: "Article"
+  - headline: [seoTitle or title]
+  - description: [seoDescription or summary]
+  - articleSection: [CATEGORY - use exact category name from the 6 listed]
+  - author: { @type: "Person", name: "Harry Prince" }
+  - publisher: { @type: "Organization", name: "Digital Home", url: "https://www.digitalhomeblog.in" }
+  - datePublished: "2026-05-31"  (use today's date)
+  - dateModified: "2026-05-31"
+  - mainEntityOfPage: { @type: "WebPage", "@id": "https://www.digitalhomeblog.in/blog/{category-url-slug}/{slug}" }
+- articleSection must ALWAYS be one of: Sarkari Jobs & Exams, Health & Wellness, Tech & Tutorials, AI & Web Tools, News & Trends, Finance & Business
+- Place this schema as the last element in the content output, before Key Takeaways section.
 
 **SEO METADATA:**
 - slug: SHORT slug — max 2-4 core keywords, hyphenated, NO stop words. ULTRA-SHORT preferred. E.g. "react-guide", "ipl-2026-points-table", NOT "how-to-learn-react-js-in-2026-step-by-step"
@@ -385,14 +543,14 @@ In the JSON output, include at the very top:
 - Dense 3-4 line paragraphs. One idea per paragraph. Minimize bullet points — use only in Key Takeaways.
 - Always include 1 highly relevant data table (comparing specs, stats, overview, or reference chart).
 - Start with a hook question or surprising stat.
-- Include target keyword 8-10 times naturally (in Title, First Paragraph, at least one H2).
-- Include 2-3 LSI keywords in headings and paragraphs naturally.
+- Include FOCUS KEYWORD 8-10 times naturally (Title, First Paragraph, at least one H2).
+- Use SHORT-TAIL keywords in headings, LONG-TAIL in body paragraphs, LSI naturally throughout.
 - Use specific numbers, stats, data, real examples.
 - Avoid: "Frequ01", "interru01", "Q1" codes, horizontal lines (---, ___).
 - Use bold sparingly (max 3-4 per article). No over-quoting, no generic phrases.
-- ## Introduction section mandatory.
-- ## FAQ section at end with 3 highly searched questions using ### Question: format.
-- ## Key Takeaways with 4-5 bullets at end.`;
+- ## FAQ section at end with 3 highly searched questions. Format each as: ### Question: question text? then answer in next line.
+- ## Key Takeaways with 4-5 bullets at end.
+- HEADINGS must follow strict descending order: H2 → H3. NEVER skip levels. NEVER wrap entire paragraphs or bullet lists inside heading tags.`;
 
 
 
@@ -400,13 +558,40 @@ In the JSON output, include at the very top:
     const sectionInstr = sectionMap[length] || sectionMap.medium;
     const customInstr = command ? `\n\nAuthor's extra instruction: ${command}` : '';
 
-    const tokenBudget = length === 'short' ? 2048 : length === 'long' ? 4096 : 3072;
+    const tokenBudget = length === 'short' ? 4096 : length === 'long' ? 8192 : 6144;
 
-    const userPrompt = `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}"
+    let keywordInject = '';
+    let kwResearchId = null;
+    try {
+      const kwData = await aggregateKeywordData(title);
+      if (kwData && kwData.filtered.length > 0) {
+        const allKws = kwData.filtered;
+        // Find focus keyword (short-tail with highest volume)
+        const focus = allKws.find(k => k.type === 'short-tail') || allKws[0];
+        const shortTail = allKws.filter(k => k.type === 'short-tail' || k.type === 'mid-tail').slice(0, 2);
+        const longTail = allKws.filter(k => k.type === 'long-tail' || k.type === 'question-based').slice(0, 2);
+        const lsiWords = allKws.filter(k => k.type === 'lsi').slice(0, 3);
 
-Follow the Permanent Rules exactly. Choose the best category from: Sarkari Jobs & Exams, Health & Wellness, Tech & Tutorials, AI & Web Tools, News & Trends, Finance & Business.
+        keywordInject = `
+**KEYWORD STRATEGY — FOLLOW EXACTLY:**
+- FOCUS KEYWORD: "${focus.keyword}" → MUST use in: Title, H1, first paragraph, at least one H2, URL slug
+- SHORT-TAIL (broad): ${shortTail.map(k => `"${k.keyword}"`).join(', ')} → use in H2 headings and intro
+- LONG-TAIL (specific): ${longTail.map(k => `"${k.keyword}"`).join(', ')} → use in body paragraphs naturally
+- LSI (related): ${lsiWords.map(k => `"${k.keyword}"`).join(', ')} → sprinkle naturally throughout
+- Include focus keyword 8-10 times total in content`;
+        kwResearchId = allKws.map(k => k.keyword);
+      }
+    } catch (kwErr) {
+      console.warn('Keyword research step failed (non-fatal):', kwErr.message);
+    }
 
-Structure: ${sectionInstr}. Include 1 data table and FAQ with 3 questions. End with Key Takeaways.${customInstr}
+    const newsContext = await fetchNewsContext(title);
+
+    const userPrompt = `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}" for category: ${detectedCategory}
+
+Follow the Permanent Rules exactly. Category framework for ${detectedCategory} is MANDATORY.
+
+Structure: ${sectionInstr}. Include 1 data table in body, and FAQ with 3 questions. End with Key Takeaways.${customInstr}${keywordInject}${newsContext}
 
 Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{category-url-slug}/{slug}), content (string with ## headings on separate lines, NEVER inside lists/tables), slug (no stop words), keywords (array), summary (140-160 chars Hinglish with CTA), imageTag, imagetag, seoTitle, seoDescription. content MUST be a STRING. Natural Hinglish. Dense 3-4 line paragraphs.`;
 
@@ -419,8 +604,8 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
     let text = '';
 
     if (isGemini) {
-      const primaryKey = aiModel === 'gemini-2.0-flash' ? GEMINI_API_KEY_2 : GEMINI_API_KEY;
-      const fallbackKey = aiModel === 'gemini-2.0-flash' ? GEMINI_API_KEY : GEMINI_API_KEY_2;
+      const primaryKey = GEMINI_API_KEY;
+      const fallbackKey = GEMINI_API_KEY_2;
       if (!primaryKey && !fallbackKey) {
         return res.status(400).json({ success: false, message: 'No Gemini API key set in .env' });
       }
@@ -438,7 +623,7 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
         });
         text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       } catch (geminiErr) {
-        // If 429 (quota) or 503 (busy) and fallback key exists, retry with fallback
+        // If 429 (quota) or 503 (busy) and fallback key exists, retry with fallback key
         if ((geminiErr.response?.status === 429 || geminiErr.response?.status === 503) && fallbackKey && fallbackKey !== primaryKey) {
           try {
             const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${fallbackKey}`, {
@@ -454,7 +639,28 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
             });
             text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
           } catch (fallbackErr) {
-            throw fallbackErr; // Let the outer catch handle it
+            // Both Gemini keys failed (busy/quota) → auto-fallback to Groq
+            if (GROQ_API_KEY && (fallbackErr.response?.status === 429 || fallbackErr.response?.status === 503)) {
+              try {
+                const groqFallback = await axios.post(GROQ_CHAT_URL, {
+                  model: 'llama-3.3-70b-versatile',
+                  messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                  ],
+                  temperature: 0.7,
+                  max_tokens: tokenBudget,
+                  top_p: 0.9
+                }, {
+                  headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+                  timeout: 60000
+                });
+                text = groqFallback.data?.choices?.[0]?.message?.content || '';
+                if (text) console.log('Auto-fallback to Groq (Gemini busy)');
+              } catch { throw fallbackErr; }
+            } else {
+              throw fallbackErr;
+            }
           }
         } else {
           throw geminiErr;
@@ -464,20 +670,36 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
       if (!GROQ_API_KEY) {
         return res.status(400).json({ success: false, message: 'GROQ_API_KEY not set in .env' });
       }
-      const groqResponse = await axios.post(GROQ_CHAT_URL, {
-        model: aiModel,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: tokenBudget,
-        top_p: 0.9
-      }, {
-        headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-        timeout: modelTimeout
-      });
-      text = groqResponse.data?.choices?.[0]?.message?.content || '';
+      try {
+        const groqResponse = await axios.post(GROQ_CHAT_URL, {
+          model: aiModel,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.7,
+          max_tokens: tokenBudget,
+          top_p: 0.9
+        }, {
+          headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+          timeout: modelTimeout
+        });
+        text = groqResponse.data?.choices?.[0]?.message?.content || '';
+      } catch (groqErr) {
+        // Groq failed → auto-fallback to Gemini Flash
+        if (GEMINI_API_KEY) {
+          try {
+            const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+              contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: tokenBudget, topP: 0.9 }
+            }, { timeout: 60000, headers: { 'Content-Type': 'application/json' } });
+            text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (text) console.log('Auto-fallback to Gemini (Groq failed)');
+          } catch { throw groqErr; }
+        } else {
+          throw groqErr;
+        }
+      }
     } else if (isOpenAI) {
       if (!OPENAI_API_KEY) {
         return res.status(400).json({ success: false, message: 'OPENAI_API_KEY not set in .env' });
@@ -618,7 +840,7 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
       title,
       content,
       keywords,
-      category: matchCategory(title + ' ' + plainText),
+      category: detectedCategory,
       imageTag,
       imageKeywords,
       summary,
@@ -626,7 +848,7 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
       seoDescription: summary.slice(0, 155),
     });
 
-    const category = processed.category || matchCategory(title + ' ' + plainText);
+    const category = processed.category || detectedCategory;
     const permalink = 'digitalhomeblog.in/' + category.toLowerCase().replace(/\s+/g, '-') + '/' + slug;
 
     res.json({

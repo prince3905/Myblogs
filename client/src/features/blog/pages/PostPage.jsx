@@ -12,6 +12,7 @@ import AdSlot from '../../../components/AdSlot';
 import { MonetizationOn, Info } from '@mui/icons-material';
 import { useEffect } from 'react';
 import Prism from 'prismjs';
+import { optimizeImage } from '../../../shared/lib/images';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-css';
@@ -20,21 +21,21 @@ import { usePost } from '../../../hooks/usePost';
 import { postUrl } from '../../../shared/lib/category';
 
 const HERO_PHOTOS = [
-  'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=1200&q=80',
-  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200&q=80',
-  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&q=80',
-  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&q=80',
-  'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&q=80',
-  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&q=80',
-  'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=1200&q=80',
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80',
-  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80',
-  'https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=1200&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=80',
-  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&q=80',
-  'https://images.unsplash.com/photo-1559526324-593bc073d938?w=1200&q=80',
-  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80',
-  'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=1200&q=80',
+  'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=700&q=80',
+  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=700&q=80',
+  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=700&q=80',
+  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=700&q=80',
+  'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=700&q=80',
+  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=700&q=80',
+  'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=700&q=80',
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=700&q=80',
+  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=700&q=80',
+  'https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=700&q=80',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80',
+  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=700&q=80',
+  'https://images.unsplash.com/photo-1559526324-593bc073d938?w=700&q=80',
+  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=700&q=80',
+  'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=700&q=80',
 ];
 
 function pickHero(title) {
@@ -72,7 +73,7 @@ export default function PostPage() {
     return <Layout><Container sx={{ py: 4 }}><Alert severity="warning">Post not found</Alert></Container></Layout>;
   }
 
-  const heroImage = post.featuredImage || pickHero(post.title);
+  const heroImage = optimizeImage(post.featuredImage || pickHero(post.title), 700);
 
   return (
     <Layout>
@@ -105,6 +106,7 @@ export default function PostPage() {
         <Box sx={{ 
           width: '100%', 
           height: { xs: '40vh', md: '60vh' },
+          minHeight: { xs: 280, md: 400 },
           backgroundImage: `url(${heroImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',

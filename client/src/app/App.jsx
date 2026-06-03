@@ -6,6 +6,7 @@ import AdminLoginPage from '../features/auth/pages/AdminLoginPage';
 import AdminDashboardPage from '../features/admin/pages/AdminDashboardPage';
 import AdminCommentsPage from '../features/admin/pages/AdminCommentsPage';
 import AdminAdsPage from '../features/admin/pages/AdminAdsPage';
+import KeywordResearchPage from '../features/admin/pages/KeywordResearchPage';
 import PostEditorPage from '../features/admin/pages/PostEditorPage';
 import HomePage from '../features/blog/pages/HomePage';
 import BlogListPage from '../features/blog/pages/BlogListPage';
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="posts" element={<AdminDashboardPage />} />
           <Route path="comments" element={<AdminCommentsPage />} />
           <Route path="ads" element={<AdminAdsPage />} />
+          <Route path="keywords" element={<KeywordResearchPage />} />
           <Route path="posts/new" element={<PostEditorPage />} />
           <Route path="posts/:id/edit" element={<PostEditorPage />} />
         </Route>

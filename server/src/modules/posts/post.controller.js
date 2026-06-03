@@ -1,6 +1,6 @@
 const BlogPost = require('./post.model');
 const env = require('../../config/env');
-const { makeSlug, normalizeCsvOrArray, calculateReadingTime } = require('../../shared/utils/post.helpers');
+const { makeSlug, normalizeCsvOrArray, calculateReadingTime, toTitleCase } = require('../../shared/utils/post.helpers');
 
 function catUrlSlug(category) {
   if (!category) return 'blog';
@@ -26,7 +26,7 @@ async function ensureUniqueSlug(baseSlug, currentId = null) {
 }
 
 function mapPayload(body) {
-  const title = `${body.title || ''}`.trim();
+  const title = toTitleCase(`${body.title || ''}`);
   const excerpt = `${body.excerpt || ''}`.trim();
   const content = `${body.content || ''}`.trim();
   const category = `${body.category || ''}`.trim();

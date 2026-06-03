@@ -5,6 +5,7 @@ import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
 import { usePosts } from '../../../hooks/usePosts';
 import { postUrl } from '../../../shared/lib/category';
+import { optimizeImage } from '../../../shared/lib/images';
 
 export default function HomePage() {
   const { posts, loading, error } = usePosts({ limit: 10 });
@@ -31,8 +32,11 @@ export default function HomePage() {
                   {featuredPost.featuredImage ? (
                     <Box
                       component="img"
-                      src={featuredPost.featuredImage}
+                      src={optimizeImage(featuredPost.featuredImage, 700)}
                       alt={featuredPost.title}
+                      width="700"
+                      height="380"
+                      loading="eager"
                       sx={{
                         width: '100%',
                         height: { xs: 240, md: 380 },
@@ -133,7 +137,7 @@ export default function HomePage() {
                 sx={{
                   p: { xs: 3, md: 4 }, borderRadius: '24px',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white', height: '100%',
+                  color: 'white', height: '100%', minHeight: { xs: 260, md: 280 },
                   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                   cursor: 'pointer',
                   '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 20px 60px rgba(102,126,234,0.3)' }
@@ -160,7 +164,7 @@ export default function HomePage() {
                 sx={{
                   p: { xs: 3, md: 4 }, borderRadius: '24px',
                   background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                  color: 'white', height: '100%',
+                  color: 'white', height: '100%', minHeight: { xs: 260, md: 280 },
                   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                   cursor: 'pointer',
                   '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 20px 60px rgba(245,87,108,0.3)' }

@@ -47,6 +47,62 @@ function generateTags(title, content, keywords, category) {
   return Array.from(tags).filter(Boolean).slice(0, 10);
 }
 
+function stripScripts(content) {
+  if (!content) return content;
+  let c = content;
+
+  c = c.replace(/<script[\s\S]*?<\/script>/gi, '');
+  c = c.replace(/<iframe[\s\S]*?<\/iframe>/gi, '');
+  c = c.replace(/<object[\s\S]*?<\/object>/gi, '');
+  c = c.replace(/<embed[\s\S]*?<\/embed>/gi, '');
+  c = c.replace(/\son\w+="[^"]*"/gi, '');
+  c = c.replace(/\son\w+='[^']*'/gi, '');
+  c = c.replace(/\bjavascript\s*:/gi, '');
+
+  return c;
+}
+
+function validateHeadingHierarchy(content) {
+  if (!content) return content;
+
+  const headingRegex = /<h([234])[^>]*>/gi;
+  const headings = [];
+  let match;
+  while ((match = headingRegex.exec(content)) !== null) {
+    headings.push({ level: parseInt(match[1]), index: match.index });
+  }
+
+  if (headings.length === 0) return content;
+
+  let c = content;
+  let lastLevel = 2;
+  const corrections = [];
+
+  for (const h of headings) {
+    if (h.level < lastLevel) {
+      lastLevel = h.level;
+    } else if (h.level > lastLevel + 1) {
+      corrections.push({ index: h.index, from: h.level, to: lastLevel + 1 });
+      lastLevel = lastLevel + 1;
+    } else {
+      lastLevel = h.level;
+    }
+  }
+
+  corrections.reverse();
+  for (const corr of corrections) {
+    const before = c.slice(0, corr.index);
+    const after = c.slice(corr.index);
+    const fromTag = `<h${corr.from}`;
+    const toTag = `<h${corr.to}`;
+    if (after.startsWith(fromTag)) {
+      c = before + toTag + after.slice(fromTag.length);
+    }
+  }
+
+  return c;
+}
+
 function cleanContent(content) {
   if (!content) return content;
   let c = content;
@@ -97,8 +153,9 @@ async function addInternalLinks(content, category) {
     const linkPost1 = relatedPosts[0];
     const linkPost2 = relatedPosts[1] || relatedPosts[0];
 
+    const catUrl = (linkPost1.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
     const targetWord1 = linkPost1.title.split(' ').slice(0, 2).join(' ');
-    const linkHtml1 = '<a href="/blog/' + linkPost1.slug + '">' + targetWord1 + '</a>';
+    const linkHtml1 = '<a href="/blog/' + catUrl + '/' + linkPost1.slug + '">' + targetWord1 + '</a>';
 
     const firstThird = c.indexOf('</p>', c.length / 3);
     if (firstThird > 0) {
@@ -106,8 +163,9 @@ async function addInternalLinks(content, category) {
       c = c.slice(0, insertPos) + '\n<p>If you found this helpful, also check out our guide on ' + linkHtml1 + ' for more details.</p>\n' + c.slice(insertPos);
     }
 
+    const catUrl2 = (linkPost2.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
     const targetWord2 = linkPost2.title.split(' ').slice(0, 2).join(' ');
-    const linkHtml2 = '<a href="/blog/' + linkPost2.slug + '">' + targetWord2 + '</a>';
+    const linkHtml2 = '<a href="/blog/' + catUrl2 + '/' + linkPost2.slug + '">' + targetWord2 + '</a>';
     const twoThirds = c.indexOf('</p>', (c.length * 2) / 3);
     if (twoThirds > 0) {
       const insertPos2 = twoThirds + 4;
@@ -158,6 +216,8 @@ async function processAIOutput(data) {
 
   let processedContent = content;
 
+  processedContent = stripScripts(processedContent);
+  processedContent = validateHeadingHierarchy(processedContent);
   processedContent = cleanContent(processedContent);
   processedContent = await addInternalLinks(processedContent, category);
   processedContent = ensureKeywordFrequency(processedContent, title);

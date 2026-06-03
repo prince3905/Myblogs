@@ -16,6 +16,7 @@ const contactRoutes = require('./modules/contact/contact.routes');
 const aiRoutes = require('./modules/ai/ai.routes');
 const pexelsRoutes = require('./modules/pexels/pexels.routes');
 const adRoutes = require('./modules/ads/ad.routes');
+const keywordRoutes = require('./modules/keywords/keyword.routes');
 const { geoTranslateMiddleware } = require('./shared/middleware/geoTranslate');
 const { sitemap, robots, rssFeed } = require('./modules/posts/post.controller');
 
@@ -57,6 +58,7 @@ app.use('/api', aiRoutes);
 app.use('/api', pexelsRoutes);
 app.use('/api', adRoutes.public);
 app.use('/api/admin', adRoutes.admin);
+app.use('/api', keywordRoutes);
 
 // SEO routes - before static files
 app.get('/sitemap.xml', sitemap);

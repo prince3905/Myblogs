@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, Typography, Chip, Box, useTheme } from '@mui/material';
 import { CalendarToday, AccessTime, Visibility } from '@mui/icons-material';
 import { postUrl } from '../../../shared/lib/category';
+import { optimizeImage } from '../../../shared/lib/images';
 
 // Category color mapping
 const categoryColors = {
@@ -42,12 +43,15 @@ export default function PostCard({ post, headingLevel = 'h6' }) {
       }}
     >
       {/* Image section */}
-      <Box sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '16/9', flexShrink: 0 }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '16/9', flexShrink: 0, minHeight: { xs: 180, md: 200 } }}>
         {post.featuredImage ? (
           <Box
             component="img"
-            src={post.featuredImage}
+            src={optimizeImage(post.featuredImage, 700)}
             alt={post.title}
+            width="700"
+            height="394"
+            loading="lazy"
             sx={{
               width: '100%',
               height: '100%',
