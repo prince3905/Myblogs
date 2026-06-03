@@ -1,9 +1,30 @@
 export function optimizeImage(url, width = 500) {
   if (!url) return url;
-  if (url.includes('res.cloudinary.com')) {
-    let clean = url.replace(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i, '$2');
-    return clean.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+
+  const isCloudinary = url.includes('res.cloudinary.com') || url.includes('/myblogs/') || url.includes('myblogs/');
+
+  if (isCloudinary) {
+    let fullUrl = url;
+    if (!url.includes('res.cloudinary.com')) {
+      const cleanPath = url.startsWith('/') ? url.slice(1) : url;
+      fullUrl = `https://res.cloudinary.com/drkm1wo9o/image/upload/${cleanPath}`;
+    }
+
+    // Programmatically strip/swap extensions to clear payload overhead
+    let clean = fullUrl.replace(/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i, '');
+
+    if (clean.includes('/upload/')) {
+      const parts = clean.split('/upload/');
+      const subparts = parts[1].split('/');
+      const mainPathIdx = subparts.findIndex(
+        p => (p.startsWith('v') && /^\d+$/.test(p.slice(1))) || p === 'myblogs'
+      );
+      const mainPath = subparts.slice(mainPathIdx >= 0 ? mainPathIdx : 0).join('/');
+      return `${parts[0]}/upload/f_auto,q_auto,w_${width}/${mainPath}`;
+    }
+    return clean;
   }
+
   if (url.includes('images.unsplash.com')) {
     return url.replace(/w=\d+/g, `w=${width}`).replace(/q=\d+/g, 'q=80');
   }

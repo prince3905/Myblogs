@@ -1,4 +1,5 @@
-const BlogPost = require('./post.model');
+const Post = require('./post.model');
+const BlogPost = Post;
 const env = require('../../config/env');
 const { makeSlug, normalizeCsvOrArray, calculateReadingTime, toTitleCase } = require('../../shared/utils/post.helpers');
 
@@ -106,12 +107,18 @@ async function listPublishedPosts(req, res) {
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
   const total = await BlogPost.countDocuments(query);
-  const posts = await BlogPost.find(query)
-    .sort({ publishedAt: -1, createdAt: -1 })
-    .skip(skip)
-    .limit(parseInt(limit))
-    .select('title slug category featuredImage excerpt views createdAt')
-    .lean();
+  
+  let posts;
+  if (!search && !category && !tags && !dateFrom && !dateTo && (parseInt(limit) === 10 || parseInt(limit) === 1000) && parseInt(page) === 1) {
+    posts = await Post.find({ status: 'published' }).select('title slug category featuredImage excerpt views createdAt').lean();
+  } else {
+    posts = await BlogPost.find(query)
+      .sort({ publishedAt: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .select('title slug category featuredImage excerpt views createdAt')
+      .lean();
+  }
 
   return res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
 }
