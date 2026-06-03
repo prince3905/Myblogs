@@ -119,7 +119,7 @@ export default function HomePage() {
       )}
 
       {/* Explore Tools & Games Section (H2) */}
-      <div id="inkspire-utility-box" style={{ minHeight: '260px', contain: 'layout size', display: 'block', padding: '48px 0' }}>
+      <div style={{ minHeight: '280px', contain: 'layout', display: 'block', padding: '48px 0px' }} id="inkspire-utility-box">
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
           <Typography
             variant="h2"
