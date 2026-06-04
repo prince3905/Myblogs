@@ -17,101 +17,66 @@ export default function HomePage() {
       <Seo title="Digital Home | Your Daily Dose of Information & Insights" description="Sarkari Jobs, Health, Tech, AI Tools, News & Finance — researched and explained in simple language." keywords="information blog, digital home, tech tutorials, sarkari jobs, ai tools" />
 
       {/* Hero Section - Featured Article (H1) or Loading Skeleton to prevent CLS */}
-      {loading ? (
-        <Box component="section" sx={{ pt: { xs: 8, md: 14 }, pb: { xs: 4, md: 8 } }}>
-          <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-            <Box sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', md: 'row' },
-              gap: { xs: 3, md: 5 },
-              alignItems: { md: 'center' }
-            }}>
-              {/* Skeleton Image */}
-              <Box sx={{ flex: { md: '0 0 55%' }, width: '100%' }}>
-                <Box sx={{
-                  width: '100%',
-                  height: { xs: 240, md: 380 },
-                  bgcolor: '#ECECEC',
-                  borderRadius: '24px',
-                  animation: 'pulse 1.5s infinite ease-in-out'
-                }} />
-              </Box>
-              {/* Skeleton Content */}
-              <Box sx={{ flex: { md: '0 0 40%' }, width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <Box sx={{ height: 36, bgcolor: '#ECECEC', borderRadius: '8px', mb: 2, width: '90%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1, width: '100%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1, width: '95%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 3, width: '70%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#ECECEC', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ flex: 1 }}>
-                    <Box sx={{ height: 16, bgcolor: '#ECECEC', borderRadius: '4px', mb: 0.5, width: '40%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                    <Box sx={{ height: 12, bgcolor: '#ECECEC', borderRadius: '4px', width: '30%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+      {/* Hero Section - Featured Article (H1) or Loading Skeleton (Unified to prevent CLS) */}
+      <Box component="section" sx={{ pt: { xs: 8, md: 14 }, pb: { xs: 4, md: 8 } }}>
+        <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+          <Box sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: { xs: 3, md: 5 },
+            alignItems: { md: 'center' }
+          }}>
+            {/* Image (left side) */}
+            <Box 
+              component={!loading && featuredPost ? Link : Box} 
+              {...(!loading && featuredPost ? { to: postUrl(featuredPost) } : {})}
+              sx={{ 
+                textDecoration: 'none', 
+                flex: { md: '0 0 55%' }, 
+                display: 'block',
+                width: '100%'
+              }}
+            >
+              <Box sx={{ 
+                position: 'relative', 
+                borderRadius: '24px', 
+                overflow: 'hidden', 
+                boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
+                height: { xs: 240, md: 380 },
+                width: '100%',
+                bgcolor: '#ECECEC'
+              }}>
+                {loading ? (
+                  <Box sx={{
+                    width: '100%',
+                    height: '100%',
+                    bgcolor: '#ECECEC',
+                    animation: 'pulse 1.5s infinite ease-in-out'
+                  }} />
+                ) : featuredPost?.featuredImage ? (
+                  <Box
+                    component="img"
+                    src={optimizeImage(featuredPost.featuredImage, 700)}
+                    alt={featuredPost.title}
+                    width="700"
+                    height="380"
+                    loading="eager"
+                    fetchPriority="high"
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                      transition: 'transform 0.4s ease',
+                      '&:hover': { transform: 'scale(1.02)' },
+                    }}
+                  />
+                ) : featuredPost ? (
+                  <Box sx={{ width: '100%', height: '100%', bgcolor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>{featuredPost.category}</Typography>
                   </Box>
-                </Box>
-              </Box>
-            </Box>
-          </Container>
-          <style>{`
-            @keyframes pulse {
-              0% { opacity: 0.6; }
-              50% { opacity: 1; }
-              100% { opacity: 0.6; }
-            }
-          `}</style>
-        </Box>
-      ) : featuredPost ? (
-        <Box component="section" sx={{ pt: { xs: 8, md: 14 }, pb: { xs: 4, md: 8 } }}>
-          <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-            <Box sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', md: 'row' },
-              gap: { xs: 3, md: 5 },
-              alignItems: { md: 'center' }
-            }}>
-              {/* Image (left side) */}
-              <Box 
-                component={Link} 
-                to={postUrl(featuredPost)} 
-                sx={{ 
-                  textDecoration: 'none', 
-                  flex: { md: '0 0 55%' }, 
-                  display: 'block',
-                  width: '100%'
-                }}
-              >
-                <Box sx={{ 
-                  position: 'relative', 
-                  borderRadius: '24px', 
-                  overflow: 'hidden', 
-                  boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
-                  height: { xs: 240, md: 380 },
-                  width: '100%',
-                  bgcolor: '#ECECEC'
-                }}>
-                  {featuredPost.featuredImage ? (
-                    <Box
-                      component="img"
-                      src={optimizeImage(featuredPost.featuredImage, 700)}
-                      alt={featuredPost.title}
-                      width="700"
-                      height="380"
-                      loading="eager"
-                      fetchPriority="high"
-                      sx={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                        transition: 'transform 0.4s ease',
-                        '&:hover': { transform: 'scale(1.02)' },
-                      }}
-                    />
-                  ) : (
-                    <Box sx={{ width: '100%', height: '100%', bgcolor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>{featuredPost.category}</Typography>
-                    </Box>
-                  )}
+                ) : null}
+                {!loading && featuredPost && (
                   <Chip
                     label={featuredPost.category}
                     size="small"
@@ -123,69 +88,97 @@ export default function HomePage() {
                       px: 1, height: 28,
                     }}
                   />
-                </Box>
-              </Box>
-
-              {/* Content (right side) */}
-              <Box 
-                sx={{ 
-                  flex: { md: '0 0 40%' }, 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  justifyContent: 'center',
-                  minHeight: { xs: 188, md: 240 }
-                }}
-              >
-                <Link to={postUrl(featuredPost)} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <Typography
-                    variant="h1"
-                    sx={{
-                      fontWeight: 800,
-                      mb: 1.5,
-                      fontSize: { xs: '1.6rem', sm: '2rem', md: '2.5rem' },
-                      lineHeight: 1.2,
-                      color: '#111827',
-                      letterSpacing: '-0.03em',
-                      '&:hover': { opacity: 0.85 }
-                    }}
-                  >
-                    {featuredPost.title}
-                  </Typography>
-                </Link>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    mb: 2.5,
-                    color: '#4B5563',
-                    fontSize: { xs: '0.9rem', md: '1.05rem' },
-                    lineHeight: 1.7,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {featuredPost.excerpt}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <Avatar sx={{ width: 40, height: 40, bgcolor: '#4F46E5', fontSize: '0.9rem', fontWeight: 600 }}>
-                    {featuredPost.author?.charAt(0) || 'H'}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827', fontSize: '0.9rem' }}>
-                      {featuredPost.author || 'Harry Prince'}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#4B5563', fontWeight: 500, fontSize: '0.75rem' }}>
-                      {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      {' · '}{featuredPost.readingTime || 5} min read
-                    </Typography>
-                  </Box>
-                </Box>
+                )}
               </Box>
             </Box>
-          </Container>
-        </Box>
-      ) : null}
+
+            {/* Content (right side) */}
+            <Box 
+              sx={{ 
+                flex: { md: '0 0 40%' }, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'center',
+                minHeight: { xs: 188, md: 240 },
+                width: '100%'
+              }}
+            >
+              {loading ? (
+                <>
+                  <Box sx={{ height: 36, bgcolor: '#ECECEC', borderRadius: '8px', mb: 2, width: '90%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1, width: '100%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1, width: '95%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 3, width: '70%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#ECECEC', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                    <Box sx={{ flex: 1 }}>
+                      <Box sx={{ height: 16, bgcolor: '#ECECEC', borderRadius: '4px', mb: 0.5, width: '40%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                      <Box sx={{ height: 12, bgcolor: '#ECECEC', borderRadius: '4px', width: '30%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                    </Box>
+                  </Box>
+                </>
+              ) : featuredPost ? (
+                <>
+                  <Link to={postUrl(featuredPost)} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <Typography
+                      variant="h1"
+                      sx={{
+                        fontWeight: 800,
+                        mb: 1.5,
+                        fontSize: { xs: '1.6rem', sm: '2rem', md: '2.5rem' },
+                        lineHeight: 1.2,
+                        color: '#111827',
+                        letterSpacing: '-0.03em',
+                        '&:hover': { opacity: 0.85 }
+                      }}
+                    >
+                      {featuredPost.title}
+                    </Typography>
+                  </Link>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      mb: 2.5,
+                      color: '#4B5563',
+                      fontSize: { xs: '0.9rem', md: '1.05rem' },
+                      lineHeight: 1.7,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {featuredPost.excerpt}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <Avatar sx={{ width: 40, height: 40, bgcolor: '#4F46E5', fontSize: '0.9rem', fontWeight: 600 }}>
+                      {featuredPost.author?.charAt(0) || 'H'}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827', fontSize: '0.9rem' }}>
+                        {featuredPost.author || 'Harry Prince'}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#4B5563', fontWeight: 500, fontSize: '0.75rem' }}>
+                        {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {' · '}{featuredPost.readingTime || 5} min read
+                      </Typography>
+                    </Box>
+                  </Box>
+                </>
+              ) : null}
+            </Box>
+          </Box>
+        </Container>
+        {loading && (
+          <style>{`
+            @keyframes pulse {
+              0% { opacity: 0.6; }
+              50% { opacity: 1; }
+              100% { opacity: 0.6; }
+            }
+          `}</style>
+        )}
+      </Box>
 
       {/* Explore Tools & Games Section (H2) */}
       <Box 
