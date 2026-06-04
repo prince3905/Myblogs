@@ -80,7 +80,15 @@ export default function HomePage() {
                   width: '100%'
                 }}
               >
-                <Box sx={{ position: 'relative', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
+                <Box sx={{ 
+                  position: 'relative', 
+                  borderRadius: '24px', 
+                  overflow: 'hidden', 
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
+                  height: { xs: 240, md: 380 },
+                  width: '100%',
+                  bgcolor: '#ECECEC'
+                }}>
                   {featuredPost.featuredImage ? (
                     <Box
                       component="img"
@@ -92,7 +100,7 @@ export default function HomePage() {
                       fetchPriority="high"
                       sx={{
                         width: '100%',
-                        height: { xs: 240, md: 380 },
+                        height: '100%',
                         objectFit: 'cover',
                         display: 'block',
                         transition: 'transform 0.4s ease',
@@ -100,7 +108,7 @@ export default function HomePage() {
                       }}
                     />
                   ) : (
-                    <Box sx={{ width: '100%', height: { xs: 240, md: 380 }, bgcolor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Box sx={{ width: '100%', height: '100%', bgcolor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>{featuredPost.category}</Typography>
                     </Box>
                   )}
@@ -119,7 +127,15 @@ export default function HomePage() {
               </Box>
 
               {/* Content (right side) */}
-              <Box sx={{ flex: { md: '0 0 40%' }, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Box 
+                sx={{ 
+                  flex: { md: '0 0 40%' }, 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'center',
+                  minHeight: { xs: 188, md: 240 }
+                }}
+              >
                 <Link to={postUrl(featuredPost)} style={{ textDecoration: 'none', color: 'inherit' }}>
                   <Typography
                     variant="h1"
