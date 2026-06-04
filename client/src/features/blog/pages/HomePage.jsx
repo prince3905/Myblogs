@@ -99,8 +99,9 @@ export default function HomePage() {
                 display: 'flex', 
                 flexDirection: 'column', 
                 justifyContent: 'center',
-                minHeight: { xs: 188, md: 240 },
-                width: '100%'
+                height: { xs: 240, md: 240 },
+                width: '100%',
+                overflow: 'hidden'
               }}
             >
               {loading ? (
