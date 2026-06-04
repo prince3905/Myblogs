@@ -90,7 +90,6 @@ export default function HomePage() {
                       height="380"
                       loading="eager"
                       fetchPriority="high"
-                      crossOrigin="anonymous"
                       sx={{
                         width: '100%',
                         height: { xs: 240, md: 380 },
@@ -177,7 +176,7 @@ export default function HomePage() {
         component="section"
         id="inkspire-utility-box"
         sx={{ 
-          minHeight: { xs: '702px', md: '438px' }, 
+          minHeight: { xs: '736px', md: '440px' }, 
           contain: 'layout', 
           display: 'block', 
           py: 6 
@@ -200,7 +199,7 @@ export default function HomePage() {
                 sx={{
                   p: { xs: 3, md: 4 }, borderRadius: '24px',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white', height: '100%', minHeight: { xs: 260, md: 280 },
+                  color: 'white', height: { xs: 280, md: 280 },
                   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                   cursor: 'pointer',
                   '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 20px 60px rgba(102,126,234,0.3)' }
@@ -227,7 +226,7 @@ export default function HomePage() {
                 sx={{
                   p: { xs: 3, md: 4 }, borderRadius: '24px',
                   background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                  color: 'white', height: '100%', minHeight: { xs: 260, md: 280 },
+                  color: 'white', height: { xs: 280, md: 280 },
                   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                   cursor: 'pointer',
                   '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 20px 60px rgba(245,87,108,0.3)' }

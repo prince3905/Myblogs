@@ -115,7 +115,6 @@ export default function PostPage() {
             alt={post.title}
             loading="eager"
             fetchpriority="high"
-            crossOrigin="anonymous"
             sx={{
               position: 'absolute',
               top: 0,
