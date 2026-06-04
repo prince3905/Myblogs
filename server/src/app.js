@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const compression = require('compression');
 const env = require('./config/env');
 const requestLogger = require('./middleware/requestLogger');
 const notFound = require('./middleware/notFound');
@@ -24,6 +25,7 @@ const app = express();
 const publicPath = path.join(__dirname, '../public');
 
 // Middleware
+app.use(compression());
 app.use(cors({
   origin: [
     'http://localhost:5173',

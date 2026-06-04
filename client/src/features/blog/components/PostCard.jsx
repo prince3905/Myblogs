@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, Typography, Chip, Box, useTheme } from '@mui/material';
-import { CalendarToday, AccessTime, Visibility } from '@mui/icons-material';
+import CalendarToday from '@mui/icons-material/CalendarToday';
+import AccessTime from '@mui/icons-material/AccessTime';
+import Visibility from '@mui/icons-material/Visibility';
 import { postUrl } from '../../../shared/lib/category';
 import { optimizeImage } from '../../../shared/lib/images';
 

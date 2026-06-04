@@ -1,5 +1,6 @@
 import { IconButton, Tooltip } from '@mui/material';
-import { LightMode, DarkMode } from '@mui/icons-material';
+import LightMode from '@mui/icons-material/LightMode';
+import DarkMode from '@mui/icons-material/DarkMode';
 import { useThemeMode } from '../features/theme/ThemeContext';
 
 export default function DarkModeToggle() {
