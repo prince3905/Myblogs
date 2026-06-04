@@ -10,7 +10,7 @@ import DarkModeToggle from '../../../components/DarkModeToggle';
 import BreadcrumbsNav from '../../../components/Breadcrumbs';
 
 
-export default function Layout({ children }) {
+export default function Layout({ children, useContainer = true, containerMaxWidth = "lg" }) {
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catAnchor, setCatAnchor] = useState(null);
@@ -55,7 +55,7 @@ export default function Layout({ children }) {
               : 'rgba(255, 255, 255, 0.6)',
             borderRadius: '9999px',
             boxShadow: '0 8px 30px rgba(0, 0, 0, 0.05)',
-            width: { xs: '100%', md: '940px' },
+            width: { xs: 'calc(100% - 32px)', md: '940px' },
             maxWidth: '940px',
             px: { xs: 1, md: 2 },
             py: 0.5,
@@ -251,9 +251,15 @@ export default function Layout({ children }) {
       
       <BreadcrumbsNav />
       
-      <Container component="main" maxWidth="lg" sx={{ flex: 1, py: { xs: 1.5, md: 2 } }}>
-        {children}
-      </Container>
+      {useContainer ? (
+        <Container component="main" maxWidth={containerMaxWidth} sx={{ flex: 1, py: { xs: 1.5, md: 2 } }}>
+          {children}
+        </Container>
+      ) : (
+        <Box component="main" sx={{ flex: 1, py: { xs: 1.5, md: 2 } }}>
+          {children}
+        </Box>
+      )}
       
       <Box 
         component="footer" 

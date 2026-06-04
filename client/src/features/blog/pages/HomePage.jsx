@@ -13,7 +13,7 @@ export default function HomePage() {
   const regularPosts = posts.length > 1 ? posts.slice(1) : [];
 
   return (
-    <Layout>
+    <Layout useContainer={false}>
       <Seo title="Digital Home | Your Daily Dose of Information & Insights" description="Sarkari Jobs, Health, Tech, AI Tools, News & Finance — researched and explained in simple language." keywords="information blog, digital home, tech tutorials, sarkari jobs, ai tools" />
 
       {/* Hero Section - Featured Article (H1) or Loading Skeleton to prevent CLS */}

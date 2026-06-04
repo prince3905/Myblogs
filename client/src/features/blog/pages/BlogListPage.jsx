@@ -29,7 +29,7 @@ export default function BlogListPage() {
   const resultText = useMemo(() => `${total} article${total === 1 ? '' : 's'} found`, [total]);
 
   return (
-    <Layout>
+    <Layout useContainer={false}>
       <Seo title="All Insights | Digital Home" description="Browse our latest AI consulting insights and articles." />
       
       {/* Filter Section */}
@@ -136,8 +136,8 @@ export default function BlogListPage() {
       </Paper>
 
       {/* Main Content + Sidebar */}
-      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2.1fr 0.9fr' }, gap: '24px' }}>
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 4 } }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr', lg: '2.2fr 0.8fr' }, gap: '24px' }}>
           {/* Left: Posts */}
           <Box sx={{ minWidth: 0 }}>
             {postsLoading ? (
