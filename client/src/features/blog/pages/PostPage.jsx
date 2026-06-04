@@ -71,7 +71,7 @@ export default function PostPage() {
   const heroImage = optimizeImage(post.featuredImage || pickHero(post.title), 1000, 600);
 
   return (
-    <Layout useContainer={false}>
+    <Layout>
        <ReadingProgress />
        <Seo 
           title={post.seoTitle || post.title} 
@@ -114,7 +114,7 @@ export default function PostPage() {
             src={heroImage}
             alt={post.title}
             loading="eager"
-            fetchPriority="high"
+            fetchpriority="high"
             sx={{
               position: 'absolute',
               top: 0,

@@ -31,7 +31,7 @@ export default function ArchivePage() {
   }, []);
 
   return (
-    <Layout useContainer={false}>
+    <Layout>
       <Seo title="Archive | Inkspire Blog" description="Browse all posts by month and year." />
       
       {/* Header Section */}

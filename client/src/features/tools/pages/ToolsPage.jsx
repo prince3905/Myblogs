@@ -90,7 +90,7 @@ export default function ToolsPage() {
   };
 
   return (
-    <Layout useContainer={false}>
+    <Layout>
       <Seo
         title="Free Student Utility Tools - Photo Compressor, Passport Cropper, Age Calculator"
         description="Free online tools for government exam students: compress photo to 20KB, passport size photo cropper 3.5x4.5 cm, age calculator for government forms, image to PDF converter, and PDF compressor. All browser-based, no upload needed."
