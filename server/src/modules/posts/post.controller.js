@@ -111,7 +111,11 @@ async function listPublishedPosts(req, res) {
   let posts;
   if (!search && !category && !tags && !dateFrom && !dateTo && (parseInt(limit) === 10 || parseInt(limit) === 1000) && parseInt(page) === 1) {
     res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
-    posts = await Post.find({ status: 'published' }).select('title slug category featuredImage excerpt views createdAt').lean();
+    posts = await Post.find({ status: 'published' })
+      .sort({ publishedAt: -1, createdAt: -1 })
+      .limit(parseInt(limit))
+      .select('title slug category featuredImage excerpt views createdAt')
+      .lean();
   } else {
     posts = await BlogPost.find(query)
       .sort({ publishedAt: -1, createdAt: -1 })

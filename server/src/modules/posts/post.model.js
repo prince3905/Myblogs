@@ -37,5 +37,6 @@ const blogPostSchema = new mongoose.Schema(
 );
 
 blogPostSchema.index({ title: 'text', content: 'text', excerpt: 'text' });
+blogPostSchema.index({ status: 1, publishedAt: -1, createdAt: -1 });
 
 module.exports = mongoose.model('BlogPost', blogPostSchema);
