@@ -113,7 +113,7 @@ export default function NewsletterWidget() {
         </Alert>
       )}
       
-      <Typography variant="caption" sx={{ mt: 2, display: 'block', color: 'text.disabled' }}>
+      <Typography variant="caption" sx={{ mt: 2, display: 'block', color: 'text.secondary' }}>
         Join 500+ smart readers who already subscribed
       </Typography>
     </Paper>

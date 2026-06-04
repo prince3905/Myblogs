@@ -141,7 +141,7 @@ export default function HomePage() {
                   variant="body1"
                   sx={{
                     mb: 2.5,
-                    color: '#6B7280',
+                    color: '#4B5563',
                     fontSize: { xs: '0.9rem', md: '1.05rem' },
                     lineHeight: 1.7,
                     display: '-webkit-box',
@@ -160,7 +160,7 @@ export default function HomePage() {
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827', fontSize: '0.9rem' }}>
                       {featuredPost.author || 'Harry Prince'}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 500, fontSize: '0.75rem' }}>
+                    <Typography variant="caption" sx={{ color: '#4B5563', fontWeight: 500, fontSize: '0.75rem' }}>
                       {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       {' · '}{featuredPost.readingTime || 5} min read
                     </Typography>
@@ -173,7 +173,16 @@ export default function HomePage() {
       ) : null}
 
       {/* Explore Tools & Games Section (H2) */}
-      <div style={{ minHeight: '280px', contain: 'layout', display: 'block', padding: '48px 0px' }} id="inkspire-utility-box">
+      <Box 
+        component="section"
+        id="inkspire-utility-box"
+        sx={{ 
+          minHeight: { xs: '702px', md: '438px' }, 
+          contain: 'layout', 
+          display: 'block', 
+          py: 6 
+        }}
+      >
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
           <Typography
             variant="h2"
@@ -240,7 +249,7 @@ export default function HomePage() {
             </Link>
           </Box>
         </Container>
-      </div>
+      </Box>
 
       {/* Latest Insights Section (H2) */}
       <Box component="section" sx={{ py: { xs: 6, md: 10 }, bgcolor: '#F9FAFB' }}>

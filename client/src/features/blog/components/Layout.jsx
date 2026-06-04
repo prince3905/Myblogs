@@ -69,6 +69,7 @@ export default function Layout({ children }) {
             <IconButton
               onClick={() => setMobileOpen(true)}
               size="small"
+              aria-label="menu"
               sx={{ display: { md: 'none' }, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111827' }}
             >
               <MenuIcon />
@@ -185,6 +186,7 @@ export default function Layout({ children }) {
               <IconButton
                 component={Link}
                 to="/search"
+                aria-label="search"
                 sx={{ color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#6B7280', p: { xs: 0.75, md: 1 } }}
               >
                 <SearchIcon sx={{ fontSize: { xs: '1.2rem', md: '1.5rem' } }} />
@@ -249,7 +251,7 @@ export default function Layout({ children }) {
       
       <BreadcrumbsNav />
       
-      <Container maxWidth="lg" sx={{ flex: 1, py: { xs: 1.5, md: 2 } }}>
+      <Container component="main" maxWidth="lg" sx={{ flex: 1, py: { xs: 1.5, md: 2 } }}>
         {children}
       </Container>
       
@@ -266,10 +268,10 @@ export default function Layout({ children }) {
         <Container maxWidth="lg">
           <NewsletterWidget />
           <Box sx={{ display: 'flex', gap: { xs: 2, md: 3 }, justifyContent: 'center', mt: 3, flexWrap: 'wrap' }}>
-            <Link to="/privacy" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Privacy Policy</Link>
-            <Link to="/terms" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Terms & Disclaimer</Link>
-            <Link to="/contact" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Contact</Link>
-            <Link to="/about" style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>About</Link>
+            <Link to="/privacy" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Privacy Policy</Link>
+            <Link to="/terms" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Terms & Disclaimer</Link>
+            <Link to="/contact" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Contact</Link>
+            <Link to="/about" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>About</Link>
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontWeight: 500 }}>
             Built with MERN Stack • Modern Blogging Platform

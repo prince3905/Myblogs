@@ -12,6 +12,7 @@ export default function DarkModeToggle() {
       <IconButton
         onClick={toggleTheme}
         size="small"
+        aria-label="toggle dark mode"
         sx={{
           transition: 'all 0.3s ease',
           bgcolor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
