@@ -64,13 +64,33 @@ function validatePost(data) {
 let cachedPostsFeed = null;
 let cachedPostsTotal = 0;
 let cacheTimestamp = 0;
-const CACHE_TTL = 30 * 1000; // 30 seconds cache duration
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours cache duration (invalidated on updates)
 
 function invalidateFeedCache() {
   cachedPostsFeed = null;
   cachedPostsTotal = 0;
   cacheTimestamp = 0;
 }
+
+// Proactively warm up the cache on startup
+async function warmUpCache() {
+  try {
+    const query = { status: 'published' };
+    const total = await Post.countDocuments(query);
+    const posts = await Post.find({ status: 'published' })
+      .sort({ publishedAt: -1, createdAt: -1 })
+      .limit(10)
+      .select('title slug category featuredImage excerpt views createdAt')
+      .lean();
+    cachedPostsFeed = posts;
+    cachedPostsTotal = total;
+    cacheTimestamp = Date.now();
+    console.log(`[Cache] Warm-up successful: Cached ${posts.length} posts.`);
+  } catch (err) {
+    console.error('[Cache] Warm-up failed:', err);
+  }
+}
+setTimeout(warmUpCache, 5000);
 
 async function listPublishedPosts(req, res) {
   const { search = '', category = '', tags = '', dateFrom = '', dateTo = '', page = 1, limit = 10 } = req.query;
