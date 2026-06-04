@@ -60,6 +60,18 @@ function validatePost(data) {
   return null;
 }
 
+// Local cache for the homepage feed to avoid database calls on every load
+let cachedPostsFeed = null;
+let cachedPostsTotal = 0;
+let cacheTimestamp = 0;
+const CACHE_TTL = 30 * 1000; // 30 seconds cache duration
+
+function invalidateFeedCache() {
+  cachedPostsFeed = null;
+  cachedPostsTotal = 0;
+  cacheTimestamp = 0;
+}
+
 async function listPublishedPosts(req, res) {
   const { search = '', category = '', tags = '', dateFrom = '', dateTo = '', page = 1, limit = 10 } = req.query;
   const query = { status: 'published' };
@@ -104,25 +116,46 @@ async function listPublishedPosts(req, res) {
     }
   }
 
-
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  const total = await BlogPost.countDocuments(query);
-  
+  let total;
   let posts;
-  if (!search && !category && !tags && !dateFrom && !dateTo && (parseInt(limit) === 10 || parseInt(limit) === 1000) && parseInt(page) === 1) {
-    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
-    posts = await Post.find({ status: 'published' })
-      .sort({ publishedAt: -1, createdAt: -1 })
-      .limit(parseInt(limit))
-      .select('title slug category featuredImage excerpt views createdAt')
-      .lean();
+
+  const isDefaultHomeFeed = !search && !category && !tags && !dateFrom && !dateTo && parseInt(limit) === 10 && parseInt(page) === 1;
+
+  if (isDefaultHomeFeed) {
+    const now = Date.now();
+    if (cachedPostsFeed && (now - cacheTimestamp < CACHE_TTL)) {
+      posts = cachedPostsFeed;
+      total = cachedPostsTotal;
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+      total = await BlogPost.countDocuments(query);
+      posts = await Post.find({ status: 'published' })
+        .sort({ publishedAt: -1, createdAt: -1 })
+        .limit(10)
+        .select('title slug category featuredImage excerpt views createdAt')
+        .lean();
+      cachedPostsFeed = posts;
+      cachedPostsTotal = total;
+      cacheTimestamp = now;
+    }
   } else {
-    posts = await BlogPost.find(query)
-      .sort({ publishedAt: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
-      .select('title slug category featuredImage excerpt views createdAt')
-      .lean();
+    total = await BlogPost.countDocuments(query);
+    if (!search && !category && !tags && !dateFrom && !dateTo && parseInt(limit) === 1000 && parseInt(page) === 1) {
+      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+      posts = await Post.find({ status: 'published' })
+        .sort({ publishedAt: -1, createdAt: -1 })
+        .limit(1000)
+        .select('title slug category featuredImage excerpt views createdAt')
+        .lean();
+    } else {
+      posts = await BlogPost.find(query)
+        .sort({ publishedAt: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .select('title slug category featuredImage excerpt views createdAt')
+        .lean();
+    }
   }
 
   return res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
@@ -189,6 +222,7 @@ async function createPost(req, res) {
   payload.canonicalUrl = payload.canonicalUrl || postUrl(payload);
 
   const post = await BlogPost.create(payload);
+  invalidateFeedCache();
   return res.status(201).json(post);
 }
 
@@ -213,6 +247,7 @@ async function updatePost(req, res) {
 
   Object.assign(existing, payload);
   await existing.save();
+  invalidateFeedCache();
   return res.json(existing);
 }
 
@@ -221,6 +256,7 @@ async function deletePost(req, res) {
   if (!post) {
     return res.status(404).json({ message: 'Post not found' });
   }
+  invalidateFeedCache();
   return res.json({ success: true });
 }
 
