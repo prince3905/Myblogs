@@ -1,1 +1,0 @@
-import{ag as o,m as s,a2 as i,a7 as u,ai as t,ab as n}from"./index-D-6FMIY5.js";import{u as l}from"./usePost-BLiSUxqU.js";function c(){const{slug:a}=o(),{post:r,loading:e}=l(a);return e?s.jsx(i,{sx:{display:"flex",justifyContent:"center",py:8},children:s.jsx(u,{})}):r?s.jsx(t,{to:n(r),replace:!0}):s.jsx(t,{to:"/",replace:!0})}export{c as default};

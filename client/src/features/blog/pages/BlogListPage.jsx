@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Chip, Divider } from '@mui/material';
+import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Chip, Divider, Grid } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -137,9 +137,9 @@ export default function BlogListPage() {
 
       {/* Main Content + Sidebar */}
       <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 0.9fr' }, gap: '24px' }}>
+        <Grid container spacing={3}>
           {/* Left: Posts */}
-          <Box>
+          <Grid item xs={12} md={8} sx={{ minWidth: 0, width: '100%' }}>
             {postsLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
                 <CircularProgress size={48} />
@@ -202,78 +202,107 @@ export default function BlogListPage() {
                   </Box>
                 )}
               </>
-          )}
-          </Box>
+            )}
+          </Grid>
 
           {/* Right: Sidebar */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: { xs: 4, md: 0 } }}>
-            {/* Search Box */}
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                borderRadius: 3,
-                bgcolor: 'background.paper',
-                border: '1px solid #F2F2F2',
-              }}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Search insights..."
-                onClick={() => window.location.href = '/search'}
+          <Grid item xs={12} md={4} sx={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: { xs: 4, md: 0 }, width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+              {/* Search Box */}
+              <Paper
+                elevation={0}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 3,
-                    bgcolor: '#F9FAFB',
-                    '& fieldset': { borderColor: '#ECECEC' },
-                    height: 44,
-                    cursor: 'pointer',
-                  }
+                  p: 2,
+                  borderRadius: 3,
+                  bgcolor: 'background.paper',
+                  border: '1px solid #F2F2F2',
+                  width: '100%',
+                  maxWidth: '100%',
+                  boxSizing: 'border-box',
+                  overflow: 'hidden'
                 }}
-                InputProps={{ readOnly: true }}
-              />
-            </Paper>
+              >
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Search insights..."
+                  onClick={() => window.location.href = '/search'}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 3,
+                      bgcolor: '#F9FAFB',
+                      '& fieldset': { borderColor: '#ECECEC' },
+                      height: 44,
+                      cursor: 'pointer',
+                    }
+                  }}
+                  InputProps={{ readOnly: true }}
+                />
+              </Paper>
 
-            {/* Trending Topics */}
-            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid #F2F2F2' }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: '#111827' }}>
-                <TrendingUp sx={{ mr: 1, fontSize: 20, color: '#4F46E5' }} />
-                Trending Topics
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {['AI Strategy', 'Web Development', 'MERN Stack', 'UI/UX Design', 'SEO Optimization'].map((topic) => (
-                  <Chip 
-                    key={topic}
-                    label={topic}
-                    size="small"
-                    sx={{ 
-                      bgcolor: '#F8F8F8',
-                      color: '#4B5563',
-                      borderRadius: '9999px',
-                      fontSize: '0.8rem',
-                      fontWeight: 500,
-                      px: 1.5,
-                      py: 0.5,
-                    }}
-                  />
-                ))}
-              </Box>
-            </Paper>
+              {/* Trending Topics */}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  bgcolor: 'background.paper',
+                  border: '1px solid #F2F2F2',
+                  width: '100%',
+                  maxWidth: '100%',
+                  boxSizing: 'border-box',
+                  overflow: 'hidden'
+                }}
+              >
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: '#111827' }}>
+                  <TrendingUp sx={{ mr: 1, fontSize: 20, color: '#4F46E5' }} />
+                  Trending Topics
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {['AI Strategy', 'Web Development', 'MERN Stack', 'UI/UX Design', 'SEO Optimization'].map((topic) => (
+                    <Chip 
+                      key={topic}
+                      label={topic}
+                      size="small"
+                      sx={{ 
+                        bgcolor: '#F8F8F8',
+                        color: '#4B5563',
+                        borderRadius: '9999px',
+                        fontSize: '0.8rem',
+                        fontWeight: 500,
+                        px: 1.5,
+                        py: 0.5,
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Paper>
 
-            {/* Trending Blogs */}
-            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid #F2F2F2' }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: '#111827' }}>
-                📈 Trending Blogs
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {posts.slice(0, 5).map((post) => (
-                  <Link
-                    key={post._id}
-                    to={postUrl(post)}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <Typography
+              {/* Trending Blogs */}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  bgcolor: 'background.paper',
+                  border: '1px solid #F2F2F2',
+                  width: '100%',
+                  maxWidth: '100%',
+                  boxSizing: 'border-box',
+                  overflow: 'hidden'
+                }}
+              >
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: '#111827' }}>
+                  📈 Trending Blogs
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {posts.slice(0, 5).map((post) => (
+                    <Link
+                      key={post._id}
+                      to={postUrl(post)}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <Typography
                       variant="body2"
                       sx={{
                         color: '#4B5563',
@@ -300,13 +329,20 @@ export default function BlogListPage() {
             <AdSlot format="sidebar" />
 
             {/* Newsletter Card */}
-            <Paper elevation={0} sx={{ 
-              p: 2.5,
-              borderRadius: 3,
-              background: '#050816',
-              color: 'white',
-              textAlign: 'center',
-            }}>
+            <Paper
+              elevation={0}
+              sx={{ 
+                p: 2.5,
+                borderRadius: 3,
+                background: '#050816',
+                color: 'white',
+                textAlign: 'center',
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
+                overflow: 'hidden'
+              }}
+            >
               <Mail sx={{ fontSize: 28, mb: 1, color: '#818CF8' }} />
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: 'white', fontSize: '1rem' }}>
                 Stay Updated
@@ -351,10 +387,10 @@ export default function BlogListPage() {
                 No spam. Unsubscribe anytime.
               </Typography>
             </Paper>
-
           </Box>
-        </Box>
-      </Container>
+        </Grid>
+      </Grid>
+    </Container>
     </Layout>
   );
 }

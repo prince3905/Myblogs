@@ -50,313 +50,69 @@
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=optional">
     </noscript>
     <meta name="google-adsense-account" content="ca-pub-7044184444698366">
-    <script type="module" crossorigin src="/assets/index-D-6FMIY5.js"></script>
+    <script type="module" crossorigin src="/assets/index-B-tHwF_F.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-B00D0jYS.css">
   </head>
   <body>
     <div id="root">
-      <!-- HTML Shell / Skeleton loader for instant First Contentful Paint -->
+      <!-- Minimalist Brand Loading Splash Screen -->
       <style>
-        .shell-container {
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-          min-height: 100vh;
+        .brand-loader-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
           display: flex;
           flex-direction: column;
-          background: #ffffff;
-          color: #111827;
-        }
-        .shell-header-wrap {
-          position: sticky;
-          top: 16px;
-          z-index: 1100;
-          height: 72px;
-          display: flex;
           align-items: center;
+          justify-content: center;
+          background-color: #ffffff;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          z-index: 9999;
+          transition: opacity 0.3s ease;
         }
-        .shell-header {
-          background: rgba(255, 255, 255, 0.75);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          border: 1px solid rgba(255, 255, 255, 0.6);
-          border-radius: 9999px;
-          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
-          width: 940px;
-          max-width: calc(100% - 32px);
-          margin: 0 auto;
-          padding: 8px 16px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          height: 48px;
-        }
-        .shell-logo {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-weight: 700;
-          font-size: 16px;
-          text-decoration: none;
-          color: #111111;
-        }
-        .shell-avatar {
-          width: 26px;
-          height: 26px;
+        .brand-loader-logo {
+          width: 60px;
+          height: 60px;
           border-radius: 50%;
           background: #4F46E5;
           color: white;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 12px;
+          font-size: 24px;
           font-weight: 800;
-        }
-        .shell-header-right {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        .shell-icon-placeholder {
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: #ECECEC;
-        }
-        .shell-hero {
-          padding-top: 64px;
-          padding-bottom: 32px;
-          flex-grow: 1;
-        }
-        .shell-hero-container {
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-        @media (min-width: 900px) {
-          .shell-hero-container {
-            flex-direction: row;
-            align-items: center;
-            padding: 0 48px;
-          }
-        }
-        .shell-hero-left {
-          flex: 1;
-          width: 100%;
-        }
-        @media (min-width: 900px) {
-          .shell-hero-left {
-            flex: 0 0 55%;
-          }
-        }
-        .shell-img-skeleton {
-          width: 100%;
-          border-radius: 24px;
-          background: #ECECEC;
-          position: relative;
-          height: 240px;
-        }
-        @media (min-width: 900px) {
-          .shell-img-skeleton {
-            height: 380px;
-          }
-        }
-        .shell-hero-right {
-          flex: 1;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          height: 240px;
-        }
-        @media (min-width: 900px) {
-          .shell-hero-right {
-            flex: 0 0 40%;
-          }
-        }
-        .shell-line-title {
-          height: 36px;
-          background: #ECECEC;
-          border-radius: 8px;
+          box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25);
           margin-bottom: 16px;
-          width: 90%;
+          animation: brand-pulse 1.8s infinite ease-in-out;
         }
-        .shell-line-body {
-          height: 20px;
-          background: #ECECEC;
-          border-radius: 8px;
-          margin-bottom: 8px;
-          width: 100%;
-        }
-        .shell-line-body.w95 { width: 95%; }
-        .shell-line-body.w70 { width: 70%; margin-bottom: 24px; }
-        .shell-author-wrap {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        .shell-author-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: #ECECEC;
-        }
-        .shell-author-lines {
-          flex-grow: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-        .shell-line-author {
-          height: 16px;
-          background: #ECECEC;
-          border-radius: 4px;
-          width: 40%;
-        }
-        .shell-line-date {
-          height: 12px;
-          background: #ECECEC;
-          border-radius: 4px;
-          width: 30%;
-        }
-        .shell-pulse {
-          animation: shell-pulse-anim 1.5s infinite ease-in-out;
-        }
-        @keyframes shell-pulse-anim {
-          0% { opacity: 0.6; }
-          50% { opacity: 1; }
-          100% { opacity: 0.6; }
-        }
-        .shell-utility-section {
-          padding: 48px 0;
-        }
-        .shell-utility-container {
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 16px;
-        }
-        @media (min-width: 900px) {
-          .shell-utility-container {
-            padding: 0 48px;
-          }
-        }
-        .shell-utility-title {
-          font-size: 24px;
+        .brand-loader-title {
+          font-size: 20px;
           font-weight: 700;
-          margin-bottom: 32px;
+          color: #111111;
+          letter-spacing: -0.02em;
         }
-        .shell-utility-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 24px;
+        .dark .brand-loader-container {
+          background-color: #0a0a0a;
         }
-        @media (min-width: 900px) {
-          .shell-utility-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-        .shell-card-tools {
-          height: 280px;
-          border-radius: 24px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          padding: 32px;
-          color: white;
-        }
-        .shell-card-games {
-          height: 280px;
-          border-radius: 24px;
-          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-          padding: 32px;
-          color: white;
-        }
-        .shell-card-title {
-          font-size: 24px;
-          font-weight: 700;
-          margin-bottom: 8px;
-          margin-top: 8px;
-        }
-        .shell-card-desc {
-          opacity: 0.9;
-          font-size: 14px;
-          line-height: 1.6;
-        }
-        /* Dark mode support */
-        .dark .shell-container {
-          background: #0a0a0a;
-          color: #E5E7EB;
-        }
-        .dark .shell-header {
-          background: rgba(17, 24, 39, 0.75);
-          border-color: rgba(255, 255, 255, 0.1);
+        .dark .brand-loader-title {
           color: #F9FAFB;
         }
-        .dark .shell-logo {
-          color: #F9FAFB;
-        }
-        .dark .shell-img-skeleton,
-        .dark .shell-line-title,
-        .dark .shell-line-body,
-        .dark .shell-author-avatar,
-        .dark .shell-line-author,
-        .dark .shell-line-date,
-        .dark .shell-icon-placeholder {
-          background: #1f2937;
-        }
-        .dark .shell-utility-title {
-          color: #E5E7EB;
+        @keyframes brand-pulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25);
+          }
+          50% {
+            transform: scale(1.08);
+            box-shadow: 0 15px 35px rgba(79, 70, 229, 0.45);
+          }
         }
       </style>
-      <div class="shell-container">
-        <div class="shell-header-wrap">
-          <div class="shell-header">
-            <div class="shell-logo">
-              <div class="shell-avatar">D</div>
-              <span>Digital Home</span>
-            </div>
-            <div class="shell-header-right">
-              <div class="shell-icon-placeholder"></div>
-              <div class="shell-icon-placeholder"></div>
-            </div>
-          </div>
-        </div>
-        <div class="shell-hero">
-          <div class="shell-hero-container">
-            <div class="shell-hero-left">
-              <div class="shell-img-skeleton shell-pulse"></div>
-            </div>
-            <div class="shell-hero-right">
-              <div class="shell-line-title shell-pulse"></div>
-              <div class="shell-line-body shell-pulse"></div>
-              <div class="shell-line-body w95 shell-pulse"></div>
-              <div class="shell-line-body w70 shell-pulse"></div>
-              <div class="shell-author-wrap">
-                <div class="shell-author-avatar shell-pulse"></div>
-                <div class="shell-author-lines">
-                  <div class="shell-line-author shell-pulse"></div>
-                  <div class="shell-line-date shell-pulse"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="shell-utility-section">
-          <div class="shell-utility-container">
-            <div class="shell-utility-title">Explore More</div>
-            <div class="shell-utility-grid">
-              <div class="shell-card-tools">
-                <div style="font-size: 40px; margin-bottom: 12px;">🛠️</div>
-                <div class="shell-card-title">Student Utility Tools</div>
-                <div class="shell-card-desc">Photo compressor under 20KB, PDF tools, passport size maker, signature creator, image to PDF converter, and more — all free, all in your browser.</div>
-              </div>
-              <div class="shell-card-games">
-                <div style="font-size: 40px; margin-bottom: 12px;">🎮</div>
-                <div class="shell-card-title">Kids Educational Games</div>
-                <div class="shell-card-desc">Fun learning games for kids — alphabet matching, math booster, animal shadow & sound quiz. Playful way to learn while having fun!</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="brand-loader-container">
+        <div class="brand-loader-logo">D</div>
+        <div class="brand-loader-title">Digital Home</div>
       </div>
     </div>
   </body>
