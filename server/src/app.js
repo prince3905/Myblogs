@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 const compression = require('compression');
 const env = require('./config/env');
@@ -19,7 +20,7 @@ const pexelsRoutes = require('./modules/pexels/pexels.routes');
 const adRoutes = require('./modules/ads/ad.routes');
 const keywordRoutes = require('./modules/keywords/keyword.routes');
 const { geoTranslateMiddleware } = require('./shared/middleware/geoTranslate');
-const { sitemap, robots, rssFeed } = require('./modules/posts/post.controller');
+const { sitemap, robots, rssFeed, getHomepageData } = require('./modules/posts/post.controller');
 
 const app = express();
 const publicPath = path.join(__dirname, '../public');
@@ -69,6 +70,29 @@ app.get('/rss.xml', rssFeed);
 app.get('/ads.txt', (req, res) => {
   res.type('text/plain');
   res.send('google.com, pub-7044184444698366, DIRECT, f08c47fec0942fa0');
+});
+
+// Handle root path / specially to inject initial posts data to avoid client API waterfall
+app.get('/', async (req, res, next) => {
+  try {
+    const indexPath = path.join(publicPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(404).send('index.html not found');
+    }
+    let html = fs.readFileSync(indexPath, 'utf8');
+    
+    // Get pre-cached homepage posts data
+    const data = await getHomepageData();
+    if (data) {
+      const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data).replace(/</g, '\\u003c')};</script>`;
+      html = html.replace('</head>', `${scriptTag}\n</head>`);
+    }
+    
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(html);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Serve static files

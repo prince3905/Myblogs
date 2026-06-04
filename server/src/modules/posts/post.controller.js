@@ -383,6 +383,29 @@ async function likePost(req, res, next) {
   }
 }
 
+async function getHomepageData() {
+  const now = Date.now();
+  if (cachedPostsFeed && (now - cacheTimestamp < CACHE_TTL)) {
+    return { posts: cachedPostsFeed, total: cachedPostsTotal, page: 1, pages: Math.ceil(cachedPostsTotal / 10) };
+  }
+  try {
+    const query = { status: 'published' };
+    const total = await Post.countDocuments(query);
+    const posts = await Post.find({ status: 'published' })
+      .sort({ publishedAt: -1, createdAt: -1 })
+      .limit(10)
+      .select('title slug category featuredImage excerpt views createdAt')
+      .lean();
+    cachedPostsFeed = posts;
+    cachedPostsTotal = total;
+    cacheTimestamp = now;
+    return { posts, total, page: 1, pages: Math.ceil(total / 10) };
+  } catch (err) {
+    console.error('[Cache] getHomepageData fetch failed:', err);
+    return null;
+  }
+}
+
 module.exports = {
   listPublishedPosts,
   listAdminPosts,
@@ -397,5 +420,7 @@ module.exports = {
   robots,
   rssFeed,
   searchPosts,
-  likePost
+  likePost,
+  getHomepageData
 };
+

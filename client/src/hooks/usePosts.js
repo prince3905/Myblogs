@@ -2,12 +2,35 @@ import { useState, useEffect, useCallback } from 'react';
 import { postsService } from '../services/posts';
 
 export function usePosts(params = {}) {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Check if we are fetching the default homepage feed (limit 10, page 1, no filters)
+  const isDefaultHome = !params.search && !params.category && !params.tags && !params.dateFrom && !params.dateTo && (!params.limit || params.limit === 10);
+
+  const [posts, setPosts] = useState(() => {
+    if (isDefaultHome && typeof window !== 'undefined' && window.__INITIAL_POSTS__) {
+      return window.__INITIAL_POSTS__.posts || [];
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (isDefaultHome && typeof window !== 'undefined' && window.__INITIAL_POSTS__) {
+      return false;
+    }
+    return true;
+  });
   const [error, setError] = useState(null);
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState(() => {
+    if (isDefaultHome && typeof window !== 'undefined' && window.__INITIAL_POSTS__) {
+      return window.__INITIAL_POSTS__.total || 0;
+    }
+    return 0;
+  });
   const [page, setPage] = useState(params.page || 1);
-  const [pages, setPages] = useState(1);
+  const [pages, setPages] = useState(() => {
+    if (isDefaultHome && typeof window !== 'undefined' && window.__INITIAL_POSTS__) {
+      return window.__INITIAL_POSTS__.pages || 1;
+    }
+    return 1;
+  });
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -45,6 +68,12 @@ export function usePosts(params = {}) {
   }, [JSON.stringify(params), page]);
 
   useEffect(() => {
+    // If we have initial posts loaded in window.__INITIAL_POSTS__ and we are on page 1,
+    // skip the initial fetch, consume it, and clean up.
+    if (isDefaultHome && page === 1 && typeof window !== 'undefined' && window.__INITIAL_POSTS__) {
+      delete window.__INITIAL_POSTS__;
+      return;
+    }
     fetchPosts();
   }, [fetchPosts]);
 
