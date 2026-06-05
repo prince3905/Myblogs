@@ -6,7 +6,7 @@ export default function BreadcrumbsNav() {
   const location = useLocation();
   const paths = location.pathname.split('/').filter(Boolean);
   
-  if (paths.length === 0) return null;
+  if (paths.length <= 1) return null;
 
   return (
     <Box

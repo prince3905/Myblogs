@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Chip, Divider, Grid } from '@mui/material';
+import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Chip, Divider, Grid, Collapse } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -13,6 +13,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import CalendarToday from '@mui/icons-material/CalendarToday';
 import TrendingUp from '@mui/icons-material/TrendingUp';
 import Mail from '@mui/icons-material/Mail';
+import FilterList from '@mui/icons-material/FilterList';
 import AdSlot from '../../../components/AdSlot';
 
 export default function BlogListPage() {
@@ -21,6 +22,7 @@ export default function BlogListPage() {
   const [tags, setTags] = useState('');
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   
   const { posts, loading: postsLoading, error: postsError, total, page, pages, setPage } = usePosts({ search, category, tags, dateFrom, dateTo, limit: 9 });
   const { categories } = useCategories();
@@ -33,105 +35,142 @@ export default function BlogListPage() {
       <Seo title="All Insights | Digital Home" description="Browse our latest AI consulting insights and articles." />
       
       {/* Filter Section */}
-      <Paper elevation={0} sx={{ py: { xs: 1.5, md: 3 }, mb: { xs: 1.5, md: 3 }, bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider' }}>
+      <Paper elevation={0} sx={{ py: { xs: 1.5, md: 2 }, mb: { xs: 1.5, md: 2 }, bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider' }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: 'text.primary', letterSpacing: '-0.02em', fontSize: { xs: '1.5rem', md: '2.125rem' }, mb: { xs: 0.5, md: 1 } }}>
-            All Insights
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 1.5, md: 2 }, fontSize: { xs: '0.85rem', md: '0.95rem' } }}>
-            Search by title, excerpt, or tags and filter by category.
-          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2 }}>
+            <Box>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', letterSpacing: '-0.02em', fontSize: { xs: '1.35rem', md: '1.65rem' } }}>
+                All Insights
+              </Typography>
+            </Box>
 
-          <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Search articles"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              sx={{ 
-                flex: { xs: '1 1 100%', sm: '1 1 calc(33.333% - 11px)' },
-                minWidth: { xs: '100%', sm: 180 }
-              }}
-            />
-            <FormControl 
-              size="small" 
-              sx={{ 
-                flex: { xs: '1 1 100%', sm: '1 1 calc(33.333% - 11px)' },
-                minWidth: { xs: '100%', sm: 150 }
-              }}
-            >
-              <InputLabel>Category</InputLabel>
-              <Select
-                value={category}
-                label="Category"
-                onChange={(e) => setCategory(e.target.value)}
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap', flex: { md: '0 1 auto' }, minWidth: { md: 550 } }}>
+              <TextField
+                size="small"
+                label="Search articles"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                sx={{ 
+                  flex: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '10px',
+                  }
+                }}
+              />
+              <FormControl 
+                size="small" 
+                sx={{ 
+                  flex: 1.2, 
+                  minWidth: 140,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '10px',
+                  }
+                }}
               >
-                <MenuItem value="">All categories</MenuItem>
-                {categories.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
-              </Select>
-            </FormControl>
-            <TextField
-              fullWidth
-              size="small"
-              label="Tags (comma-separated)"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              sx={{ 
-                flex: { xs: '1 1 100%', sm: '1 1 calc(33.333% - 11px)' },
-                minWidth: { xs: '100%', sm: 150 }
-              }}
-            />
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={category}
+                  label="Category"
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  <MenuItem value="">All categories</MenuItem>
+                  {categories.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+                </Select>
+              </FormControl>
+
+              <Button
+                variant={showAdvanced ? "contained" : "outlined"}
+                size="small"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                startIcon={<FilterList />}
+                sx={{ 
+                  borderRadius: '10px',
+                  height: 40,
+                  px: 2,
+                  fontSize: '0.8rem',
+                  minWidth: 'fit-content',
+                  borderWidth: showAdvanced ? 0 : 1.5
+                }}
+              >
+                Filters
+              </Button>
+            </Box>
           </Box>
 
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-              <DatePicker
-                label="From Date"
-                value={dateFrom}
-                onChange={(newValue) => setDateFrom(newValue ? newValue : null)}
-                slots={{
-                  openPickerIcon: CalendarToday,
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: "small",
-                    sx: { 
-                      flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)' },
-                      minWidth: { xs: '100%', sm: 160 }
+          <Collapse in={showAdvanced} timeout="auto" unmountOnExit>
+            <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+              <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Tags (comma-separated)"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  sx={{ 
+                    flex: '1 1 100%',
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
                     }
-                  },
-                  openPickerButton: {
-                    size: "small",
-                    sx: { mr: 0.5 }
-                  }
-                }}
-              />
-              <DatePicker
-                label="To Date"
-                value={dateTo}
-                onChange={(newValue) => setDateTo(newValue ? newValue : null)}
-                slots={{
-                  openPickerIcon: CalendarToday,
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: "small",
-                    sx: { 
-                      flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)' },
-                      minWidth: { xs: '100%', sm: 160 }
-                    }
-                  },
-                  openPickerButton: {
-                    size: "small",
-                    sx: { mr: 0.5 }
-                  }
-                }}
-              />
+                  }}
+                />
+              </Box>
+
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                  <DatePicker
+                    label="From Date"
+                    value={dateFrom}
+                    onChange={(newValue) => setDateFrom(newValue ? newValue : null)}
+                    slots={{
+                      openPickerIcon: CalendarToday,
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: "small",
+                        sx: { 
+                          flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)' },
+                          minWidth: { xs: '100%', sm: 160 },
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '10px',
+                          }
+                        }
+                      },
+                      openPickerButton: {
+                        size: "small",
+                        sx: { mr: 0.5 }
+                      }
+                    }}
+                  />
+                  <DatePicker
+                    label="To Date"
+                    value={dateTo}
+                    onChange={(newValue) => setDateTo(newValue ? newValue : null)}
+                    slots={{
+                      openPickerIcon: CalendarToday,
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: "small",
+                        sx: { 
+                          flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)' },
+                          minWidth: { xs: '100%', sm: 160 },
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '10px',
+                          }
+                        }
+                      },
+                      openPickerButton: {
+                        size: "small",
+                        sx: { mr: 0.5 }
+                      }
+                    }}
+                  />
+                </Box>
+              </LocalizationProvider>
             </Box>
-          </LocalizationProvider>
+          </Collapse>
         </Container>
       </Paper>
 
