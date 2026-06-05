@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Typography, Box, CircularProgress, Alert, TextField, Chip, Paper, InputAdornment } from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
+import { Typography, Box, CircularProgress, Alert, TextField, Chip, Paper, InputAdornment, IconButton } from '@mui/material';
+import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
 import { request } from '../../../shared/lib/api';
+import { usePosts } from '../../../hooks/usePosts';
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -17,6 +18,8 @@ export default function SearchPage() {
   const [pages, setPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const { posts: recentPosts, loading: recentLoading, error: recentError } = usePosts({ limit: 3 });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -49,7 +52,7 @@ export default function SearchPage() {
       <Seo title={q ? `Search: ${q} | Digital Home` : 'Search | Digital Home'} description="Search articles on Digital Home" />
 
       <>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>Search</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>Search Insights</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           Search all articles by title, content, and excerpt
         </Typography>
@@ -99,7 +102,18 @@ export default function SearchPage() {
               variant="standard"
               InputProps={{
                 disableUnderline: true,
-                sx: { px: 1.5, py: 1.2, fontSize: '1rem', '&::placeholder': { color: 'text.disabled', opacity: 1 } }
+                sx: { px: 1.5, py: 1.2, fontSize: '1rem', '&::placeholder': { color: 'text.disabled', opacity: 1 } },
+                endAdornment: query && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => setQuery('')}
+                      sx={{ color: 'text.secondary', mr: 1 }}
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                )
               }}
             />
           </Paper>
@@ -126,7 +140,43 @@ export default function SearchPage() {
               </Box>
             )}
           </>
-        ) : null}
+        ) : (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5, color: 'text.primary' }}>
+              ⚡ Trending Topics
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.2, mb: 5 }}>
+              {['AI Tools', 'Sarkari Jobs', 'Health', 'Tech & Tutorials', 'Finance', 'News & Trends'].map((topic) => (
+                <Chip 
+                  key={topic}
+                  label={topic}
+                  clickable
+                  onClick={() => setQuery(topic)}
+                  sx={{ 
+                    bgcolor: 'grey.100',
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    borderRadius: '8px',
+                    '&:hover': { bgcolor: 'primary.main', color: 'white' }
+                  }}
+                />
+              ))}
+            </Box>
+
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
+              📖 Recent Insights
+            </Typography>
+            {recentLoading ? (
+              <Box sx={{ py: 4 }}><CircularProgress size={24} /></Box>
+            ) : recentError ? (
+              <Alert severity="error">{recentError}</Alert>
+            ) : (
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: '20px' }}>
+                {recentPosts.map(post => <PostCard key={post._id} post={post} />)}
+              </Box>
+            )}
+          </Box>
+        )}
       </>
     </Layout>
   );
