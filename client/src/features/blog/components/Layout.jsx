@@ -247,7 +247,7 @@ export default function Layout({ children }) {
       </Drawer>
       
       {/* Spacer for sticky navbar */}
-      <Box sx={{ height: { xs: 72, md: 72 } }} />
+      <Box sx={{ height: { xs: 12, md: 16 } }} />
       
       <BreadcrumbsNav />
       

@@ -18,7 +18,7 @@ export default function HomePage() {
 
       {/* Hero Section - Featured Article (H1) or Loading Skeleton to prevent CLS */}
       {/* Hero Section - Featured Article (H1) or Loading Skeleton (Unified to prevent CLS) */}
-      <Box component="section" sx={{ pt: { xs: 8, md: 14 }, pb: { xs: 4, md: 8 } }}>
+      <Box component="section" sx={{ pt: { xs: 2.5, md: 4 }, pb: { xs: 2, md: 4 } }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
           <Box sx={{
             display: 'flex',
@@ -189,7 +189,7 @@ export default function HomePage() {
           minHeight: { xs: '736px', md: '440px' }, 
           contain: 'layout', 
           display: 'block', 
-          py: 6 
+          py: { xs: 3, md: 4.5 }
         }}
       >
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
@@ -261,7 +261,7 @@ export default function HomePage() {
       </Box>
 
       {/* Latest Insights Section (H2) */}
-      <Box component="section" sx={{ py: { xs: 6, md: 10 }, bgcolor: '#F9FAFB' }}>
+      <Box component="section" sx={{ py: { xs: 4, md: 6 }, bgcolor: '#F9FAFB' }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 5 }}>
             <Typography
