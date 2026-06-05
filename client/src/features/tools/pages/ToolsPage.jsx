@@ -97,36 +97,84 @@ export default function ToolsPage() {
         keywords="photo compressor under 20kb, passport size photo resizer online, age calculator for government forms, image to pdf converter free, pdf compressor, signature maker, image format converter, ssc photo resize tool"
         jsonLd={seoSchema}
       />
-      <Box sx={{ py: { xs: 4, md: 5 }, px: { xs: 2, md: 3 } }}>
+      <Box sx={{ py: { xs: 3, md: 5 }, px: { xs: 1.5, sm: 2, md: 3 } }}>
         <Container maxWidth="lg" disableGutters>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h4" fontWeight={800} gutterBottom>
+          <Box sx={{ mb: 4, px: { xs: 0.5, sm: 0 } }}>
+            <Typography variant="h4" fontWeight={900} gutterBottom sx={{ fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' }, color: 'text.primary', mb: 1 }}>
               📋 Student Utility Tools
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 2, fontWeight: 600, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>
               Sarkari form mein chahe photo resize karna ho, PDF banana ho, signature chahiye — sab kuch yahin free me karo.
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
               Sarkari exams jaise SSC, UPSC, Railway aur Banking ke form bharte waqt students ko photo size 20KB se kam karna, signature crop karna, documents ko PDF me badalna aur exact age calculate karna hota hai. Yeh saare tools aapke browser mein locally chalte hain — koi server upload nahi, koi data leak nahi.
             </Typography>
           </Box>
-          <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto" sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-            {tools.map((t, i) => (
-              <Tab key={i} icon={t.icon} label={t.label} sx={{ minHeight: 56, textTransform: 'none', fontWeight: 600 }} />
-            ))}
+          <Tabs 
+            value={tab} 
+            onChange={(_, v) => setTab(v)} 
+            variant="scrollable" 
+            scrollButtons="auto" 
+            allowScrollButtonsMobile
+            sx={{ 
+              mb: 3,
+              '& .MuiTabs-indicator': {
+                display: 'none'
+              },
+              '& .MuiTabs-flexContainer': {
+                gap: 1.2,
+                py: 0.5,
+              },
+            }}
+          >
+            {tools.map((t, i) => {
+              const isSelected = tab === i;
+              return (
+                <Tab 
+                  key={i} 
+                  icon={t.icon} 
+                  iconPosition="start"
+                  label={t.label} 
+                  sx={{ 
+                    minHeight: 44, 
+                    textTransform: 'none', 
+                    fontWeight: 700,
+                    borderRadius: '30px',
+                    px: { xs: 2, sm: 2.5 },
+                    py: 0.8,
+                    border: '2px solid',
+                    borderColor: isSelected ? 'primary.main' : 'rgba(0,0,0,0.08)',
+                    bgcolor: isSelected ? 'primary.main' : '#ffffff',
+                    color: isSelected ? '#ffffff !important' : '#4B5563 !important',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: isSelected ? '0 6px 16px rgba(79, 70, 229, 0.2)' : '0 2px 6px rgba(0,0,0,0.01)',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      bgcolor: isSelected ? 'primary.main' : 'rgba(79, 70, 229, 0.04)',
+                      transform: 'translateY(-2px)',
+                    },
+                    gap: 0.8,
+                    fontSize: '0.88rem'
+                  }} 
+                />
+              );
+            })}
           </Tabs>
-          <TabPanel value={tab} index={0}><PhotoCompressor /></TabPanel>
-          <TabPanel value={tab} index={1}><ImageToPdf /></TabPanel>
-          <TabPanel value={tab} index={2}><PassportCropper /></TabPanel>
-          <TabPanel value={tab} index={3}><PdfCompressor /></TabPanel>
-          <TabPanel value={tab} index={4}><SignatureMaker /></TabPanel>
-          <TabPanel value={tab} index={5}><MergePdf /></TabPanel>
-          <TabPanel value={tab} index={6}><FormatConverter /></TabPanel>
-          <TabPanel value={tab} index={7}><BgWhitener /></TabPanel>
-          <TabPanel value={tab} index={8}><AgeCalculator /></TabPanel>
+          
+          <Box sx={{ mb: 4 }}>
+            <TabPanel value={tab} index={0}><PhotoCompressor /></TabPanel>
+            <TabPanel value={tab} index={1}><ImageToPdf /></TabPanel>
+            <TabPanel value={tab} index={2}><PassportCropper /></TabPanel>
+            <TabPanel value={tab} index={3}><PdfCompressor /></TabPanel>
+            <TabPanel value={tab} index={4}><SignatureMaker /></TabPanel>
+            <TabPanel value={tab} index={5}><MergePdf /></TabPanel>
+            <TabPanel value={tab} index={6}><FormatConverter /></TabPanel>
+            <TabPanel value={tab} index={7}><BgWhitener /></TabPanel>
+            <TabPanel value={tab} index={8}><AgeCalculator /></TabPanel>
+          </Box>
 
-          <Box sx={{ mt: 4, px: 1 }}>
-            <Typography variant="h5" fontWeight={700} gutterBottom>
+          <Paper sx={{ p: { xs: 2.5, sm: 3.5 }, borderRadius: '24px', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', bgcolor: '#FCFBFC', mt: 4 }}>
+            <Typography variant="h5" fontWeight={800} sx={{ mb: 2, fontSize: { xs: '1.2rem', sm: '1.4rem' } }}>
               {tab === 0 && 'How to Compress Photo to 20KB for Government Forms'}
               {tab === 1 && 'How to Convert Images to PDF for SSC & UPSC Forms'}
               {tab === 2 && 'Passport Size Photo Cropper 3.5 x 4.5 cm Guide'}
@@ -138,7 +186,7 @@ export default function ToolsPage() {
               {tab === 8 && 'Age Calculator for Government Forms Guide'}
             </Typography>
             {tab === 0 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                 Government exam forms require photos under specific KB limits — usually 20KB, 50KB, or 100KB.
                 Our <strong>photo compressor for govt exams</strong> uses aggressive compression to meet exact size targets.
                 Upload your photo, use the quick presets like <strong>"Passport Photo (≤50 KB)"</strong> or <strong>"Signature (≤20 KB)"</strong>,
@@ -146,7 +194,7 @@ export default function ToolsPage() {
               </Typography>
             )}
             {tab === 1 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                 SSC, UPSC, Railway aur Banking forms mein aadhar card, marksheet, caste certificate sabhi documents
                 ki scanned copy ek hi PDF me upload karni hoti hai. Yeh <strong>image to PDF converter</strong> aapko
                 multiple photos ko A4 size PDF mein combine karne deta hai. Arrow buttons se images ko reorder bhi kar
@@ -154,23 +202,23 @@ export default function ToolsPage() {
               </Typography>
             )}
             {tab === 2 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                 HAR <strong>passport size photo cropper 3.5 x 4.5 cm</strong> form ka standard size hai. Chahe SSC
                 ho ya UPSC Police, photo ka exact ratio 3.5cm by 4.5cm hona chahiye. Yeh tool aapko blue box drag
-                karke face ko adjust karne deta hai, phir automatically 413×531 pixels (300 DPI) ki image JPEG format
+                karke face ko adjust karne deta hai, aur dynamic touch options support ke saath mobile browser me bhi perfect work karega. automatically 413×531 pixels (300 DPI) ki image JPEG format
                 mein download hoti hai — ready for upload.
               </Typography>
             )}
             {tab === 3 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                 Kafi portals pe PDF size 500KB se 1MB se upar nahi hona chahiye. Hamara <strong>PDF compressor</strong>
-                har page ko re-render karta hai, images ko downsample karta hai aur metadata strip karta hai.
+                har page ko re-render karta hai, images ko downsample karta hai aur metadata strip karta.
                 Four presets hain — Maximum se 80%+ compression, Low se 15-30% reduction. Quality bar adjust karke
                 perfect balance paayein.
               </Typography>
             )}
             {tab === 4 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                 Digital signatures ke liye ab kisi app ki zaroorat nahi. Yeh <strong>signature maker</strong> tool
                 mouse ya finger se sign draw karne deta hai, phir JPEG format mein white background ke saath download
                 karta hai. Govt forms transparent signatures reject karte hain, isliye background white rakha gaya hai.
@@ -178,21 +226,21 @@ export default function ToolsPage() {
               </Typography>
             )}
             {tab === 5 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                 Multiple PDF files (jaise aadhar, marksheet, certificates) ko ek single PDF mein merge karna
                 sarkari forms ke liye zaroori hota hai. Yeh <strong>merge PDF tool</strong> aapko up/down arrows
                 se files reorder karne deta hai, phir exact usi sequence mein merged PDF generate karta hai.
               </Typography>
             )}
             {tab === 6 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                 Kuch government portals sirf JPG format accept karte hain, kuch sirf PNG. Yeh <strong>image format converter</strong>
                 PNG ↔ JPG ↔ WebP me badalta hai. Transparent PNG ko JPG me convert karte waqt white background auto add
                 hota hai (black bg nahi aayega). Quality slider se file size control karein.
               </Typography>
             )}
             {tab === 7 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                 Passport aur government forms ke liye white background wali photo chahiye hoti hai. Yeh <strong>AI background remover</strong>
                 browser mein hi TensorFlow.js chalata hai — free, koi server cost nahi. Model pehli baar ~40MB download hota hai,
                 phir cached rehta hai. Background remove hone ke baad pure white (#FFFFFF) background pe composite hota hai
@@ -200,13 +248,13 @@ export default function ToolsPage() {
               </Typography>
             )}
             {tab === 8 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                 Sarkari forms mein exact age years, months aur days me likhni hoti hai. Yeh <strong>age calculator for government forms</strong>
                 birth date dalne par correct age count karta hai — months me days borrow karte waqt saari edge cases handle ki gayi hain
                 (jaise Jan 31 se March 1). "As on" date bhi daal sakte hain agar form me kisi specific date tak age chahiye.
               </Typography>
             )}
-          </Box>
+          </Paper>
 
           <TopPosts />
         </Container>
@@ -216,6 +264,74 @@ export default function ToolsPage() {
 }
 
 const formatBytes = (b) => b < 1024 ? `${b} B` : `${(b / 1024).toFixed(1)} KB`;
+
+function FileUploadZone({ accept, onChange, label, sublabel, icon, multiple = false }) {
+  const [dragActive, setDragActive] = useState(false);
+  const inputRef = useRef(null);
+  
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onChange({ target: { files: e.dataTransfer.files } });
+    }
+  };
+
+  return (
+    <Box
+      onDragEnter={handleDrag}
+      onDragOver={handleDrag}
+      onDragLeave={handleDrag}
+      onDrop={handleDrop}
+      onClick={() => inputRef.current?.click()}
+      sx={{
+        border: '2px dashed',
+        borderColor: dragActive ? 'primary.main' : 'rgba(79, 70, 229, 0.25)',
+        borderRadius: '16px',
+        bgcolor: dragActive ? 'rgba(79, 70, 229, 0.04)' : '#FCFBFC',
+        p: { xs: 2.5, sm: 4 },
+        textAlign: 'center',
+        cursor: 'pointer',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          borderColor: 'primary.main',
+          bgcolor: 'rgba(79, 70, 229, 0.02)',
+          transform: 'scale(1.005)'
+        },
+        mb: 2,
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        onChange={onChange}
+        style={{ display: 'none' }}
+        multiple={multiple}
+      />
+      <Box sx={{ color: 'primary.main', mb: 1.5, display: 'flex', justifyContent: 'center' }}>
+        {icon || <CloudUploadIcon sx={{ fontSize: { xs: 36, sm: 44 } }} />}
+      </Box>
+      <Typography variant="body1" fontWeight={700} sx={{ color: 'text.primary', mb: 0.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: { xs: '0.75rem', sm: '0.85rem' } }}>
+        {sublabel || 'Drag & drop file here, or click to browse'}
+      </Typography>
+    </Box>
+  );
+}
 
 function PhotoCompressor() {
   const [file, setFile] = useState(null);
@@ -297,29 +413,43 @@ function PhotoCompressor() {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" fontWeight={700} gutterBottom>Photo / Sign Resizer</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Photo ko exact KB me resize karein: <strong>{targetSize} KB</strong></Typography>
-        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-          <Button size="small" variant={targetSize === 50 ? 'contained' : 'outlined'} onClick={() => quickResize(50)} sx={{ borderRadius: 4, textTransform: 'none' }}>📷 Passport Photo (≤50 KB)</Button>
-          <Button size="small" variant={targetSize === 20 ? 'contained' : 'outlined'} onClick={() => quickResize(20)} sx={{ borderRadius: 4, textTransform: 'none' }}>✍️ Signature (≤20 KB)</Button>
-          <Button size="small" variant={targetSize === 10 ? 'contained' : 'outlined'} onClick={() => quickResize(10)} sx={{ borderRadius: 4, textTransform: 'none' }}>📄 Sign (≤10 KB)</Button>
+    <Card sx={{
+      borderRadius: '24px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
+      border: '1px solid rgba(0,0,0,0.06)',
+      '&:hover': { transform: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Typography variant="h6" fontWeight={800} gutterBottom sx={{ color: 'text.primary', mb: 1 }}>Photo / Sign Resizer</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Photo ko exact KB me resize karein: <strong>{targetSize} KB</strong></Typography>
+        
+        <Box sx={{ display: 'flex', gap: 1.2, mb: 3, flexWrap: 'wrap' }}>
+          <Button size="small" variant={targetSize === 50 ? 'contained' : 'outlined'} onClick={() => quickResize(50)} sx={{ borderRadius: '20px', textTransform: 'none', px: 2.5, py: 0.6 }}>📷 Passport Photo (≤50 KB)</Button>
+          <Button size="small" variant={targetSize === 20 ? 'contained' : 'outlined'} onClick={() => quickResize(20)} sx={{ borderRadius: '20px', textTransform: 'none', px: 2.5, py: 0.6 }}>✍️ Signature (≤20 KB)</Button>
+          <Button size="small" variant={targetSize === 10 ? 'contained' : 'outlined'} onClick={() => quickResize(10)} sx={{ borderRadius: '20px', textTransform: 'none', px: 2.5, py: 0.6 }}>📄 Sign (≤10 KB)</Button>
         </Box>
-        <Slider value={targetSize} onChange={handleSlider} min={3} max={200} step={1} valueLabelDisplay="auto" valueLabelFormat={v => `${v} KB`} sx={{ mb: 2 }} />
-        <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
-          Upload Photo/Sign
-          <input hidden type="file" accept="image/*" onChange={handleUpload} />
-        </Button>
-        {loading && <LinearProgress sx={{ mt: 2 }} />}
+        
+        <Slider value={targetSize} onChange={handleSlider} min={3} max={200} step={1} valueLabelDisplay="auto" valueLabelFormat={v => `${v} KB`} sx={{ mb: 4 }} />
+        
+        <FileUploadZone
+          accept="image/*"
+          onChange={handleUpload}
+          label="Upload Photo or Signature"
+          sublabel="Drag and drop your image here, or click to browse"
+        />
+
+        {loading && <LinearProgress sx={{ mt: 3, borderRadius: 2 }} />}
+        
         {preview && (
-          <Box sx={{ mt: 2 }}>
-            <img src={preview} alt="preview" style={{ maxWidth: 200, maxHeight: 200, borderRadius: 8 }} />
-            <Typography variant="caption" display="block" sx={{ mt: 1 }}>Original: {formatBytes(origSize)} {compressed && ` → Compressed: ${formatBytes(compressed.size)} ✅`}</Typography>
-            {compressed && (
-              <Button variant="contained" startIcon={<DownloadIcon />} href={URL.createObjectURL(compressed)} download={`compressed.${compressed.name.split('.').pop() || 'jpg'}`} sx={{ mt: 1 }}>Download ({formatBytes(compressed.size)})</Button>
-            )}
-            <IconButton color="error" onClick={() => { setFile(null); setPreview(null); setCompressed(null); }} sx={{ ml: 1, mt: 1 }}><DeleteIcon /></IconButton>
+          <Box sx={{ mt: 3, p: 2, bgcolor: '#FAF9FA', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <img src={preview} alt="preview" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }} />
+            <Typography variant="caption" display="block" sx={{ mt: 2, fontWeight: 600 }}>Original: {formatBytes(origSize)} {compressed && ` → Compressed: ${formatBytes(compressed.size)} ✅`}</Typography>
+            <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center', width: '100%' }}>
+              {compressed && (
+                <Button variant="contained" startIcon={<DownloadIcon />} href={URL.createObjectURL(compressed)} download={`compressed.${compressed.name.split('.').pop() || 'jpg'}`} sx={{ borderRadius: '12px', textTransform: 'none' }}>Download ({formatBytes(compressed.size)})</Button>
+              )}
+              <IconButton color="error" onClick={() => { setFile(null); setPreview(null); setCompressed(null); }} sx={{ bgcolor: 'rgba(239, 68, 68, 0.08)', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.15)' } }}><DeleteIcon /></IconButton>
+            </Box>
           </Box>
         )}
       </CardContent>
@@ -336,7 +466,6 @@ function ImageToPdf() {
       setImages(prev => [...prev, f]);
       setPreviews(prev => [...prev, URL.createObjectURL(f)]);
     });
-    e.target.value = '';
   }, []);
 
   const remove = (i) => {
@@ -371,33 +500,44 @@ function ImageToPdf() {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" fontWeight={700} gutterBottom>📄 Image to PDF Converter</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Documents/photos ko ek PDF me combine karein. Images ko drag/arrow se reorder karein.</Typography>
-        <Button variant="outlined" component="label" startIcon={<AddPhotoAlternateIcon />}>
-          Add Images
-          <input hidden type="file" accept="image/*" multiple onChange={handleAdd} />
-        </Button>
+    <Card sx={{
+      borderRadius: '24px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
+      border: '1px solid rgba(0,0,0,0.06)',
+      '&:hover': { transform: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Typography variant="h6" fontWeight={800} gutterBottom sx={{ color: 'text.primary', mb: 1 }}>📄 Image to PDF Converter</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Documents/photos ko ek PDF me combine karein. Images ko drag/arrow se reorder karein.</Typography>
+        
+        <FileUploadZone
+          accept="image/*"
+          onChange={handleAdd}
+          multiple={true}
+          label="Add Marks sheets, certificates or pictures"
+          sublabel="Drag & drop images here, or click to choose (multiple allowed)"
+          icon={<AddPhotoAlternateIcon sx={{ fontSize: { xs: 36, sm: 44 } }} />}
+        />
+
         {images.length > 0 && (
           <>
-            <Typography variant="caption" sx={{ mt: 1.5, display: 'block', fontWeight: 600 }}>{images.length} image(s) — Arrow buttons se order badle, PDF usi sequence me banega:</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+            <Typography variant="caption" sx={{ mt: 2.5, display: 'block', fontWeight: 700, color: 'text.primary' }}>{images.length} image(s) — Arrow buttons se order badle, PDF usi sequence me banega:</Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2, mt: 1.5 }}>
               {previews.map((url, i) => (
-                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                  <Typography variant="body2" fontWeight={700} color="text.secondary" sx={{ minWidth: 24 }}>#{i + 1}</Typography>
-                  <img src={url} alt="" style={{ height: 56, width: 56, objectFit: 'cover', borderRadius: 6 }} />
-                  <Box sx={{ display: 'flex', gap: 0.3 }}>
-                    <Tooltip title="Move Up"><span><IconButton size="small" disabled={i === 0} onClick={() => move(i, -1)}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
-                    <Tooltip title="Move Down"><span><IconButton size="small" disabled={i === images.length - 1} onClick={() => move(i, 1)}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
+                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.2, border: '1px solid rgba(0,0,0,0.05)', borderRadius: '12px', bgcolor: '#FAF9FA' }}>
+                  <Typography variant="body2" fontWeight={800} color="text.secondary" sx={{ minWidth: 20 }}>#{i + 1}</Typography>
+                  <img src={url} alt="" style={{ height: 48, width: 48, objectFit: 'cover', borderRadius: '8px', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }} />
+                  <Box sx={{ display: 'flex', gap: 0.2 }}>
+                    <Tooltip title="Move Up"><span><IconButton size="small" disabled={i === 0} onClick={() => move(i, -1)} sx={{ p: 0.5 }}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
+                    <Tooltip title="Move Down"><span><IconButton size="small" disabled={i === images.length - 1} onClick={() => move(i, 1)} sx={{ p: 0.5 }}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
                   </Box>
                   <Box sx={{ flex: 1 }} />
-                  <Typography variant="caption" color="text.secondary">{images[i].name.slice(0, 20)}</Typography>
-                  <IconButton size="small" color="error" onClick={() => remove(i)}><DeleteIcon fontSize="small" /></IconButton>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>{images[i].name.slice(0, 20)}</Typography>
+                  <IconButton size="small" color="error" onClick={() => remove(i)} sx={{ ml: 1, bgcolor: 'rgba(239, 68, 68, 0.05)', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)' } }}><DeleteIcon fontSize="small" /></IconButton>
                 </Box>
               ))}
             </Box>
-            <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={generatePdf} sx={{ mt: 2 }}>Download PDF ({images.length} pages)</Button>
+            <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={generatePdf} sx={{ mt: 3, borderRadius: '12px', textTransform: 'none' }}>Download PDF ({images.length} pages)</Button>
           </>
         )}
       </CardContent>
@@ -410,7 +550,7 @@ function PassportCropper() {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const imgRef = useRef(null);
   const canvasRef = useRef(null);
-  const boxSize = 280;
+  const boxSize = 240; // Reduced slightly to fit small mobile screens better
 
   const handleUpload = useCallback((e) => {
     const f = e.target.files?.[0];
@@ -443,34 +583,80 @@ function PassportCropper() {
     }, 'image/jpeg', 0.95);
   }, [crop]);
 
-  const handleMouseMove = useCallback((e) => {
-    if (!e.buttons) return;
-    const rect = e.currentTarget.getBoundingClientRect();
+  const updateCropPosition = useCallback((clientX, clientY, currentTarget) => {
+    const rect = currentTarget.getBoundingClientRect();
     setCrop({
-      x: Math.max(0, Math.min(e.clientX - rect.left - boxSize / 2, rect.width - boxSize)),
-      y: Math.max(0, Math.min(e.clientY - rect.top - boxSize / 2, rect.height - boxSize)),
+      x: Math.max(0, Math.min(clientX - rect.left - boxSize / 2, rect.width - boxSize)),
+      y: Math.max(0, Math.min(clientY - rect.top - boxSize / 2, rect.height - boxSize)),
     });
   }, []);
 
+  const handleMouseMove = useCallback((e) => {
+    if (!e.buttons) return;
+    updateCropPosition(e.clientX, e.clientY, e.currentTarget);
+  }, [updateCropPosition]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (e.touches && e.touches[0]) {
+      e.preventDefault(); // Prevent scrolling mobile screen while dragging
+      updateCropPosition(e.touches[0].clientX, e.touches[0].clientY, e.currentTarget);
+    }
+  }, [updateCropPosition]);
+
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" fontWeight={700} gutterBottom>🖼️ Passport Size Cropper</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>3.5cm × 4.5cm — SSC, UPSC, Railway & all govt forms</Typography>
-        <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
-          Upload Photo
-          <input hidden type="file" accept="image/*" onChange={handleUpload} />
-        </Button>
+    <Card sx={{
+      borderRadius: '24px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
+      border: '1px solid rgba(0,0,0,0.06)',
+      '&:hover': { transform: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Typography variant="h6" fontWeight={800} gutterBottom sx={{ color: 'text.primary', mb: 1 }}>🖼️ Passport Size Cropper</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>3.5cm × 4.5cm — SSC, UPSC, Railway & all govt forms</Typography>
+        
+        <FileUploadZone
+          accept="image/*"
+          onChange={handleUpload}
+          label="Upload Photo for Passport"
+          sublabel="Drag and drop photo here, or click to select"
+        />
+
         {preview && (
-          <Box sx={{ mt: 2, textAlign: 'center' }}>
-            <Box sx={{ position: 'relative', display: 'inline-block', overflow: 'hidden', borderRadius: 2, border: '2px dashed #aaa', cursor: 'crosshair' }} onMouseMove={handleMouseMove}>
-              <img ref={imgRef} src={preview} alt="" draggable={false} style={{ maxWidth: '100%', maxHeight: 400, display: 'block' }} />
-              <Box sx={{ position: 'absolute', border: '2px solid #1976d2', bgcolor: 'rgba(25,118,210,0.08)', pointerEvents: 'none', borderRadius: 1, boxShadow: '0 0 8px rgba(25,118,210,0.5)', left: crop.x, top: crop.y, width: boxSize, height: boxSize }} />
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
+            <Box 
+              sx={{ 
+                position: 'relative', 
+                display: 'inline-block', 
+                overflow: 'hidden', 
+                borderRadius: '16px', 
+                border: '2px dashed rgba(0,0,0,0.15)', 
+                cursor: 'crosshair',
+                touchAction: 'none' // Important to disable browser drag/scroll
+              }} 
+              onMouseMove={handleMouseMove}
+              onTouchMove={handleTouchMove}
+              onTouchStart={handleTouchMove}
+            >
+              <img ref={imgRef} src={preview} alt="" draggable={false} style={{ maxWidth: '100%', maxHeight: 380, display: 'block', borderRadius: '14px' }} />
+              <Box sx={{ 
+                position: 'absolute', 
+                border: '2.5px solid #1976d2', 
+                bgcolor: 'rgba(25,118,210,0.06)', 
+                pointerEvents: 'none', 
+                borderRadius: '8px', 
+                boxShadow: '0 0 12px rgba(25,118,210,0.4)', 
+                left: crop.x, 
+                top: crop.y, 
+                width: boxSize, 
+                height: boxSize 
+              }} />
             </Box>
-            <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>Blue box ko face ke around drag karein → Crop & Download</Typography>
-            <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleCrop} sx={{ mt: 1 }}>Crop & Download</Button>
+            <Typography variant="caption" sx={{ mt: 2, display: 'block', color: 'text.secondary', fontWeight: 600 }}>Drag the blue box around your face → Crop & Download</Typography>
+            <Box sx={{ mt: 2.5, display: 'flex', gap: 1.5, justifyContent: 'center' }}>
+              <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleCrop} sx={{ borderRadius: '12px', textTransform: 'none', px: 3 }}>Crop & Download</Button>
+              <IconButton color="error" onClick={() => setPreview(null)} sx={{ bgcolor: 'rgba(239, 68, 68, 0.08)', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.15)' } }}><DeleteIcon /></IconButton>
+            </Box>
             <canvas ref={canvasRef} style={{ display: 'none' }} />
-            <IconButton color="error" onClick={() => setPreview(null)} sx={{ ml: 1, mt: 1 }}><DeleteIcon /></IconButton>
           </Box>
         )}
       </CardContent>
@@ -542,38 +728,51 @@ function PdfCompressor() {
   }, [scale, quality]);
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" fontWeight={700} gutterBottom>📦 PDF Compressor</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>PDF ko aggressively compress karein — 2MB+ PDF ko 200-500KB me badle</Typography>
-        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+    <Card sx={{
+      borderRadius: '24px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
+      border: '1px solid rgba(0,0,0,0.06)',
+      '&:hover': { transform: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Typography variant="h6" fontWeight={800} gutterBottom sx={{ color: 'text.primary', mb: 1 }}>📦 PDF Compressor</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>PDF ko aggressively compress karein — 2MB+ PDF ko 200-500KB me badle</Typography>
+        
+        <Box sx={{ display: 'flex', gap: 1.2, mb: 3, flexWrap: 'wrap' }}>
           {qualityPresets.map((p, i) => (
-            <Button key={i} size="small" variant={preset === i ? 'contained' : 'outlined'} onClick={() => applyPreset(i)} sx={{ borderRadius: 4, textTransform: 'none', fontSize: '0.75rem' }}>{p.label}</Button>
+            <Button key={i} size="small" variant={preset === i ? 'contained' : 'outlined'} onClick={() => applyPreset(i)} sx={{ borderRadius: '20px', textTransform: 'none', px: 2, py: 0.6, fontSize: '0.75rem' }}>{p.label}</Button>
           ))}
         </Box>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="caption">Image Scale: {(scale * 100).toFixed(0)}%</Typography>
+        <Box sx={{ mb: 2.5 }}>
+          <Typography variant="caption" fontWeight={600} sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>Image Scale: {(scale * 100).toFixed(0)}%</Typography>
           <Slider value={scale} onChange={(_, v) => { setScale(v); setPreset(-1); }} min={0.2} max={1.5} step={0.05} valueLabelDisplay="auto" valueLabelFormat={v => `${(v * 100).toFixed(0)}%`} size="small" />
         </Box>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="caption">JPEG Quality: {(quality * 100).toFixed(0)}%</Typography>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="caption" fontWeight={600} sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>JPEG Quality: {(quality * 100).toFixed(0)}%</Typography>
           <Slider value={quality} onChange={(_, v) => { setQuality(v); setPreset(-1); }} min={0.1} max={1} step={0.05} valueLabelDisplay="auto" valueLabelFormat={v => `${(v * 100).toFixed(0)}%`} size="small" />
         </Box>
-        <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
-          Upload PDF
-          <input hidden type="file" accept="application/pdf" onChange={handleUpload} />
-        </Button>
+
+        <FileUploadZone
+          accept="application/pdf"
+          onChange={handleUpload}
+          label="Upload PDF File"
+          sublabel="Drag and drop PDF here, or click to browse"
+          icon={<PictureAsPdfIcon sx={{ fontSize: { xs: 36, sm: 44 } }} />}
+        />
+
         {loading && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="caption">{totalPages > 0 ? `Processing page ${progress}/${totalPages}...` : 'Loading PDF...'}</Typography>
-            <LinearProgress variant={totalPages > 0 ? 'determinate' : 'indeterminate'} value={totalPages > 0 ? (progress / totalPages) * 100 : undefined} sx={{ mt: 0.5 }} />
+          <Box sx={{ mt: 3, p: 2, bgcolor: '#FAF9FA', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.03)' }}>
+            <Typography variant="caption" fontWeight={600} sx={{ display: 'block', mb: 1 }}>{totalPages > 0 ? `Processing page ${progress}/${totalPages}...` : 'Loading PDF...'}</Typography>
+            <LinearProgress variant={totalPages > 0 ? 'determinate' : 'indeterminate'} value={totalPages > 0 ? (progress / totalPages) * 100 : undefined} sx={{ borderRadius: 2 }} />
           </Box>
         )}
-        {file && !loading && <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>Original: {formatBytes(origSize)}</Typography>}
+        
+        {file && !loading && <Typography variant="caption" sx={{ mt: 2, display: 'block', fontWeight: 600, color: 'text.primary' }}>Original Size: {formatBytes(origSize)}</Typography>}
+        
         {compressedUrl && (
-          <Box sx={{ mt: 1 }}>
-            <Typography variant="caption" display="block" fontWeight={600}>Compressed: {formatBytes(compSize)} <span style={{ color: compSize < origSize ? 'green' : 'red' }}>({(100 - compSize / origSize * 100).toFixed(1)}% smaller)</span></Typography>
-            <Button variant="contained" startIcon={<DownloadIcon />} href={compressedUrl} download="compressed.pdf" sx={{ mt: 1 }}>Download</Button>
+          <Box sx={{ mt: 2.5, p: 2, bgcolor: '#DCFCE7', borderRadius: '16px', border: '1px solid #BBF7D0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <Typography variant="body2" display="block" fontWeight={700} sx={{ color: '#15803D', mb: 1.5 }}>Compressed: {formatBytes(compSize)} <span style={{ color: compSize < origSize ? '#166534' : '#b91c1c' }}>({(100 - compSize / origSize * 100).toFixed(1)}% smaller)</span></Typography>
+            <Button variant="contained" color="success" startIcon={<DownloadIcon />} href={compressedUrl} download="compressed.pdf" sx={{ borderRadius: '12px', textTransform: 'none', px: 3 }}>Download Compressed PDF</Button>
           </Box>
         )}
       </CardContent>
@@ -641,19 +840,33 @@ function SignatureMaker() {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" fontWeight={700} gutterBottom>✍️ Signature Maker</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Mouse ya finger se sign karein → JPEG download karein (white background)</Typography>
-        <Box sx={{ border: '2px dashed #aaa', borderRadius: 2, bgcolor: '#fff', touchAction: 'none', cursor: 'crosshair' }}
+    <Card sx={{
+      borderRadius: '24px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
+      border: '1px solid rgba(0,0,0,0.06)',
+      '&:hover': { transform: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Typography variant="h6" fontWeight={800} gutterBottom sx={{ color: 'text.primary', mb: 1 }}>✍️ Signature Maker</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Mouse ya finger se sign karein → JPEG download karein (white background)</Typography>
+        <Box sx={{ 
+          border: '2px dashed rgba(79, 70, 229, 0.25)', 
+          borderRadius: '16px', 
+          bgcolor: '#FAF9FA', 
+          touchAction: 'none', 
+          cursor: 'crosshair',
+          overflow: 'hidden',
+          transition: 'border-color 0.3s ease',
+          '&:hover': { borderColor: 'primary.main' }
+        }}
           onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end}
           onTouchStart={start} onTouchMove={move} onTouchEnd={end}>
           <canvas ref={canvasRef} style={{ width: '100%', height: 300, display: 'block' }} />
         </Box>
-        <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: 'text.secondary' }}>Draw your signature above</Typography>
-        <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-          <Button variant="contained" startIcon={<DownloadIcon />} onClick={download} disabled={!hasContent}>Download Signature (JPEG)</Button>
-          <Button variant="outlined" color="error" onClick={clear} disabled={!hasContent}>Clear</Button>
+        <Typography variant="caption" sx={{ mt: 1.5, display: 'block', color: 'text.secondary', fontWeight: 600 }}>Draw your signature above</Typography>
+        <Box sx={{ mt: 2.5, display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+          <Button variant="contained" startIcon={<DownloadIcon />} onClick={download} disabled={!hasContent} sx={{ borderRadius: '12px', textTransform: 'none', px: 3 }}>Download Signature (JPEG)</Button>
+          <Button variant="outlined" color="error" onClick={clear} disabled={!hasContent} sx={{ borderRadius: '12px', textTransform: 'none', px: 3 }}>Clear</Button>
         </Box>
       </CardContent>
     </Card>
@@ -664,7 +877,7 @@ function MergePdf() {
   const [files, setFiles] = useState([]);
   const [merging, setMerging] = useState(false);
 
-  const handleAdd = useCallback((e) => { setFiles(prev => [...prev, ...Array.from(e.target.files || [])]); e.target.value = ''; }, []);
+  const handleAdd = useCallback((e) => { setFiles(prev => [...prev, ...Array.from(e.target.files || [])]); }, []);
   const remove = (i) => setFiles(prev => prev.filter((_, idx) => idx !== i));
   const move = (i, dir) => { const j = i + dir; if (j < 0 || j >= files.length) return; setFiles(prev => { const a = [...prev]; [a[i], a[j]] = [a[j], a[i]]; return a; }); };
 
@@ -690,30 +903,43 @@ function MergePdf() {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" fontWeight={700} gutterBottom>🔗 Merge PDF Files</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Multiple PDF files ko ek single PDF me merge karein — up/down arrows se order badle</Typography>
-        <Button variant="outlined" component="label" startIcon={<AddPhotoAlternateIcon />}>
-          Add PDF Files
-          <input hidden type="file" accept="application/pdf" multiple onChange={handleAdd} />
-        </Button>
+    <Card sx={{
+      borderRadius: '24px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
+      border: '1px solid rgba(0,0,0,0.06)',
+      '&:hover': { transform: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Typography variant="h6" fontWeight={800} gutterBottom sx={{ color: 'text.primary', mb: 1 }}>🔗 Merge PDF Files</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Multiple PDF files ko ek single PDF me merge karein — up/down arrows se order badle</Typography>
+        
+        <FileUploadZone
+          accept="application/pdf"
+          onChange={handleAdd}
+          multiple={true}
+          label="Upload PDF Files to Merge"
+          sublabel="Drag & drop multiple PDF files here, or click to select"
+          icon={<MergeIcon sx={{ fontSize: { xs: 36, sm: 44 } }} />}
+        />
+
         {files.length > 0 && (
           <>
-            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box sx={{ mt: 2.5, display: 'flex', flexDirection: 'column', gap: 1.2 }}>
               {files.map((f, i) => (
-                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                  <Typography variant="body2" fontWeight={700} color="text.secondary" sx={{ minWidth: 24 }}>#{i + 1}</Typography>
-                  <Typography variant="body2" sx={{ flex: 1 }}>{f.name}</Typography>
-                  <Typography variant="caption">{formatBytes(f.size)}</Typography>
-                  <Tooltip title="Move Up"><span><IconButton size="small" disabled={i === 0} onClick={() => move(i, -1)}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
-                  <Tooltip title="Move Down"><span><IconButton size="small" disabled={i === files.length - 1} onClick={() => move(i, 1)}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
-                  <IconButton size="small" color="error" onClick={() => remove(i)}><DeleteIcon fontSize="small" /></IconButton>
+                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.2, border: '1px solid rgba(0,0,0,0.05)', borderColor: 'divider', borderRadius: '12px', bgcolor: '#FAF9FA' }}>
+                  <Typography variant="body2" fontWeight={800} color="text.secondary" sx={{ minWidth: 20 }}>#{i + 1}</Typography>
+                  <Typography variant="body2" sx={{ flex: 1, fontWeight: 600, fontSize: { xs: '0.8rem', sm: '0.9rem' } }} noWrap>{f.name}</Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'block' } }}>{formatBytes(f.size)}</Typography>
+                  <Box sx={{ display: 'flex', gap: 0.2 }}>
+                    <Tooltip title="Move Up"><span><IconButton size="small" disabled={i === 0} onClick={() => move(i, -1)} sx={{ p: 0.5 }}><ArrowUpwardIcon fontSize="small" /></IconButton></span></Tooltip>
+                    <Tooltip title="Move Down"><span><IconButton size="small" disabled={i === files.length - 1} onClick={() => move(i, 1)} sx={{ p: 0.5 }}><ArrowDownwardIcon fontSize="small" /></IconButton></span></Tooltip>
+                  </Box>
+                  <IconButton size="small" color="error" onClick={() => remove(i)} sx={{ bgcolor: 'rgba(239, 68, 68, 0.05)', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.1)' } }}><DeleteIcon fontSize="small" /></IconButton>
                 </Box>
               ))}
             </Box>
-            {merging && <LinearProgress sx={{ mt: 1 }} />}
-            <Button variant="contained" startIcon={<DownloadIcon />} onClick={merge} disabled={merging || files.length < 2} sx={{ mt: 2 }}>Merge & Download ({files.length} files)</Button>
+            {merging && <LinearProgress sx={{ mt: 2, borderRadius: 2 }} />}
+            <Button variant="contained" startIcon={<DownloadIcon />} onClick={merge} disabled={merging || files.length < 2} sx={{ mt: 3, borderRadius: '12px', textTransform: 'none', px: 3 }}>Merge & Download ({files.length} files)</Button>
           </>
         )}
       </CardContent>
@@ -758,18 +984,27 @@ function FormatConverter() {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" fontWeight={700} gutterBottom>🔄 Image Format Converter</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>PNG ↔ JPG ↔ WebP — kisi bhi format me badle</Typography>
-        <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
-          Upload Image
-          <input hidden type="file" accept="image/*" onChange={handleUpload} />
-        </Button>
+    <Card sx={{
+      borderRadius: '24px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
+      border: '1px solid rgba(0,0,0,0.06)',
+      '&:hover': { transform: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Typography variant="h6" fontWeight={800} gutterBottom sx={{ color: 'text.primary', mb: 1 }}>🔄 Image Format Converter</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>PNG ↔ JPG ↔ WebP — kisi bhi format me badle</Typography>
+        
+        <FileUploadZone
+          accept="image/*"
+          onChange={handleUpload}
+          label="Upload Image to Convert"
+          sublabel="Drag and drop your image here, or click to browse"
+        />
+
         {preview && (
-          <Box sx={{ mt: 2 }}>
-            <img src={preview} alt="" style={{ maxWidth: 200, maxHeight: 200, borderRadius: 8 }} />
-            <Box sx={{ display: 'flex', gap: 2, mt: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Box sx={{ mt: 3, p: 2, bgcolor: '#FAF9FA', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <img src={preview} alt="" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
+            <Box sx={{ display: 'flex', gap: 2, mt: 3, alignItems: 'center', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
               <FormControl size="small" sx={{ minWidth: 120 }}>
                 <InputLabel>Format</InputLabel>
                 <Select value={format} label="Format" onChange={(e) => setFormat(e.target.value)}>
@@ -779,18 +1014,21 @@ function FormatConverter() {
                 </Select>
               </FormControl>
               {format !== 'png' && (
-                <Box sx={{ minWidth: 200 }}>
-                  <Typography variant="caption">Quality: {quality}%</Typography>
-                  <Slider value={quality} onChange={(_, v) => setQuality(v)} min={10} max={100} />
+                <Box sx={{ minWidth: 200, flex: { xs: '1 0 100%', sm: 'none' }, px: 2 }}>
+                  <Typography variant="caption" fontWeight={600} sx={{ color: 'text.secondary' }}>Quality: {quality}%</Typography>
+                  <Slider value={quality} onChange={(_, v) => setQuality(v)} min={10} max={100} size="small" />
                 </Box>
               )}
             </Box>
-            {loading && <LinearProgress sx={{ mt: 1 }} />}
-            <Button variant="contained" startIcon={<DownloadIcon />} onClick={convert} disabled={loading} sx={{ mt: 1 }}>Convert & Download</Button>
-            {convertedUrl && (
-              <Button variant="outlined" startIcon={<DownloadIcon />} href={convertedUrl} download={`converted.${format}`} sx={{ mt: 1, ml: 1 }}>Save</Button>
-            )}
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>Note: Government application forms ke liye <strong>JPG/JPEG</strong> format select karein</Typography>
+            {loading && <LinearProgress sx={{ mt: 2, width: '100%', borderRadius: 2 }} />}
+            <Box sx={{ mt: 3, display: 'flex', gap: 1.5, flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
+              <Button variant="contained" startIcon={<DownloadIcon />} onClick={convert} disabled={loading} sx={{ borderRadius: '12px', textTransform: 'none', px: 3 }}>Convert Format</Button>
+              {convertedUrl && (
+                <Button variant="outlined" color="success" startIcon={<DownloadIcon />} href={convertedUrl} download={`converted.${format}`} sx={{ borderRadius: '12px', textTransform: 'none', px: 3 }}>Save Image</Button>
+              )}
+              <IconButton color="error" onClick={() => { setFile(null); setPreview(null); setConvertedUrl(null); }} sx={{ bgcolor: 'rgba(239, 68, 68, 0.08)', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.15)' } }}><DeleteIcon /></IconButton>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, fontWeight: 600 }}>Note: Government application forms ke liye <strong>JPG/JPEG</strong> format select karein</Typography>
           </Box>
         )}
       </CardContent>
@@ -855,35 +1093,45 @@ function BgWhitener() {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" fontWeight={700} gutterBottom>☀️ Photo Background Remover</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>AI automatic background remove karein → pure white background → passport ready JPEG</Typography>
-        <Button variant="outlined" component="label" startIcon={<CloudUploadIcon />}>
-          Upload Photo
-          <input hidden type="file" accept="image/*" onChange={handleUpload} />
-        </Button>
-        {status && <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>{status}</Typography>}
-        {loading && <LinearProgress sx={{ mt: 1 }} />}
+    <Card sx={{
+      borderRadius: '24px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
+      border: '1px solid rgba(0,0,0,0.06)',
+      '&:hover': { transform: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Typography variant="h6" fontWeight={800} gutterBottom sx={{ color: 'text.primary', mb: 1 }}>☀️ Photo Background Remover</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>AI automatic background remove karein → pure white background → passport ready JPEG</Typography>
+        
+        <FileUploadZone
+          accept="image/*"
+          onChange={handleUpload}
+          label="Upload Photo for Background Removal"
+          sublabel="Drag and drop photo here, or click to select"
+        />
+
+        {status && <Typography variant="caption" sx={{ mt: 2, display: 'block', fontWeight: 700, color: 'primary.main' }}>{status}</Typography>}
+        {loading && <LinearProgress sx={{ mt: 1.5, borderRadius: 2 }} />}
+        
         {preview && (
-          <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="caption">Original</Typography>
-              <img src={preview} alt="" style={{ maxWidth: 150, maxHeight: 180, borderRadius: 8, display: 'block' }} />
+          <Box sx={{ mt: 3, display: 'flex', gap: 3, flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="caption" fontWeight={700} sx={{ display: 'block', mb: 1 }}>Original</Typography>
+              <img src={preview} alt="" style={{ maxWidth: 140, maxHeight: 170, borderRadius: 8, display: 'block', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
             </Box>
             {processedUrl && (
-              <Box>
-                <Typography variant="caption">White Background (413×531px)</Typography>
-                <img src={processedUrl} alt="" style={{ maxWidth: 150, maxHeight: 180, borderRadius: 8, display: 'block' }} />
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="caption" fontWeight={700} sx={{ display: 'block', mb: 1 }}>White Background (413×531px)</Typography>
+                <img src={processedUrl} alt="" style={{ maxWidth: 140, maxHeight: 170, borderRadius: 8, display: 'block', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
               </Box>
             )}
-            <Box>
-              <Button variant="contained" startIcon={<BrushIcon />} onClick={whiten} disabled={loading} sx={{ display: 'block' }}>{loading ? 'Processing...' : 'Remove & Whiten Background'}</Button>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, alignItems: 'center', width: { xs: '100%', sm: 'auto' } }}>
+              <Button variant="contained" startIcon={<BrushIcon />} onClick={whiten} disabled={loading} sx={{ borderRadius: '12px', textTransform: 'none', width: '100%' }}>{loading ? 'Processing...' : 'Remove & Whiten Background'}</Button>
               {processedUrl && (
-                <Button variant="outlined" startIcon={<DownloadIcon />} href={processedUrl} download="passport-white-bg.jpg" sx={{ mt: 1, display: 'block' }}>Download JPEG</Button>
+                <Button variant="outlined" color="success" startIcon={<DownloadIcon />} href={processedUrl} download="passport-white-bg.jpg" sx={{ borderRadius: '12px', textTransform: 'none', width: '100%' }}>Download JPEG</Button>
               )}
+              <IconButton color="error" onClick={() => { setFile(null); setPreview(null); setProcessedUrl(null); }} sx={{ bgcolor: 'rgba(239, 68, 68, 0.08)', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.15)' } }}><DeleteIcon /></IconButton>
             </Box>
-            <IconButton color="error" onClick={() => { setFile(null); setPreview(null); setProcessedUrl(null); }}><DeleteIcon /></IconButton>
           </Box>
         )}
       </CardContent>
@@ -916,25 +1164,35 @@ function AgeCalculator() {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" fontWeight={700} gutterBottom>📅 Age Calculator</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Sarkari form ke liye exact saal, mahine aur din (100% accurate)</Typography>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Date of Birth</Typography>
-          <TextField type="date" value={dob} onChange={(e) => setDob(e.target.value)} inputProps={{ placeholder: 'dd/mm/yyyy' }} fullWidth size="small" />
-        </Box>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>As on Date (optional — default today)</Typography>
-          <TextField type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} inputProps={{ placeholder: 'dd/mm/yyyy' }} fullWidth size="small" />
-        </Box>
-        <Button variant="contained" startIcon={<CalendarMonthIcon />} onClick={calculate} fullWidth>Calculate Age</Button>
+    <Card sx={{
+      borderRadius: '24px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
+      border: '1px solid rgba(0,0,0,0.06)',
+      '&:hover': { transform: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Typography variant="h6" fontWeight={800} gutterBottom sx={{ color: 'text.primary', mb: 1 }}>📅 Age Calculator</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Sarkari form ke liye exact saal, mahine aur din (100% accurate)</Typography>
+        
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2" fontWeight={700} sx={{ mb: 0.8, color: 'text.primary' }}>Date of Birth</Typography>
+            <TextField type="date" value={dob} onChange={(e) => setDob(e.target.value)} inputProps={{ placeholder: 'dd/mm/yyyy' }} fullWidth size="small" />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2" fontWeight={700} sx={{ mb: 0.8, color: 'text.primary' }}>As on Date (optional — default today)</Typography>
+            <TextField type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} inputProps={{ placeholder: 'dd/mm/yyyy' }} fullWidth size="small" />
+          </Grid>
+        </Grid>
+
+        <Button variant="contained" startIcon={<CalendarMonthIcon />} onClick={calculate} sx={{ borderRadius: '12px', textTransform: 'none', py: 1.2, fontWeight: 700 }} fullWidth>Calculate Age</Button>
+        
         {age && (
-          <Alert severity="success" sx={{ mt: 2, textAlign: 'center' }}>
-            <Typography variant="h4" fontWeight={800}>{age.years}y {age.months}m {age.days}d</Typography>
-            <Typography variant="body1">{age.years} years, {age.months} months, {age.days} days</Typography>
-            <Typography variant="body2">{age.years} saal, {age.months} mahine, {age.days} din</Typography>
-            <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>Form me likho: {age.years} Years {age.months} Months {age.days} Days</Typography>
+          <Alert severity="success" sx={{ mt: 3, borderRadius: '16px', border: '1px solid #C3E6CB', bgcolor: '#D4EDDA', color: '#155724', p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Typography variant="h4" fontWeight={900} sx={{ fontSize: { xs: '1.8rem', sm: '2.4rem' } }}>{age.years}y {age.months}m {age.days}d</Typography>
+            <Typography variant="body1" fontWeight={700} sx={{ mt: 0.5, fontSize: { xs: '0.9rem', sm: '1rem' } }}>{age.years} years, {age.months} months, {age.days} days</Typography>
+            <Typography variant="body2" fontWeight={600} sx={{ color: '#155724' }}>{age.years} saal, {age.months} mahine, {age.days} din</Typography>
+            <Typography variant="caption" sx={{ mt: 1.5, display: 'block', fontWeight: 700, color: '#155724', borderTop: '1px dashed rgba(21, 87, 36, 0.2)', pt: 1, width: '100%', textAlign: 'center' }}>Form me likho: {age.years} Years {age.months} Months {age.days} Days</Typography>
           </Alert>
         )}
       </CardContent>

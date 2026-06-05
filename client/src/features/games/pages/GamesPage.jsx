@@ -157,43 +157,45 @@ function ShadowGame() {
   return (
     <GameFullscreen>
     <Card sx={{
-      borderRadius: 6,
+      borderRadius: '24px',
       background: 'linear-gradient(135deg, #FEF9C3 0%, #FED7AA 100%)',
-      boxShadow: '0 8px 32px rgba(251, 146, 60, 0.15)',
+      boxShadow: '0 12px 40px rgba(251, 146, 60, 0.18)',
       overflow: 'visible',
       position: 'relative',
+      border: 'none',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(251, 146, 60, 0.18)' }
     }}>
-      <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" fontWeight={800} sx={{ color: '#D97706', display: 'flex', alignItems: 'center', gap: 1 }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#D97706', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
             <StarsIcon sx={{ color: '#FBBF24' }} /> Shadow & Sound
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Chip
               icon={<EmojiEventsIcon />}
               label={`Score: ${score}`}
-              sx={{ fontWeight: 700, fontSize: '1rem', bgcolor: '#FEF3C7', color: '#92400E', borderRadius: 4, px: 1 }}
+              sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#FEF3C7', color: '#92400E', borderRadius: '12px', px: 0.5 }}
             />
             <GameFullscreenButton />
           </Box>
         </Box>
 
-        <Box sx={{ textAlign: 'center', py: 2 }}>
-          <Typography variant="body2" sx={{ color: '#6B7280', mb: 2, fontWeight: 500 }}>
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          <Typography variant="body2" sx={{ color: '#6B7280', mb: 2.5, fontWeight: 600, fontSize: { xs: '0.85rem', sm: '0.95rem' } }}>
             Who hides behind the shadow? 👀
           </Typography>
 
-          <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+          <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
             <Box sx={{
-              width: { xs: 160, md: 200 }, height: { xs: 160, md: 200 },
+              width: { xs: 150, sm: 190, md: 200 }, height: { xs: 150, sm: 190, md: 200 },
               borderRadius: '50%', bgcolor: '#ffffff',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.1)',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               overflow: 'hidden', position: 'relative',
             }}>
               <Typography
                 sx={{
-                  fontSize: { xs: '5rem', md: '7rem' },
+                  fontSize: { xs: '4.5rem', sm: '6.5rem', md: '7rem' },
                   lineHeight: 1,
                   filter: revealed ? 'none' : 'brightness(0) contrast(1)',
                   transition: 'filter 0.4s ease',
@@ -211,23 +213,25 @@ function ShadowGame() {
               aria-label={`Play sound of ${current.name}`}
               disabled={locked}
               sx={{
-                position: 'absolute', bottom: -8, right: -8,
+                position: 'absolute', bottom: -4, right: -4,
                 bgcolor: '#F59E0B', color: '#ffffff',
-                width: { xs: 48, md: 56 }, height: { xs: 48, md: 56 },
-                boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)',
+                width: { xs: 48, sm: 54, md: 56 }, height: { xs: 48, sm: 54, md: 56 },
+                boxShadow: '0 6px 20px rgba(245, 158, 11, 0.45)',
+                animation: !locked ? 'pulseGlow 2.5s infinite' : 'none',
                 '&:hover': { bgcolor: '#D97706', transform: 'scale(1.08)' },
                 transition: 'all 0.2s ease',
+                '&.Mui-disabled': { bgcolor: '#D1D5DB', color: '#9CA3AF', boxShadow: 'none' }
               }}
             >
-              <VolumeUpIcon sx={{ fontSize: { xs: '1.4rem', md: '1.7rem' } }} />
+              <VolumeUpIcon sx={{ fontSize: { xs: '1.4rem', sm: '1.6rem', md: '1.7rem' } }} />
             </IconButton>
           </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, maxWidth: 480, mx: 'auto' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5, maxWidth: 480, mx: 'auto' }}>
             {options.map((animal, i) => {
               const label = String.fromCharCode(65 + i);
               const isCorrect = animal.name === current.name;
-              let bg = '#ffffff', border = '#E5E7EB';
+              let bg = '#ffffff', border = 'rgba(0,0,0,0.06)';
               if (feedback === 'correct' && isCorrect) { bg = '#BBF7D0'; border = '#22C55E'; }
               if (feedback === 'wrong' && isCorrect) { bg = '#FECACA'; border = '#EF4444'; }
               return (
@@ -237,30 +241,30 @@ function ShadowGame() {
                   disabled={locked}
                   aria-label={`Option ${label}: ${animal.name}`}
                   sx={{
-                    display: 'flex', alignItems: 'center', gap: 1,
-                    p: 1.5, borderRadius: 4, minHeight: 64,
+                    display: 'flex', alignItems: 'center', gap: 1.5,
+                    p: { xs: 1.5, sm: 1.8 }, borderRadius: '16px', minHeight: { xs: 56, sm: 64 },
                     bgcolor: bg, color: '#1F2937',
                     border: '2px solid', borderColor: border,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                     '&:hover': !locked ? {
                       transform: 'translateY(-3px)',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                      boxShadow: '0 8px 20px rgba(251, 146, 60, 0.2)',
                       borderColor: '#FBBF24',
                       bgcolor: '#FFFBEB',
                     } : {},
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     textTransform: 'none',
                     justifyContent: 'flex-start',
                   }}
                 >
                   <Typography variant="body2" fontWeight={800}
-                    sx={{ color: '#9CA3AF', minWidth: 24, fontSize: '0.85rem' }}>
+                    sx={{ color: '#9CA3AF', minWidth: 20, fontSize: '0.85rem' }}>
                     {label}.
                   </Typography>
-                  <Typography sx={{ fontSize: '1.6rem', lineHeight: 1 }}>
+                  <Typography sx={{ fontSize: { xs: '1.3rem', sm: '1.6rem' }, lineHeight: 1 }}>
                     {animal.emoji}
                   </Typography>
-                  <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.9rem' }}>
+                  <Typography variant="body2" fontWeight={700} sx={{ fontSize: '0.9rem', color: '#374151' }}>
                     {animal.name}
                   </Typography>
                 </Button>
@@ -271,17 +275,17 @@ function ShadowGame() {
 
         {feedback === 'correct' && (
           <Box sx={{
-            textAlign: 'center', mt: 2, p: 2,
-            bgcolor: '#DCFCE7', borderRadius: 4,
+            textAlign: 'center', mt: 3, p: 2,
+            bgcolor: '#DCFCE7', borderRadius: '16px',
             animation: 'bounceIn 0.4s ease',
           }}>
-            <Typography variant="h5" fontWeight={800} sx={{ color: '#16A34A' }}>
+            <Typography variant="h5" fontWeight={800} sx={{ color: '#16A34A', fontSize: { xs: '1.2rem', sm: '1.4rem' } }}>
               🎉 Correct! It's a {current.name}!
             </Typography>
             <Button
               variant="contained"
               onClick={nextRound}
-              sx={{ mt: 1.5, borderRadius: 6, bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' }, textTransform: 'none', fontWeight: 700 }}
+              sx={{ mt: 1.5, borderRadius: '12px', bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' }, textTransform: 'none', fontWeight: 700 }}
             >
               Next Animal →
             </Button>
@@ -290,11 +294,11 @@ function ShadowGame() {
 
         {feedback === 'wrong' && (
           <Box sx={{
-            textAlign: 'center', mt: 2, p: 2,
-            bgcolor: '#FEF3C7', borderRadius: 4,
+            textAlign: 'center', mt: 3, p: 2,
+            bgcolor: '#FEF3C7', borderRadius: '16px',
             animation: 'shake 0.4s ease',
           }}>
-            <Typography variant="h6" fontWeight={700} sx={{ color: '#D97706' }}>
+            <Typography variant="h6" fontWeight={700} sx={{ color: '#D97706', fontSize: { xs: '1rem', sm: '1.1rem' } }}>
               ✨ Try again, you can do it!
             </Typography>
           </Box>
@@ -414,44 +418,46 @@ function AlphabetQuiz() {
   return (
     <GameFullscreen>
     <Card sx={{
-      borderRadius: 6,
+      borderRadius: '24px',
       background: 'linear-gradient(135deg, #FFF0F5 0%, #E6E6FA 100%)',
-      boxShadow: '0 8px 32px rgba(255, 105, 180, 0.15)',
+      boxShadow: '0 12px 40px rgba(255, 105, 180, 0.15)',
       overflow: 'visible',
       position: 'relative',
+      border: 'none',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(255, 105, 180, 0.15)' }
     }}>
-      <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" fontWeight={800} sx={{ color: '#8B5CF6', display: 'flex', alignItems: 'center', gap: 1 }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#8B5CF6', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
             <StarsIcon sx={{ color: '#FBBF24' }} /> Alphabet Quiz
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Chip
               icon={<EmojiEventsIcon />}
               label={`Score: ${score}`}
-              sx={{ fontWeight: 700, fontSize: '1rem', bgcolor: '#FEF3C7', color: '#92400E', borderRadius: 4, px: 1 }}
+              sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#FEF3C7', color: '#92400E', borderRadius: '12px', px: 0.5 }}
             />
             <GameFullscreenButton />
           </Box>
         </Box>
 
-        <Box sx={{ textAlign: 'center', py: 2 }}>
-          <Typography variant="body2" sx={{ color: '#6B7280', mb: 1, fontWeight: 500 }}>
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          <Typography variant="body2" sx={{ color: '#6B7280', mb: 2, fontWeight: 600, fontSize: { xs: '0.85rem', sm: '0.95rem' } }}>
             Which one starts with the letter <strong>{current.letter}</strong>?
           </Typography>
           <Box sx={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: { xs: 100, md: 120 }, height: { xs: 100, md: 120 },
+            width: { xs: 80, sm: 100, md: 120 }, height: { xs: 80, sm: 100, md: 120 },
             borderRadius: '50%', bgcolor: '#ffffff',
-            boxShadow: '0 4px 20px rgba(139, 92, 246, 0.2)',
+            boxShadow: '0 8px 30px rgba(139, 92, 246, 0.15)',
             mb: 3,
           }}>
-            <Typography variant="h2" fontWeight={800} sx={{ color: '#7C3AED', fontSize: { xs: '3rem', md: '4rem' } }}>
+            <Typography variant="h2" fontWeight={800} sx={{ color: '#7C3AED', fontSize: { xs: '2.5rem', sm: '3.2rem', md: '4rem' } }}>
               {current.letter}
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, maxWidth: 480, mx: 'auto' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, maxWidth: 480, mx: 'auto' }}>
             {options.current.map((item, i) => (
               <Button
                 key={i}
@@ -459,30 +465,30 @@ function AlphabetQuiz() {
                 disabled={locked}
                 aria-label={`Select ${item.word} for letter ${current.letter}`}
                 sx={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5,
-                  p: 2, borderRadius: 4, minHeight: 100,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                  p: { xs: 1.5, sm: 2 }, borderRadius: '16px', minHeight: { xs: 85, sm: 100 },
                   bgcolor: feedback === 'correct' && item.letter === current.letter
                     ? '#BBF7D0' : feedback === 'wrong' && item.letter === current.letter
                     ? '#FECACA' : '#ffffff',
                   color: '#1F2937',
                   fontSize: '2.5rem',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                   border: '2px solid',
                   borderColor: feedback === 'correct' && item.letter === current.letter
                     ? '#22C55E' : feedback === 'wrong' && item.letter === current.letter
-                    ? '#EF4444' : '#E5E7EB',
+                    ? '#EF4444' : 'rgba(0,0,0,0.06)',
                   '&:hover': !locked ? {
                     transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    boxShadow: '0 8px 20px rgba(139, 92, 246, 0.15)',
                     bgcolor: '#FDF2F8',
                     borderColor: '#F9A8D4',
                   } : {},
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   textTransform: 'none',
                 }}
               >
-                <span style={{ fontSize: '2.5rem', lineHeight: 1.2 }}>{item.emoji}</span>
-                <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.85rem', color: '#6B7280' }}>
+                <span style={{ fontSize: { xs: '2rem', sm: '2.4rem' }, lineHeight: 1.1 }}>{item.emoji}</span>
+                <Typography variant="body2" fontWeight={700} sx={{ fontSize: '0.85rem', color: '#4B5563' }}>
                   {item.word}
                 </Typography>
               </Button>
@@ -492,17 +498,17 @@ function AlphabetQuiz() {
 
         {feedback === 'correct' && (
           <Box sx={{
-            textAlign: 'center', mt: 2, p: 2,
-            bgcolor: '#DCFCE7', borderRadius: 4,
+            textAlign: 'center', mt: 3, p: 2,
+            bgcolor: '#DCFCE7', borderRadius: '16px',
             animation: 'bounceIn 0.4s ease',
           }}>
-            <Typography variant="h5" fontWeight={800} sx={{ color: '#16A34A' }}>
+            <Typography variant="h5" fontWeight={800} sx={{ color: '#16A34A', fontSize: { xs: '1.2rem', sm: '1.4rem' } }}>
               🎉 Correct! Great Job!
             </Typography>
             <Button
               variant="contained"
               onClick={nextRound}
-              sx={{ mt: 1.5, borderRadius: 6, bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' }, textTransform: 'none', fontWeight: 700 }}
+              sx={{ mt: 1.5, borderRadius: '12px', bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' }, textTransform: 'none', fontWeight: 700 }}
             >
               Next Question →
             </Button>
@@ -511,11 +517,11 @@ function AlphabetQuiz() {
 
         {feedback === 'wrong' && (
           <Box sx={{
-            textAlign: 'center', mt: 2, p: 2,
-            bgcolor: '#FEF3C7', borderRadius: 4,
+            textAlign: 'center', mt: 3, p: 2,
+            bgcolor: '#FEF3C7', borderRadius: '16px',
             animation: 'shake 0.4s ease',
           }}>
-            <Typography variant="h6" fontWeight={700} sx={{ color: '#D97706' }}>
+            <Typography variant="h6" fontWeight={700} sx={{ color: '#D97706', fontSize: { xs: '1rem', sm: '1.1rem' } }}>
               ✨ Try again, you can do it!
             </Typography>
           </Box>
@@ -579,61 +585,71 @@ function MathBooster() {
     }
   }, [problem, locked, streak]);
 
-  const visualCount = problem.a > 12 ? `${problem.a}` : '🍎'.repeat(problem.a);
+  const visualCount = problem.a > 12 
+    ? <Typography variant="h6" fontWeight={800} sx={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>🔢 {problem.a} apples</Typography>
+    : <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center', fontSize: { xs: '1.4rem', sm: '1.8rem' } }}>
+        {Array.from({ length: problem.a }).map((_, idx) => (
+          <span key={idx} role="img" aria-label="apple" style={{ display: 'inline-block', animation: 'bounceIn 0.3s ease', animationDelay: `${idx * 0.04}s` }}>🍎</span>
+        ))}
+      </Box>;
 
   return (
     <GameFullscreen>
     <Card sx={{
-      borderRadius: 6,
+      borderRadius: '24px',
       background: 'linear-gradient(135deg, #F0FFF0 0%, #E0F4FF 100%)',
-      boxShadow: '0 8px 32px rgba(34, 197, 94, 0.15)',
+      boxShadow: '0 12px 40px rgba(34, 197, 94, 0.15)',
       overflow: 'visible',
       position: 'relative',
+      border: 'none',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(34, 197, 94, 0.15)' }
     }}>
-      <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-          <Typography variant="h6" fontWeight={800} sx={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 1 }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5, flexWrap: 'wrap', gap: 1 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
             <StarsIcon sx={{ color: '#FBBF24' }} /> Math Booster
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <Chip
               label={`Score: ${score}`}
-              sx={{ fontWeight: 700, fontSize: '0.9rem', bgcolor: '#DCFCE7', color: '#166534', borderRadius: 4 }}
+              sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#DCFCE7', color: '#166534', borderRadius: '12px' }}
             />
             {streak >= 2 && (
               <Chip
-                icon={<EmojiEventsIcon sx={{ fontSize: 16 }} />}
+                icon={<EmojiEventsIcon sx={{ fontSize: 14 }} />}
                 label={`+${10 + (streak >= 2 ? 5 : 0)} streak!`}
-                sx={{ fontWeight: 700, fontSize: '0.9rem', bgcolor: '#FEF3C7', color: '#92400E', borderRadius: 4 }}
+                sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#FEF3C7', color: '#92400E', borderRadius: '12px' }}
               />
             )}
             <GameFullscreenButton />
           </Box>
         </Box>
 
-        <Box sx={{ textAlign: 'center', py: 2 }}>
+        <Box sx={{ textAlign: 'center', py: 1 }}>
           <Box sx={{
-            bgcolor: '#ffffff', borderRadius: 4, p: 2, mb: 2,
-            boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.04)',
+            bgcolor: '#ffffff', borderRadius: '16px', p: 2, mb: 3,
+            boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.03)',
             minHeight: 60,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
           }}>
-            <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.85rem', mb: 0.5 }}>
+            <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.85rem', mb: 0.8, fontWeight: 600 }}>
               Count and solve:
             </Typography>
-            <Typography variant="h5" fontWeight={600} sx={{ color: '#374151', letterSpacing: '0.05em' }}>
-              {typeof visualCount === 'string' ? visualCount : visualCount}
-            </Typography>
+            {visualCount}
           </Box>
 
-          <Typography variant="h3" fontWeight={800} sx={{ color: '#1F2937', mb: 3, fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
+          <Typography variant="h3" fontWeight={800} sx={{ color: '#1F2937', mb: 3, fontSize: { xs: '2.4rem', sm: '3rem', md: '3.5rem' } }}>
             {problem.a} {problem.op === '+' ? <span style={{color:'#059669'}}>+</span> : <span style={{color:'#DC2626'}}>−</span>} {problem.b} = ?
           </Typography>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, maxWidth: 400, mx: 'auto' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2, maxWidth: 360, mx: 'auto' }}>
             {problem.opts.map((val, i) => {
               const isCorrect = val === problem.correct;
               let bg = '#ffffff';
-              let border = '#E5E7EB';
+              let border = 'rgba(0,0,0,0.06)';
               if (feedback === 'correct' && isCorrect) { bg = '#BBF7D0'; border = '#22C55E'; }
               if (feedback === 'wrong' && isCorrect) { bg = '#FECACA'; border = '#EF4444'; }
               return (
@@ -643,19 +659,22 @@ function MathBooster() {
                   disabled={locked}
                   aria-label={`Answer option ${val}`}
                   sx={{
-                    width: '100%', aspectRatio: '1/1', borderRadius: '50%',
-                    fontSize: { xs: '1.5rem', md: '2rem' }, fontWeight: 800,
+                    width: { xs: 68, sm: 80 },
+                    height: { xs: 68, sm: 80 },
+                    borderRadius: '50%',
+                    fontSize: { xs: '1.4rem', sm: '1.8rem' }, fontWeight: 800,
                     bgcolor: bg, color: '#1F2937',
                     border: '3px solid', borderColor: border,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                    '&:hover': !locked ? {
-                      transform: 'scale(1.05)',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                      borderColor: '#60A5FA',
-                      bgcolor: '#EFF6FF',
-                    } : {},
-                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                     minWidth: 0,
+                    p: 0,
+                    '&:hover': !locked ? {
+                      transform: 'scale(1.08)',
+                      boxShadow: '0 8px 24px rgba(34, 197, 94, 0.2)',
+                      borderColor: '#10B981',
+                      bgcolor: '#ECFDF5',
+                    } : {},
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
                 >
                   {val}
@@ -667,17 +686,17 @@ function MathBooster() {
 
         {feedback === 'correct' && (
           <Box sx={{
-            textAlign: 'center', mt: 2, p: 2,
-            bgcolor: '#DCFCE7', borderRadius: 4,
+            textAlign: 'center', mt: 3, p: 2,
+            bgcolor: '#DCFCE7', borderRadius: '16px',
             animation: 'bounceIn 0.4s ease',
           }}>
-            <Typography variant="h5" fontWeight={800} sx={{ color: '#16A34A' }}>
+            <Typography variant="h5" fontWeight={800} sx={{ color: '#16A34A', fontSize: { xs: '1.2rem', sm: '1.4rem' } }}>
               🎉 Correct! +{streak >= 2 ? '15' : '10'} Points
             </Typography>
             <Button
               variant="contained"
               onClick={nextRound}
-              sx={{ mt: 1.5, borderRadius: 6, bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' }, textTransform: 'none', fontWeight: 700 }}
+              sx={{ mt: 1.5, borderRadius: '12px', bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' }, textTransform: 'none', fontWeight: 700 }}
             >
               Next Question →
             </Button>
@@ -686,11 +705,11 @@ function MathBooster() {
 
         {feedback === 'wrong' && (
           <Box sx={{
-            textAlign: 'center', mt: 2, p: 2,
-            bgcolor: '#FEF3C7', borderRadius: 4,
+            textAlign: 'center', mt: 3, p: 2,
+            bgcolor: '#FEF3C7', borderRadius: '16px',
             animation: 'shake 0.4s ease',
           }}>
-            <Typography variant="h6" fontWeight={700} sx={{ color: '#D97706' }}>
+            <Typography variant="h6" fontWeight={700} sx={{ color: '#D97706', fontSize: { xs: '1rem', sm: '1.1rem' } }}>
               ✨ Try again, you can do it!
             </Typography>
           </Box>
@@ -770,15 +789,13 @@ function GameFullscreen({ children }) {
         </Box>
         <Box sx={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          px: { xs: 0.5, sm: 2, md: 4 }, py: { xs: 0.5, sm: 2, md: 3 },
+          px: { xs: 1.5, sm: 3, md: 4 }, py: { xs: 1.5, sm: 3, md: 3 },
           minHeight: { xs: 'calc(100vh - 48px)', sm: 'calc(100vh - 56px)' },
         }}>
           <Box sx={{
             width: '100%',
             maxWidth: { xs: '100%', sm: 480, md: 580, lg: 620 },
             mx: 'auto',
-            transform: { xs: 'scale(0.92)', sm: 'scale(0.96)', md: 'scale(1)' },
-            transformOrigin: 'center center',
           }}>
             {children}
           </Box>
@@ -828,7 +845,14 @@ const seoSchema = {
   author: { '@type': 'Organization', name: 'Digital Home' },
 };
 
+const gameTabs = [
+  { id: 'alphabet', label: 'Alphabet Quiz', emoji: '🔤', color: '#8B5CF6', gradient: 'linear-gradient(135deg, #FFF0F5 0%, #E6E6FA 100%)', hoverBg: 'rgba(139, 92, 246, 0.08)' },
+  { id: 'math', label: 'Math Booster', emoji: '➕', color: '#059669', gradient: 'linear-gradient(135deg, #F0FFF0 0%, #E0F4FF 100%)', hoverBg: 'rgba(5, 150, 105, 0.08)' },
+  { id: 'shadow', label: 'Shadow & Sound', emoji: '👀', color: '#D97706', gradient: 'linear-gradient(135deg, #FEF9C3 0%, #FED7AA 100%)', hoverBg: 'rgba(217, 119, 6, 0.08)' },
+];
+
 export default function GamesPage() {
+  const [activeGame, setActiveGame] = useState('alphabet');
   const [alphabetKey, setAlphabetKey] = useState(0);
   const [mathKey, setMathKey] = useState(0);
   const [shadowKey, setShadowKey] = useState(0);
@@ -841,78 +865,167 @@ export default function GamesPage() {
         keywords="free educational games for kids, kindergarten learning games online, toddler games free, alphabet matching game, math games for kids, animal sound game, preschool learning activities, interactive games for children, US educational games, UK kids games"
         jsonLd={seoSchema}
       />
-      <Box sx={{ py: { xs: 2, md: 3 } }}>
+      <style>{`
+        @keyframes bounceIn {
+          0% { transform: scale(0.3); opacity: 0; }
+          50% { transform: scale(1.05); opacity: 0.8; }
+          70% { transform: scale(0.9); opacity: 0.9; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        @keyframes puffIn {
+          0% { opacity: 0; transform: scale(1.6); filter: blur(4px); }
+          100% { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+        @keyframes pulseGlow {
+          0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+          70% { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+      <Box sx={{ py: { xs: 2.5, md: 4 } }}>
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Typography
             variant="h3"
             fontWeight={900}
             sx={{
-              fontSize: { xs: '1.8rem', md: '2.8rem' },
+              fontSize: { xs: '1.8rem', sm: '2.3rem', md: '2.8rem' },
               background: 'linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              mb: 1,
+              mb: 1.5,
             }}
           >
             🎮 Kids Educational Game Zone
           </Typography>
-          <Typography variant="h6" sx={{ color: '#6B7280', fontWeight: 500, fontSize: { xs: '1rem', md: '1.2rem' } }}>
+          <Typography variant="h6" sx={{ color: '#4B5563', fontWeight: 600, fontSize: { xs: '0.95rem', sm: '1.1rem', md: '1.2rem' } }}>
             Fun learning games for toddlers and kindergarteners worldwide 🌎
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          <section aria-label="Alphabet Matching Quiz Game">
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#7C3AED' }}>
-                🔤 Alphabet Matching Quiz
-              </Typography>
-              <ResetButton onReset={() => setAlphabetKey(k => k + 1)} />
-            </Box>
-            <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
-              Match the letter to the correct picture! Tap the right emoji to earn points.
-            </Typography>
-            <Box key={alphabetKey}>
-              <AlphabetQuiz />
-            </Box>
-          </section>
-
-          <section aria-label="Kids Math Booster Game">
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#059669' }}>
-                ➕ Kids Math Booster
-              </Typography>
-              <ResetButton onReset={() => setMathKey(k => k + 1)} />
-            </Box>
-            <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
-              Solve fun addition & subtraction problems. Get streak bonuses for consecutive correct answers!
-            </Typography>
-            <Box key={mathKey}>
-              <MathBooster />
-            </Box>
-          </section>
-
-          <section aria-label="Guess the Animal Shadow and Sound Game">
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#D97706' }}>
-                👀 Guess the Animal Shadow & Sound
-              </Typography>
-              <ResetButton onReset={() => setShadowKey(k => k + 1)} />
-            </Box>
-            <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
-              Look at the shadow silhouette, play the animal sound, and guess who it is! Tap the right answer to reveal the animal.
-            </Typography>
-            <Box key={shadowKey}>
-              <ShadowGame />
-            </Box>
-          </section>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'center',
+          alignItems: 'stretch',
+          gap: 2,
+          mb: 5,
+          px: { xs: 1, sm: 0 }
+        }}>
+          {gameTabs.map((g) => {
+            const isSelected = activeGame === g.id;
+            return (
+              <Button
+                key={g.id}
+                onClick={() => setActiveGame(g.id)}
+                sx={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1.5,
+                  py: { xs: 1.5, sm: 2 },
+                  px: 3,
+                  borderRadius: '20px',
+                  bgcolor: isSelected ? g.color : '#ffffff',
+                  color: isSelected ? '#ffffff' : '#374151',
+                  border: `2.5px solid ${isSelected ? g.color : '#E5E7EB'}`,
+                  boxShadow: isSelected 
+                    ? `0 10px 20px ${g.color}33` 
+                    : '0 4px 12px rgba(0,0,0,0.03)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    bgcolor: isSelected ? g.color : g.hoverBg,
+                    borderColor: g.color,
+                    transform: 'translateY(-3px)',
+                    boxShadow: isSelected 
+                      ? `0 12px 24px ${g.color}44` 
+                      : '0 6px 18px rgba(0,0,0,0.08)',
+                  },
+                }}
+              >
+                <span style={{ fontSize: '1.6rem' }}>{g.emoji}</span>
+                <Typography variant="body1" fontWeight={800} sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' }, letterSpacing: '0.01em' }}>
+                  {g.label}
+                </Typography>
+              </Button>
+            );
+          })}
         </Box>
 
-        <Paper sx={{ mt: 5, p: { xs: 2.5, md: 3.5 }, borderRadius: 4, bgcolor: '#F0F9FF', border: '1px solid #BAE6FD' }}>
-          <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#0369A1', mb: 1.5, fontSize: { xs: '1.2rem', md: '1.4rem' } }}>
+        <Box sx={{ minHeight: 400 }}>
+          {activeGame === 'alphabet' && (
+            <section aria-label="Alphabet Matching Quiz Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#7C3AED', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  🔤 Alphabet Matching Quiz
+                </Typography>
+                <ResetButton onReset={() => setAlphabetKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Match the letter to the correct picture! Tap the right emoji to earn points.
+              </Typography>
+              <Box key={alphabetKey}>
+                <AlphabetQuiz />
+              </Box>
+            </section>
+          )}
+
+          {activeGame === 'math' && (
+            <section aria-label="Kids Math Booster Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#059669', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  ➕ Kids Math Booster
+                </Typography>
+                <ResetButton onReset={() => setMathKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Solve fun addition & subtraction problems. Get streak bonuses for consecutive correct answers!
+              </Typography>
+              <Box key={mathKey}>
+                <MathBooster />
+              </Box>
+            </section>
+          )}
+
+          {activeGame === 'shadow' && (
+            <section aria-label="Guess the Animal Shadow and Sound Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#D97706', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  👀 Guess the Animal Shadow & Sound
+                </Typography>
+                <ResetButton onReset={() => setShadowKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Look at the shadow silhouette, play the animal sound, and guess who it is! Tap the right answer to reveal the animal.
+              </Typography>
+              <Box key={shadowKey}>
+                <ShadowGame />
+              </Box>
+            </section>
+          )}
+        </Box>
+
+        <Paper sx={{
+          mt: 6, p: { xs: 3, md: 4 },
+          borderRadius: '24px',
+          bgcolor: '#F0F9FF',
+          border: '1px solid #BAE6FD',
+          boxShadow: '0 4px 20px rgba(3, 105, 161, 0.04)'
+        }}>
+          <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#0369A1', mb: 2, fontSize: { xs: '1.2rem', md: '1.4rem' } }}>
             Why Parents Trust Our Free Online Toddler Games
           </Typography>
-          <Typography variant="body2" sx={{ color: '#0C4A6E', lineHeight: 1.8 }}>
+          <Typography variant="body2" sx={{ color: '#0C4A6E', lineHeight: 1.8, fontWeight: 500 }}>
             Our interactive learning platform is designed to boost cognitive skills in preschool kids. 
             With animal sound recognition, visual counting math blocks, and letter association, learning 
             becomes purely play-based. Every game uses bright colors, positive audio reinforcement, and 
