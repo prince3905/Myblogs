@@ -19,8 +19,6 @@ import BrushIcon from '@mui/icons-material/Brush';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import imageCompression from 'browser-image-compression';
-import { jsPDF } from 'jspdf';
 import Layout from '../../blog/components/Layout';
 import Seo from '../../blog/components/Seo';
 import PostCard from '../../blog/components/PostCard';
@@ -350,7 +348,9 @@ function PhotoCompressor() {
     let maxDim = 2000;
     let quality = 0.8;
 
-    while (iteration < maxIterations) {
+    try {
+      const imageCompression = (await import('browser-image-compression')).default;
+      while (iteration < maxIterations) {
       try {
         const out = await imageCompression(currentFile, {
           maxSizeMB: targetKB / 1024,
@@ -369,6 +369,9 @@ function PhotoCompressor() {
       maxDim = Math.floor(maxDim * 0.75);
       quality = Math.max(0.15, quality - 0.12);
       iteration++;
+    }
+    } catch (err) {
+      console.error("Compression library failed to load:", err);
     }
     try {
       const img = new Image();
@@ -480,23 +483,28 @@ function ImageToPdf() {
     setPreviews(prev => { const a = [...prev]; [a[i], a[j]] = [a[j], a[i]]; return a; });
   };
 
-  const generatePdf = () => {
+  const generatePdf = async () => {
     if (!images.length) return;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pw = pdf.internal.pageSize.getWidth();
-    const ph = pdf.internal.pageSize.getHeight();
-    const m = 10;
-    const mw = pw - m * 2;
-    previews.forEach((url, i) => {
-      if (i > 0) pdf.addPage();
-      const img = new Image();
-      img.src = url;
-      const r = img.naturalWidth / img.naturalHeight || 1;
-      let w = mw, h = w / r;
-      if (h > ph - m * 2) { h = ph - m * 2; w = h * r; }
-      pdf.addImage(url, 'JPEG', m, m, w, h);
-    });
-    pdf.save('combined-document.pdf');
+    try {
+      const { jsPDF } = await import('jspdf');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pw = pdf.internal.pageSize.getWidth();
+      const ph = pdf.internal.pageSize.getHeight();
+      const m = 10;
+      const mw = pw - m * 2;
+      previews.forEach((url, i) => {
+        if (i > 0) pdf.addPage();
+        const img = new Image();
+        img.src = url;
+        const r = img.naturalWidth / img.naturalHeight || 1;
+        let w = mw, h = w / r;
+        if (h > ph - m * 2) { h = ph - m * 2; w = h * r; }
+        pdf.addImage(url, 'JPEG', m, m, w, h);
+      });
+      pdf.save('combined-document.pdf');
+    } catch (err) {
+      alert("Failed to load PDF generation library: " + err.message);
+    }
   };
 
   return (
