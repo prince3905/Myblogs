@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Box, Container, Typography, Tabs, Tab, Button, Slider, IconButton,
   Card, CardContent, TextField, LinearProgress, Alert, Select, MenuItem,
-  FormControl, InputLabel, Tooltip, Grid
+  FormControl, InputLabel, Tooltip, Grid, Paper
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DownloadIcon from '@mui/icons-material/Download';
