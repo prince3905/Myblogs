@@ -8,7 +8,7 @@ import { postUrl } from '../../../shared/lib/category';
 import { optimizeImage } from '../../../shared/lib/images';
 
 export default function HomePage() {
-  const { posts, loading, error } = usePosts({ limit: 16 });
+  const { posts, loading, error } = usePosts({ limit: 17 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = posts.length > 1 ? posts.slice(1) : [];
 
@@ -298,7 +298,8 @@ export default function HomePage() {
               gridTemplateColumns: {
                 xs: '1fr',
                 sm: 'repeat(2, 1fr)',
-                md: regularPosts.length === 1 ? '1fr' : 'repeat(3, 1fr)'
+                md: regularPosts.length === 1 ? '1fr' : 'repeat(3, 1fr)',
+                lg: regularPosts.length === 1 ? '1fr' : 'repeat(4, 1fr)'
               },
               gap: '24px',
             }}>

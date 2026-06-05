@@ -102,8 +102,8 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
         flex: 1, 
         display: 'flex', 
         flexDirection: 'column',
-        p: { xs: 1.5, md: 2.5 },
-        '&:last-child': { pb: { xs: 1.5, md: 2.5 } }
+        p: { xs: 1.5, md: 2 },
+        '&:last-child': { pb: { xs: 1.5, md: 2 } }
       }}>
         <Typography 
           variant={headingLevel}
