@@ -46,7 +46,7 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
       }}
     >
       {/* Image section */}
-      <Box sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '16/9', flexShrink: 0, minHeight: { xs: 180, md: 200 } }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '16/9', flexShrink: 0 }}>
         {post.featuredImage ? (
           <Box
             component="img"
