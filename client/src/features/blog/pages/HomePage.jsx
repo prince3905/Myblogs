@@ -181,6 +181,66 @@ export default function HomePage() {
         )}
       </Box>
 
+      {/* Latest Insights Section (H2) */}
+      <Box component="section" sx={{ py: { xs: 4, md: 6 }, bgcolor: '#F9FAFB' }}>
+        <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+          <Box sx={{ display: 'flex', justifycontent: 'space-between', alignItems: 'center', mb: 5 }}>
+            <Typography
+              variant="h2"
+              sx={{
+                fontWeight: 700, color: '#111827', letterSpacing: '-0.02em',
+                fontSize: { xs: '1.5rem', md: '2rem' }
+              }}
+            >
+              Latest Insights
+            </Typography>
+            <Button
+              component={Link}
+              to="/blog"
+              sx={{
+                fontWeight: 600, fontSize: '0.9rem',
+                color: '#4F46E5',
+                '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.04)' }
+              }}
+            >
+              View all →
+            </Button>
+          </Box>
+
+          {loading ? (
+            <Typography sx={{ textAlign: 'center', py: 4 }}>Loading posts...</Typography>
+          ) : error ? (
+            <Typography color="error" sx={{ textAlign: 'center', py: 4 }}>
+              Error loading posts: {error}
+            </Typography>
+          ) : (
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: regularPosts.length === 1 ? '1fr' : 'repeat(3, 1fr)',
+                lg: regularPosts.length === 1 ? '1fr' : 'repeat(4, 1fr)'
+              },
+              gap: '24px',
+            }}>
+              {regularPosts.map((post) => (
+                <Box key={post._id} component="article" sx={{ minWidth: 0 }}>
+                  <PostCard post={post} headingLevel="h3" />
+                </Box>
+              ))}
+              {!regularPosts.length ? (
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                  <Typography sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+                    No published posts yet. Log in to admin and create your first article.
+                  </Typography>
+                </Box>
+              ) : null}
+            </Box>
+          )}
+        </Container>
+      </Box>
+
       {/* Explore Tools & Games Section (H2) */}
       <Box 
         component="section"
@@ -257,66 +317,6 @@ export default function HomePage() {
               </Box>
             </Link>
           </Box>
-        </Container>
-      </Box>
-
-      {/* Latest Insights Section (H2) */}
-      <Box component="section" sx={{ py: { xs: 4, md: 6 }, bgcolor: '#F9FAFB' }}>
-        <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 5 }}>
-            <Typography
-              variant="h2"
-              sx={{
-                fontWeight: 700, color: '#111827', letterSpacing: '-0.02em',
-                fontSize: { xs: '1.5rem', md: '2rem' }
-              }}
-            >
-              Latest Insights
-            </Typography>
-            <Button
-              component={Link}
-              to="/blog"
-              sx={{
-                fontWeight: 600, fontSize: '0.9rem',
-                color: '#4F46E5',
-                '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.04)' }
-              }}
-            >
-              View all →
-            </Button>
-          </Box>
-
-          {loading ? (
-            <Typography sx={{ textAlign: 'center', py: 4 }}>Loading posts...</Typography>
-          ) : error ? (
-            <Typography color="error" sx={{ textAlign: 'center', py: 4 }}>
-              Error loading posts: {error}
-            </Typography>
-          ) : (
-            <Box sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: regularPosts.length === 1 ? '1fr' : 'repeat(3, 1fr)',
-                lg: regularPosts.length === 1 ? '1fr' : 'repeat(4, 1fr)'
-              },
-              gap: '24px',
-            }}>
-              {regularPosts.map((post) => (
-                <Box key={post._id} component="article" sx={{ minWidth: 0 }}>
-                  <PostCard post={post} headingLevel="h3" />
-                </Box>
-              ))}
-              {!regularPosts.length ? (
-                <Box sx={{ gridColumn: '1 / -1' }}>
-                  <Typography sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-                    No published posts yet. Log in to admin and create your first article.
-                  </Typography>
-                </Box>
-              ) : null}
-            </Box>
-          )}
         </Container>
       </Box>
     </Layout>
