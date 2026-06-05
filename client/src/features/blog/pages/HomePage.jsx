@@ -8,7 +8,7 @@ import { postUrl } from '../../../shared/lib/category';
 import { optimizeImage } from '../../../shared/lib/images';
 
 export default function HomePage() {
-  const { posts, loading, error } = usePosts({ limit: 10 });
+  const { posts, loading, error } = usePosts({ limit: 16 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = posts.length > 1 ? posts.slice(1) : [];
 
