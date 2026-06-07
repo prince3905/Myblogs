@@ -1,4 +1,5 @@
 const axios = require('axios');
+const path = require('path');
 const { processAIOutput } = require('./aiPostProcessor');
 const { aggregateKeywordData } = require('./keywordResearchService');
 const { newsRssUrl, extractRssTitles } = require('./topicDiscoveryService');
@@ -97,23 +98,21 @@ Structure like a personal finance guide. Natural Hinglish headings from this lis
   }
 };
 
-const ADSENSE_CONSTRAINTS = `**ADSENSE COMPLIANCE — NEGATIVE CONSTRAINTS (STRICT — FOLLOW FOR EVERY POST):**
-1. NEVER use these exact phrases as headings or section starters:
-   - "What is [Topic]?" (or any variation like "What is...")
-   - "Benefits of [Topic]"
-   - "Introduction", "Overview", "Conclusion" (boring generic labels — use creative alternatives)
-2. NEVER start a paragraph with robotic transitions:
-   - "In conclusion", "To summarize", "It is important to note that", "Furthermore", "Moreover"
-   - Instead use natural Hinglish connectors: "तो", "अब बात करते हैं", "चलिए जानते हैं", "वैसे ही", "इसके अलावा"
-3. AVOID generic AI layout markers:
-   - Don't label sections as "Section 1", "Part A"
-   - Don't use "Here are some", "There are many"
-   - Don't use "Frequ01", "interru01", "Q1"/"Q2" codes
-4. FLUID TRANSITIONS between sections — every section must connect naturally to the next. Never突兀 (abruptly) jump topics.
-   - End each section with a hook/setup for the next section.
-5. EVERY paragraph must be substantive — no filler sentences like "This is a great topic to explore" or "Let's dive deeper".
-   - If a paragraph doesn't add unique value, remove it.
-6. THIN CONTENT ZERO TOLERANCE — No generic advice without specific numbers, examples, or data. Every claim needs backing.`;
+const ADSENSE_CONSTRAINTS = `**ADSENSE COMPLIANCE & HUMANIZATION DIRECTIVES (STRICT — FOLLOW FOR EVERY POST):**
+1. ZERO TOLERANCE FOR ROBOTIC AI TRANSITIONS & WORDS:
+   - NEVER use: "In conclusion", "To summarize", "It is important to note that", "Furthermore", "Moreover", "Lastly", "Additionally", "Delve", "Testament", "Embark", "Paving the way", "Game changer", "In the rapidly evolving world", "Look no further".
+   - Instead, use conversational, friendly transitions: "तो", "अब बात करते हैं", "चलिए जानते हैं", "वैसे ही", "इसके अलावा", "सच कहें तो", "मजेदार बात यह है", "देखिए", "अब सवाल यह आता है".
+2. BANNED SECTION HEADERS:
+   - NEVER use: "Introduction", "Overview", "Conclusion", "What is [Topic]?", "Benefits of [Topic]", "Key Features of [Topic]", "How it works" as plain boring headings. Use creative, human-written alternative phrases.
+3. VARY SENTENCE LENGTHS (BURSTINESS):
+   - Mix extremely short punchy sentences (e.g. "Simple hai.", "Sach hai.", "Aap hi sochiye.", "Yeh bilkul sach hai.") with medium and longer sentences. Avoid having all sentences of uniform length. This pattern makes the content pass AI checkers and feel 100% human-written.
+4. ZERO FORMULAIC BULLET LISTS:
+   - Do NOT use typical AI bullet lists with bold terms (e.g. "- **Feature Name:** Description"). This is a dead machine signature. Write explanations in natural, flowing paragraphs of 1-3 sentences.
+   - Use bullet points ONLY in the "Key Takeaways" section at the very end.
+5. FLUID TRANSITIONS:
+   - Every paragraph must flow naturally into the next. End each section with a connector or hook that sets up the next section.
+6. NO FILLER CONTENT:
+   - Every sentence must provide real value, specific numbers, details, or steps. No generic AI fluff like "Let's explore this amazing topic further".`;
 
 async function fetchNewsContext(topic) {
   if (!topic || topic.length < 3) return '';
@@ -444,6 +443,40 @@ function robustJsonParse(text) {
   return merged;
 }
 
+function extractContentField(text) {
+  if (!text) return '';
+  const marker = '"content"';
+  const idx = text.indexOf(marker);
+  if (idx === -1) return '';
+
+  const colonIdx = text.indexOf(':', idx + marker.length);
+  if (colonIdx === -1) return '';
+
+  const startQuoteIdx = text.indexOf('"', colonIdx + 1);
+  if (startQuoteIdx === -1) return '';
+
+  let contentValue = '';
+  let escaped = false;
+  for (let i = startQuoteIdx + 1; i < text.length; i++) {
+    const char = text[i];
+    if (escaped) {
+      if (char === 'n') contentValue += '\n';
+      else if (char === 't') contentValue += '\t';
+      else if (char === '"') contentValue += '"';
+      else if (char === '\\') contentValue += '\\';
+      else contentValue += '\\' + char;
+      escaped = false;
+    } else if (char === '\\') {
+      escaped = true;
+    } else if (char === '"') {
+      return contentValue;
+    } else {
+      contentValue += char;
+    }
+  }
+  return contentValue;
+}
+
 async function generateAIContent(req, res) {
   try {
     const { title, model, length, tone, language, command } = req.body;
@@ -460,9 +493,9 @@ async function generateAIContent(req, res) {
     };
 
     const sectionMap = {
-      short:  '2 sections with 1-2 paragraphs each, plus a bullet list. Total ~300-400 words.',
-      medium: '3-4 sections with 2-3 paragraphs each, plus a bullet list. Total ~500-700 words.',
-      long:   '5-6 sections with 2-3 paragraphs each, plus a bullet list and FAQ with 2-3 Q&A. Total ~800-1200 words.'
+      short:  'At least 4 comprehensive sections with 2-3 paragraphs each, plus a bullet list and data table. Total ~800-1000 words.',
+      medium: 'At least 6 comprehensive sections with 3-4 paragraphs each, plus a detailed data table and a 3-question FAQ. Total ~1200-1500 words.',
+      long:   'At least 8-10 comprehensive sections with 4-5 paragraphs each, plus a detailed comparison table, Key Takeaways, and a 4-5 question FAQ. Total ~1800-2500 words.'
     };
 
     const langMap = {
@@ -503,30 +536,21 @@ ${categoryFrameworkInstr}
 
 ${ADSENSE_CONSTRAINTS}
 
+**GEO (GENERATIVE ENGINE OPTIMIZATION) & AEO (ANSWER ENGINE OPTIMIZATION) RULES:**
+- CITATIONS & QUOTES: Naturally include at least 1-2 authoritative citations or expert statements (e.g., "According to a study by...", "Experts at [name] suggest..."). Citing real sources/organizations is crucial for GEO ranking.
+- NUMERICAL EVIDENCE (STATS): Incorporate at least 3-4 specific statistics, numbers, percentages (%), or data points (e.g. salary, interest rates, timelines, market size) in the content. AI search engines heavily prioritize and cite posts with quantitative facts.
+- DEFINITIONS: Provide clear, direct definitions for key technical concepts using words like "refers to", "is defined as", or "means" to help generative engines extract definitions.
+- CONVERSATIONAL QUESTIONS: Phrase at least two headings as questions (e.g. "How to get started?", "What is the qualification?").
+- DIRECT Q&A SNIPPET: For the FAQ section, provide a concise direct answer (40-60 words max) in the very first paragraph immediately below each question heading. This matches voice-search AEO and Google Featured Snippets extraction patterns.
+
 **PAGE SPEED 100/100 RULES (MANDATORY):**
 - IMAGES: NEVER include raw JPEG/PNG in content. All images must use <picture> element with WebP format.
   - First/hero image at top: fetchpriority="high" — NO loading="lazy"
   - All other images: loading="lazy" + width="800" height="450" + style="width:100%; height:auto; object-fit:cover;
   - Required format: <picture><source srcset="[CLOUDINARY-WEBP-URL]" type="image/webp" /><img src="[CLOUDINARY-JPG-FALLBACK-URL]" alt="[SEO-Alt]" width="800" height="450" loading="lazy" style="width:100%; height:auto; object-fit:cover;" fetchpriority="high" /></picture>
-  - Reminder in first line of output: "Bhai, is post ki image ko compress karke .webp format mein hi upload karna!"
 - ZERO BACKGROUND SCRIPTS: content MUST NOT contain any script tags, iframes, crypto widgets, OKX API calls, useEffect hooks, fetch calls to external APIs, or any JavaScript execution code. Page must be 100% clean static content only.
 - Keep the output clean HTML with no embedded scripts, no external resource calls.
 
-**JSON-LD SCHEMA MARKUP (MANDATORY):**
-- The blog post content MUST include a complete JSON-LD Article Schema at the very bottom, wrapped in <script type="application/ld+json"> tags.
-- Schema fields:
-  - @context: "https://schema.org"
-  - @type: "Article"
-  - headline: [seoTitle or title]
-  - description: [seoDescription or summary]
-  - articleSection: [CATEGORY - use exact category name from the 6 listed]
-  - author: { @type: "Person", name: "Harry Prince" }
-  - publisher: { @type: "Organization", name: "Digital Home", url: "https://www.digitalhomeblog.in" }
-  - datePublished: "2026-05-31"  (use today's date)
-  - dateModified: "2026-05-31"
-  - mainEntityOfPage: { @type: "WebPage", "@id": "https://www.digitalhomeblog.in/blog/{category-url-slug}/{slug}" }
-- articleSection must ALWAYS be one of: Sarkari Jobs & Exams, Health & Wellness, Tech & Tutorials, AI & Web Tools, News & Trends, Finance & Business
-- Place this schema as the last element in the content output, before Key Takeaways section.
 
 **SEO METADATA:**
 - slug: SHORT slug — max 2-4 core keywords, hyphenated, NO stop words. ULTRA-SHORT preferred. E.g. "react-guide", "ipl-2026-points-table", NOT "how-to-learn-react-js-in-2026-step-by-step"
@@ -540,7 +564,8 @@ ${ADSENSE_CONSTRAINTS}
 **CONTENT STRUCTURE:**
 - Write in engaging, human-like, natural Hinglish (matching top Indian bloggers). Avoid robotic/generic sentences.
 - content: Full blog post using ## for headings on separate lines. NEVER put headings inside bullet points, numbered lists, or tables.
-- Dense 3-4 line paragraphs. One idea per paragraph. Minimize bullet points — use only in Key Takeaways.
+- Dense 3-4 line paragraphs. One idea per paragraph. Mix sentence lengths (short, punchy sentences alongside descriptive ones) to simulate human burstiness and pass AI checkers.
+- Do NOT use typical AI bullet lists with bold headers (e.g. "- **Feature:** text") in the body. Instead, write concepts in standard paragraphs. Bullet points are ONLY allowed in the Key Takeaways section.
 - Always include 1 highly relevant data table (comparing specs, stats, overview, or reference chart).
 - Start with a hook question or surprising stat.
 - Include FOCUS KEYWORD 8-10 times naturally (Title, First Paragraph, at least one H2).
@@ -614,8 +639,9 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
           contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: tokenBudget,
-            topP: 0.9
+            maxOutputTokens: 8192,
+            topP: 0.9,
+            responseMimeType: "application/json"
           }
         }, {
           timeout: modelTimeout,
@@ -630,8 +656,9 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
               contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
               generationConfig: {
                 temperature: 0.7,
-                maxOutputTokens: tokenBudget,
-                topP: 0.9
+                maxOutputTokens: 8192,
+                topP: 0.9,
+                responseMimeType: "application/json"
               }
             }, {
               timeout: modelTimeout,
@@ -650,7 +677,8 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
                   ],
                   temperature: 0.7,
                   max_tokens: tokenBudget,
-                  top_p: 0.9
+                  top_p: 0.9,
+                  response_format: { type: "json_object" }
                 }, {
                   headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
                   timeout: 60000
@@ -679,7 +707,8 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
           ],
           temperature: 0.7,
           max_tokens: tokenBudget,
-          top_p: 0.9
+          top_p: 0.9,
+          response_format: { type: "json_object" }
         }, {
           headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
           timeout: modelTimeout
@@ -691,7 +720,7 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
           try {
             const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
               contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
-              generationConfig: { temperature: 0.7, maxOutputTokens: tokenBudget, topP: 0.9 }
+              generationConfig: { temperature: 0.7, maxOutputTokens: 8192, topP: 0.9, responseMimeType: "application/json" }
             }, { timeout: 60000, headers: { 'Content-Type': 'application/json' } });
             text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
             if (text) console.log('Auto-fallback to Gemini (Groq failed)');
@@ -712,7 +741,8 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
         ],
         temperature: 0.7,
         max_tokens: tokenBudget,
-        top_p: 0.9
+        top_p: 0.9,
+        response_format: { type: "json_object" }
       }, {
         headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
         timeout: modelTimeout
@@ -724,6 +754,15 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
 
     // Strip code fences
     text = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+    console.log("=== RAW MODEL TEXT ===");
+    console.log(text);
+    console.log("======================");
+    try {
+      const fs = require('fs');
+      fs.writeFileSync(path.resolve(__dirname, '../../raw_response.txt'), text);
+    } catch (e) {
+      console.error('Failed to write raw_response.txt:', e.message);
+    }
 
     if (!text) {
       return res.status(500).json({ success: false, message: 'AI returned empty response' });
@@ -766,12 +805,10 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
       }
     }
 
-    // Fallback: extract content field from raw JSON text
+    // Fallback: extract content field from raw JSON text safely without ReDoS / catastrophic backtracking
     if (!content) {
-      // Use a multiline-aware regex to extract content field value
-      const m = text.match(/"content"\s*:\s*"((?:[^"\\]|\\"|\\.|[\s\S])*?)"\s*(?:,|\n|\r|$)/);
-      if (m && m[1].trim()) {
-        const extracted = m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\t/g, '\t');
+      const extracted = extractContentField(text);
+      if (extracted.trim()) {
         content = (/^\s*</.test(extracted)) ? cleanHtml(extracted) : markdownToHtml(extracted);
       }
     }

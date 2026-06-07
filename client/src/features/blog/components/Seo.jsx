@@ -7,11 +7,35 @@ export default function Seo({ title, description, image, url, canonical, keyword
   const pageUrl = url || window.location.href;
   const canonicalUrl = canonical || pageUrl;
 
+  const enhanceSingle = (schema) => {
+    if (!schema) return null;
+    if (schema.publisher) {
+      return {
+        ...schema,
+        publisher: {
+          ...schema.publisher,
+          logo: schema.publisher.logo || {
+            '@type': 'ImageObject',
+            url: `${window.location.origin}/logo.png`,
+            width: 190,
+            height: 60
+          }
+        }
+      };
+    }
+    return schema;
+  };
+
+  const enhancedJsonLd = Array.isArray(jsonLd)
+    ? jsonLd.map(enhanceSingle).filter(Boolean)
+    : enhanceSingle(jsonLd);
+
   return (
     <Helmet>
       <title>{fullTitle}</title>
       <link rel="canonical" href={canonicalUrl} />
       <meta name="description" content={desc} />
+      <meta name="robots" content="max-image-preview:large, index, follow" />
       {keywords && <meta name="keywords" content={keywords} />}
 
       {/* Open Graph */}
@@ -30,9 +54,14 @@ export default function Seo({ title, description, image, url, canonical, keyword
       <meta name="twitter:description" content={desc} />
       {image && <meta name="twitter:image" content={image} />}
 
-      {/* JSON-LD Structured Data */}
-      {jsonLd && (
-        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      {enhancedJsonLd && (
+        Array.isArray(enhancedJsonLd) ? (
+          enhancedJsonLd.map((schema, idx) => (
+            <script key={idx} type="application/ld+json">{JSON.stringify(schema)}</script>
+          ))
+        ) : (
+          <script type="application/ld+json">{JSON.stringify(enhancedJsonLd)}</script>
+        )
       )}
     </Helmet>
   );

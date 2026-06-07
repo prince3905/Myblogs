@@ -184,7 +184,6 @@ async function listPublishedPosts(req, res) {
 async function listAdminPosts(req, res) {
   const posts = await BlogPost.find()
     .sort({ updatedAt: -1 })
-    .select('title slug category featuredImage excerpt views createdAt updatedAt status')
     .lean();
   return res.json(posts);
 }
@@ -243,6 +242,12 @@ async function createPost(req, res) {
 
   const post = await BlogPost.create(payload);
   invalidateFeedCache();
+
+  if (post.status === 'published') {
+    const { notifyUrl } = require('../../shared/utils/google-indexing');
+    notifyUrl(postUrl(post), 'URL_UPDATED').catch(() => {});
+  }
+
   return res.status(201).json(post);
 }
 
@@ -265,9 +270,25 @@ async function updatePost(req, res) {
     : null;
   payload.canonicalUrl = payload.canonicalUrl || postUrl(payload);
 
+  const oldUrl = postUrl(existing);
+  const oldStatus = existing.status;
+
   Object.assign(existing, payload);
   await existing.save();
   invalidateFeedCache();
+
+  if (existing.status === 'published') {
+    const { notifyUrl } = require('../../shared/utils/google-indexing');
+    notifyUrl(postUrl(existing), 'URL_UPDATED').catch(() => {});
+
+    if (oldStatus === 'published' && oldUrl !== postUrl(existing)) {
+      notifyUrl(oldUrl, 'URL_DELETED').catch(() => {});
+    }
+  } else if (oldStatus === 'published' && existing.status !== 'published') {
+    const { notifyUrl } = require('../../shared/utils/google-indexing');
+    notifyUrl(oldUrl, 'URL_DELETED').catch(() => {});
+  }
+
   return res.json(existing);
 }
 
@@ -277,6 +298,12 @@ async function deletePost(req, res) {
     return res.status(404).json({ message: 'Post not found' });
   }
   invalidateFeedCache();
+
+  if (post.status === 'published') {
+    const { notifyUrl } = require('../../shared/utils/google-indexing');
+    notifyUrl(postUrl(post), 'URL_DELETED').catch(() => {});
+  }
+
   return res.json({ success: true });
 }
 

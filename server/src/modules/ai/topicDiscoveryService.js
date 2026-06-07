@@ -95,7 +95,7 @@ const CATEGORY_RULES = [
     primary: ['sarkari', 'government job', 'govt job', 'recruitment', 'vacancy', 'apply online',
       'admit card', 'syllabus', 'cutoff', 'merit list', 'answer key',
       'upsc', 'ssc cgl', 'ssc chsl', 'bank po', 'railway', 'defence', 'police',
-      'ias officer', 'ips officer', 'nda exam', 'cds exam'],
+      'ias officer', 'ips officer', 'nda exam', 'cds exam', 'jee mains', 'neet pg', 'ctet', 'rrb ntpc', 'gate exam'],
     secondary: ['exam date', 'registration', 'notification', 'career', 'government', 'job alert'],
     negative: [],
   },
@@ -105,7 +105,7 @@ const CATEGORY_RULES = [
       'fat loss', 'belly fat', 'muscle', 'calories', 'protein', 'vitamin',
       'blood pressure', 'sugar', 'diabetes', 'cholesterol',
       'hair care', 'skin care', 'immunity', 'mental health', 'depression',
-      'yoga poses', 'fitness tips', 'healthy diet'],
+      'yoga poses', 'fitness tips', 'healthy diet', 'symptoms', 'causes', 'remedies'],
     secondary: ['health tips', 'fitness', 'disease', 'symptoms', 'treatment', 'hospital',
       'medicine', 'doctor', 'yoga', 'nutrition', 'healthy', 'weight'],
     negative: [],
@@ -118,7 +118,7 @@ const CATEGORY_RULES = [
       'windows', 'macbook', 'chromebook', 'gaming',
       'coding', 'programming', 'javascript', 'python', 'react', 'node.js',
       'web development', 'app development', 'software', 'github', 'api', 'database',
-      'tutorial', 'step by step', 'vs code', 'developer', 'technology'],
+      'tutorial', 'step by step', 'vs code', 'developer', 'technology', 'windows 11', 'how to install'],
     secondary: ['features', 'update', 'review', 'unveils', 'unveiled', 'flagship',
       'display', 'charging', 'wireless', 'bluetooth', 'wi-fi', 'usb-c',
       'artificial intelligence', 'internet', 'digital', 'tech'],
@@ -130,7 +130,7 @@ const CATEGORY_RULES = [
     primary: ['chatgpt', 'gpt-4', 'gpt-5', 'gemini ai', 'artificial intelligence',
       'machine learning', 'deep learning', 'ai tool', 'ai generator',
       'ai image', 'ai video', 'prompt engineering', 'ai prompts',
-      'llm', 'neural network', 'openai', 'copilot'],
+      'llm', 'neural network', 'openai', 'copilot', 'midjourney', 'sora ai', 'claude ai'],
     secondary: ['automation', 'calculator', 'online tool', 'website builder', 'seo tool',
       'content generator', 'digital tool', 'ai', 'chatbot'],
     negative: ['breaking', 'news', 'war', 'attack', 'arrest', 'election', 'politics',
@@ -144,7 +144,8 @@ const CATEGORY_RULES = [
       'talks', 'meet', 'launches', 'announces', 'approves', 'clears',
       'says', 'claims', 'accuses', 'slams', 'targets', 'captures',
       'ipl', 'cricket', 'match', 'score', 'points table', 'tournament',
-      'sports', 'football', 't20', 'champions'],
+      'sports', 'football', 't20', 'champions', 'modi', 'gandhi', 'kejriwal', 'trump', 'bjp', 'congress',
+      'virat kohli', 'rohit sharma', 'jaiswal', 'dhoni', 'box office', 'movie', 'actor', 'actress', 'film'],
     secondary: ['news', 'today', 'update', 'report', 'india', 'world',
       'government', 'court', 'minister', 'prime minister', 'president',
       'security', 'probe', 'investigation', 'inquiry'],
@@ -157,7 +158,7 @@ const CATEGORY_RULES = [
       'crypto currency', 'bitcoin', 'ethereum', 'investment',
       'income tax', 'gst', 'loan', 'insurance', 'home loan',
       'saving account', 'fixed deposit', 'sip', 'business idea',
-      'startup funding', 'ipo'],
+      'startup funding', 'ipo', 'gold rate', 'silver price', 'share price'],
     secondary: ['finance', 'money', 'budget', 'profit', 'startup', 'entrepreneur',
       'earning', 'income', 'payment', 'credit card', 'interest rate'],
     negative: ['breaking', 'war', 'attack', 'arrest', 'election', 'sports', 'cricket', 'ipl'],
@@ -236,7 +237,7 @@ function guessCategory(title, link) {
   const domainHint = guessCategoryFromDomain(link);
   const urlHint = guessCategoryFromUrl(link);
 
-  let best = 'Tech & Tutorials';
+  let best = 'News & Trends';
   let bestScore = 0;
 
   for (const rule of CATEGORY_RULES) {
@@ -530,67 +531,180 @@ const INTENT_RULES = {
   Transactional: [/\b(buy|purchase|order|download|discount|shop|register|signup|login|subscribe|enroll|apply|renewal|book|pay)\b/i],
 };
 
-function serpAnalyze(keyword) {
+async function serpAnalyze(keyword) {
   const wordCount = keyword.split(/\s+/).length;
-  const charLen = keyword.length;
-
-  // Determine recommended content length based on keyword type
   const isInformational = INTENT_RULES.Informational.some(r => r.test(keyword));
   const isCommercial = INTENT_RULES.Commercial.some(r => r.test(keyword));
   const isTransactional = INTENT_RULES.Transactional.some(r => r.test(keyword));
 
-  let totalWordCount, headingCount;
-  if (isTransactional) {
-    totalWordCount = Math.max(800, wordCount * 250);
-    headingCount = 3;
-  } else if (isCommercial) {
-    totalWordCount = Math.max(1200, wordCount * 300);
-    headingCount = 5;
-  } else {
-    totalWordCount = Math.max(1500, wordCount * 350);
-    headingCount = 6;
+  let totalWordCount = isTransactional ? 900 : isCommercial ? 1300 : 1600;
+  let headingCount = isTransactional ? 4 : isCommercial ? 6 : 7;
+
+  const competitors = [];
+  try {
+    // 1. Fetch top URLs from Google News RSS Search (extremely reliable, bypasses blocks)
+    const rssRes = await axios.get(newsRssUrl(keyword), {
+      timeout: 5000,
+      headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+    });
+    const items = extractRssTitles(rssRes.data);
+
+    if (items && items.length > 0) {
+      // Fetch HTML for top 3 competitor pages in parallel (capped at 3 for speed)
+      const fetchPromises = items.slice(0, 3).map(async (item) => {
+        if (!item.link) return null;
+        try {
+          const pageRes = await axios.get(item.link, {
+            timeout: 2500,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+          });
+          const html = pageRes.data;
+          if (typeof html !== 'string') return null;
+
+          // Parse page title
+          const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+          const title = titleMatch ? titleMatch[1].trim().replace(/\s+/g, ' ') : item.title;
+
+          // Extract text to calculate approximate word count
+          // Strip styles, scripts, and HTML tags
+          const textOnly = html
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          
+          const words = textOnly.split(/\s+/).filter(w => w.length > 1);
+          const computedWordCount = Math.max(200, words.length);
+
+          // Extract headings (H2s and H3s)
+          const headingRegex = /<h([23])(?:[^>]*)>([\s\S]*?)<\/h\1>/gi;
+          let match;
+          const pageHeadings = [];
+          while ((match = headingRegex.exec(html)) !== null) {
+            const hText = match[2].replace(/<[^>]*>/g, '').trim().replace(/\s+/g, ' ');
+            if (hText.length > 5 && hText.length < 100) {
+              pageHeadings.push(hText);
+            }
+            if (pageHeadings.length >= 6) break;
+          }
+
+          return {
+            title: title || item.title,
+            link: item.link,
+            wordCount: computedWordCount,
+            headings: pageHeadings.length > 0 ? pageHeadings : [`Overview of ${keyword}`]
+          };
+        } catch {
+          // Failed to fetch or scrape this URL, fallback to default entry
+          return {
+            title: item.title,
+            link: item.link,
+            wordCount: 800,
+            headings: [`About ${keyword}`]
+          };
+        }
+      });
+
+      const resolved = await Promise.all(fetchPromises);
+      resolved.filter(Boolean).forEach(c => competitors.push(c));
+    }
+  } catch (err) {
+    console.warn('Competitor scraping failed (non-fatal, fallback to heuristics):', err.message);
   }
 
-  // Generate LSI keywords from the keyword itself
-  const words = keyword.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-  const lsiModifiers = ['guide', 'benefits', 'tips', 'review', 'vs', 'examples', 'best', 'how to', 'what is'];
-  const recommendedLSI = [];
-  const seen = new Set();
-  for (const mod of lsiModifiers) {
-    const lsi = `${mod} ${keyword}`.toLowerCase();
-    if (!seen.has(lsi)) { seen.add(lsi); recommendedLSI.push(lsi); }
-    if (recommendedLSI.length >= 5) break;
-  }
-  // Add some LSI from individual words
-  for (const w of words) {
-    if (recommendedLSI.length >= 8) break;
-    const lsi = keyword.includes(w) ? `${w} ${keyword.replace(w, '').trim()}` : `${keyword} ${w}`;
-    if (!seen.has(lsi)) { seen.add(lsi); recommendedLSI.push(lsi); }
+  // Generate suggested headings outline and LSI keywords
+  let headings = [];
+  let recommendedLSI = [];
+  let targetWords = totalWordCount;
+
+  // Let's use AI model to dynamically analyze competitors if we have API keys and retrieved competitor data
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  if (GEMINI_API_KEY && competitors.length > 0) {
+    try {
+      const prompt = `You are an expert SEO auditor. Analyze the following competitors ranking on Google for keyword: "${keyword}".
+Competitors Data:
+${competitors.map((c, i) => `[Competitor #${i+1}] Title: "${c.title}" | Word Count: ${c.wordCount} | Headings: ${c.headings.join(' -> ')}`).join('\n')}
+
+Generate:
+1. Suggested SEO outline headings (H2/H3 outline layout covering gaps and combining their best elements). Max 7 headings.
+2. Recommended LSI semantic keywords to sprinkle in body (comma-separated list of 6 phrases).
+3. Ideal outranking target word count (integer value).
+
+Return strictly a JSON object with keys: "headings" (array of strings), "lsi" (array of strings), "targetWordCount" (integer). DO NOT include markdown code blocks.`;
+
+      const aiRes = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 1000,
+          responseMimeType: "application/json"
+        }
+      }, { timeout: 8000 });
+
+      let text = aiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      text = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+      const parsed = JSON.parse(text);
+
+      if (parsed && Array.isArray(parsed.headings)) headings = parsed.headings;
+      if (parsed && Array.isArray(parsed.lsi)) recommendedLSI = parsed.lsi;
+      if (parsed && typeof parsed.targetWordCount === 'number') targetWords = parsed.targetWordCount;
+    } catch (aiErr) {
+      console.warn('AI competitor synthesis failed (falling back to heuristics):', aiErr.message);
+    }
   }
 
-  // Generate suggested headings
-  const capitalize = s => s.replace(/\b\w/g, c => c.toUpperCase());
-  const headings = [`Introduction`, `What is ${capitalize(keyword)}?`];
-  if (isCommercial) {
-    headings.push(`Top ${capitalize(keyword)} Options`, `${capitalize(keyword)} Comparison`, `Pros and Cons`);
-  } else if (isTransactional) {
-    headings.push(`How to ${capitalize(keyword)}`, `Step-by-Step Guide`, `Eligibility & Requirements`);
-  } else {
-    headings.push(`Key Benefits of ${capitalize(keyword)}`, `How ${capitalize(keyword)} Works`, `${capitalize(keyword)} Tips for 2026`);
+  // Fallback heuristics if headings or keywords are empty
+  if (headings.length === 0) {
+    const capitalize = s => s.replace(/\b\w/g, c => c.toUpperCase());
+    headings = [`Introduction`, `What is ${capitalize(keyword)}?`];
+    if (isCommercial) {
+      headings.push(`Top ${capitalize(keyword)} Options`, `${capitalize(keyword)} Comparison`, `Pros and Cons`);
+    } else if (isTransactional) {
+      headings.push(`How to ${capitalize(keyword)}`, `Step-by-Step Guide`, `Eligibility & Requirements`);
+    } else {
+      headings.push(`Key Benefits of ${capitalize(keyword)}`, `How ${capitalize(keyword)} Works`, `${capitalize(keyword)} Tips for 2026`);
+    }
+    headings.push(`FAQ About ${capitalize(keyword)}`, `Conclusion`);
+    headings = headings.slice(0, headingCount + 2);
   }
-  headings.push(`FAQ About ${capitalize(keyword)}`, `Conclusion`);
+
+  if (recommendedLSI.length === 0) {
+    const words = keyword.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const lsiModifiers = ['guide', 'benefits', 'tips', 'review', 'vs', 'examples', 'best', 'how to', 'what is'];
+    const seen = new Set();
+    for (const mod of lsiModifiers) {
+      const lsi = `${mod} ${keyword}`.toLowerCase();
+      if (!seen.has(lsi)) { seen.add(lsi); recommendedLSI.push(lsi); }
+      if (recommendedLSI.length >= 6) break;
+    }
+    for (const w of words) {
+      if (recommendedLSI.length >= 8) break;
+      const lsi = keyword.includes(w) ? `${w} ${keyword.replace(w, '').trim()}` : `${keyword} ${w}`;
+      if (!seen.has(lsi)) { seen.add(lsi); recommendedLSI.push(lsi); }
+    }
+  }
+
+  if (competitors.length > 0 && targetWords === totalWordCount) {
+    // Target word count should be 15% higher than max competitor word count, rounded to nearest 100
+    const maxCompWords = Math.max(...competitors.map(c => c.wordCount));
+    targetWords = Math.min(2500, Math.max(900, Math.round((maxCompWords * 1.15) / 100) * 100));
+  }
 
   return {
     keyword,
-    totalRecommendedWords: Math.min(2500, Math.max(600, Math.round(totalWordCount / 100) * 100)),
+    totalRecommendedWords: targetWords,
     recommendedLSI: [...new Set(recommendedLSI)].slice(0, 8),
-    suggestedHeadings: headings.slice(0, headingCount + 2),
+    suggestedHeadings: headings,
     serpFeatures: {
       featuredSnippet: isInformational ? 'likely' : 'possible',
       peopleAlsoAsk: Math.max(2, Math.min(5, wordCount + 2)),
       imagePack: !isTransactional,
       videoResult: keyword.length > 15,
     },
+    competitors: competitors.slice(0, 3)
   };
 }
 

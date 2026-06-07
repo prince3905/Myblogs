@@ -1,11 +1,12 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider, FormControlLabel, Checkbox, CircularProgress, Chip, Collapse, IconButton, Tooltip } from '@mui/material';
+import { Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider, FormControlLabel, Checkbox, CircularProgress, Chip, Collapse, IconButton, Tooltip, LinearProgress } from '@mui/material';
 import { ArrowBack, ExpandMore, ExpandLess, ContentCopy } from '@mui/icons-material';
 import ImageUpload from '../../../components/ImageUpload';
 import RichTextEditor from '../../../components/RichTextEditor';
 import { useToast } from '../../../components/Toast';
 import { request } from '../../../shared/lib/api';
+import { calculateSeoScore } from '../../../shared/utils/seoAuditor';
 
 const initialForm = {
   title: '',
@@ -33,14 +34,20 @@ export default function PostEditorPage() {
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiStep, setAiStep] = useState('');
+  const [aiProgress, setAiProgress] = useState(0);
   const [aiModel, setAiModel] = useState('gemini-flash-latest');
   const [aiLength, setAiLength] = useState('medium');
   const [aiTone, setAiTone] = useState('informative');
   const [aiLanguage, setAiLanguage] = useState('hinglish');
   const [aiCommand, setAiCommand] = useState('');
+  const [seoDrawerOpen, setSeoDrawerOpen] = useState(false);
   const [kwData, setKwData] = useState(null);
   const [serpData, setSerpData] = useState(null);
-  const [seoDrawerOpen, setSeoDrawerOpen] = useState(false);
+
+  const seoAudit = useMemo(() => {
+    return calculateSeoScore(form, kwData);
+  }, [form.title, form.content, form.seoTitle, form.seoDescription, form.slug, form.tags, kwData]);
   const isEdit = Boolean(id);
 
   const handleCopyPrompt = useCallback(async () => {
@@ -116,6 +123,25 @@ export default function PostEditorPage() {
     const finalTitle = form.title.replace(/\b\w/g, c => c.toUpperCase());
     updateField('title', finalTitle);
     setAiLoading(true);
+    setAiProgress(5);
+    setAiStep('🔍 Analyzing title & performing keyword research...');
+
+    const steps = [
+      { text: '🧠 Gemini is thinking & structuring outline...', progress: 20 },
+      { text: '✍️ Writing content in conversational Hinglish (non-robotic)...', progress: 45 },
+      { text: '🖼️ Fetching relevant featured stock image...', progress: 70 },
+      { text: '🚀 Performing post-processing & checking SEO rules...', progress: 90 }
+    ];
+
+    let currentStep = 0;
+    const interval = setInterval(() => {
+      if (currentStep < steps.length) {
+        setAiStep(steps[currentStep].text);
+        setAiProgress(steps[currentStep].progress);
+        currentStep++;
+      }
+    }, 7000);
+
     try {
       let serpInject = '';
       if (serpData) {
@@ -157,7 +183,10 @@ export default function PostEditorPage() {
       else if (msg.includes('timeout') || msg.includes('taking too long')) addToast('AI slow hai, dubara try kar', 'error');
       else addToast(msg.slice(0, 80), 'error');
     } finally {
+      clearInterval(interval);
       setAiLoading(false);
+      setAiStep('');
+      setAiProgress(0);
     }
   }
 
@@ -251,6 +280,18 @@ export default function PostEditorPage() {
                   </Button>
                 </Tooltip>
               </Box>
+
+              {aiLoading && (
+                <Box sx={{ mb: 3, p: 2, bgcolor: '#f0fdf4', borderRadius: 2, border: '1px solid #bbf7d0' }}>
+                  <Typography variant="subtitle2" sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#166534', mb: 0.5 }}>
+                    ✨ AI Writer is working...
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#15803d', mb: 1.5 }}>
+                    {aiStep}
+                  </Typography>
+                  <LinearProgress variant="determinate" value={aiProgress} color="success" sx={{ height: 6, borderRadius: 3 }} />
+                </Box>
+              )}
 
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
                 <FormControl size="small" sx={{ minWidth: 100 }}>
@@ -539,27 +580,182 @@ export default function PostEditorPage() {
                 onClick={() => setSeoDrawerOpen(!seoDrawerOpen)}
                 sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', mb: 1 }}
               >
-                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '0.95rem' }}>
-                  📈 SEO Traffic Insights
+                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 1 }}>
+                  📈 SEO/GEO/AEO Auditor ({seoAudit.overallVisibilityIndex || 0}/100)
                 </Typography>
                 <IconButton size="small">{seoDrawerOpen ? <ExpandLess /> : <ExpandMore />}</IconButton>
               </Box>
               <Collapse in={seoDrawerOpen}>
-                <Box sx={{ mb: 3, p: 1.5, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                  {/* Recommended Tags */}
-                  <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: '#475569', mb: 0.75 }}>
-                    🏷️ Recommended Tags
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1.5 }}>
-                    {(kwData?.filtered || []).filter(k => k.type === 'short-tail' || k.type === 'lsi').slice(0, 6).length > 0
-                      ? (kwData.filtered).filter(k => k.type === 'short-tail' || k.type === 'lsi').slice(0, 6).map((k, i) => (
-                          <Chip key={i} label={k.keyword} size="small" sx={{ height: 20, fontSize: '0.6rem', bgcolor: '#e0e7ff', color: '#4338ca' }} />
-                        ))
-                      : <Typography sx={{ fontSize: '0.65rem', color: '#94a3b8' }}>Keyword research nahi hua hai. Pehle AI Write karo.</Typography>
-                    }
+                <Box sx={{ mb: 3, p: 2, bgcolor: '#f8fafc', borderRadius: 3, border: '1px solid #e2e8f0' }}>
+                  {/* Master Score: Search Visibility Index */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                    <Box sx={{
+                      width: 56, height: 56, borderRadius: '50%',
+                      border: '4px solid',
+                      borderColor: (seoAudit.overallVisibilityIndex || 0) >= 80 ? '#10b981' : (seoAudit.overallVisibilityIndex || 0) >= 50 ? '#f59e0b' : '#ef4444',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 800, fontSize: '1.1rem', color: (seoAudit.overallVisibilityIndex || 0) >= 80 ? '#047857' : (seoAudit.overallVisibilityIndex || 0) >= 50 ? '#b45309' : '#b91c1c',
+                      bgcolor: 'white', flexShrink: 0
+                    }}>
+                      {seoAudit.overallVisibilityIndex || 0}
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b' }}>Search Visibility Index</Typography>
+                      <Typography sx={{ fontSize: '0.7rem', color: '#64748b' }}>
+                        {(seoAudit.overallVisibilityIndex || 0) >= 80 ? '🔥 Expert search visibility ready!' : (seoAudit.overallVisibilityIndex || 0) >= 50 ? '⚠️ Good, but needs GEO/AEO optimization' : '❌ Needs significant audit fixes'}
+                      </Typography>
+                    </Box>
                   </Box>
 
+                  {/* Sub-scores Grid */}
+                  <Grid container spacing={1.5} sx={{ mb: 3 }}>
+                    {[
+                      { label: 'Google SEO', val: seoAudit.seoScore || 0, color: 'primary' },
+                      { label: 'Generative AI (GEO)', val: seoAudit.geoScore || 0, color: 'secondary' },
+                      { label: 'Voice & Answer (AEO)', val: seoAudit.aeoScore || 0, color: 'success' }
+                    ].map((sub, i) => (
+                      <Grid item xs={4} key={i}>
+                        <Paper variant="outlined" sx={{ p: 1, textAlign: 'center', borderRadius: 2, bgcolor: '#ffffff' }}>
+                          <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: '#64748b', mb: 0.5 }}>{sub.label}</Typography>
+                          <Typography sx={{ fontSize: '0.9rem', fontWeight: 800, color: `${sub.color}.main`, mb: 0.5 }}>{sub.val}/100</Typography>
+                          <LinearProgress variant="determinate" value={sub.val} color={sub.color} sx={{ height: 4, borderRadius: 2 }} />
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </Grid>
+
+                  {/* Rank Prediction Card */}
+                  {seoAudit.focusKeyword && (
+                    <Box sx={{ mb: 3, p: 1.5, bgcolor: '#f0fdf4', borderRadius: 2, border: '1.5px dashed #bbf7d0' }}>
+                      <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#166534', mb: 0.5 }}>
+                        🎯 Predicted Google Rank:
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Chip
+                          label={seoAudit.rankPrediction.range}
+                          size="small"
+                          sx={{
+                            fontWeight: 700, fontSize: '0.7rem',
+                            bgcolor: seoAudit.rankPrediction.badgeColor,
+                            color: 'white'
+                          }}
+                        />
+                        <Chip
+                          label={`KD: ${seoAudit.kd}%`}
+                          size="small"
+                          sx={{ fontWeight: 600, fontSize: '0.65rem', bgcolor: '#e2e8f0', color: '#475569' }}
+                        />
+                      </Box>
+                      <Typography sx={{ fontSize: '0.65rem', color: '#15803d', fontStyle: 'italic' }}>
+                        {seoAudit.rankPrediction.description}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* SEO Checklist */}
+                  <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', mb: 1, borderBottom: '1px solid #e2e8f0', pb: 0.5 }}>
+                    🔍 Search Engine Optimization (SEO)
+                  </Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 0.75, mb: 3.5 }}>
+                    {[
+                      { label: 'Keyword in Title', ok: seoAudit.checks.keywordInTitle },
+                      { label: 'Keyword in URL Slug', ok: seoAudit.checks.keywordInSlug },
+                      { label: 'Keyword in First Paragraph', ok: seoAudit.checks.keywordInIntro },
+                      { label: 'Keyword in H2 Heading', ok: seoAudit.checks.keywordInH2 },
+                      { label: 'Optimal Keyword Density (0.7% - 2.2%)', ok: seoAudit.checks.keywordDensityOk, suffix: `(${seoAudit.density}%)` },
+                      { label: 'Optimal Word Count (1,100+ words)', ok: seoAudit.checks.wordCountOk, suffix: `(${seoAudit.wordCount})` },
+                      { label: 'Comparison/Data Table included', ok: seoAudit.checks.hasTable },
+                      { label: 'SEO Description has Keyword & Length', ok: seoAudit.checks.metaOk }
+                    ].map((item, idx) => (
+                      <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{
+                          width: 14, height: 14, borderRadius: '50%',
+                          bgcolor: item.ok ? '#10b981' : '#cbd5e1',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: 'white', fontSize: '0.55rem', fontWeight: 800, flexShrink: 0
+                        }}>
+                          {item.ok ? '✓' : ''}
+                        </Box>
+                        <Typography sx={{ fontSize: '0.7rem', color: item.ok ? '#1e293b' : '#64748b' }}>
+                          {item.label} {item.suffix && <strong style={{ color: '#0284c7' }}>{item.suffix}</strong>}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+
+                  {/* GEO Checklist */}
+                  <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', mb: 1, borderBottom: '1px solid #e2e8f0', pb: 0.5 }}>
+                    🤖 Generative Engine Optimization (GEO)
+                  </Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 0.75, mb: 3.5 }}>
+                    {[
+                      { label: 'Citations & Expert Statements', ok: seoAudit.geoChecks?.hasCitations },
+                      { label: 'Numerical Evidence & Statistics', ok: seoAudit.geoChecks?.hasStats },
+                      { label: 'Structured Key Takeaways / Summaries', ok: seoAudit.geoChecks?.hasSummary },
+                      { label: 'Clear Concepts Definition', ok: seoAudit.geoChecks?.hasDefinitions }
+                    ].map((item, idx) => (
+                      <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{
+                          width: 14, height: 14, borderRadius: '50%',
+                          bgcolor: item.ok ? '#8b5cf6' : '#cbd5e1',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: 'white', fontSize: '0.55rem', fontWeight: 800, flexShrink: 0
+                        }}>
+                          {item.ok ? '✓' : ''}
+                        </Box>
+                        <Typography sx={{ fontSize: '0.7rem', color: item.ok ? '#1e293b' : '#64748b' }}>
+                          {item.label}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+
+                  {/* AEO Checklist */}
+                  <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', mb: 1, borderBottom: '1px solid #e2e8f0', pb: 0.5 }}>
+                    🎙️ Answer Engine & Voice Optimization (AEO)
+                  </Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 0.75, mb: 3 }}>
+                    {[
+                      { label: 'Dedicated FAQ / Q&A Section', ok: seoAudit.aeoChecks?.hasFaq },
+                      { label: 'Direct Concise Answer Snippets', ok: seoAudit.aeoChecks?.hasDirectAnswers },
+                      { label: 'Voice-friendly Conversational Headers', ok: seoAudit.aeoChecks?.hasConversationalWords },
+                      { label: 'Schema-rich Metadata Fields', ok: seoAudit.aeoChecks?.hasSchemaFields }
+                    ].map((item, idx) => (
+                      <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{
+                          width: 14, height: 14, borderRadius: '50%',
+                          bgcolor: item.ok ? '#22c55e' : '#cbd5e1',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: 'white', fontSize: '0.55rem', fontWeight: 800, flexShrink: 0
+                        }}>
+                          {item.ok ? '✓' : ''}
+                        </Box>
+                        <Typography sx={{ fontSize: '0.7rem', color: item.ok ? '#1e293b' : '#64748b' }}>
+                          {item.label}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+
+                  {/* Suggestions Checklist */}
+                  {seoAudit.suggestions.length > 0 && (
+                    <>
+                      <Divider sx={{ my: 1.5 }} />
+                      <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#b91c1c', mb: 0.75 }}>
+                        ⚠️ Actions Required to Rank:
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                        {seoAudit.suggestions.map((sug, idx) => (
+                          <Typography key={idx} sx={{ fontSize: '0.65rem', color: '#7f1d1d', bgcolor: '#fef2f2', p: 0.75, borderRadius: 1.5, borderLeft: '3px solid #ef4444' }}>
+                            • {sug}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </>
+                  )}
+
                   {/* Low-Difficulty Long-Tails */}
+                  <Divider sx={{ my: 1.5 }} />
                   <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: '#475569', mb: 0.75 }}>
                     🎯 Low-Difficulty Long-Tails (KD ≤ 25%)
                   </Typography>
@@ -568,9 +764,33 @@ export default function PostEditorPage() {
                       ? (kwData.filtered).filter(k => (k.type === 'long-tail' || k.type === 'question-based') && k.kd <= 25).slice(0, 5).map((k, i) => (
                           <Chip key={i} label={`${k.keyword} (${k.kd}%)`} size="small" sx={{ height: 20, fontSize: '0.6rem', bgcolor: '#d1fae5', color: '#166534' }} />
                         ))
-                      : <Typography sx={{ fontSize: '0.65rem', color: '#94a3b8' }}>Koi low-difficulty long-tail nahi mila.</Typography>
+                      : <Typography sx={{ fontSize: '0.65rem', color: '#94a3b8' }}>No low-difficulty long-tails found.</Typography>
                     }
                   </Box>
+
+                  {/* Scraped Competitors Benchmarks */}
+                  {serpData?.competitors && serpData.competitors.length > 0 && (
+                    <>
+                      <Divider sx={{ my: 1.5 }} />
+                      <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: '#475569', mb: 0.75 }}>
+                        🔥 Competitor Word Benchmarks
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mb: 1.5 }}>
+                        {serpData.competitors.map((comp, idx) => (
+                          <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#f1f5f9', p: 0.75, borderRadius: 1.5 }}>
+                            <Typography sx={{ fontSize: '0.6rem', color: '#1e293b', fontWeight: 500, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                              <a href={comp.link} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>
+                                {comp.title}
+                              </a>
+                            </Typography>
+                            <Typography sx={{ fontSize: '0.6rem', color: '#475569', fontWeight: 700 }}>
+                              {comp.wordCount} words
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </>
+                  )}
 
                   {/* Character Count Target */}
                   <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: '#475569', mb: 0.75 }}>
@@ -589,11 +809,6 @@ export default function PostEditorPage() {
                       {serpData?.totalRecommendedWords || 1200} — 2500 words
                     </Typography>
                   </Box>
-                  {!kwData && (
-                    <Typography sx={{ fontSize: '0.6rem', color: '#94a3b8', mt: 1, fontStyle: 'italic' }}>
-                      💡 Insaan ke search data ke liye "AI Write" dabao — auto keyword research fill ho jayega.
-                    </Typography>
-                  )}
                 </Box>
               </Collapse>
 

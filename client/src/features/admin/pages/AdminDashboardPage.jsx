@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Box, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination } from '@mui/material';
+import { Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Box, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination, Tooltip } from '@mui/material';
 import { Article, Mail, Comment, Add, Edit, Delete, Forum, MarkEmailRead, Schedule, Visibility, TrendingUp } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
 import { request } from '../../../shared/lib/api';
+import { calculateSeoScore } from '../../../shared/utils/seoAuditor';
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -234,57 +235,79 @@ export default function AdminDashboardPage() {
             <Table>
               <TableHead>
                 <TableRow sx={{ '& th': { color: '#6B7280', fontWeight: 600, fontSize: '0.75rem', py: 1.5, px: 3, borderBottom: '1px solid #ECECEC' } }}>
-                  <TableCell sx={{ width: '40%' }}>Title</TableCell>
-                  <TableCell sx={{ width: '15%' }}>Status</TableCell>
+                  <TableCell sx={{ width: '35%' }}>Title</TableCell>
+                  <TableCell sx={{ width: '10%' }}>Status</TableCell>
                   <TableCell sx={{ width: '15%' }}>Category</TableCell>
-                  <TableCell sx={{ width: '15%' }}>Updated</TableCell>
+                  <TableCell sx={{ width: '15%' }}>SEO & Rank</TableCell>
+                  <TableCell sx={{ width: '10%' }}>Updated</TableCell>
                   <TableCell sx={{ width: '15%' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {pagePosts.map((post, i) => (
-                  <TableRow key={post._id} sx={{
-                    '& td': { py: 1.8, px: 3, borderBottom: i < pagePosts.length - 1 ? '1px solid #ECECEC' : 'none' },
-                    '&:hover': { bgcolor: '#F9FAFB' },
-                    transition: 'background 0.15s',
-                  }}>
-                    <TableCell>
-                      <Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: '#111827' }}>{post.title}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={post.status} size="small"
-                        sx={{
-                          fontWeight: 600, fontSize: '0.7rem', height: 24, borderRadius: 1.5,
-                          bgcolor: post.status === 'published' ? '#D1FAE5' : '#F3F4F6',
-                          color: post.status === 'published' ? '#065F46' : '#6B7280',
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography sx={{ fontSize: '0.8rem', color: '#6B7280' }}>{post.category || '—'}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography sx={{ fontSize: '0.8rem', color: '#6B7280' }}>{new Date(post.updatedAt).toLocaleDateString()}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        <Button component={Link} to={`/admin/posts/${post._id}/edit`} size="small"
-                          sx={{ minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600, color: '#4F46E5', borderRadius: 1.5, '&:hover': { bgcolor: '#EEF2FF' } }}
-                        >
-                          <Edit sx={{ fontSize: '0.9rem', mr: 0.3 }} /> Edit
-                        </Button>
-                        <Button size="small" onClick={() => setDeleteId(post._id)}
-                          sx={{ minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600, color: '#EF4444', borderRadius: 1.5, '&:hover': { bgcolor: '#FEF2F2' } }}
-                        >
-                          <Delete sx={{ fontSize: '0.9rem', mr: 0.3 }} /> Delete
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {pagePosts.map((post, i) => {
+                  const seoAudit = calculateSeoScore(post);
+                  return (
+                    <TableRow key={post._id} sx={{
+                      '& td': { py: 1.8, px: 3, borderBottom: i < pagePosts.length - 1 ? '1px solid #ECECEC' : 'none' },
+                      '&:hover': { bgcolor: '#F9FAFB' },
+                      transition: 'background 0.15s',
+                    }}>
+                      <TableCell>
+                        <Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: '#111827' }}>{post.title}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={post.status} size="small"
+                          sx={{
+                            fontWeight: 600, fontSize: '0.7rem', height: 24, borderRadius: 1.5,
+                            bgcolor: post.status === 'published' ? '#D1FAE5' : '#F3F4F6',
+                            color: post.status === 'published' ? '#065F46' : '#6B7280',
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography sx={{ fontSize: '0.8rem', color: '#6B7280' }}>{post.category || '—'}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title={seoAudit.rankPrediction.description || ''}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip
+                              label={`${seoAudit.score}%`}
+                              size="small"
+                              sx={{
+                                fontWeight: 700, fontSize: '0.7rem', height: 22,
+                                bgcolor: seoAudit.score >= 80 ? '#D1FAE5' : seoAudit.score >= 50 ? '#FEF3C7' : '#FEE2E2',
+                                color: seoAudit.score >= 80 ? '#065F46' : seoAudit.score >= 50 ? '#92400E' : '#991B1B',
+                              }}
+                            />
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: seoAudit.rankPrediction.badgeColor }}>
+                              {seoAudit.rankPrediction.potential} Pot.
+                            </Typography>
+                          </Box>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Typography sx={{ fontSize: '0.8rem', color: '#6B7280' }}>{new Date(post.updatedAt).toLocaleDateString()}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          <Button component={Link} to={`/admin/posts/${post._id}/edit`} size="small"
+                            sx={{ minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600, color: '#4F46E5', borderRadius: 1.5, '&:hover': { bgcolor: '#EEF2FF' } }}
+                          >
+                            <Edit sx={{ fontSize: '0.9rem', mr: 0.3 }} /> Edit
+                          </Button>
+                          <Button size="small" onClick={() => setDeleteId(post._id)}
+                            sx={{ minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600, color: '#EF4444', borderRadius: 1.5, '&:hover': { bgcolor: '#FEF2F2' } }}
+                          >
+                            <Delete sx={{ fontSize: '0.9rem', mr: 0.3 }} /> Delete
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {!posts.length ? (
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+                    <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
                       <Article sx={{ fontSize: 40, color: '#D1D5DB', mb: 1 }} />
                       <Typography sx={{ color: '#6B7280', fontWeight: 600 }}>No posts yet</Typography>
                       <Button component={Link} to="/admin/posts/new" variant="contained" size="small" sx={{ mt: 1.5, fontWeight: 600, borderRadius: 2 }}>

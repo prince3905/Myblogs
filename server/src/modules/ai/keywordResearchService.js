@@ -1,5 +1,6 @@
 const googleTrends = require('google-trends-api');
 const KeywordResearch = require('../keywords/keyword.model');
+const axios = require('axios');
 
 const STOP_WORDS = new Set(['the', 'a', 'an', 'in', 'of', 'for', 'to', 'and', 'is', 'it', 'on', 'at', 'with', 'by', 'from', 'as', 'are', 'was', 'were', 'been', 'be', 'has', 'have', 'had', 'its', 'all', 'can', 'you', 'per', 'this', 'that', 'not', 'but']);
 
@@ -177,20 +178,27 @@ async function checkGoogleTrends(keywords) {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const results = [];
-  for (const item of keywords) {
+  const promises = keywords.map(async (item) => {
+    let timer;
     try {
-      const res = await googleTrends.interestOverTime({
+      const apiCall = googleTrends.interestOverTime({
         keyword: item.keyword,
         startTime: thirtyDaysAgo,
         endTime: now,
         geo: 'IN',
       });
+
+      const timeoutPromise = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Timeout')), 1500);
+      });
+
+      const res = await Promise.race([apiCall, timeoutPromise]);
+      clearTimeout(timer);
+
       const data = JSON.parse(res);
       const timeline = data?.default?.timelineData || [];
       if (timeline.length === 0) {
-        results.push({ ...item, trend: 'insufficient_data', trendScore: 0 });
-        continue;
+        return { ...item, trend: 'insufficient_data', trendScore: 0 };
       }
 
       const values = timeline.map(t => t.value[0] || 0);
@@ -208,15 +216,14 @@ async function checkGoogleTrends(keywords) {
         trend = 'declining';
       }
 
-      results.push({ ...item, trend, trendScore });
+      return { ...item, trend, trendScore };
     } catch {
-      results.push({ ...item, trend: 'insufficient_data', trendScore: 0 });
+      if (timer) clearTimeout(timer);
+      return { ...item, trend: 'insufficient_data', trendScore: 0 };
     }
+  });
 
-    await new Promise(r => setTimeout(r, 200));
-  }
-
-  return results;
+  return Promise.all(promises);
 }
 
 function filterByKD(items, maxKd = 35) {
@@ -228,9 +235,247 @@ function prioritizeByTrend(items) {
   return [...items].sort((a, b) => (order[a.trend] || 2) - (order[b.trend] || 2));
 }
 
+async function fetchGoogleSuggestions(topic) {
+  const suggestions = new Set();
+  const queries = [
+    topic,
+    `best ${topic}`,
+    `how to ${topic}`,
+    `${topic} vs`,
+    `latest ${topic}`,
+    `${topic} tutorial`,
+    `${topic} guide`,
+    `${topic} 2026`
+  ];
+  
+  const promises = queries.map(async (q) => {
+    try {
+      const res = await axios.get(`https://suggestqueries.google.com/complete/search`, {
+        params: {
+          client: 'firefox',
+          hl: 'en',
+          gl: 'in',
+          q: q.trim()
+        },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        timeout: 2000
+      });
+      const list = res.data[1] || [];
+      list.forEach(item => {
+        if (item && item.toLowerCase().trim() !== topic.toLowerCase().trim()) {
+          suggestions.add(item.toLowerCase().trim());
+        }
+      });
+    } catch (err) {
+      console.warn(`[SEO] Autocomplete failed for query "${q}":`, err.message);
+    }
+  });
+
+  await Promise.all(promises);
+  return Array.from(suggestions).slice(0, 35);
+}
+
+async function analyzeKeywordsWithGemini(topic, category, suggestions) {
+  const primaryKey = process.env.GEMINI_API_KEY;
+  const fallbackKey = process.env.GEMINI_API_KEY_2;
+  const groqKey = process.env.GROQ_API_KEY;
+
+  if (!primaryKey && !fallbackKey && !groqKey) {
+    throw new Error('No AI keys available in env');
+  }
+
+  const prompt = `You are a professional SEO Keyword Research Specialist.
+Analyze these real Google search suggestions for the topic "${topic}" (category: "${category || 'General'}"):
+${suggestions.map((s, idx) => `${idx + 1}. "${s}"`).join('\n')}
+
+For each keyword in the list:
+1. Predict monthly search volume in India (an accurate estimate, e.g. 500 to 50000).
+2. Calculate SEO Keyword Difficulty (KD% from 0 to 100). Easy is 0-30%, moderate is 31-60%, hard is >60%. Be realistic!
+3. Classify Search Intent ('informational', 'commercial', 'transactional', or 'navigational').
+4. Determine Keyword Type ('short-tail', 'mid-tail', 'long-tail', 'lsi', or 'question-based').
+5. Recommend a placement in a blog post (e.g. 'Title & H1', 'H2 Heading', 'Body paragraph', 'FAQ section').
+
+Return ONLY a valid JSON array of objects, where each object has these exact keys:
+"keyword" (string), "type" (string), "searchVolume" (number), "kd" (number), "intent" (string), "placement" (string)
+
+Do not include any thinking, markdown, backticks, or other text outside the JSON array. Output MUST start with [ and end with ].`;
+
+  let text = '';
+
+  // 1. Try Gemini Primary Key
+  if (primaryKey) {
+    try {
+      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${primaryKey}`, {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 2048,
+          responseMimeType: "application/json"
+        }
+      }, {
+        timeout: 8000,
+        headers: { 'Content-Type': 'application/json' }
+      });
+      text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } catch (err) {
+      console.warn('[SEO] Primary Gemini key failed:', err.message);
+    }
+  }
+
+  // 2. Try Gemini Fallback Key
+  if (!text && fallbackKey && fallbackKey !== primaryKey) {
+    try {
+      console.log('[SEO] Trying fallback Gemini key...');
+      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${fallbackKey}`, {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 2048,
+          responseMimeType: "application/json"
+        }
+      }, {
+        timeout: 8000,
+        headers: { 'Content-Type': 'application/json' }
+      });
+      text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } catch (err) {
+      console.warn('[SEO] Fallback Gemini key failed:', err.message);
+    }
+  }
+
+  // 3. Try Groq Llama 3.3 70B
+  if (!text && groqKey) {
+    try {
+      console.log('[SEO] Trying Groq Llama 3.3 70B...');
+      const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are a professional SEO Specialist. Return only raw JSON array.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.2,
+        max_tokens: 2048,
+        response_format: { type: "json_object" }
+      }, {
+        headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+        timeout: 8000
+      });
+      text = response.data?.choices?.[0]?.message?.content || '';
+    } catch (err) {
+      console.warn('[SEO] Groq fallback failed:', err.message);
+    }
+  }
+
+  if (!text) {
+    throw new Error('All AI providers failed to analyze keywords');
+  }
+
+  const cleanJsonText = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+  const list = JSON.parse(cleanJsonText);
+  if (!Array.isArray(list)) {
+    throw new Error('AI response is not a valid array');
+  }
+  return list;
+}
+
+function sortKeywordsByOpportunity(keywords, topic) {
+  if (!keywords || keywords.length === 0) return [];
+  const lowerTopic = String(topic || '').toLowerCase().trim();
+  
+  const calculateScore = (k) => {
+    const vol = Number(k.searchVolume) || 0;
+    const kd = Number(k.kd) || 0;
+    return (vol * (100 - kd)) / 100;
+  };
+
+  return [...keywords].sort((a, b) => {
+    const aIsFocus = String(a.keyword || '').toLowerCase().trim() === lowerTopic;
+    const bIsFocus = String(b.keyword || '').toLowerCase().trim() === lowerTopic;
+    if (aIsFocus && !bIsFocus) return -1;
+    if (!aIsFocus && bIsFocus) return 1;
+    return calculateScore(b) - calculateScore(a);
+  });
+}
+
 async function aggregateKeywordData(topic, category = '') {
   if (!topic || topic.trim().length < 2) return null;
 
+  // 1. Try real-time Autocomplete suggestions + Gemini AI SEO scoring
+  try {
+    console.log(`[SEO] Fetching real autocomplete suggestions from Google for "${topic}"...`);
+    const suggestions = await fetchGoogleSuggestions(topic);
+    
+    if (suggestions.length > 0) {
+      console.log(`[SEO] Analyzing ${suggestions.length} suggestions with Gemini AI...`);
+      const scoredKeywords = await analyzeKeywordsWithGemini(topic, category, suggestions);
+      
+      if (scoredKeywords && scoredKeywords.length > 0) {
+        const keywords = scoredKeywords.map(k => ({
+          keyword: k.keyword,
+          type: k.type || 'long-tail',
+          searchVolume: Number(k.searchVolume) || 1000,
+          kd: Number(k.kd) || 20,
+          intent: k.intent || 'informational',
+          trend: 'insufficient_data',
+          trendScore: 0,
+          placement: k.placement || 'Body paragraph'
+        }));
+
+        // Backfill if we have less than 15 keywords
+        const backfilledKeywords = [...keywords];
+        if (backfilledKeywords.length < 15) {
+          const localVars = generateKeywordVariations(topic);
+          const existingSet = new Set(backfilledKeywords.map(k => k.keyword.toLowerCase().trim()));
+          for (const item of localVars) {
+            const cleanKw = item.keyword.toLowerCase().trim();
+            if (!existingSet.has(cleanKw)) {
+              existingSet.add(cleanKw);
+              const { searchVolume, kd } = estimateMetrics(item.keyword, item.type);
+              backfilledKeywords.push({
+                keyword: item.keyword,
+                type: item.type,
+                searchVolume,
+                kd,
+                intent: classifyIntent(item.keyword),
+                trend: 'insufficient_data',
+                trendScore: 0,
+                placement: item.placement || 'Body paragraph'
+              });
+            }
+            if (backfilledKeywords.length >= 20) break;
+          }
+        }
+
+        const sortedKeywords = sortKeywordsByOpportunity(backfilledKeywords, topic);
+        const filtered = sortedKeywords.filter(k => k.kd <= 35 || k.keyword.toLowerCase().trim() === topic.toLowerCase().trim());
+        const doc = {
+          topic: topic.toLowerCase().trim(),
+          category,
+          keywords: sortedKeywords,
+          filteredKeywords: filtered.map(k => k.keyword)
+        };
+
+        await KeywordResearch.findOneAndUpdate(
+          { topic: doc.topic },
+          doc,
+          { upsert: true, new: true }
+        );
+
+        console.log(`[SEO] Successfully generated ${sortedKeywords.length} accurate keywords.`);
+        return {
+          all: sortedKeywords,
+          filtered,
+          filteredKeywords: doc.filteredKeywords
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[SEO] Accurate keyword research failed, falling back to local simulation:', err.message);
+  }
+
+  // 2. Fallback to local rule-based simulation + parallel googleTrends timeout
   const raw = generateKeywordVariations(topic);
   if (raw.length === 0) return null;
 
@@ -247,14 +492,14 @@ async function aggregateKeywordData(topic, category = '') {
   });
 
   const withTrends = await checkGoogleTrends(withMetrics);
-  const filtered = withTrends.filter(i => i.trend !== 'declining' && i.kd <= 35);
-  const prioritized = prioritizeByTrend(filtered);
+  const sortedKeywords = sortKeywordsByOpportunity(withTrends, topic);
+  const filtered = sortedKeywords.filter(i => i.trend !== 'declining' && (i.kd <= 35 || i.keyword.toLowerCase().trim() === topic.toLowerCase().trim()));
 
   const doc = {
     topic: topic.toLowerCase().trim(),
     category,
-    keywords: withTrends,
-    filteredKeywords: prioritized.map(i => i.keyword),
+    keywords: sortedKeywords,
+    filteredKeywords: filtered.map(i => i.keyword),
   };
 
   try {
@@ -268,8 +513,8 @@ async function aggregateKeywordData(topic, category = '') {
   }
 
   return {
-    all: withTrends,
-    filtered: prioritized,
+    all: sortedKeywords,
+    filtered,
     filteredKeywords: doc.filteredKeywords,
   };
 }

@@ -38,6 +38,28 @@ const HERO_PHOTOS = [
   'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=700&q=80',
 ];
 
+function extractFaqs(content) {
+  if (!content) return [];
+  const faqs = [];
+  const regex = /<h[23][^>]*>(?:Question:\s*)?([^<]+\?)\s*<\/h[23]>\s*<p[^>]*>([\s\S]*?)<\/p>/gi;
+  let match;
+  while ((match = regex.exec(content)) !== null) {
+    const question = match[1].trim();
+    const answer = match[2].replace(/<[^>]*>/g, '').trim();
+    if (question && answer) {
+      faqs.push({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: answer
+        }
+      });
+    }
+  }
+  return faqs;
+}
+
 function pickHero(title) {
   if (!title) return HERO_PHOTOS[0];
   const hash = title.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -80,21 +102,34 @@ export default function PostPage() {
           url={`${window.location.origin}${postUrl(post)}`}
           canonical={post.canonicalUrl}
           keywords={(post.seoKeywords || []).join(', ')}
-          jsonLd={{
-            '@context': 'https://schema.org',
-            '@type': 'BlogPosting',
-            headline: post.seoTitle || post.title,
-            description: post.seoDescription || post.excerpt,
-            image: post.featuredImage,
-            datePublished: post.publishedAt,
-            dateModified: post.updatedAt,
-            author: { '@type': 'Person', name: 'Harry Prince' },
-            publisher: { '@type': 'Organization', name: 'Digital Home' },
-            mainEntityOfPage: {
-              '@type': 'WebPage',
-              '@id': `${window.location.origin}${postUrl(post)}`,
-            },
-          }}
+          jsonLd={(() => {
+            const blogPostingSchema = {
+              '@context': 'https://schema.org',
+              '@type': 'BlogPosting',
+              headline: post.seoTitle || post.title,
+              description: post.seoDescription || post.excerpt,
+              image: post.featuredImage,
+              datePublished: post.publishedAt,
+              dateModified: post.updatedAt,
+              author: { '@type': 'Person', name: 'Harry Prince' },
+              publisher: { '@type': 'Organization', name: 'Digital Home' },
+              mainEntityOfPage: {
+                '@type': 'WebPage',
+                '@id': `${window.location.origin}${postUrl(post)}`,
+              },
+            };
+
+            const schemas = [blogPostingSchema];
+            const parsedFaqs = extractFaqs(post.content);
+            if (parsedFaqs.length > 0) {
+              schemas.push({
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: parsedFaqs
+              });
+            }
+            return schemas;
+          })()}
         />
       
        {/* Hero Image Section */}

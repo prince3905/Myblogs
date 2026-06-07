@@ -76,7 +76,7 @@ router.post('/admin/topics/serp-analyze', requireAuth, async (req, res) => {
     if (!keyword || keyword.length < 2) {
       return res.status(400).json({ success: false, message: 'keyword is required (min 2 chars)' });
     }
-    const data = serpAnalyze(keyword);
+    const data = await serpAnalyze(keyword);
     res.json({ success: true, data });
   } catch (err) {
     console.error('SERP analyze error:', err);

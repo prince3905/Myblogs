@@ -13,7 +13,7 @@ const storage = new CloudinaryStorage({
   params: {
     folder: 'myblogs',
     allowed_formats: ['jpeg', 'jpg', 'png', 'gif', 'webp', 'svg'],
-    transformation: [{ width: 700, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
+    transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
   },
 });
 
