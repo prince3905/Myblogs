@@ -152,13 +152,14 @@ export default function PostEditorPage() {
         method: 'POST',
         body: JSON.stringify({ title: finalTitle, model: aiModel, length: aiLength, tone: aiTone, language: aiLanguage, command: finalCommand })
       });
-      const title = finalTitle;
+      const generatedTitle = data.title || finalTitle;
+      updateField('title', generatedTitle);
       const plainText = stripHtml(data.content || '');
 
       updateField('content', data.content || '');
-      updateField('slug', data.slug || makeSlug(title));
+      updateField('slug', data.slug || makeSlug(generatedTitle));
       updateField('excerpt', data.summary || plainText.slice(0, 250));
-      updateField('seoTitle', data.seoTitle || title.slice(0, 70));
+      updateField('seoTitle', data.seoTitle || generatedTitle.slice(0, 70));
       updateField('seoDescription', data.seoDescription || data.summary || plainText.slice(0, 155));
       updateField('category', data.category || 'Tech & Tutorials');
       if (data.keywords?.length) {

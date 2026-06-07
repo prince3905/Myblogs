@@ -169,6 +169,77 @@ function makeSlug(str) {
   return slug;
 }
 
+function fallbackRephraseTitle(titleStr, category) {
+  if (!titleStr) return '';
+  let t = titleStr.trim();
+  
+  // Remove question mark at the end
+  t = t.replace(/\?$/, '');
+
+  // Patterns to strip (English & Hinglish/Hindi question prefixes)
+  const prefixPatterns = [
+    /^(?:do\s+you\s+know\s+)(?:what\s+is|how\s+to|what|how)\s+/i,
+    /^(?:what\s+is|what\s+are|how\s+to|why\s+do|why\s+is|why\s+are|do\s+you\s+know)\s+/i,
+    /^(?:guide\s+to|complete\s+guide\s+on\s+how\s+to|step\s+by\s+step\s+guide\s+on\s+how\s+to)\s+/i,
+    /^(?:know\s+everything\s+about|all\s+you\s+need\s+to\s+know\s+about)\s+/i,
+    /^(?:kya\s+aap\s+jaante\s+hain\s+|kya\s+aap\s+jante\s+hai\s+|kya\s+aap\s+jante\s+hain\s+)/i,
+    /^(?:kya\s+hai\s+|kaise\s+kare\s+|kaise\s+karen\s+|kaise\s+karein\s+)/i,
+    /^(?:क्या\s+आप\s+जानते\s+हैं\s+|क्या\s+है\s+|कैसे\s+करें\s+)/
+  ];
+
+  // Patterns to strip from the end (e.g., "... kya hai", "... kya hota hai")
+  const suffixPatterns = [
+    /\s+(?:kya\s+hai|kya\s+hota\s+hai|kaise\s+kare|kaise\s+karein|kaise\s+karen)$/i,
+    /\s+(?:क्या\s+है|क्या\s+होता\s+है|कैसे\s+करें)$/
+  ];
+
+  let matched = false;
+  let cleaned = t;
+
+  // 1. Clean prefixes
+  for (const pattern of prefixPatterns) {
+    if (pattern.test(cleaned)) {
+      cleaned = cleaned.replace(pattern, '');
+      matched = true;
+    }
+  }
+
+  // 2. Clean suffixes
+  for (const pattern of suffixPatterns) {
+    if (pattern.test(cleaned)) {
+      cleaned = cleaned.replace(pattern, '');
+      matched = true;
+    }
+  }
+
+  if (matched && cleaned.length > 2) {
+    // Capitalize first letter
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    
+    // Choose professional suffix based on category
+    const cat = category || 'Tech & Tutorials';
+    let suffix = ' May Change Your Life'; // default
+    if (cat === 'Sarkari Jobs & Exams') {
+      suffix = ': Important Updates & Details';
+    } else if (cat === 'Health & Wellness') {
+      suffix = ': The Complete Health Guide';
+    } else if (cat === 'Tech & Tutorials') {
+      suffix = ': A Developer\'s Complete Guide';
+    } else if (cat === 'AI & Web Tools') {
+      suffix = ' May Change Your Life';
+    } else if (cat === 'News & Trends') {
+      suffix = ': Latest Updates & Analysis';
+    } else if (cat === 'Finance & Business') {
+      suffix = ': Ultimate Financial Guide';
+    }
+    
+    return cleaned + suffix;
+  }
+
+  return t;
+}
+
+
 function extractKeywords(text, count = 6) {
   const lower = text.toLowerCase().replace(/<[^>]*>/g, '');
   const words = lower.match(/\b[a-z]{3,}\b/g) || [];
@@ -522,6 +593,12 @@ async function generateAIContent(req, res) {
 ${categoryFrameworkInstr}
 
 **1. GOOGLE SEO CORE RULES (STRICTLY MANDATORY):**
+- CREATIVE TITLE OPTIMIZATION (HIGH-IMPACT COPYWRITING):
+  - Generate a professional, standard, and highly engaging article title (and store it in the "title" JSON field).
+  - DO NOT use generic, plain AI query structures or question-based headings/titles (e.g. avoid words/phrases like "Do you know what is", "What is", "When to", "How to", "Why you need").
+  - Rephrase the user's initial input topic/keyword into a powerful, click-worthy copywriting statement that keeps the exact original meaning but changes the wording and structure completely to ensure it does not look like a direct copy of search engine results or other websites.
+  - *Example*: Convert a query like "Do you know what is prompt engineering?" to "Prompt Engineering May Change Your Life" or similar high-impact copywriting statements.
+  - The title must look professional, human-crafted, premium, and authoritative.
 - FOCUS KEYWORD PLACEMENT: The exact focus keyword provided must be injected naturally in the first 2-3 lines of the Introduction paragraph, inside at least one H2 subheading, and maintain a natural density of 1.0% to 1.5% throughout the text body.
 - WORD COUNT BOUNDS: Force a comprehensive depth layout stretching between 1,200 to 1,500 words minimum. Suppress thin content.
 - RICH SNIPPETS DATA: Automatically structure a clean specification data table or comparison grid comparing the topic with current market competitors.
@@ -560,6 +637,7 @@ ${ADSENSE_CONSTRAINTS}
 
 
 **SEO METADATA:**
+- title: The creative, professional copywriting-optimized title rephrased as per rules.
 - slug: SHORT slug — max 2-4 core keywords, hyphenated, NO stop words. ULTRA-SHORT preferred. E.g. "react-guide", "ipl-2026-points-table", NOT "how-to-learn-react-js-in-2026-step-by-step"
 - summary: Professional 140-150 character meta description in natural Hinglish containing the focus keyword at the very beginning.
 - seoTitle: Click-worthy title under 60 characters for Google India
@@ -625,7 +703,7 @@ Follow the Permanent Rules exactly. Category framework for ${detectedCategory} i
 
 Structure: ${sectionInstr}. Include 1 data table in body, and FAQ with 3 questions. End with Key Takeaways.${customInstr}${keywordInject}${newsContext}
 
-Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{category-url-slug}/{slug}), content (string with ## headings on separate lines, NEVER inside lists/tables), slug (no stop words), keywords (array), summary (140-160 chars Hinglish with CTA), imageTag, imagetag, seoTitle, seoDescription. content MUST be a STRING. Natural Hinglish. Dense 3-4 line paragraphs.`;
+Return ONLY valid JSON with fields: title (the creative, professional copywriting-optimized title), category, permalink (digitalhomeblog.in/{category-url-slug}/{slug}), content (string with ## headings on separate lines, NEVER inside lists/tables), slug (no stop words), keywords (array), summary (140-160 chars Hinglish with CTA), imageTag, imagetag, seoTitle, seoDescription. content MUST be a STRING. Natural Hinglish. Dense 3-4 line paragraphs.`;
 
     const aiModel = model || 'gemini-flash-latest';
     const isOpenAI = aiModel.startsWith('gpt-');
@@ -830,9 +908,15 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
     const plainText = stripHtml(content || '');
     const firstSentence = extractFirstSentence(plainText);
 
+    let optimizedTitle = (parsed?.title && typeof parsed.title === 'string' && parsed.title.trim())
+      ? parsed.title.trim()
+      : title;
+
+    optimizedTitle = fallbackRephraseTitle(optimizedTitle, detectedCategory);
+
     const slug = (parsed?.slug && parsed.slug.length < 80 && !/\s/.test(parsed.slug)) 
       ? parsed.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') 
-      : makeSlug(title);
+      : makeSlug(optimizedTitle);
 
     let summary = '';
     if (parsed?.summary && parsed.summary !== 'null' && parsed.summary !== 'undefined') {
@@ -881,14 +965,14 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
 
     // ─── Post-processing: Apply all SEO rules ─────────────────────
     const processed = await processAIOutput({
-      title,
+      title: optimizedTitle,
       content,
       keywords,
       category: detectedCategory,
       imageTag,
       imageKeywords,
       summary,
-      seoTitle: title.length > 70 ? title.slice(0, 67) + '...' : title,
+      seoTitle: optimizedTitle.length > 70 ? optimizedTitle.slice(0, 67) + '...' : optimizedTitle,
       seoDescription: summary.slice(0, 155),
     });
 
@@ -897,6 +981,7 @@ Return ONLY valid JSON with fields: category, permalink (digitalhomeblog.in/{cat
 
     res.json({
       success: true,
+      title: optimizedTitle,
       content: processed.content,
       slug,
       permalink,
