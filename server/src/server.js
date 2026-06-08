@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const app = require('./app');
 const env = require('./config/env');
 const seedAdmin = require('./shared/utils/seed-admin');
+const { initScheduler } = require('./modules/liveAlerts/liveAlert.cron');
 
 mongoose.connection.on('connected', () => {
   console.log('Database connected successfully');
@@ -14,6 +15,7 @@ mongoose.connection.on('error', (err) => {
 async function start() {
   await mongoose.connect(env.mongoUri);
   await seedAdmin();
+  initScheduler();
   app.listen(env.port, () => {
     console.log(`Server running on port ${env.port}`);
   });

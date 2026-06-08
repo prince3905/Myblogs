@@ -5,13 +5,14 @@ import {
 import {
   Dashboard as DashboardIcon, Article as ArticleIcon,
   Forum as ForumIcon, MonetizationOn as AdIcon,
-  TravelExplore as KeywordIcon,
+  TravelExplore as KeywordIcon, NotificationsActive as AlertsIcon,
 } from '@mui/icons-material';
 
 const nav = [
   { label: 'Dashboard', path: '/admin', icon: <DashboardIcon /> },
   { label: 'Posts', path: '/admin/posts', icon: <ArticleIcon /> },
   { label: 'Keywords', path: '/admin/keywords', icon: <KeywordIcon /> },
+  { label: 'Live Alerts', path: '/admin/live-alerts', icon: <AlertsIcon /> },
   { label: 'Comments', path: '/admin/comments', icon: <ForumIcon /> },
   { label: 'Ads', path: '/admin/ads', icon: <AdIcon /> },
 ];

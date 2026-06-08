@@ -511,77 +511,37 @@ function robustJsonParse(text) {
       }
     }
   }
-  return merged;
+  return Object.keys(merged).length > 0 ? merged : null;
 }
 
-function extractContentField(text) {
-  if (!text) return '';
-  const marker = '"content"';
-  const idx = text.indexOf(marker);
-  if (idx === -1) return '';
+async function generateBlogContentCore({ title, model, length, tone, language, command, category }) {
+  const toneMap = {
+    informative: 'Informative and educational. Explain concepts with examples.',
+    funny:       'Fun, light-hearted, and humorous. Keep it entertaining.',
+    professional:'Formal and professional. Authoritative tone.',
+    beginner:    'Beginner-friendly. Simple language, no jargon.',
+    critical:    'Opinionated with a strong stance and reasoning.'
+  };
 
-  const colonIdx = text.indexOf(':', idx + marker.length);
-  if (colonIdx === -1) return '';
+  const sectionMap = {
+    short:  'At least 4 comprehensive sections with 2-3 paragraphs each, plus a bullet list and data table. Total ~800-1000 words.',
+    medium: 'At least 6 comprehensive sections with 3-4 paragraphs each, plus a detailed data table and a 3-question FAQ. Total ~1200-1500 words.',
+    long:   'At least 8-10 comprehensive sections with 4-5 paragraphs each, plus a detailed comparison table, Key Takeaways, and a 4-5 question FAQ. Total ~1800-2500 words.'
+  };
 
-  const startQuoteIdx = text.indexOf('"', colonIdx + 1);
-  if (startQuoteIdx === -1) return '';
+  const langMap = {
+    hinglish: 'Write in Hinglish (Hindi in Latin script, conversational, like friends chat). Use simple Hinglish throughout. Key terms in English are fine.',
+    hindi: 'Write in Hindi (Devanagari script). Pure Hindi with simple wording.',
+    english: 'Write in English. Professional but conversational tone.',
+  };
 
-  let contentValue = '';
-  let escaped = false;
-  for (let i = startQuoteIdx + 1; i < text.length; i++) {
-    const char = text[i];
-    if (escaped) {
-      if (char === 'n') contentValue += '\n';
-      else if (char === 't') contentValue += '\t';
-      else if (char === '"') contentValue += '"';
-      else if (char === '\\') contentValue += '\\';
-      else contentValue += '\\' + char;
-      escaped = false;
-    } else if (char === '\\') {
-      escaped = true;
-    } else if (char === '"') {
-      return contentValue;
-    } else {
-      contentValue += char;
-    }
-  }
-  return contentValue;
-}
+  const langInstr = langMap[language] || langMap.hinglish;
 
-async function generateAIContent(req, res) {
-  try {
-    const { title, model, length, tone, language, command } = req.body;
-    if (!title) {
-      return res.status(400).json({ message: 'Title is required' });
-    }
+  const detectedCategory = category || matchCategory(title);
+  const framework = CATEGORY_FRAMEWORKS[detectedCategory] || CATEGORY_FRAMEWORKS['Tech & Tutorials'];
+  const categoryFrameworkInstr = framework.prompt;
 
-    const toneMap = {
-      informative: 'Informative and educational. Explain concepts with examples.',
-      funny:       'Fun, light-hearted, and humorous. Keep it entertaining.',
-      professional:'Formal and professional. Authoritative tone.',
-      beginner:    'Beginner-friendly. Simple language, no jargon.',
-      critical:    'Opinionated with a strong stance and reasoning.'
-    };
-
-    const sectionMap = {
-      short:  'At least 4 comprehensive sections with 2-3 paragraphs each, plus a bullet list and data table. Total ~800-1000 words.',
-      medium: 'At least 6 comprehensive sections with 3-4 paragraphs each, plus a detailed data table and a 3-question FAQ. Total ~1200-1500 words.',
-      long:   'At least 8-10 comprehensive sections with 4-5 paragraphs each, plus a detailed comparison table, Key Takeaways, and a 4-5 question FAQ. Total ~1800-2500 words.'
-    };
-
-    const langMap = {
-      hinglish: 'Write in Hinglish (Hindi in Latin script, conversational, like friends chat). Use simple Hinglish throughout. Key terms in English are fine.',
-      hindi: 'Write in Hindi (Devanagari script). Pure Hindi with simple wording.',
-      english: 'Write in English. Professional but conversational tone.',
-    };
-
-    const langInstr = langMap[language] || langMap.hinglish;
-
-    const detectedCategory = req.body.category || matchCategory(title);
-    const framework = CATEGORY_FRAMEWORKS[detectedCategory] || CATEGORY_FRAMEWORKS['Tech & Tutorials'];
-    const categoryFrameworkInstr = framework.prompt;
-
-    const systemPrompt = `You are a Lead Software Architect & Prompt Engineer designing high-ranking articles for Digital Home, an Indian multi-niche platform. Current year: 2026.
+  const systemPrompt = `You are a Lead Software Architect & Prompt Engineer designing high-ranking articles for Digital Home, an Indian multi-niche platform. Current year: 2026.
 
 **PERMANENT RULES — FOLLOW FOR EVERY POST, ALL MODELS.**
 
@@ -662,42 +622,39 @@ ${ADSENSE_CONSTRAINTS}
 - ## Key Takeaways with 4-5 bullets at end.
 - HEADINGS must follow strict descending order: H2 → H3. NEVER skip levels. NEVER wrap entire paragraphs or bullet lists inside heading tags.`;
 
+  const toneInstr = toneMap[tone] || toneMap.informative;
+  const sectionInstr = sectionMap[length] || sectionMap.medium;
+  const customInstr = command ? `\n\nAuthor's extra instruction: ${command}` : '';
 
+  const tokenBudget = length === 'short' ? 4096 : length === 'long' ? 8192 : 6144;
 
-    const toneInstr = toneMap[tone] || toneMap.informative;
-    const sectionInstr = sectionMap[length] || sectionMap.medium;
-    const customInstr = command ? `\n\nAuthor's extra instruction: ${command}` : '';
+  let keywordInject = '';
+  let kwResearchId = null;
+  try {
+    const kwData = await aggregateKeywordData(title);
+    if (kwData && kwData.filtered.length > 0) {
+      const allKws = kwData.filtered;
+      const focus = allKws.find(k => k.type === 'short-tail') || allKws[0];
+      const shortTail = allKws.filter(k => k.type === 'short-tail' || k.type === 'mid-tail').slice(0, 2);
+      const longTail = allKws.filter(k => k.type === 'long-tail' || k.type === 'question-based').slice(0, 2);
+      const lsiWords = allKws.filter(k => k.type === 'lsi').slice(0, 3);
 
-    const tokenBudget = length === 'short' ? 4096 : length === 'long' ? 8192 : 6144;
-
-    let keywordInject = '';
-    let kwResearchId = null;
-    try {
-      const kwData = await aggregateKeywordData(title);
-      if (kwData && kwData.filtered.length > 0) {
-        const allKws = kwData.filtered;
-        // Find focus keyword (short-tail with highest volume)
-        const focus = allKws.find(k => k.type === 'short-tail') || allKws[0];
-        const shortTail = allKws.filter(k => k.type === 'short-tail' || k.type === 'mid-tail').slice(0, 2);
-        const longTail = allKws.filter(k => k.type === 'long-tail' || k.type === 'question-based').slice(0, 2);
-        const lsiWords = allKws.filter(k => k.type === 'lsi').slice(0, 3);
-
-        keywordInject = `
+      keywordInject = `
 **KEYWORD STRATEGY — FOLLOW EXACTLY:**
 - FOCUS KEYWORD: "${focus.keyword}" → MUST use in: Title, H1, first paragraph, at least one H2, URL slug
 - SHORT-TAIL (broad): ${shortTail.map(k => `"${k.keyword}"`).join(', ')} → use in H2 headings and intro
 - LONG-TAIL (specific): ${longTail.map(k => `"${k.keyword}"`).join(', ')} → use in body paragraphs naturally
 - LSI (related): ${lsiWords.map(k => `"${k.keyword}"`).join(', ')} → sprinkle naturally throughout
 - Include focus keyword 8-10 times total in content`;
-        kwResearchId = allKws.map(k => k.keyword);
-      }
-    } catch (kwErr) {
-      console.warn('Keyword research step failed (non-fatal):', kwErr.message);
+      kwResearchId = allKws.map(k => k.keyword);
     }
+  } catch (kwErr) {
+    console.warn('Keyword research step failed (non-fatal):', kwErr.message);
+  }
 
-    const newsContext = await fetchNewsContext(title);
+  const newsContext = await fetchNewsContext(title);
 
-    const userPrompt = `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}" for category: ${detectedCategory}
+  const userPrompt = `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}" for category: ${detectedCategory}
 
 Follow the Permanent Rules exactly. Category framework for ${detectedCategory} is MANDATORY.
 
@@ -705,120 +662,83 @@ Structure: ${sectionInstr}. Include 1 data table in body, and FAQ with 3 questio
 
 Return ONLY valid JSON with fields: title (the creative, professional copywriting-optimized title), category, permalink (digitalhomeblog.in/{category-url-slug}/{slug}), content (string with ## headings on separate lines, NEVER inside lists/tables), slug (no stop words), keywords (array), summary (140-160 chars Hinglish with CTA), imageTag, imagetag, seoTitle, seoDescription. content MUST be a STRING. Natural Hinglish. Dense 3-4 line paragraphs.`;
 
-    const aiModel = model || 'gemini-flash-latest';
-    const isOpenAI = aiModel.startsWith('gpt-');
-    const isGemini = aiModel.startsWith('gemini-');
-    const isGroq = GROQ_MODELS.includes(aiModel);
-    const modelTimeout = isGroq ? 60000 : (isGemini ? 60000 : 30000);
+  const aiModel = model || 'gemini-flash-latest';
+  const isOpenAI = aiModel.startsWith('gpt-');
+  const isGemini = aiModel.startsWith('gemini-');
+  const isGroq = GROQ_MODELS.includes(aiModel);
+  const modelTimeout = isGroq ? 60000 : (isGemini ? 60000 : 30000);
 
-    let text = '';
+  let text = '';
 
-    if (isGemini) {
-      const primaryKey = GEMINI_API_KEY;
-      const fallbackKey = GEMINI_API_KEY_2;
-      if (!primaryKey && !fallbackKey) {
-        return res.status(400).json({ success: false, message: 'No Gemini API key set in .env' });
-      }
-      try {
-        const geminiResponse = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${primaryKey}`, {
-          contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 8192,
-            topP: 0.9,
-            responseMimeType: "application/json"
-          }
-        }, {
-          timeout: modelTimeout,
-          headers: { 'Content-Type': 'application/json' }
-        });
-        text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      } catch (geminiErr) {
-        // If 429 (quota) or 503 (busy) and fallback key exists, retry with fallback key
-        if ((geminiErr.response?.status === 429 || geminiErr.response?.status === 503) && fallbackKey && fallbackKey !== primaryKey) {
-          try {
-            const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${fallbackKey}`, {
-              contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 8192,
-                topP: 0.9,
-                responseMimeType: "application/json"
-              }
-            }, {
-              timeout: modelTimeout,
-              headers: { 'Content-Type': 'application/json' }
-            });
-            text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          } catch (fallbackErr) {
-            // Both Gemini keys failed (busy/quota) → auto-fallback to Groq
-            if (GROQ_API_KEY && (fallbackErr.response?.status === 429 || fallbackErr.response?.status === 503)) {
-              try {
-                const groqFallback = await axios.post(GROQ_CHAT_URL, {
-                  model: 'llama-3.3-70b-versatile',
-                  messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt }
-                  ],
-                  temperature: 0.7,
-                  max_tokens: tokenBudget,
-                  top_p: 0.9,
-                  response_format: { type: "json_object" }
-                }, {
-                  headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-                  timeout: 60000
-                });
-                text = groqFallback.data?.choices?.[0]?.message?.content || '';
-                if (text) console.log('Auto-fallback to Groq (Gemini busy)');
-              } catch { throw fallbackErr; }
-            } else {
-              throw fallbackErr;
-            }
-          }
-        } else {
-          throw geminiErr;
-        }
-      }
-    } else if (isGroq) {
-      if (!GROQ_API_KEY) {
-        return res.status(400).json({ success: false, message: 'GROQ_API_KEY not set in .env' });
-      }
-      try {
-        const groqResponse = await axios.post(GROQ_CHAT_URL, {
-          model: aiModel,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
+  if (isGemini) {
+    const primaryKey = GEMINI_API_KEY;
+    const fallbackKey = GEMINI_API_KEY_2;
+    if (!primaryKey && !fallbackKey) {
+      throw new Error('No Gemini API key set in .env');
+    }
+    try {
+      const geminiResponse = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${primaryKey}`, {
+        contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
+        generationConfig: {
           temperature: 0.7,
-          max_tokens: tokenBudget,
-          top_p: 0.9,
-          response_format: { type: "json_object" }
-        }, {
-          headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-          timeout: modelTimeout
-        });
-        text = groqResponse.data?.choices?.[0]?.message?.content || '';
-      } catch (groqErr) {
-        // Groq failed → auto-fallback to Gemini Flash
-        if (GEMINI_API_KEY) {
-          try {
-            const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
-              contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
-              generationConfig: { temperature: 0.7, maxOutputTokens: 8192, topP: 0.9, responseMimeType: "application/json" }
-            }, { timeout: 60000, headers: { 'Content-Type': 'application/json' } });
-            text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            if (text) console.log('Auto-fallback to Gemini (Groq failed)');
-          } catch { throw groqErr; }
-        } else {
-          throw groqErr;
+          maxOutputTokens: 8192,
+          topP: 0.9,
+          responseMimeType: "application/json"
         }
+      }, {
+        timeout: modelTimeout,
+        headers: { 'Content-Type': 'application/json' }
+      });
+      text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } catch (geminiErr) {
+      if ((geminiErr.response?.status === 429 || geminiErr.response?.status === 503) && fallbackKey && fallbackKey !== primaryKey) {
+        try {
+          const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${fallbackKey}`, {
+            contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 8192,
+              topP: 0.9,
+              responseMimeType: "application/json"
+            }
+          }, {
+            timeout: modelTimeout,
+            headers: { 'Content-Type': 'application/json' }
+          });
+          text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        } catch (fallbackErr) {
+          if (GROQ_API_KEY && (fallbackErr.response?.status === 429 || fallbackErr.response?.status === 503)) {
+            try {
+              const groqFallback = await axios.post(GROQ_CHAT_URL, {
+                model: 'llama-3.3-70b-versatile',
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  { role: 'user', content: userPrompt }
+                ],
+                temperature: 0.7,
+                max_tokens: tokenBudget,
+                top_p: 0.9,
+                response_format: { type: "json_object" }
+              }, {
+                headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+                timeout: 60000
+              });
+              text = groqFallback.data?.choices?.[0]?.message?.content || '';
+            } catch { throw fallbackErr; }
+          } else {
+            throw fallbackErr;
+          }
+        }
+      } else {
+        throw geminiErr;
       }
-    } else if (isOpenAI) {
-      if (!OPENAI_API_KEY) {
-        return res.status(400).json({ success: false, message: 'OPENAI_API_KEY not set in .env' });
-      }
-      const openaiResponse = await axios.post(OPENAI_CHAT_URL, {
+    }
+  } else if (isGroq) {
+    if (!GROQ_API_KEY) {
+      throw new Error('GROQ_API_KEY not set in .env');
+    }
+    try {
+      const groqResponse = await axios.post(GROQ_CHAT_URL, {
         model: aiModel,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -829,169 +749,207 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
         top_p: 0.9,
         response_format: { type: "json_object" }
       }, {
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
         timeout: modelTimeout
       });
-      text = openaiResponse.data?.choices?.[0]?.message?.content || '';
-    } else {
-      return res.status(400).json({ success: false, message: 'Invalid model specified. Use GPT, Gemini, or Groq models.' });
-    }
-
-    // Strip code fences
-    text = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
-    console.log("=== RAW MODEL TEXT ===");
-    console.log(text);
-    console.log("======================");
-    try {
-      const fs = require('fs');
-      fs.writeFileSync(path.resolve(__dirname, '../../raw_response.txt'), text);
-    } catch (e) {
-      console.error('Failed to write raw_response.txt:', e.message);
-    }
-
-    if (!text) {
-      return res.status(500).json({ success: false, message: 'AI returned empty response' });
-    }
-
-    // Parse JSON (with fallback)
-    let parsed = robustJsonParse(text);
-
-    // Normalize parsed keys to lowercase for case-insensitive matching
-    if (parsed) {
-      const norm = {};
-      for (const [k, v] of Object.entries(parsed)) {
-        norm[k.toLowerCase()] = v;
-      }
-      parsed = norm;
-      // Validate fields — discard parsed data if corrupt
-      const fieldKeys = Object.keys(parsed);
-      const hasCorruptField = fieldKeys.some(k => {
-        const v = parsed[k];
-        if (typeof v === 'string' && v.length > 200) {
-          // Check if value contains other field names (leakage)
-          const otherFields = fieldKeys.filter(f => f !== k);
-          return otherFields.some(f => v.includes(`"${f}"`) || v.includes(`${f}:`));
-        }
-        return false;
-      });
-      if (hasCorruptField) parsed = null;
-    }
-
-    let content = '';
-    if (parsed?.content) {
-      let raw = parsed.content;
-      if (typeof raw === 'object' && !Array.isArray(raw)) {
-        raw = Object.values(raw).filter(v => typeof v === 'string').join('\n\n');
-      } else if (typeof raw !== 'string') {
-        raw = String(raw);
-      }
-      if (raw.trim()) {
-        content = (/^\s*</.test(raw)) ? cleanHtml(raw) : markdownToHtml(raw);
+      text = groqResponse.data?.choices?.[0]?.message?.content || '';
+    } catch (groqErr) {
+      if (GEMINI_API_KEY) {
+        try {
+          const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+            contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 8192, topP: 0.9, responseMimeType: "application/json" }
+          }, { timeout: 60000, headers: { 'Content-Type': 'application/json' } });
+          text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        } catch { throw groqErr; }
+      } else {
+        throw groqErr;
       }
     }
-
-    // Fallback: extract content field from raw JSON text safely without ReDoS / catastrophic backtracking
-    if (!content) {
-      const extracted = extractContentField(text);
-      if (extracted.trim()) {
-        content = (/^\s*</.test(extracted)) ? cleanHtml(extracted) : markdownToHtml(extracted);
-      }
+  } else if (isOpenAI) {
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY not set in .env');
     }
-    // Last resort: treat entire AI output as content
-    if (!content) {
-      content = cleanHtml(stripInstructions(text));
-    }
-
-    // Safety net: ensure content doesn't contain instruction/metadata text
-    content = cleanExtractedContent(content);
-
-    const plainText = stripHtml(content || '');
-    const firstSentence = extractFirstSentence(plainText);
-
-    let optimizedTitle = (parsed?.title && typeof parsed.title === 'string' && parsed.title.trim())
-      ? parsed.title.trim()
-      : title;
-
-    optimizedTitle = fallbackRephraseTitle(optimizedTitle, detectedCategory);
-
-    const slug = (parsed?.slug && parsed.slug.length < 80 && !/\s/.test(parsed.slug)) 
-      ? parsed.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') 
-      : makeSlug(optimizedTitle);
-
-    let summary = '';
-    if (parsed?.summary && parsed.summary !== 'null' && parsed.summary !== 'undefined') {
-      summary = parsed.summary.slice(0, 300);
-    } else {
-      summary = firstSentence.slice(0, 300);
-    }
-
-    let keywords;
-    if (Array.isArray(parsed?.keywords)) {
-      keywords = parsed.keywords.filter(k => typeof k === 'string' && k.length < 60);
-      if (keywords.length === 0) keywords = extractKeywords(plainText);
-    } else if (typeof parsed?.keywords === 'string') {
-      keywords = parsed.keywords.split(',').map(k => k.trim()).filter(Boolean);
-    } else {
-      keywords = extractKeywords(plainText);
-    }
-
-    let imageTag = '';
-    if (parsed?.imagetag) {
-      const cleanTag = stripHtml(String(parsed.imagetag)).trim();
-      if (cleanTag) {
-        imageTag = makeSlug(cleanTag).split('-').slice(0, 2).join('-');
-      }
-    }
-    if (!imageTag) {
-      imageTag = makeSlug(title).split('-').slice(0, 2).join('-') || 'blog-post';
-    }
-
-    // Extract imageKeywords for stock photo (comma-separated)
-    let imageKeywords = '';
-    if (parsed?.imagekeywords && typeof parsed.imagekeywords === 'string') {
-      const kw = stripHtml(parsed.imagekeywords).trim().toLowerCase()
-        .replace(/[^a-z0-9\s-,]/g, '').replace(/\s+/g, ',').replace(/,+/g, ',').replace(/^,|,$/g, '');
-      if (kw && kw.split(',').length >= 2) {
-        imageKeywords = kw;
-      }
-    }
-    if (!imageKeywords) {
-      imageKeywords = imageTag; // fallback to same as imageTag
-    }
-
-    if (!content) {
-      return res.status(500).json({ success: false, message: 'AI returned empty content' });
-    }
-
-    // ─── Post-processing: Apply all SEO rules ─────────────────────
-    const processed = await processAIOutput({
-      title: optimizedTitle,
-      content,
-      keywords,
-      category: detectedCategory,
-      imageTag,
-      imageKeywords,
-      summary,
-      seoTitle: optimizedTitle.length > 70 ? optimizedTitle.slice(0, 67) + '...' : optimizedTitle,
-      seoDescription: summary.slice(0, 155),
+    const openaiResponse = await axios.post(OPENAI_CHAT_URL, {
+      model: aiModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: tokenBudget,
+      top_p: 0.9,
+      response_format: { type: "json_object" }
+    }, {
+      headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+      timeout: modelTimeout
     });
+    text = openaiResponse.data?.choices?.[0]?.message?.content || '';
+  } else {
+    throw new Error('Invalid model specified. Use GPT, Gemini, or Groq models.');
+  }
 
-    const category = processed.category || detectedCategory;
-    const permalink = 'digitalhomeblog.in/' + category.toLowerCase().replace(/\s+/g, '-') + '/' + slug;
+  text = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+  try {
+    const fs = require('fs');
+    fs.writeFileSync(path.resolve(__dirname, '../../raw_response.txt'), text);
+  } catch (e) {
+    console.error('Failed to write raw_response.txt:', e.message);
+  }
+
+  if (!text) {
+    throw new Error('AI returned empty response');
+  }
+
+  let parsed = robustJsonParse(text);
+  if (parsed) {
+    const norm = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      norm[k.toLowerCase()] = v;
+    }
+    parsed = norm;
+    const fieldKeys = Object.keys(parsed);
+    const hasCorruptField = fieldKeys.some(k => {
+      const v = parsed[k];
+      if (typeof v === 'string' && v.length > 200) {
+        const otherFields = fieldKeys.filter(f => f !== k);
+        return otherFields.some(f => v.includes(`"${f}"`) || v.includes(`${f}:`));
+      }
+      return false;
+    });
+    if (hasCorruptField) parsed = null;
+  }
+
+  let content = '';
+  if (parsed?.content) {
+    let raw = parsed.content;
+    if (typeof raw === 'object' && !Array.isArray(raw)) {
+      raw = Object.values(raw).filter(v => typeof v === 'string').join('\n\n');
+    } else if (typeof raw !== 'string') {
+      raw = String(raw);
+    }
+    if (raw.trim()) {
+      content = (/^\s*</.test(raw)) ? cleanHtml(raw) : markdownToHtml(raw);
+    }
+  }
+
+  if (!content) {
+    const extracted = extractContentField(text);
+    if (extracted.trim()) {
+      content = (/^\s*</.test(extracted)) ? cleanHtml(extracted) : markdownToHtml(extracted);
+    }
+  }
+  if (!content) {
+    content = cleanHtml(stripInstructions(text));
+  }
+  content = cleanExtractedContent(content);
+
+  const plainText = stripHtml(content || '');
+  const firstSentence = extractFirstSentence(plainText);
+
+  let optimizedTitle = (parsed?.title && typeof parsed.title === 'string' && parsed.title.trim())
+    ? parsed.title.trim()
+    : title;
+  optimizedTitle = fallbackRephraseTitle(optimizedTitle, detectedCategory);
+
+  const slug = (parsed?.slug && parsed.slug.length < 80 && !/\s/.test(parsed.slug)) 
+    ? parsed.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') 
+    : makeSlug(optimizedTitle);
+
+  let summary = '';
+  if (parsed?.summary && parsed.summary !== 'null' && parsed.summary !== 'undefined') {
+    summary = parsed.summary.slice(0, 300);
+  } else {
+    summary = firstSentence.slice(0, 300);
+  }
+
+  let keywords;
+  if (Array.isArray(parsed?.keywords)) {
+    keywords = parsed.keywords.filter(k => typeof k === 'string' && k.length < 60);
+    if (keywords.length === 0) keywords = extractKeywords(plainText);
+  } else if (typeof parsed?.keywords === 'string') {
+    keywords = parsed.keywords.split(',').map(k => k.trim()).filter(Boolean);
+  } else {
+    keywords = extractKeywords(plainText);
+  }
+
+  let imageTag = '';
+  if (parsed?.imagetag) {
+    const cleanTag = stripHtml(String(parsed.imagetag)).trim();
+    if (cleanTag) {
+      imageTag = makeSlug(cleanTag).split('-').slice(0, 2).join('-');
+    }
+  }
+  if (!imageTag) {
+    imageTag = makeSlug(title).split('-').slice(0, 2).join('-') || 'blog-post';
+  }
+
+  let imageKeywords = '';
+  if (parsed?.imagekeywords && typeof parsed.imagekeywords === 'string') {
+    const kw = stripHtml(parsed.imagekeywords).trim().toLowerCase()
+      .replace(/[^a-z0-9\s-,]/g, '').replace(/\s+/g, ',').replace(/,+/g, ',').replace(/^,|,$/g, '');
+    if (kw && kw.split(',').length >= 2) {
+      imageKeywords = kw;
+    }
+  }
+  if (!imageKeywords) {
+    imageKeywords = imageTag;
+  }
+
+  if (!content) {
+    throw new Error('AI returned empty content');
+  }
+
+  const processed = await processAIOutput({
+    title: optimizedTitle,
+    content,
+    keywords,
+    category: detectedCategory,
+    imageTag,
+    imageKeywords,
+    summary,
+    seoTitle: optimizedTitle.length > 70 ? optimizedTitle.slice(0, 67) + '...' : optimizedTitle,
+    seoDescription: summary.slice(0, 155),
+  });
+
+  const finalCategory = processed.category || detectedCategory;
+  const permalink = 'digitalhomeblog.in/' + finalCategory.toLowerCase().replace(/\s+/g, '-') + '/' + slug;
+
+  return {
+    title: optimizedTitle,
+    content: processed.content,
+    slug,
+    permalink,
+    summary: processed.summary,
+    seoTitle: processed.seoTitle,
+    seoDescription: processed.seoDescription,
+    keywords: processed.tags || keywords,
+    category: finalCategory,
+    imageTag: processed.imageTag,
+    imageKeywords: processed.imageKeywords
+  };
+}
+
+async function generateAIContent(req, res) {
+  try {
+    const { title, model, length, tone, language, command } = req.body;
+    if (!title) {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+
+    const data = await generateBlogContentCore({
+      title,
+      model,
+      length,
+      tone,
+      language,
+      command,
+      category: req.body.category
+    });
 
     res.json({
       success: true,
-      title: optimizedTitle,
-      content: processed.content,
-      slug,
-      permalink,
-      summary: processed.summary,
-      seoTitle: processed.seoTitle,
-      seoDescription: processed.seoDescription,
-      keywords: processed.tags || keywords,
-      category,
-      imageTag: processed.imageTag,
-      imageKeywords: processed.imageKeywords
+      ...data
     });
   } catch (error) {
     if (error.response?.status === 401) {
@@ -1029,8 +987,8 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
       console.error('AI generation error:', error.message);
     }
 
-    res.status(500).json({ success: false, message: 'Failed to generate content' });
+    res.status(500).json({ success: false, message: error.message || 'Failed to generate content' });
   }
 }
 
-module.exports = { generateAIContent };
+module.exports = { generateAIContent, generateBlogContentCore };

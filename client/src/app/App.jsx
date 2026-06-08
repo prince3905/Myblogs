@@ -29,6 +29,7 @@ const AdminCommentsPage = lazy(() => import('../features/admin/pages/AdminCommen
 const AdminAdsPage = lazy(() => import('../features/admin/pages/AdminAdsPage'));
 const KeywordResearchPage = lazy(() => import('../features/admin/pages/KeywordResearchPage'));
 const PostEditorPage = lazy(() => import('../features/admin/pages/PostEditorPage'));
+const LiveAlertsPage = lazy(() => import('../features/admin/pages/LiveAlertsPage'));
 
 const AdminLoading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontFamily: 'sans-serif', color: '#666' }}>
@@ -74,6 +75,7 @@ const AdminCommentsPageSuspense = withAdminSuspense(AdminCommentsPage);
 const AdminAdsPageSuspense = withAdminSuspense(AdminAdsPage);
 const KeywordResearchPageSuspense = withAdminSuspense(KeywordResearchPage);
 const PostEditorPageSuspense = withAdminSuspense(PostEditorPage);
+const LiveAlertsPageSuspense = withAdminSuspense(LiveAlertsPage);
 
 const BlogListPageSuspense = withPublicSuspense(BlogListPage);
 const PostPageSuspense = withPublicSuspense(PostPage);
@@ -114,6 +116,7 @@ export default function App() {
           <Route path="comments" element={<AdminCommentsPageSuspense />} />
           <Route path="ads" element={<AdminAdsPageSuspense />} />
           <Route path="keywords" element={<KeywordResearchPageSuspense />} />
+          <Route path="live-alerts" element={<LiveAlertsPageSuspense />} />
           <Route path="posts/new" element={<PostEditorPageSuspense />} />
           <Route path="posts/:id/edit" element={<PostEditorPageSuspense />} />
         </Route>
