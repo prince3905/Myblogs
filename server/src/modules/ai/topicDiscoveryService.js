@@ -3,6 +3,7 @@ const { aggregateKeywordData } = require('./keywordResearchService');
 
 const NEWS_RSS_BASE = 'https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en';
 const SUGGEST_URL = 'https://suggestqueries.google.com/complete/search';
+const INVALID_SCRIPT_REGEX = /[\u0980-\u09FF\u0A00-\u0A7F\u0A80-\u0AFF\u0B00-\u0B7F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F\u0D80-\u0DFF\u0E00-\u0E7F\u4E00-\u9FFF\u3040-\u30FF\uac00-\ud7af\u0600-\u06FF\u0400-\u04FF]/;
 
 function newsRssUrl(topic) {
   const base = topic
@@ -343,7 +344,7 @@ async function fetchGoogleNews() {
     });
     const items = extractRssTitles(res.data);
     return items
-      .filter(i => isRecent(i.pubDate, 48))
+      .filter(i => isRecent(i.pubDate, 48) && !INVALID_SCRIPT_REGEX.test(i.title))
       .map(t => ({
         title: t.title,
         pubDate: t.pubDate,
@@ -421,6 +422,7 @@ async function fetchGoogleTrends() {
       if (!titleMatch) continue;
       const title = titleMatch[1].replace(/&amp;/g, '&').replace(/&apos;/g, "'").trim();
       if (title.length < 2) continue;
+      if (INVALID_SCRIPT_REGEX.test(title)) continue;
       const traffic = trafficMatch ? trafficMatch[1].trim() : '';
       const pubDate = pubDateMatch ? pubDateMatch[1].trim() : null;
       if (!isRecent(pubDate, 48)) continue;
@@ -461,7 +463,7 @@ async function fetchNewsByCategory() {
         headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
       });
       const items = extractRssTitles(res.data);
-      for (const item of items.filter(i => isRecent(i.pubDate, 48)).slice(0, 4)) {
+      for (const item of items.filter(i => isRecent(i.pubDate, 48) && !INVALID_SCRIPT_REGEX.test(i.title)).slice(0, 4)) {
         results.push({
           title: item.title, pubDate: item.pubDate, link: item.link,
           sourceName: item.sourceName, source: 'Google News',
