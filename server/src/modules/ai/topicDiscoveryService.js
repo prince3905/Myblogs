@@ -497,6 +497,31 @@ async function discoverTopics() {
     const j = Math.floor(Math.random() * (i + 1));
     [merged[i], merged[j]] = [merged[j], merged[i]];
   }
+
+  // Backfill trends if we have less than 15 items, using clean news headlines
+  if (trends.length < 15) {
+    const trendsSeen = new Set(trends.map(t => t.title.toLowerCase()));
+    for (const item of merged) {
+      if (trends.length >= 15) break;
+      
+      // Clean headline (remove " - Source" suffix)
+      const cleanTitle = item.title.split(/\s+-\s+/)[0].trim();
+      const key = cleanTitle.toLowerCase();
+      
+      if (!trendsSeen.has(key) && cleanTitle.length > 10) {
+        trendsSeen.add(key);
+        trends.push({
+          title: cleanTitle,
+          traffic: 'Hot',
+          source: 'Google News',
+          category: item.category,
+          related: [item.title],
+          fetchedAt: new Date().toISOString()
+        });
+      }
+    }
+  }
+
   return { news: merged.slice(0, 30), trends, timestamp: new Date().toISOString() };
 }
 
