@@ -49,6 +49,7 @@ async function draftPostFromAlert(req, res) {
     const generatedTitle = `${alert.boardName} Recruitment Notification Update`;
 
     // Construct the context/command parameters for Gemini Flash to generate a 1200+ word optimized post
+    const resolvedUrl = alert.officialUrl || '';
     const aiParams = {
       title: cleanTitle,
       model: 'gemini-flash-latest',
@@ -59,11 +60,15 @@ async function draftPostFromAlert(req, res) {
       command: `Write a comprehensive, professional Sarkari Result exam notification article about: "${alert.title}".
       - Official Board: "${alert.boardName}"
       - Last Date to Apply: "${alert.lastDate}"
-      - Exact Official Apply Link: "${alert.sourceUrl}"
+      - Official Website Link: "${resolvedUrl || 'To be dynamically resolved by you'}"
       - Ensure you follow the Sarkari Jobs & Exams category framework headings and rules.
       - Add details of eligibility, vacancies, step-by-step process, selection process, and dates.
       - Make sure the post strictly complies with GOOGLE SEO, GEO, and AEO rules.
-      - Embed the official link "${alert.sourceUrl}" inside the body naturally as the official portal url.`
+      - CRITICAL REQUIREMENT FOR LINKS:
+        - The official portal link must point ONLY to the direct official government website domain for the board "${alert.boardName}" (e.g. if the board is UPSC, use "https://upsc.gov.in"; if the board is SSC, use "https://ssc.gov.in"; if the board is SAIL, use "https://sail.co.in", etc.).
+        - If the Official Website Link above is provided, use it. Otherwise, dynamically resolve the correct official government domain for the board "${alert.boardName}" and prefix with "https://".
+        - Embed this official government link inside the body naturally (e.g. in a "How to Apply" section or dates table) as the official apply URL.
+        - DO NOT use "freejobalert.com", "sarkariresult.info", or any other third-party blog URL in the generated content.`
     };
 
     // Trigger backend AI post generator

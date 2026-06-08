@@ -55,6 +55,26 @@ function extractLastDate(title, description) {
   return 'Check Official Link';
 }
 
+function extractOfficialDomain(description) {
+  if (!description) return '';
+  // Match standard domains ending in .in, .gov.in, .nic.in, .ac.in, .res.in, .org
+  const domainRegex = /\b([a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:gov\.in|nic\.in|ac\.in|res\.in|edu\.in|org\.in|co\.in|in|org|net|com))\b/i;
+  const match = description.match(domainRegex);
+  if (match) {
+    const domain = match[1].toLowerCase();
+    // Exclude common scrapers/socials
+    if (!domain.includes('freejobalert') && 
+        !domain.includes('sarkariresult') && 
+        !domain.includes('google') && 
+        !domain.includes('facebook') &&
+        !domain.includes('twitter') &&
+        !domain.includes('youtube')) {
+      return `https://${domain}`;
+    }
+  }
+  return '';
+}
+
 async function scrapeFeeds() {
   console.log('[LiveAlert Scraper] Starting feed parsing...');
   let totalSaved = 0;
@@ -98,18 +118,21 @@ async function scrapeFeeds() {
 
         const boardName = extractBoardName(title);
         const lastDate = extractLastDate(title, description);
+        const officialUrl = extractOfficialDomain(description);
         const sourceName = url.includes('freejobalert') ? 'FreeJobAlert' : 'SarkariResult';
 
         // Upsert into MongoDB (prevents duplicate sourceUrls)
         await LiveAlert.updateOne(
           { sourceUrl: link },
           {
-            $setOnInsert: {
+            $set: {
               title,
               boardName,
               lastDate,
-              sourceUrl: link,
-              source: sourceName,
+              officialUrl,
+              source: sourceName
+            },
+            $setOnInsert: {
               status: 'active'
             }
           },
