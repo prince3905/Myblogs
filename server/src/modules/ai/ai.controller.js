@@ -310,6 +310,10 @@ function markdownToHtml(text) {
   h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
   // Inline code
   h = h.replace(/`(.+?)`/g, '<code>$1</code>');
+  // Convert Markdown links [Text](URL) to HTML <a> tags
+  h = h.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  // Convert raw URLs to HTML <a> tags, avoiding existing href values or URLs already wrapped in <a>
+  h = h.replace(/(?<!href=["']|">)(https?:\/\/[^\s<"'`()]+)(?![^<]*<\/a>)/gi, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
   // Strip random brackets with numbers like [1], [2], [3]
   h = h.replace(/\[\d+\]/g, '');
   // Strip stray standalone brackets

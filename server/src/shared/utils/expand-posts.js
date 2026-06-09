@@ -208,6 +208,10 @@ function markdownToHtml(text) {
   h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
   h = h.replace(/`(.+?)`/g, '<code>$1</code>');
+  // Convert Markdown links [Text](URL) to HTML <a> tags
+  h = h.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  // Convert raw URLs to HTML <a> tags, avoiding existing href values or URLs already wrapped in <a>
+  h = h.replace(/(?<!href=["']|">)(https?:\/\/[^\s<"'`()]+)(?![^<]*<\/a>)/gi, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
   h = h.replace(/\[\d+\]/g, '');
   h = h.replace(/[[\]]/g, '');
   h = h.replace(/^[-*]\s*(.+)$/gm, '<li>$1</li>');
