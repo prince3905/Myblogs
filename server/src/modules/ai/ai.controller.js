@@ -437,6 +437,40 @@ function cleanExtractedContent(raw) {
   return raw;
 }
 
+function extractContentField(text) {
+  if (!text) return '';
+  const marker = '"content"';
+  const idx = text.indexOf(marker);
+  if (idx === -1) return '';
+
+  const colonIdx = text.indexOf(':', idx + marker.length);
+  if (colonIdx === -1) return '';
+
+  const startQuoteIdx = text.indexOf('"', colonIdx + 1);
+  if (startQuoteIdx === -1) return '';
+
+  let contentValue = '';
+  let escaped = false;
+  for (let i = startQuoteIdx + 1; i < text.length; i++) {
+    const char = text[i];
+    if (escaped) {
+      if (char === 'n') contentValue += '\n';
+      else if (char === 't') contentValue += '\t';
+      else if (char === '"') contentValue += '"';
+      else if (char === '\\') contentValue += '\\';
+      else contentValue += '\\' + char;
+      escaped = false;
+    } else if (char === '\\') {
+      escaped = true;
+    } else if (char === '"') {
+      return contentValue;
+    } else {
+      contentValue += char;
+    }
+  }
+  return contentValue;
+}
+
 function robustJsonParse(text) {
   if (!text) return null;
   try {

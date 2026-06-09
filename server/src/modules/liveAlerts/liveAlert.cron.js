@@ -75,6 +75,78 @@ function extractOfficialDomain(description) {
   return '';
 }
 
+async function scrapeDetailedUrls(pageUrl) {
+  try {
+    const res = await axios.get(pageUrl, {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    const html = res.data;
+    if (typeof html !== 'string') return { officialPdfUrl: '', officialApplyUrl: '', officialUrl: '' };
+
+    const hrefRegex = /href=["'](https?:\/\/[^"']+)["']/gi;
+    let match;
+    const links = [];
+    while ((match = hrefRegex.exec(html)) !== null) {
+      links.push(match[1]);
+    }
+
+    const excludeDomains = [
+      'freejobalert.com', 'google', 'doubleclick', 'whatsapp', 'arattai.in',
+      't.me', 'instagram', 'youtube', 'facebook', 'twitter', 'linkedin',
+      'gmpg.org', 'rebrand.ly', 'cluestoday.com', 'marketshost.com',
+      'rojgarlive.com', 'stylishscape.com', 'pinterest', 'wordpress', 'sarkariresult'
+    ];
+
+    const uniqueLinks = [...new Set(links)].filter(link => {
+      const lower = link.toLowerCase();
+      return !excludeDomains.some(domain => lower.includes(domain));
+    });
+
+    let officialPdfUrl = '';
+    let officialApplyUrl = '';
+    let officialUrl = '';
+
+    for (const link of uniqueLinks) {
+      const lower = link.toLowerCase();
+      if (lower.includes('.pdf') || lower.includes('/pdf') || lower.includes('notification') || lower.includes('advertisement') || lower.includes('advt')) {
+        if (!officialPdfUrl) officialPdfUrl = link;
+      } else if (lower.includes('apply') || lower.includes('registration') || lower.includes('online') || lower.includes('/form') || lower.includes('login')) {
+        if (!officialApplyUrl) officialApplyUrl = link;
+      } else {
+        if (!officialUrl) officialUrl = link;
+      }
+    }
+
+    // Fallback domains if homepage was not found but we have other links
+    if (!officialUrl && officialPdfUrl) {
+      try {
+        const parsed = new URL(officialPdfUrl);
+        officialUrl = `${parsed.protocol}//${parsed.hostname}`;
+      } catch {}
+    }
+    if (!officialUrl && officialApplyUrl) {
+      try {
+        const parsed = new URL(officialApplyUrl);
+        officialUrl = `${parsed.protocol}//${parsed.hostname}`;
+      } catch {}
+    }
+
+    if (!officialApplyUrl) {
+      officialApplyUrl = officialUrl;
+    }
+
+    return { officialPdfUrl, officialApplyUrl, officialUrl };
+  } catch (err) {
+    console.error('[LiveAlert Scraper] Detail scrape failed for', pageUrl, err.message);
+    return { officialPdfUrl: '', officialApplyUrl: '', officialUrl: '' };
+  }
+}
+
 async function scrapeFeeds() {
   console.log('[LiveAlert Scraper] Starting feed parsing...');
   let totalSaved = 0;
@@ -118,7 +190,11 @@ async function scrapeFeeds() {
 
         const boardName = extractBoardName(title);
         const lastDate = extractLastDate(title, description);
-        const officialUrl = extractOfficialDomain(description);
+        
+        // Let's scrape the detailed page for the exact official government links
+        console.log(`[LiveAlert Scraper] Fetching details for: ${link}`);
+        const details = await scrapeDetailedUrls(link);
+
         const sourceName = url.includes('freejobalert') ? 'FreeJobAlert' : 'SarkariResult';
 
         // Upsert into MongoDB (prevents duplicate sourceUrls)
@@ -129,7 +205,9 @@ async function scrapeFeeds() {
               title,
               boardName,
               lastDate,
-              officialUrl,
+              officialUrl: details.officialUrl || extractOfficialDomain(description),
+              officialPdfUrl: details.officialPdfUrl,
+              officialApplyUrl: details.officialApplyUrl,
               source: sourceName
             },
             $setOnInsert: {

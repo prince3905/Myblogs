@@ -50,6 +50,9 @@ async function draftPostFromAlert(req, res) {
 
     // Construct the context/command parameters for Gemini Flash to generate a 1200+ word optimized post
     const resolvedUrl = alert.officialUrl || '';
+    const resolvedPdf = alert.officialPdfUrl || '';
+    const resolvedApply = alert.officialApplyUrl || '';
+
     const aiParams = {
       title: cleanTitle,
       model: 'gemini-flash-latest',
@@ -60,14 +63,21 @@ async function draftPostFromAlert(req, res) {
       command: `Write a comprehensive, professional Sarkari Result exam notification article about: "${alert.title}".
       - Official Board: "${alert.boardName}"
       - Last Date to Apply: "${alert.lastDate}"
-      - Official Website Link: "${resolvedUrl || 'To be dynamically resolved by you'}"
+      - Official Website: "${resolvedUrl || 'To be dynamically resolved by you'}"
+      - Official Notification PDF: "${resolvedPdf || ''}"
+      - Official Apply Portal: "${resolvedApply || ''}"
       - Ensure you follow the Sarkari Jobs & Exams category framework headings and rules.
       - Add details of eligibility, vacancies, step-by-step process, selection process, and dates.
       - Make sure the post strictly complies with GOOGLE SEO, GEO, and AEO rules.
-      - CRITICAL REQUIREMENT FOR LINKS:
-        - The official portal link must point ONLY to the direct official government website domain for the board "${alert.boardName}" (e.g. if the board is UPSC, use "https://upsc.gov.in"; if the board is SSC, use "https://ssc.gov.in"; if the board is SAIL, use "https://sail.co.in", etc.).
-        - If the Official Website Link above is provided, use it. Otherwise, dynamically resolve the correct official government domain for the board "${alert.boardName}" and prefix with "https://".
-        - Embed this official government link inside the body naturally (e.g. in a "How to Apply" section or dates table) as the official apply URL.
+      - CRITICAL REQUIREMENT FOR LINKS (MUST BE 100% USEFUL FOR STUDENTS):
+        - You must embed direct government links for the official website, official notification PDF, and direct apply portal.
+        - If 'Official Website', 'Official Notification PDF', or 'Official Apply Portal' are provided above, you MUST use those exact URLs.
+        - If they are not provided, dynamically resolve the correct official government domains for "${alert.boardName}" (e.g. upsc.gov.in for UPSC, ssc.gov.in for SSC, etc.).
+        - Create a distinct, highlightable "Important Links" section or table at the end of the post, containing:
+          1. "Official Notification PDF" pointing to the PDF link provided.
+          2. "Direct Link to Apply Online" pointing to the apply link provided.
+          3. "Official Board Website" pointing to the board homepage.
+        - Ensure all links in the article point ONLY to direct government websites, official notifications, or application portals.
         - DO NOT use "freejobalert.com", "sarkariresult.info", or any other third-party blog URL in the generated content.`
     };
 
