@@ -21,7 +21,7 @@ export default function HomePage() {
     request('/api/public/live-alerts?status=active')
       .then(res => {
         if (res.success) {
-          setAlerts((res.data || []).slice(0, 4));
+          setAlerts((res.data || []).slice(0, 8));
         }
       })
       .catch(err => console.error(err))
@@ -95,24 +95,27 @@ export default function HomePage() {
                 const shadowColor = isEven ? 'rgba(239, 68, 68, 0.06)' : 'rgba(59, 130, 246, 0.06)';
                 const hoverBorder = isEven ? '#EF4444' : '#3B82F6';
                 const textCol = isEven ? '#991B1B' : '#1E40AF';
+                const isNew = new Date() - new Date(alert.createdAt) < 3 * 24 * 60 * 60 * 1000;
 
                 return (
-                  <Grid item xs={12} sm={6} md={3} key={alert._id}>
+                  <Grid item xs={6} sm={4} md={3} key={alert._id}>
                     <Link to="/live-alerts" style={{ textDecoration: 'none' }}>
                       <Box
                         sx={{
-                          p: 2.2,
+                          p: { xs: 1.5, sm: 2.2 },
                           height: '100%',
-                          minHeight: '105px',
+                          minHeight: '110px',
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
                           background: cardBg,
-                          border: `1px solid ${cardBorder}`,
+                          border: isNew ? `2px solid ${isEven ? '#EF4444' : '#3B82F6'}` : `1px solid ${cardBorder}`,
                           borderRadius: '16px',
                           position: 'relative',
                           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          boxShadow: `0 4px 6px -1px ${shadowColor}`,
+                          boxShadow: isNew 
+                            ? `0 4px 12px ${isEven ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)'}`
+                            : `0 4px 6px -1px ${shadowColor}`,
                           '&:hover': {
                             transform: 'translateY(-4px)',
                             boxShadow: `0 12px 20px -3px ${shadowColor}`,
@@ -122,6 +125,35 @@ export default function HomePage() {
                           }
                         }}
                       >
+                        {isNew && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              right: 8,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              bgcolor: isEven ? '#EF4444' : '#3B82F6',
+                              color: 'white',
+                              px: 0.6,
+                              py: 0.2,
+                              borderRadius: '4px',
+                              fontSize: '0.55rem',
+                              fontWeight: 900,
+                              boxShadow: isEven ? '0 2px 6px rgba(239, 68, 68, 0.4)' : '0 2px 6px rgba(59, 130, 246, 0.4)',
+                              animation: 'pulse 1.5s infinite ease-in-out',
+                              '@keyframes pulse': {
+                                '0%': { transform: 'scale(1)', opacity: 0.9 },
+                                '50%': { transform: 'scale(1.05)', opacity: 1 },
+                                '100%': { transform: 'scale(1)', opacity: 0.9 }
+                              }
+                            }}
+                          >
+                            <Box sx={{ width: 4, height: 4, bgcolor: 'white', borderRadius: '50%' }} />
+                            NEW 🔥
+                          </Box>
+                        )}
                         <Typography 
                           className="alert-board-title"
                           variant="caption" 
@@ -129,9 +161,10 @@ export default function HomePage() {
                             fontWeight: 850, 
                             color: textCol, 
                             textTransform: 'uppercase', 
-                            fontSize: '0.65rem',
+                            fontSize: '0.62rem',
                             letterSpacing: 0.5,
                             mb: 0.8,
+                            pr: isNew ? 5 : 0,
                             transition: 'color 0.2s ease'
                           }}
                         >
@@ -144,21 +177,26 @@ export default function HomePage() {
                             fontWeight: 750, 
                             color: '#374151', 
                             lineHeight: 1.4,
-                            fontSize: '0.82rem',
+                            fontSize: '0.8rem',
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            mb: 1,
+                            mb: 0.8,
                             transition: 'color 0.2s ease'
                           }}
                         >
                           {alert.title}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.68rem', mt: 'auto' }}>
-                          Sourced: {new Date(alert.createdAt).toLocaleDateString()}
-                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
+                          <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.62rem' }}>
+                            {new Date(alert.createdAt).toLocaleDateString()}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: textCol, fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
+                            Apply online ↗
+                          </Typography>
+                        </Box>
                       </Box>
                     </Link>
                   </Grid>
