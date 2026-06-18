@@ -20,6 +20,7 @@ const ArchivePage = lazy(() => import('../features/blog/pages/ArchivePage'));
 const SearchPage = lazy(() => import('../features/blog/pages/SearchPage'));
 const ToolsPage = lazy(() => import('../features/tools/pages/ToolsPage'));
 const GamesPage = lazy(() => import('../features/games/pages/GamesPage'));
+const PublicLiveAlertsPage = lazy(() => import('../features/blog/pages/PublicLiveAlertsPage'));
 
 // Lazy load admin features
 const AdminLayout = lazy(() => import('../features/admin/components/AdminLayout'));
@@ -90,6 +91,7 @@ const ArchivePageSuspense = withPublicSuspense(ArchivePage);
 const SearchPageSuspense = withPublicSuspense(SearchPage);
 const ToolsPageSuspense = withPublicSuspense(ToolsPage);
 const GamesPageSuspense = withPublicSuspense(GamesPage);
+const PublicLiveAlertsPageSuspense = withPublicSuspense(PublicLiveAlertsPage);
 
 export default function App() {
   return (
@@ -109,6 +111,7 @@ export default function App() {
         <Route path="/search" element={<SearchPageSuspense />} />
         <Route path="/tools" element={<ToolsPageSuspense />} />
         <Route path="/games" element={<GamesPageSuspense />} />
+        <Route path="/live-alerts" element={<PublicLiveAlertsPageSuspense />} />
         <Route path="/admin/login" element={<AdminLoginPageSuspense />} />
         <Route path="/admin" element={<AdminRoute><AdminLayoutSuspense /></AdminRoute>}>
           <Route index element={<AdminDashboardPageSuspense />} />

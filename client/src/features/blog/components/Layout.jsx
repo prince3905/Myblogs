@@ -26,6 +26,7 @@ export default function Layout({ children }) {
 
   const navItems = [
     { label: 'Blog', path: '/blog' },
+    { label: 'Live Alerts', path: '/live-alerts' },
     { label: 'Games', path: '/games' },
     { label: 'Tools', path: '/tools' },
     { label: 'About', path: '/about' },

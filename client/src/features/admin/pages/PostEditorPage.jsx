@@ -36,7 +36,7 @@ export default function PostEditorPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiStep, setAiStep] = useState('');
   const [aiProgress, setAiProgress] = useState(0);
-  const [aiModel, setAiModel] = useState('gemini-flash-latest');
+  const [aiModel, setAiModel] = useState('gemini-pro-latest');
   const [aiLength, setAiLength] = useState('medium');
   const [aiTone, setAiTone] = useState('informative');
   const [aiLanguage, setAiLanguage] = useState('hinglish');
@@ -325,6 +325,7 @@ export default function PostEditorPage() {
                     onChange={(e) => setAiModel(e.target.value)}
                   >
                     <MenuItem disabled>— Gemini (Free, Working) —</MenuItem>
+                    <MenuItem value="gemini-pro-latest">Gemini Pro (High Quality) 🌟</MenuItem>
                     <MenuItem value="gemini-flash-latest">Gemini Flash 🪐</MenuItem>
                     <MenuItem disabled>— Groq (Free, Working) —</MenuItem>
                     <MenuItem value="llama-3.3-70b-versatile">Groq Llama 3.3 70B ⚡</MenuItem>
@@ -428,7 +429,8 @@ export default function PostEditorPage() {
                 value={form.excerpt}
                 onChange={(e) => updateField('excerpt', e.target.value)}
                 required
-                helperText="This will appear in post previews and SEO description if not specified"
+                inputProps={{ maxLength: 3000 }}
+                helperText={`${form.excerpt ? form.excerpt.length : 0}/3000 characters. This will appear in post previews and SEO description if not specified.`}
               />
             </Paper>
           </Grid>

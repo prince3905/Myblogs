@@ -8,18 +8,24 @@ function stripHtml(html) {
 function generateTags(title, content, keywords, category) {
   const tags = new Set();
 
-  // Title as primary tag
-  if (title) tags.add(title.toLowerCase());
-
-  if (Array.isArray(keywords)) {
-    keywords.slice(0, 5).forEach(k => tags.add(k));
-  } else if (typeof keywords === 'string') {
-    keywords.split(',').slice(0, 5).forEach(k => tags.add(k.trim()));
+  // Add title as a tag only if it is short and simple (under 4 words, no colons)
+  if (title && title.split(/\s+/).length < 4 && !title.includes(':')) {
+    tags.add(title.toLowerCase().trim());
   }
 
-  if (category) tags.add(category);
+  if (Array.isArray(keywords)) {
+    keywords.slice(0, 5).forEach(k => tags.add(k.toLowerCase().trim()));
+  } else if (typeof keywords === 'string') {
+    keywords.split(',').slice(0, 5).forEach(k => tags.add(k.toLowerCase().trim()));
+  }
+
+  // Do not add broad category as a tag chip for Sarkari, it is redundant
+  if (category && category !== 'Sarkari Jobs & Exams') {
+    tags.add(category.toLowerCase().trim());
+  }
 
   const lsiTags = {
+    'Sarkari Jobs & Exams': ['govt jobs', 'latest job', 'admit card', 'sarkari result', 'exam date', 'recruitment', 'job alert'],
     'Career': ['job alert', 'govt jobs', 'exam preparation', 'result 2026', 'apply online', 'syllabus', 'eligibility', 'qualification', 'admit card', 'exam date', 'vacancy', 'recruitment', 'notification', 'latest job', 'career guidance'],
     'Education': ['online classes', 'admission 2026', 'scholarship', 'study material', 'university', 'college', 'entrance exam', 'result', 'board exam', 'competition'],
     'Technology': ['tech news', 'smartphone', 'laptop', 'AI tools', 'software', 'gadgets', 'latest tech', 'digital india', 'app review', 'online tools'],
@@ -103,7 +109,7 @@ function validateHeadingHierarchy(content) {
   return c;
 }
 
-function cleanContent(content) {
+function cleanContent(content, category) {
   if (!content) return content;
   let c = content;
 
@@ -111,6 +117,11 @@ function cleanContent(content) {
   c = c.replace(/<hr\s*\/?>/gi, '');
   c = c.replace(/---+/g, '');
   c = c.replace(/___+/g, '');
+
+  // For Sarkari Jobs & Exams, we want to preserve lists (ul/li) and tables exactly as they are.
+  if (category === 'Sarkari Jobs & Exams') {
+    return c;
+  }
 
   const KEY_KEEPERS = ['key takeaways', 'faq', 'conclusion', 'summary'];
   const sections = c.split(/(<h[234]>.*?<\/h[234]>)/i);
@@ -209,6 +220,82 @@ function ensureKeywordFrequency(content, title) {
   return c;
 }
 
+function sanitizeThirdPartyLinks(content) {
+  if (!content) return content;
+  let c = content;
+
+  // 1. Replace <a> tags pointing to third-party tools
+  c = c.replace(/<a\s+[^>]*href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi, (match, href, anchorText) => {
+    const lowerHref = href.toLowerCase();
+    const lowerAnchor = anchorText.toLowerCase();
+    
+    // If it's a link to a third-party site and has keywords of tools/resizers, change to /tools
+    if (
+      (lowerHref.includes('sarkariresult') || lowerHref.includes('freejobalert') || lowerHref.includes('ilovepdf') || lowerHref.includes('imageresizer') || lowerHref.includes('pdfresizer')) &&
+      (lowerHref.includes('tool') || lowerHref.includes('resize') || lowerHref.includes('compress') || lowerHref.includes('crop') || lowerHref.includes('convert') || lowerHref.includes('age') ||
+       lowerAnchor.includes('tool') || lowerAnchor.includes('resize') || lowerAnchor.includes('compress') || lowerAnchor.includes('crop') || lowerAnchor.includes('signature') || lowerAnchor.includes('age-calculator'))
+    ) {
+      return `<a href="/tools">Student Utility Tools</a>`;
+    }
+    return match;
+  });
+
+  // 2. Also replace raw URLs or any link inside parentheses like (Link: https://...) or similar text that might not be in an <a> tag
+  c = c.replace(/(https?:\/\/[^\s<"'`()]+(?:sarkariresult\.com\/tools|sarkariresult\.com\/resizer|sarkariresult\.tools|freejobalert\.com\/tools|ilovepdf\.com|imageresizer\.com)[^\s<"'`()]*)/gi, '/tools');
+
+  return c;
+}
+
+function injectStudentToolsPromo(content, category) {
+  if (!content) return content;
+  if (category !== 'Sarkari Jobs & Exams') return content;
+
+  // Idempotency check to avoid duplicate injections
+  if (content.includes('student-tools-promo')) {
+    return content;
+  }
+
+  const promoCard = `
+<div class="student-tools-promo" style="margin: 24px 0; padding: 20px; border-radius: 12px; border: 2px dashed #10b981; background: #f0fdf4; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); text-align: left;">
+  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+    <span style="font-size: 20px; line-height: 1;">🚀</span>
+    <h3 style="margin: 0; color: #065f46; font-size: 1.2rem; font-weight: 700; border: none; padding: 0;">Digital Home Free Student Utility Tools</h3>
+  </div>
+  <p style="margin: 0 0 16px 0; color: #15803d; font-size: 0.95rem; line-height: 1.5;">
+    Apne application form ke liye photo resize, signature crop aur documents compress karne ke liye humare <strong>100% Free & Fast Tools</strong> ka use karein. Kisi third-party site par jaane ki zaroorat nahi hai:
+  </p>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+    <a href="/tools" style="flex: 1 1 140px; text-align: center; padding: 10px 12px; background: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; display: inline-block;">📸 Photo Resizer</a>
+    <a href="/tools" style="flex: 1 1 140px; text-align: center; padding: 10px 12px; background: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; display: inline-block;">✍️ Signature Cropper</a>
+    <a href="/tools" style="flex: 1 1 140px; text-align: center; padding: 10px 12px; background: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; display: inline-block;">📅 Age Calculator</a>
+    <a href="/tools" style="flex: 1 1 140px; text-align: center; padding: 10px 12px; background: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; display: inline-block;">📄 PDF Compressor</a>
+  </div>
+</div>
+`;
+
+  // Find where to insert. We prefer to insert right before the "Important Links" section.
+  const linksHeaderRegex = /(<h[23][^>]*>(?:महत्वपूर्ण लिंक्स|Important\s+Links|Useful\s+Links|Important\s+Useful\s+Links|Link|महत्वपूर्ण\s+लिंक)[^<]*<\/h[23]>)/i;
+  
+  if (linksHeaderRegex.test(content)) {
+    return content.replace(linksHeaderRegex, `${promoCard}\n$1`);
+  }
+
+  // Fallback 1: Insert before FAQ section
+  const faqHeaderRegex = /(<h[23][^>]*>(?:FAQ|Frequently\s+Asked\s+Questions|Frequently\s+Asked\s+Question|अक्सर\s+पूछे\s+जाने\s+वाले\s+सवाल)[^<]*<\/h[23]>)/i;
+  if (faqHeaderRegex.test(content)) {
+    return content.replace(faqHeaderRegex, `${promoCard}\n$1`);
+  }
+
+  // Fallback 2: Append before Key Takeaways/Conclusion
+  const takeawaysRegex = /(<h[23][^>]*>(?:Key\s+Takeaways|Takeaways|निष्कर्ष|Conclusion)[^<]*<\/h[23]>)/i;
+  if (takeawaysRegex.test(content)) {
+    return content.replace(takeawaysRegex, `${promoCard}\n$1`);
+  }
+
+  // Fallback 3: Append at the end of content
+  return content + `\n${promoCard}`;
+}
+
 async function processAIOutput(data) {
   const { title, content, keywords, category } = data;
 
@@ -218,9 +305,14 @@ async function processAIOutput(data) {
 
   processedContent = stripScripts(processedContent);
   processedContent = validateHeadingHierarchy(processedContent);
-  processedContent = cleanContent(processedContent);
+  processedContent = cleanContent(processedContent, category);
   processedContent = await addInternalLinks(processedContent, category);
   processedContent = ensureKeywordFrequency(processedContent, title);
+  
+  // Sanitize bad external tools links and inject local promotional tools card
+  processedContent = sanitizeThirdPartyLinks(processedContent);
+  processedContent = injectStudentToolsPromo(processedContent, category);
+
   const tags = generateTags(title, processedContent, keywords, category);
 
   // Generate SEO-friendly fallbacks for all fields
@@ -253,4 +345,4 @@ async function processAIOutput(data) {
   };
 }
 
-module.exports = { processAIOutput, generateTags, cleanContent, addInternalLinks, ensureKeywordFrequency };
+module.exports = { processAIOutput, generateTags, cleanContent, addInternalLinks, ensureKeywordFrequency, sanitizeThirdPartyLinks, injectStudentToolsPromo };

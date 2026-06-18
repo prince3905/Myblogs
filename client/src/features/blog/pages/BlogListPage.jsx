@@ -23,8 +23,14 @@ export default function BlogListPage() {
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [sortOption, setSortOption] = useState('date-desc');
+
+  const [sortBy, order] = useMemo(() => {
+    const parts = sortOption.split('-');
+    return [parts[0], parts[1]];
+  }, [sortOption]);
   
-  const { posts, loading: postsLoading, error: postsError, total, page, pages, setPage } = usePosts({ search, category, tags, dateFrom, dateTo, limit: 9 });
+  const { posts, loading: postsLoading, error: postsError, total, page, pages, setPage } = usePosts({ search, category, tags, dateFrom, dateTo, sortBy, order, limit: 9 });
   const { categories } = useCategories();
   const theme = useTheme();
 
@@ -44,7 +50,7 @@ export default function BlogListPage() {
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap', flex: { md: '0 1 auto' }, minWidth: { md: 550 } }}>
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap', flex: { md: '0 1 auto' }, minWidth: { md: 700 } }}>
               <TextField
                 size="small"
                 label="Search articles"
@@ -75,6 +81,30 @@ export default function BlogListPage() {
                 >
                   <MenuItem value="">All categories</MenuItem>
                   {categories.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+                </Select>
+              </FormControl>
+
+              <FormControl 
+                size="small" 
+                sx={{ 
+                  flex: 1.2, 
+                  minWidth: 150,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '10px',
+                  }
+                }}
+              >
+                <InputLabel>Sort By</InputLabel>
+                <Select
+                  value={sortOption}
+                  label="Sort By"
+                  onChange={(e) => setSortOption(e.target.value)}
+                >
+                  <MenuItem value="date-desc">Newest First</MenuItem>
+                  <MenuItem value="date-asc">Oldest First</MenuItem>
+                  <MenuItem value="views-desc">Most Views</MenuItem>
+                  <MenuItem value="title-asc">Title (A-Z)</MenuItem>
+                  <MenuItem value="title-desc">Title (Z-A)</MenuItem>
                 </Select>
               </FormControl>
 

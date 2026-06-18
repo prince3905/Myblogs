@@ -19,6 +19,7 @@ import BrushIcon from '@mui/icons-material/Brush';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import WorkIcon from '@mui/icons-material/Work';
 import Layout from '../../blog/components/Layout';
 import Seo from '../../blog/components/Seo';
 import PostCard from '../../blog/components/PostCard';
@@ -58,6 +59,38 @@ function TopPosts() {
         <TrendingUpIcon sx={{ color: 'primary.main', fontSize: 28 }} />
         <Typography variant="h5" fontWeight={800} sx={{ color: 'text.primary' }}>
           Top Trending Posts
+        </Typography>
+      </Box>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+        {posts.map((post) => (
+          <Card key={post._id} sx={{ cursor: 'pointer' }}>
+            <PostCard post={post} />
+          </Card>
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
+function NewJobs() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/posts?limit=6&category=Sarkari%20Jobs%20%26%20Exams&fields=title,slug,excerpt,featuredImage,category')
+      .then(r => r.json())
+      .then(d => { setPosts(d.posts || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading || posts.length === 0) return null;
+
+  return (
+    <Box sx={{ mt: 8 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+        <WorkIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+        <Typography variant="h5" fontWeight={800} sx={{ color: 'text.primary' }}>
+          Latest Govt Jobs & Notifications
         </Typography>
       </Box>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 3 }}>
@@ -254,6 +287,7 @@ export default function ToolsPage() {
             )}
           </Paper>
 
+          <NewJobs />
           <TopPosts />
         </Container>
       </Box>

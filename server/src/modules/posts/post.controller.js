@@ -93,7 +93,7 @@ async function warmUpCache() {
 setTimeout(warmUpCache, 5000);
 
 async function listPublishedPosts(req, res) {
-  const { search = '', category = '', tags = '', dateFrom = '', dateTo = '', page = 1, limit = 10 } = req.query;
+  const { search = '', category = '', tags = '', dateFrom = '', dateTo = '', page = 1, limit = 10, sortBy = 'date', order = 'desc' } = req.query;
   const query = { status: 'published' };
 
   if (category) {
@@ -136,11 +136,23 @@ async function listPublishedPosts(req, res) {
     }
   }
 
+  const sortDirection = order === 'asc' ? 1 : -1;
+  let sortObj = {};
+  if (sortBy === 'title') {
+    sortObj.title = sortDirection;
+  } else if (sortBy === 'views') {
+    sortObj.views = sortDirection;
+  } else {
+    // Default to date (publishedAt or createdAt)
+    sortObj.publishedAt = sortDirection;
+    sortObj.createdAt = sortDirection;
+  }
+
   const skip = (parseInt(page) - 1) * parseInt(limit);
   let total;
   let posts;
 
-  const isDefaultHomeFeed = !search && !category && !tags && !dateFrom && !dateTo && parseInt(limit) === 10 && parseInt(page) === 1;
+  const isDefaultHomeFeed = !search && !category && !tags && !dateFrom && !dateTo && parseInt(limit) === 10 && parseInt(page) === 1 && sortBy === 'date' && order === 'desc';
 
   if (isDefaultHomeFeed) {
     const now = Date.now();
@@ -161,7 +173,7 @@ async function listPublishedPosts(req, res) {
     }
   } else {
     total = await BlogPost.countDocuments(query);
-    if (!search && !category && !tags && !dateFrom && !dateTo && parseInt(limit) === 1000 && parseInt(page) === 1) {
+    if (!search && !category && !tags && !dateFrom && !dateTo && parseInt(limit) === 1000 && parseInt(page) === 1 && sortBy === 'date' && order === 'desc') {
       res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
       posts = await Post.find({ status: 'published' })
         .sort({ publishedAt: -1, createdAt: -1 })
@@ -170,7 +182,7 @@ async function listPublishedPosts(req, res) {
         .lean();
     } else {
       posts = await BlogPost.find(query)
-        .sort({ publishedAt: -1, createdAt: -1 })
+        .sort(sortObj)
         .skip(skip)
         .limit(parseInt(limit))
         .select('title slug category featuredImage excerpt views createdAt')
@@ -220,91 +232,124 @@ async function getPostBySlug(req, res) {
   return res.json({ post, relatedPosts });
 }
 
-async function getAdminPostById(req, res) {
-  const post = await BlogPost.findById(req.params.id);
-  if (!post) {
-    return res.status(404).json({ message: 'Post not found' });
+async function getAdminPostById(req, res, next) {
+  try {
+    const post = await BlogPost.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    return res.json(post);
+  } catch (err) {
+    if (err.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid Post ID format' });
+    }
+    next(err);
   }
-  return res.json(post);
 }
 
-async function createPost(req, res) {
-  const payload = mapPayload(req.body);
-  const validationError = validatePost(payload);
-  if (validationError) {
-    return res.status(400).json({ message: validationError });
+async function createPost(req, res, next) {
+  try {
+    const payload = mapPayload(req.body);
+    const validationError = validatePost(payload);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+
+    const baseSlug = makeSlug(req.body.slug || payload.title);
+    payload.slug = await ensureUniqueSlug(baseSlug);
+    payload.publishedAt = payload.status === 'published' ? new Date() : null;
+    payload.canonicalUrl = payload.canonicalUrl || postUrl(payload);
+
+    const post = await BlogPost.create(payload);
+    invalidateFeedCache();
+
+    if (post.status === 'published') {
+      const { notifyUrl } = require('../../shared/utils/google-indexing');
+      notifyUrl(postUrl(post), 'URL_UPDATED').catch(() => {});
+    }
+
+    return res.status(201).json(post);
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(e => e.message).join(', ');
+      return res.status(400).json({ message: messages });
+    }
+    next(err);
   }
-
-  const baseSlug = makeSlug(req.body.slug || payload.title);
-  payload.slug = await ensureUniqueSlug(baseSlug);
-  payload.publishedAt = payload.status === 'published' ? new Date() : null;
-  payload.canonicalUrl = payload.canonicalUrl || postUrl(payload);
-
-  const post = await BlogPost.create(payload);
-  invalidateFeedCache();
-
-  if (post.status === 'published') {
-    const { notifyUrl } = require('../../shared/utils/google-indexing');
-    notifyUrl(postUrl(post), 'URL_UPDATED').catch(() => {});
-  }
-
-  return res.status(201).json(post);
 }
 
-async function updatePost(req, res) {
-  const existing = await BlogPost.findById(req.params.id);
-  if (!existing) {
-    return res.status(404).json({ message: 'Post not found' });
-  }
+async function updatePost(req, res, next) {
+  try {
+    const existing = await BlogPost.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
 
-  const payload = mapPayload(req.body);
-  const validationError = validatePost(payload);
-  if (validationError) {
-    return res.status(400).json({ message: validationError });
-  }
+    const payload = mapPayload(req.body);
+    const validationError = validatePost(payload);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
 
-  const baseSlug = makeSlug(req.body.slug || payload.title);
-  payload.slug = await ensureUniqueSlug(baseSlug, existing._id);
-  payload.publishedAt = payload.status === 'published'
-    ? existing.publishedAt || new Date()
-    : null;
-  payload.canonicalUrl = payload.canonicalUrl || postUrl(payload);
+    const baseSlug = makeSlug(req.body.slug || payload.title);
+    payload.slug = await ensureUniqueSlug(baseSlug, existing._id);
+    payload.publishedAt = payload.status === 'published'
+      ? existing.publishedAt || new Date()
+      : null;
+    payload.canonicalUrl = payload.canonicalUrl || postUrl(payload);
 
-  const oldUrl = postUrl(existing);
-  const oldStatus = existing.status;
+    const oldUrl = postUrl(existing);
+    const oldStatus = existing.status;
 
-  Object.assign(existing, payload);
-  await existing.save();
-  invalidateFeedCache();
+    Object.assign(existing, payload);
+    await existing.save();
+    invalidateFeedCache();
 
-  if (existing.status === 'published') {
-    const { notifyUrl } = require('../../shared/utils/google-indexing');
-    notifyUrl(postUrl(existing), 'URL_UPDATED').catch(() => {});
+    if (existing.status === 'published') {
+      const { notifyUrl } = require('../../shared/utils/google-indexing');
+      notifyUrl(postUrl(existing), 'URL_UPDATED').catch(() => {});
 
-    if (oldStatus === 'published' && oldUrl !== postUrl(existing)) {
+      if (oldStatus === 'published' && oldUrl !== postUrl(existing)) {
+        notifyUrl(oldUrl, 'URL_DELETED').catch(() => {});
+      }
+    } else if (oldStatus === 'published' && existing.status !== 'published') {
+      const { notifyUrl } = require('../../shared/utils/google-indexing');
       notifyUrl(oldUrl, 'URL_DELETED').catch(() => {});
     }
-  } else if (oldStatus === 'published' && existing.status !== 'published') {
-    const { notifyUrl } = require('../../shared/utils/google-indexing');
-    notifyUrl(oldUrl, 'URL_DELETED').catch(() => {});
-  }
 
-  return res.json(existing);
+    return res.json(existing);
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(e => e.message).join(', ');
+      return res.status(400).json({ message: messages });
+    }
+    if (err.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid Post ID format' });
+    }
+    next(err);
+  }
 }
 
-async function deletePost(req, res) {
-  const post = await BlogPost.findByIdAndDelete(req.params.id);
-  if (!post) {
-    return res.status(404).json({ message: 'Post not found' });
-  }
-  invalidateFeedCache();
+async function deletePost(req, res, next) {
+  try {
+    const post = await BlogPost.findByIdAndDelete(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    invalidateFeedCache();
 
-  if (post.status === 'published') {
-    const { notifyUrl } = require('../../shared/utils/google-indexing');
-    notifyUrl(postUrl(post), 'URL_DELETED').catch(() => {});
-  }
+    if (post.status === 'published') {
+      const { notifyUrl } = require('../../shared/utils/google-indexing');
+      notifyUrl(postUrl(post), 'URL_DELETED').catch(() => {});
+    }
 
-  return res.json({ success: true });
+    return res.json({ success: true });
+  } catch (err) {
+    if (err.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid Post ID format' });
+    }
+    next(err);
+  }
 }
 
 async function listCategories(req, res) {

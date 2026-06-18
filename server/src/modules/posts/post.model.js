@@ -4,7 +4,7 @@ const blogPostSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    excerpt: { type: String, required: true, trim: true, maxlength: 320 },
+    excerpt: { type: String, required: true, trim: true, maxlength: 3000 },
     content: { type: String, required: true },
     featuredImage: { type: String, trim: true, default: '' },
     category: { type: String, required: true, trim: true },

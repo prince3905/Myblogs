@@ -19,17 +19,22 @@ const CATEGORY_FRAMEWORKS = {
     heading: 'जर्नलिज्म / रिपोर्टिंग फ्रेमवर्क',
     prompt: `**JOURNALISM/REPORTING FRAMEWORK — MANDATORY FOR THIS CATEGORY:**
 Structure the post like a Sarkari result announcement or exam notification article. Natural Hinglish headings ONLY from this list — DO NOT use any other heading patterns:
+• महत्वपूर्ण तिथियाँ (Important Dates — apply start/end, exam date, result date)
+• आवेदन शुल्क (Application Fee)
+• आयु सीमा (Age Limit)
+• रिक्तियों का विवरण (Vacancy Details)
+• योग्यता और पात्रता (Eligibility Criteria)
+• चयन प्रक्रिया (Selection Process — exam/interview/merit)
+• आवेदन कैसे करें (How to Apply — with official portal links)
+• महत्वपूर्ण लिंक्स (Important Links / Useful Links)
 • परिणाम और महत्वपूर्ण आंकड़े (Results & Key Statistics)
 • स्टेप-बाय-स्टेप प्रोसेस (Step-by-Step Process)
-• योग्यता और पात्रता (Eligibility Criteria)
-• आवेदन कैसे करें (How to Apply — with official portal links)
-• चयन प्रक्रिया (Selection Process — exam/interview/merit)
-• महत्वपूर्ण तिथियाँ (Important Dates — apply start/end, exam date, result date)
 • पिछले वर्ष के आंकड़े (Previous Year Trends — cutoff, vacancies)
 • अक्सर पूछे जाने वाले सवाल (Frequently Asked Questions)
 - Focus on: official notifications, eligibility, deadlines, exam patterns, vacancy analysis.
 - Include exact numbers: vacancy count, application fees, salary range, age limit.
-- STRICTLY BANNED from this category: "How it works", "Key Benefits", "What is", "Step-by-Step Guide" (English), "Overview".`
+- STRICTLY BANNED from this category: "How it works", "Key Benefits", "What is", "Step-by-Step Guide" (English), "Overview".
+- NO THIRD-PARTY TOOLS LINKS: Do not link to any third-party photo resizers, signature croppers, age calculators, or pdf tools (e.g. from sarkariresult or elsewhere). Promote our site's own Student Utility Tools by linking to "/tools" (relative URL) instead.`
   },
   'Health & Wellness': {
     heading: 'हेल्थ एडवाइजरी फ्रेमवर्क',
@@ -284,6 +289,73 @@ function extractFirstSentence(text) {
   return match ? match[0].trim() : text.slice(0, 200);
 }
 
+function convertMarkdownTablesToHtml(text) {
+  if (!text) return text;
+  
+  const lines = text.split('\n');
+  let inTable = false;
+  let tableRows = [];
+  const output = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const isTableRow = line.startsWith('|') && line.endsWith('|') && line.includes('|');
+    
+    if (isTableRow) {
+      if (!inTable) {
+        inTable = true;
+        tableRows = [];
+      }
+      tableRows.push(line);
+    } else {
+      if (inTable) {
+        const htmlTable = buildHtmlTable(tableRows);
+        output.push(htmlTable);
+        inTable = false;
+        tableRows = [];
+      }
+      output.push(lines[i]);
+    }
+  }
+  
+  if (inTable && tableRows.length > 0) {
+    const htmlTable = buildHtmlTable(tableRows);
+    output.push(htmlTable);
+  }
+  
+  return output.join('\n');
+}
+
+function buildHtmlTable(rows) {
+  const cleanRows = rows.filter(row => !/^\|[\s:\-|]+\|$/.test(row.trim()));
+  if (cleanRows.length === 0) return '';
+  
+  let html = '<table class="min-w-full divide-y divide-gray-200 border border-gray-300 my-4">\n';
+  
+  cleanRows.forEach((row, index) => {
+    const cells = row.split('|')
+      .map(c => c.trim())
+      .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+      
+    if (index === 0) {
+      html += '  <thead>\n    <tr class="bg-gray-100">\n';
+      cells.forEach(cell => {
+        html += `      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300">${cell}</th>\n`;
+      });
+      html += '    </tr>\n  </thead>\n  <tbody>\n';
+    } else {
+      html += '    <tr>\n';
+      cells.forEach(cell => {
+        html += `      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">${cell}</td>\n`;
+      });
+      html += '    </tr>\n';
+    }
+  });
+  
+  html += '  </tbody>\n</table>';
+  return html;
+}
+
 // Convert markdown-like blog content to HTML
 function markdownToHtml(text) {
   if (!text) return '';
@@ -291,6 +363,8 @@ function markdownToHtml(text) {
   if (/^\s*</.test(text)) return cleanHtml(text);
   
   let h = text;
+  h = convertMarkdownTablesToHtml(h);
+  
   // Strip leading + prefix only (AI artifact for headings)
   h = h.replace(/^\+[ \t]*/gm, '');
   // Convert markdown headings to HTML headings
@@ -328,7 +402,28 @@ function markdownToHtml(text) {
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<li') || trimmed.startsWith('</ul') || trimmed.startsWith('<p') || trimmed.startsWith('<blockquote') || trimmed.startsWith('</blockquote') || trimmed.startsWith('<hr')) {
+    if (
+      trimmed.startsWith('<h') || 
+      trimmed.startsWith('<ul') || 
+      trimmed.startsWith('<li') || 
+      trimmed.startsWith('</ul') || 
+      trimmed.startsWith('<p') || 
+      trimmed.startsWith('<blockquote') || 
+      trimmed.startsWith('</blockquote') || 
+      trimmed.startsWith('<hr') ||
+      trimmed.startsWith('<table') ||
+      trimmed.startsWith('<tr') ||
+      trimmed.startsWith('<td') ||
+      trimmed.startsWith('<th') ||
+      trimmed.startsWith('</table') ||
+      trimmed.startsWith('</tr') ||
+      trimmed.startsWith('</td') ||
+      trimmed.startsWith('</th') ||
+      trimmed.startsWith('<thead') ||
+      trimmed.startsWith('</thead') ||
+      trimmed.startsWith('<tbody') ||
+      trimmed.startsWith('</tbody')
+    ) {
       result.push(trimmed);
     } else {
       result.push(`<p>${trimmed}</p>`);
@@ -946,8 +1041,12 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
     imageTag,
     imageKeywords,
     summary,
-    seoTitle: optimizedTitle.length > 70 ? optimizedTitle.slice(0, 67) + '...' : optimizedTitle,
-    seoDescription: summary.slice(0, 155),
+    seoTitle: (parsed?.seotitle && typeof parsed.seotitle === 'string' && parsed.seotitle.trim())
+      ? parsed.seotitle.trim()
+      : (optimizedTitle.length > 70 ? optimizedTitle.slice(0, 67) + '...' : optimizedTitle),
+    seoDescription: (parsed?.seodescription && typeof parsed.seodescription === 'string' && parsed.seodescription.trim())
+      ? parsed.seodescription.trim()
+      : summary.slice(0, 155),
   });
 
   const finalCategory = processed.category || detectedCategory;
