@@ -1,16 +1,32 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Typography, Button, Box, Chip, Avatar } from '@mui/material';
+import { Container, Typography, Button, Box, Chip, Avatar, Grid } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
 import { usePosts } from '../../../hooks/usePosts';
 import { postUrl } from '../../../shared/lib/category';
 import { optimizeImage } from '../../../shared/lib/images';
+import { request } from '../../../shared/lib/api';
 
 export default function HomePage() {
   const { posts, loading, error } = usePosts({ limit: 17 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = posts.length > 1 ? posts.slice(1) : [];
+
+  const [alerts, setAlerts] = useState([]);
+  const [loadingAlerts, setLoadingAlerts] = useState(true);
+
+  useEffect(() => {
+    request('/api/public/live-alerts?status=active')
+      .then(res => {
+        if (res.success) {
+          setAlerts((res.data || []).slice(0, 4));
+        }
+      })
+      .catch(err => console.error(err))
+      .finally(() => setLoadingAlerts(false));
+  }, []);
 
   return (
     <Layout>
@@ -179,6 +195,142 @@ export default function HomePage() {
             }
           `}</style>
         )}
+      </Box>
+
+      {/* Live Job Alerts Board Section */}
+      <Box 
+        component="section" 
+        sx={{ 
+          py: { xs: 3, md: 4.5 }, 
+          borderTop: '1px solid #ECECEC',
+          bgcolor: '#FFFFFF'
+        }}
+      >
+        <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box 
+                sx={{ 
+                  width: 8, 
+                  height: 8, 
+                  borderRadius: '50%', 
+                  bgcolor: '#EF4444',
+                  animation: 'pulse 1.6s infinite ease-in-out',
+                  '@keyframes pulse': {
+                    '0%': { transform: 'scale(0.8)', opacity: 0.5 },
+                    '50%': { transform: 'scale(1.4)', opacity: 1 },
+                    '100%': { transform: 'scale(0.8)', opacity: 0.5 }
+                  }
+                }} 
+              />
+              <Typography
+                variant="h2"
+                sx={{
+                  fontWeight: 800, color: '#111827', letterSpacing: '-0.02em',
+                  fontSize: { xs: '1.4rem', md: '1.8rem' }
+                }}
+              >
+                Live Job Alerts & Updates
+              </Typography>
+            </Box>
+            <Button
+              component={Link}
+              to="/live-alerts"
+              sx={{
+                fontWeight: 700, fontSize: '0.85rem',
+                color: '#EF4444',
+                '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.04)' }
+              }}
+            >
+              View All Alerts →
+            </Button>
+          </Box>
+
+          {loadingAlerts ? (
+            <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>Loading updates...</Typography>
+          ) : alerts.length === 0 ? (
+            <Typography variant="body2" sx={{ color: 'text.secondary', py: 2, fontStyle: 'italic' }}>No active updates at the moment.</Typography>
+          ) : (
+            <Grid container spacing={2}>
+              {alerts.map((alert, idx) => {
+                const isEven = idx % 2 === 0;
+                const cardBorder = isEven ? '#F87171' : '#60A5FA';
+                const cardBg = isEven ? 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)' : 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)';
+                const shadowColor = isEven ? 'rgba(239, 68, 68, 0.06)' : 'rgba(59, 130, 246, 0.06)';
+                const hoverBorder = isEven ? '#EF4444' : '#3B82F6';
+                const textCol = isEven ? '#991B1B' : '#1E40AF';
+
+                return (
+                  <Grid item xs={12} sm={6} md={3} key={alert._id}>
+                    <Link to="/live-alerts" style={{ textDecoration: 'none' }}>
+                      <Box
+                        sx={{
+                          p: 2.2,
+                          height: '100%',
+                          minHeight: '105px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          background: cardBg,
+                          border: `1px solid ${cardBorder}`,
+                          borderRadius: '16px',
+                          position: 'relative',
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          boxShadow: `0 4px 6px -1px ${shadowColor}`,
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: `0 12px 20px -3px ${shadowColor}`,
+                            borderColor: hoverBorder,
+                            '& .alert-board-title': { color: hoverBorder },
+                            '& .alert-card-title': { color: '#111827' }
+                          }
+                        }}
+                      >
+                        <Typography 
+                          className="alert-board-title"
+                          variant="caption" 
+                          sx={{ 
+                            fontWeight: 850, 
+                            color: textCol, 
+                            textTransform: 'uppercase', 
+                            fontSize: '0.65rem',
+                            letterSpacing: 0.5,
+                            mb: 0.8,
+                            transition: 'color 0.2s ease'
+                          }}
+                        >
+                          {alert.boardName || 'Official Board'}
+                        </Typography>
+                        <Typography 
+                          className="alert-card-title"
+                          variant="body2" 
+                          sx={{ 
+                            fontWeight: 750, 
+                            color: '#374151', 
+                            lineHeight: 1.4,
+                            fontSize: '0.82rem',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            mb: 1,
+                            transition: 'color 0.2s ease'
+                          }}
+                        >
+                          {alert.title}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.68rem', mt: 'auto' }}>
+                          Sourced: {new Date(alert.createdAt).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                    </Link>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          )}
+        </Container>
       </Box>
 
       {/* Latest Insights Section (H2) */}
