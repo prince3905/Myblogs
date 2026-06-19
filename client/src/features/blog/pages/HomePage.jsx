@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Typography, Button, Box, Chip, Avatar, Grid } from '@mui/material';
+import { Container, Typography, Button, Box, Chip, Avatar } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -87,7 +87,15 @@ export default function HomePage() {
           ) : alerts.length === 0 ? (
             <Typography variant="body2" sx={{ color: 'text.secondary', py: 2, fontStyle: 'italic' }}>No active updates at the moment.</Typography>
           ) : (
-            <Grid container spacing={2}>
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'repeat(2, 1fr)',
+                sm: 'repeat(3, 1fr)',
+                md: 'repeat(4, 1fr)'
+              },
+              gap: 2,
+            }}>
               {alerts.map((alert, idx) => {
                 const isEven = idx % 2 === 0;
                 const cardBorder = isEven ? '#F87171' : '#60A5FA';
@@ -98,111 +106,109 @@ export default function HomePage() {
                 const isNew = new Date() - new Date(alert.createdAt) < 3 * 24 * 60 * 60 * 1000;
 
                 return (
-                  <Grid item xs={6} sm={4} md={3} key={alert._id}>
-                    <Link to="/live-alerts" style={{ textDecoration: 'none' }}>
-                      <Box
-                        sx={{
-                          p: { xs: 1.5, sm: 2.2 },
-                          height: '100%',
-                          minHeight: '110px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center',
-                          background: cardBg,
-                          border: isNew ? `2px solid ${isEven ? '#EF4444' : '#3B82F6'}` : `1px solid ${cardBorder}`,
-                          borderRadius: '16px',
-                          position: 'relative',
-                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          boxShadow: isNew 
-                            ? `0 4px 12px ${isEven ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)'}`
-                            : `0 4px 6px -1px ${shadowColor}`,
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: `0 12px 20px -3px ${shadowColor}`,
-                            borderColor: hoverBorder,
-                            '& .alert-board-title': { color: hoverBorder },
-                            '& .alert-card-title': { color: '#111827' }
-                          }
+                  <Link key={alert._id} to="/live-alerts" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+                    <Box
+                      sx={{
+                        p: { xs: 1.2, sm: 1.5 },
+                        flexGrow: 1,
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        background: cardBg,
+                        border: isNew ? `1.5px solid ${isEven ? '#EF4444' : '#3B82F6'}` : `1px solid ${cardBorder}`,
+                        borderRadius: '12px',
+                        position: 'relative',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        boxShadow: isNew 
+                          ? `0 2px 8px ${isEven ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)'}`
+                          : `0 2px 4px -1px ${shadowColor}`,
+                        '&:hover': {
+                          transform: 'translateY(-3px)',
+                          boxShadow: `0 8px 16px -3px ${shadowColor}`,
+                          borderColor: hoverBorder,
+                          '& .alert-board-title': { color: hoverBorder },
+                          '& .alert-card-title': { color: '#111827' }
+                        }
+                      }}
+                    >
+                      {isNew && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 6,
+                            right: 6,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.3,
+                            bgcolor: isEven ? '#EF4444' : '#3B82F6',
+                            color: 'white',
+                            px: 0.5,
+                            py: 0.1,
+                            borderRadius: '3px',
+                            fontSize: '0.5rem',
+                            fontWeight: 900,
+                            boxShadow: isEven ? '0 1px 4px rgba(239, 68, 68, 0.3)' : '0 1px 4px rgba(59, 130, 246, 0.3)',
+                            animation: 'pulse 1.5s infinite ease-in-out',
+                            '@keyframes pulse': {
+                              '0%': { transform: 'scale(1)', opacity: 0.9 },
+                              '50%': { transform: 'scale(1.05)', opacity: 1 },
+                              '100%': { transform: 'scale(1)', opacity: 0.9 }
+                            }
+                          }}
+                        >
+                          <Box sx={{ width: 3, height: 3, bgcolor: 'white', borderRadius: '50%' }} />
+                          NEW 🔥
+                        </Box>
+                      )}
+                      <Typography 
+                        className="alert-board-title"
+                        variant="caption" 
+                        sx={{ 
+                          fontWeight: 850, 
+                          color: textCol, 
+                          textTransform: 'uppercase', 
+                          fontSize: '0.58rem',
+                          letterSpacing: 0.3,
+                          mb: 0.3,
+                          pr: isNew ? 4 : 0,
+                          transition: 'color 0.2s ease'
                         }}
                       >
-                        {isNew && (
-                          <Box
-                            sx={{
-                              position: 'absolute',
-                              top: 8,
-                              right: 8,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 0.5,
-                              bgcolor: isEven ? '#EF4444' : '#3B82F6',
-                              color: 'white',
-                              px: 0.6,
-                              py: 0.2,
-                              borderRadius: '4px',
-                              fontSize: '0.55rem',
-                              fontWeight: 900,
-                              boxShadow: isEven ? '0 2px 6px rgba(239, 68, 68, 0.4)' : '0 2px 6px rgba(59, 130, 246, 0.4)',
-                              animation: 'pulse 1.5s infinite ease-in-out',
-                              '@keyframes pulse': {
-                                '0%': { transform: 'scale(1)', opacity: 0.9 },
-                                '50%': { transform: 'scale(1.05)', opacity: 1 },
-                                '100%': { transform: 'scale(1)', opacity: 0.9 }
-                              }
-                            }}
-                          >
-                            <Box sx={{ width: 4, height: 4, bgcolor: 'white', borderRadius: '50%' }} />
-                            NEW 🔥
-                          </Box>
-                        )}
-                        <Typography 
-                          className="alert-board-title"
-                          variant="caption" 
-                          sx={{ 
-                            fontWeight: 850, 
-                            color: textCol, 
-                            textTransform: 'uppercase', 
-                            fontSize: '0.62rem',
-                            letterSpacing: 0.5,
-                            mb: 0.8,
-                            pr: isNew ? 5 : 0,
-                            transition: 'color 0.2s ease'
-                          }}
-                        >
-                          {alert.boardName || 'Official Board'}
+                        {alert.boardName || 'Official Board'}
+                      </Typography>
+                      <Typography 
+                        className="alert-card-title"
+                        variant="body2" 
+                        sx={{ 
+                          fontWeight: 750, 
+                          color: '#374151', 
+                          lineHeight: 1.3,
+                          fontSize: '0.76rem',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 1,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          mb: 0.4,
+                          transition: 'color 0.2s ease'
+                        }}
+                      >
+                        {alert.title}
+                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
+                        <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.58rem' }}>
+                          {new Date(alert.createdAt).toLocaleDateString()}
                         </Typography>
-                        <Typography 
-                          className="alert-card-title"
-                          variant="body2" 
-                          sx={{ 
-                            fontWeight: 750, 
-                            color: '#374151', 
-                            lineHeight: 1.4,
-                            fontSize: '0.8rem',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            mb: 0.8,
-                            transition: 'color 0.2s ease'
-                          }}
-                        >
-                          {alert.title}
+                        <Typography variant="caption" sx={{ color: textCol, fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
+                          Apply ↗
                         </Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
-                          <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.62rem' }}>
-                            {new Date(alert.createdAt).toLocaleDateString()}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: textCol, fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
-                            Apply online ↗
-                          </Typography>
-                        </Box>
                       </Box>
-                    </Link>
-                  </Grid>
+                    </Box>
+                  </Link>
                 );
               })}
-            </Grid>
+            </Box>
           )}
         </Container>
       </Box>
