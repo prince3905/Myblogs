@@ -1080,7 +1080,9 @@ export default function PublicLiveAlertsPage() {
                   const isFeatured = idx === 0;
                   const styles = getCardStyles(item, idx);
                   const isLive = !item.isStatic && item.targetAlert;
-                  
+                  const isNew = isLive && (new Date() - new Date(item.targetAlert.createdAt) < 3 * 24 * 60 * 60 * 1000);
+                  const accentColor = isFeatured ? '#4F46E5' : (idx % 2 !== 0 ? '#EF4444' : '#3B82F6');
+
                   return (
                     <Box
                       key={idx}
@@ -1096,24 +1098,57 @@ export default function PublicLiveAlertsPage() {
                         alignItems: 'center',
                         bgcolor: styles.bgColor,
                         background: styles.bgGradient || styles.bgColor,
-                        border: `1px solid ${styles.borderColor}`,
+                        border: isNew ? `1.5px solid ${accentColor}` : `1px solid ${styles.borderColor}`,
                         borderRadius: '12px',
                         cursor: 'pointer',
                         textAlign: isFeatured ? 'left' : 'center',
                         position: 'relative',
                         transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: `0 4px 6px -1px ${styles.shadowColor || 'rgba(0,0,0,0.03)'}`,
+                        boxShadow: isNew 
+                          ? `0 2px 8px ${isFeatured ? 'rgba(99, 102, 241, 0.15)' : (idx % 2 !== 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)')}`
+                          : `0 4px 6px -1px ${styles.shadowColor || 'rgba(0,0,0,0.03)'}`,
                         '&:hover': {
                           transform: 'translateY(-3px)',
                           boxShadow: `0 10px 15px -3px ${styles.shadowColor || 'rgba(0,0,0,0.06)'}`,
                           background: styles.hoverBgGradient || styles.hoverBg,
-                          borderColor: styles.textColor,
+                          borderColor: accentColor,
                           '& .hot-link-title': {
-                            color: styles.textColor
+                            color: accentColor
                           }
                         }
                       }}
                     >
+                      {/* NEW Badge absolute in top-right */}
+                      {isNew && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 6,
+                            right: 6,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.3,
+                            bgcolor: accentColor,
+                            color: 'white',
+                            px: 0.5,
+                            py: 0.1,
+                            borderRadius: '3px',
+                            fontSize: '0.5rem',
+                            fontWeight: 900,
+                            boxShadow: `0 1px 4px ${isFeatured ? 'rgba(99, 102, 241, 0.3)' : (idx % 2 !== 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)')}`,
+                            animation: 'pulse 1.5s infinite ease-in-out',
+                            '@keyframes pulse': {
+                              '0%': { transform: 'scale(1)', opacity: 0.9 },
+                              '50%': { transform: 'scale(1.05)', opacity: 1 },
+                              '100%': { transform: 'scale(1)', opacity: 0.9 }
+                            }
+                          }}
+                        >
+                          <Box sx={{ width: 3, height: 3, bgcolor: 'white', borderRadius: '50%' }} />
+                          NEW 🔥
+                        </Box>
+                      )}
+
                       {isFeatured ? (
                         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', gap: 2 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -1141,8 +1176,20 @@ export default function PublicLiveAlertsPage() {
                                   letterSpacing: 0.5
                                 }}
                               >
-                                {isLive ? "Active Notification" : "Featured Form"}
+                                {isLive ? `${item.targetAlert?.boardName || 'Active Notification'}` : "Featured Form"}
                               </Typography>
+                              {isLive && (
+                                <Box sx={{ display: 'flex', gap: 1.5, mt: 0.5, alignItems: 'center' }}>
+                                  <Typography sx={{ color: '#9CA3AF', fontSize: '0.58rem' }}>
+                                    {item.targetAlert?.createdAt ? new Date(item.targetAlert.createdAt).toLocaleDateString() : ''}
+                                  </Typography>
+                                  {item.targetAlert?.lastDate && item.targetAlert.lastDate !== 'N/A' && (
+                                    <Typography sx={{ color: '#E11D48', fontSize: '0.58rem', fontWeight: 800 }}>
+                                      Last Date: {item.targetAlert.lastDate}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              )}
                             </Box>
                           </Box>
                           
@@ -1159,22 +1206,61 @@ export default function PublicLiveAlertsPage() {
                             }}
                           />
                         </Box>
+                      ) : isLive ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+                          {/* Board Name */}
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              fontWeight: 850, 
+                              color: styles.textColor, 
+                              textTransform: 'uppercase', 
+                              fontSize: '0.58rem',
+                              letterSpacing: 0.3,
+                              mb: 0.3,
+                              pr: isNew ? 4 : 0,
+                              transition: 'color 0.2s ease',
+                              textAlign: 'left'
+                            }}
+                          >
+                            {item.targetAlert?.boardName || 'Official Update'}
+                          </Typography>
+
+                          {/* Title */}
+                          <Typography
+                            className="hot-link-title"
+                            sx={{
+                              fontWeight: 800,
+                              fontSize: '0.78rem',
+                              color: '#374151',
+                              lineHeight: 1.25,
+                              mb: 'auto',
+                              transition: 'color 0.15s ease',
+                              textAlign: 'left'
+                            }}
+                          >
+                            {item.displayName}
+                          </Typography>
+
+                          {/* Date details */}
+                          <Box sx={{ mt: 1.5 }}>
+                            {item.targetAlert?.lastDate && item.targetAlert.lastDate !== 'N/A' && (
+                              <Typography variant="caption" sx={{ color: '#E11D48', fontSize: '0.58rem', fontWeight: 800, display: 'block', mb: 0.2, textAlign: 'left' }}>
+                                Last Date: {item.targetAlert.lastDate}
+                              </Typography>
+                            )}
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.58rem' }}>
+                                {item.targetAlert?.createdAt ? new Date(item.targetAlert.createdAt).toLocaleDateString() : ''}
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: styles.textColor, fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
+                                Apply ↗
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
                       ) : (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                          {isLive && (
-                            <Box
-                              sx={{
-                                position: 'absolute',
-                                top: 8,
-                                right: 8,
-                                width: 6,
-                                height: 6,
-                                borderRadius: '50%',
-                                bgcolor: '#22C55E',
-                                boxShadow: '0 0 0 2px rgba(34, 197, 94, 0.3)'
-                              }}
-                            />
-                          )}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
                           <Typography
                             className="hot-link-title"
                             sx={{
@@ -1197,7 +1283,7 @@ export default function PublicLiveAlertsPage() {
                               letterSpacing: 0.3
                             }}
                           >
-                            {isLive ? "Click to view Details" : item.postCount || "Check Details"}
+                            {item.postCount || "Check Details"}
                           </Typography>
                         </Box>
                       )}
