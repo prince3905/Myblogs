@@ -1067,142 +1067,144 @@ export default function PublicLiveAlertsPage() {
                 Hot Links / Active Updates
               </Typography>
               
-              <Grid container spacing={2}>
+              <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'repeat(2, 1fr)',
+                  sm: 'repeat(4, 1fr)',
+                  md: 'repeat(4, 1fr)'
+                },
+                gap: 2,
+              }}>
                 {hotLinks.map((item, idx) => {
                   const isFeatured = idx === 0;
                   const styles = getCardStyles(item, idx);
                   const isLive = !item.isStatic && item.targetAlert;
                   
                   return (
-                    <Grid 
-                      item 
-                      xs={isFeatured ? 12 : 6} 
-                      sm={isFeatured ? 6 : 3} 
-                      md={isFeatured ? 6 : 3} 
+                    <Box
                       key={idx}
-                    >
-                      <Box
-                        onClick={() => handleHotLinkClick(item)}
-                        sx={{
-                          p: 2,
-                          height: '100%',
-                          minHeight: '85px',
-                          display: 'flex',
-                          flexDirection: isFeatured ? 'row' : 'column',
-                          justifyContent: isFeatured ? 'space-between' : 'center',
-                          alignItems: 'center',
-                          bgcolor: styles.bgColor,
-                          background: styles.bgGradient || styles.bgColor,
-                          border: `1px solid ${styles.borderColor}`,
-                          borderRadius: '12px',
-                          cursor: 'pointer',
-                          textAlign: isFeatured ? 'left' : 'center',
-                          position: 'relative',
-                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          boxShadow: `0 4px 6px -1px ${styles.shadowColor || 'rgba(0,0,0,0.03)'}`,
-                          '&:hover': {
-                            transform: 'translateY(-3px)',
-                            boxShadow: `0 10px 15px -3px ${styles.shadowColor || 'rgba(0,0,0,0.06)'}`,
-                            background: styles.hoverBgGradient || styles.hoverBg,
-                            borderColor: styles.textColor,
-                            '& .hot-link-title': {
-                              color: styles.textColor
-                            }
+                      onClick={() => handleHotLinkClick(item)}
+                      sx={{
+                        gridColumn: isFeatured 
+                          ? { xs: 'span 2', sm: 'span 2', md: 'span 2' } 
+                          : 'span 1',
+                        p: 2,
+                        display: 'flex',
+                        flexDirection: isFeatured ? 'row' : 'column',
+                        justifyContent: isFeatured ? 'space-between' : 'center',
+                        alignItems: 'center',
+                        bgcolor: styles.bgColor,
+                        background: styles.bgGradient || styles.bgColor,
+                        border: `1px solid ${styles.borderColor}`,
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        textAlign: isFeatured ? 'left' : 'center',
+                        position: 'relative',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        boxShadow: `0 4px 6px -1px ${styles.shadowColor || 'rgba(0,0,0,0.03)'}`,
+                        '&:hover': {
+                          transform: 'translateY(-3px)',
+                          boxShadow: `0 10px 15px -3px ${styles.shadowColor || 'rgba(0,0,0,0.06)'}`,
+                          background: styles.hoverBgGradient || styles.hoverBg,
+                          borderColor: styles.textColor,
+                          '& .hot-link-title': {
+                            color: styles.textColor
                           }
-                        }}
-                      >
-                        {isFeatured ? (
-                          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', gap: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                              <Typography sx={{ fontSize: '1.4rem', lineHeight: 1 }}>🔥</Typography>
-                              <Box>
-                                <Typography
-                                  className="hot-link-title"
-                                  sx={{
-                                    fontWeight: 900,
-                                    fontSize: '0.88rem',
-                                    color: styles.textColor,
-                                    lineHeight: 1.3,
-                                    mb: 0.3,
-                                    transition: 'color 0.15s ease'
-                                  }}
-                                >
-                                  {item.displayName}
-                                </Typography>
-                                <Typography
-                                  sx={{
-                                    fontWeight: 700,
-                                    fontSize: '0.62rem',
-                                    color: '#4F46E5',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: 0.5
-                                  }}
-                                >
-                                  {isLive ? "Active Notification" : "Featured Form"}
-                                </Typography>
-                              </Box>
+                        }
+                      }}
+                    >
+                      {isFeatured ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', gap: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Typography sx={{ fontSize: '1.4rem', lineHeight: 1 }}>🔥</Typography>
+                            <Box>
+                              <Typography
+                                className="hot-link-title"
+                                sx={{
+                                  fontWeight: 900,
+                                  fontSize: '0.88rem',
+                                  color: styles.textColor,
+                                  lineHeight: 1.3,
+                                  mb: 0.3,
+                                  transition: 'color 0.15s ease'
+                                }}
+                              >
+                                {item.displayName}
+                              </Typography>
+                              <Typography
+                                sx={{
+                                  fontWeight: 700,
+                                  fontSize: '0.62rem',
+                                  color: '#4F46E5',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: 0.5
+                                }}
+                              >
+                                {isLive ? "Active Notification" : "Featured Form"}
+                              </Typography>
                             </Box>
-                            
-                            <Chip
-                              label={item.postCount}
-                              size="small"
+                          </Box>
+                          
+                          <Chip
+                            label={item.postCount}
+                            size="small"
+                            sx={{
+                              fontWeight: 800,
+                              fontSize: '0.68rem',
+                              bgcolor: '#4F46E5',
+                              color: 'white',
+                              borderRadius: '6px',
+                              px: 0.5
+                            }}
+                          />
+                        </Box>
+                      ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                          {isLive && (
+                            <Box
                               sx={{
-                                fontWeight: 800,
-                                fontSize: '0.68rem',
-                                bgcolor: '#4F46E5',
-                                color: 'white',
-                                borderRadius: '6px',
-                                px: 0.5
+                                position: 'absolute',
+                                top: 8,
+                                right: 8,
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                bgcolor: '#22C55E',
+                                boxShadow: '0 0 0 2px rgba(34, 197, 94, 0.3)'
                               }}
                             />
-                          </Box>
-                        ) : (
-                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                            {isLive && (
-                              <Box
-                                sx={{
-                                  position: 'absolute',
-                                  top: 8,
-                                  right: 8,
-                                  width: 6,
-                                  height: 6,
-                                  borderRadius: '50%',
-                                  bgcolor: '#22C55E',
-                                  boxShadow: '0 0 0 2px rgba(34, 197, 94, 0.3)'
-                                }}
-                              />
-                            )}
-                            <Typography
-                              className="hot-link-title"
-                              sx={{
-                                fontWeight: 800,
-                                fontSize: '0.78rem',
-                                color: styles.textColor,
-                                lineHeight: 1.25,
-                                mb: 0.3,
-                                transition: 'color 0.15s ease'
-                              }}
-                            >
-                              {item.displayName}
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontWeight: 700,
-                                fontSize: '0.62rem',
-                                color: '#6B7280',
-                                textTransform: 'uppercase',
-                                letterSpacing: 0.3
-                              }}
-                            >
-                              {isLive ? "Click to view Details" : item.postCount || "Check Details"}
-                            </Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    </Grid>
+                          )}
+                          <Typography
+                            className="hot-link-title"
+                            sx={{
+                              fontWeight: 800,
+                              fontSize: '0.78rem',
+                              color: styles.textColor,
+                              lineHeight: 1.25,
+                              mb: 0.3,
+                              transition: 'color 0.15s ease'
+                            }}
+                          >
+                            {item.displayName}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontWeight: 700,
+                              fontSize: '0.62rem',
+                              color: '#6B7280',
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.3
+                            }}
+                          >
+                            {isLive ? "Click to view Details" : item.postCount || "Check Details"}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
                   );
                 })}
-              </Grid>
+              </Box>
             </Box>
 
             <Box
