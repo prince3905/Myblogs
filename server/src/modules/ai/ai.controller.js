@@ -686,6 +686,17 @@ async function generateBlogContentCore({ title, model, length, tone, language, c
 ${categoryFrameworkInstr}
 
 **1. GOOGLE SEO CORE RULES (STRICTLY MANDATORY):**
+- FOCUS KEYWORD & SLUG INTEGRATION Rules:
+  - CRITICAL ENTRY CONSTRAINTS: The AI engine must explicitly pull the provided 'Focus Keyword' (from the simulated keyword strategy below) from the client request.
+  - FIRST PARAGRAPH LOCK: The exact focus keyword phrase must be integrated naturally within the first 60 words of the Introduction paragraph. No artificial padding allowed.
+  - SUBHEADING INJECTION: The exact focus keyword phrase must be embedded seamlessly inside at least ONE H2 Subheading tag.
+  - URL SLUG VALIDATION: Ensure that the generated URL slug matches a strict hyphenated layout containing the core target focus keyword perfectly without special character symbols (e.g., "upsc-combined-geo-scientist-mains-exam-admit-card-2026").
+- SUPPORTING/SECONDARY KEYWORDS INJECTION Rules:
+  - LATENT SEMANTIC CLUSTERING (LSI): The AI generator must pick secondary/supporting keywords from the metadata context/simulated keywords and naturally sprinkle them across H3 subheadings and bullet points.
+  - DENSITY CEILING: Maintain an absolute target density threshold between 1.0% to 1.5% max for both the Focus Keyword and Supporting phrases to completely avoid any Google Spam flag penalties.
+- HUMAN-CENTRIC ANTI-FLUFF CONSTRAINTS (Pure Readability):
+  - BANNED ROBOTIC PATTERNS: You are strictly forbidden from generating template filler texts anywhere in the post, such as "X is a topic that many people search for online..." or "In today's digital world...".
+  - DIRECT VALUE DELIVERY: Lead every single heading section with an immediate, answer-first, authoritative Hinglish/English summary block.
 - CREATIVE TITLE OPTIMIZATION (HIGH-IMPACT COPYWRITING):
   - Generate a professional, standard, and highly engaging article title (and store it in the "title" JSON field).
   - DO NOT use generic, plain AI query structures or question-based headings/titles (e.g. avoid words/phrases like "Do you know what is", "What is", "When to", "How to", "Why you need").
@@ -693,7 +704,7 @@ ${categoryFrameworkInstr}
   - *Example*: Convert a query like "Do you know what is prompt engineering?" to "Prompt Engineering May Change Your Life" or similar high-impact copywriting statements.
   - The title must look professional, human-crafted, premium, and authoritative.
 - FOCUS KEYWORD PLACEMENT: The exact focus keyword provided must be injected naturally in the first 2-3 lines of the Introduction paragraph, inside at least one H2 subheading, and maintain a natural density of 1.0% to 1.5% throughout the text body.
-- WORD COUNT BOUNDS: Force a comprehensive depth layout stretching between 1,200 to 1,500 words minimum. Suppress thin content.
+- WORD COUNT BOUNDS: Force a deep, comprehensive contextual envelope stretching strictly between 1,200 to 1,500 words minimum. Suppress thin content.
 - RICH SNIPPETS DATA: Automatically structure a clean specification data table or comparison grid comparing the topic with current market competitors.
 - METADATA EXTRACTION: Generate a strict 140-150 character meta description containing the focus keyword at the very beginning.
 - KEYWORD RESEARCH RULES:
@@ -713,12 +724,13 @@ ${ADSENSE_CONSTRAINTS}
 
 **2. GENERATIVE ENGINE OPTIMIZATION (GEO) RULES (STRICTLY MANDATORY):**
 - AUTHORITATIVE CITATIONS: Embed journalistic attribution hooks naturally (e.g., "According to industry testing standards...", "Market data reveals that...", "According to recent studies..."). Citing real, credible sources or organizations is crucial for GEO citations and rankings.
-- CLARIFY CONCEPTS: Always use clear defining verbs (e.g., "refers to", "is defined as", "essentially means") when introducing technical AI, hardware, or core subject terminologies to help Google's Generative AI Engine understand the entities.
+- CLARIFY CONCEPTS & GEO CITATION HOOKS: Always use clear defining verbs (e.g., "refers to", "is defined as", "essentially means", "is officially established by") when introducing technical AI, hardware, or core subject terminologies to help Google's Generative AI Engine understand the entities. Embed authoritative attribution hooks like "According to the official departmental notification criteria...".
 
 **3. ANSWER ENGINE & VOICE OPTIMIZATION (AEO) RULES (STRICTLY MANDATORY):**
-- CONVERSATIONAL HEADERS: Use voice-search friendly question words like 'What is', 'How to', or 'Why' across H2 and H3 structures.
-- FAQ SECTION BLOCK: Ensure every post ends with a dedicated section explicitly titled "FAQ" or "Frequently Asked Questions" containing direct, concise answer snippets (under 45 words per answer) for direct Google featured snippet extraction.
+- CONVERSATIONAL HEADERS & AEO SNIPPETS: Use voice-search friendly question words like 'What is', 'How to', or 'Why' across H2 and H3 structures. Utilize conversational query terms like 'what is', 'how to', or 'why' across subheading distributions.
+- FAQ BLOCK TERMINATION: Every generated article must conclude with an explicit 'Frequently Asked Questions' section, keeping individual answer arrays strictly under 45 words for seamless Google Featured Snippet extraction.
   - Format each FAQ item as: ### Question: question text? then answer in next line (under 45 words).
+- CTA LINK ANCHORING: All critical hyperlinks (Apply Online, Download Admit Card, Official Website) must be grouped cleanly under an explicit 'महत्वपूर्ण लिंक्स' H2 heading using clear bullet points and emoji indicators.
 
 **PAGE SPEED 100/100 RULES (MANDATORY):**
 - IMAGES: NEVER include raw JPEG/PNG in content. All images must use <picture> element with WebP format.
@@ -731,7 +743,7 @@ ${ADSENSE_CONSTRAINTS}
 
 **SEO METADATA:**
 - title: The creative, professional copywriting-optimized title rephrased as per rules.
-- slug: SHORT slug — max 2-4 core keywords, hyphenated, NO stop words. ULTRA-SHORT preferred. E.g. "react-guide", "ipl-2026-points-table", NOT "how-to-learn-react-js-in-2026-step-by-step"
+- slug: The URL slug matching a strict hyphenated layout containing the core target focus keyword perfectly without special character symbols (e.g., "upsc-combined-geo-scientist-mains-exam-admit-card-2026").
 - summary: Professional 140-150 character meta description in natural Hinglish containing the focus keyword at the very beginning.
 - seoTitle: Click-worthy title under 60 characters for Google India
 - seoDescription: 1-2 sentence meta description under 150 chars containing the focus keyword at the very beginning.
@@ -751,7 +763,7 @@ ${ADSENSE_CONSTRAINTS}
 - Use specific numbers, stats, data, real examples.
 - Avoid: "Frequ01", "interru01", "Q1" codes, horizontal lines (---, ___).
 - Use bold sparingly (max 3-4 per article). No over-quoting, no generic phrases.
-- ## FAQ section at end with 3 highly searched questions. Format each as: ### Question: question text? then answer in next line.
+- ## Frequently Asked Questions section at end with 3 highly searched questions. Format each as: ### Question: question text? then answer in next line. Keep individual answer arrays strictly under 45 words.
 - ## Key Takeaways with 4-5 bullets at end.
 - HEADINGS must follow strict descending order: H2 → H3. NEVER skip levels. NEVER wrap entire paragraphs or bullet lists inside heading tags.`;
 
