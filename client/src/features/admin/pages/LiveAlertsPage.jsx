@@ -165,6 +165,33 @@ export default function LiveAlertsPage() {
   const [selectedState, setSelectedState] = useState('All States');
   const [sortOption, setSortOption] = useState('date-desc');
   const [expandedId, setExpandedId] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState({});
+
+  const handleToggleExpand = async (alertId) => {
+    if (expandedId === alertId) {
+      setExpandedId(null);
+    } else {
+      setExpandedId(alertId);
+      const alert = alerts.find(a => a._id === alertId);
+      if (alert && !alert.detailsText) {
+        setDetailsLoading(prev => ({ ...prev, [alertId]: true }));
+        try {
+          const res = await request(`/api/admin/live-alerts/${alertId}`);
+          if (res.success && res.data) {
+            setAlerts(prev => prev.map(a => 
+              a._id === alertId ? { ...a, ...res.data } : a
+            ));
+          } else {
+            addToast(res.message || 'Failed to fetch details', 'error');
+          }
+        } catch (err) {
+          addToast(err.message || 'Error loading alert details', 'error');
+        } finally {
+          setDetailsLoading(prev => ({ ...prev, [alertId]: false }));
+        }
+      }
+    }
+  };
 
   function parseDetails(text, alert) {
     const parsed = {
@@ -1073,7 +1100,7 @@ export default function LiveAlertsPage() {
                           <TableCell sx={{ px: 1, py: 1.8, textAlign: 'center' }}>
                             <IconButton
                               size="small"
-                              onClick={() => setExpandedId(isExpanded ? null : alert._id)}
+                              onClick={() => handleToggleExpand(alert._id)}
                               sx={{ color: '#6B7280' }}
                             >
                               {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -1194,83 +1221,92 @@ export default function LiveAlertsPage() {
                         {isExpanded && (
                           <TableRow sx={{ bgcolor: '#F8FAFC' }}>
                             <TableCell colSpan={8} sx={{ p: 0, borderBottom: i < sortedAlerts.length - 1 ? '1px solid #ECECEC' : 'none' }}>
-                              <Box sx={{ p: 3, display: 'flex', gap: 3, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
-                                {/* Left Content: Details Text Factsheet */}
-                                <Box sx={{ flex: 1, minWidth: { xs: '100%', md: 0 } }}>
-                                  <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#374151', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    📖 Premium Job Blog Preview
+                              {detailsLoading[alert._id] ? (
+                                <Box sx={{ py: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
+                                  <CircularProgress size={30} sx={{ color: '#4F46E5' }} />
+                                  <Typography variant="body2" sx={{ color: '#6B7280', fontWeight: 500 }}>
+                                    Fetching live alert details...
                                   </Typography>
-                                  <Paper variant="outlined" sx={{ p: 3, bgcolor: 'white', borderRadius: 2.5, maxHeight: 650, overflowY: 'auto' }}>
-                                    {renderBlogContent(alert)}
-                                  </Paper>
                                 </Box>
-
-                                {/* Right Content: Direct Official Actions */}
-                                <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                  <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#374151', mb: 0.5 }}>
-                                    🔗 Official Direct Resources
-                                  </Typography>
-
-                                  {getDynamicActions(alert).map((act, actIdx) => (
-                                    <Button
-                                      key={actIdx}
-                                      variant="outlined"
-                                      component={MuiLink}
-                                      href={act.url || '#'}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      disabled={!act.url}
-                                      startIcon={act.icon}
-                                      sx={{
-                                        justifyContent: 'flex-start',
-                                        textTransform: 'none',
-                                        borderRadius: 2,
-                                        fontWeight: 600,
-                                        color: act.url ? act.color : '#9CA3AF',
-                                        borderColor: act.url ? act.borderColor : '#E5E7EB',
-                                        '&:hover': {
-                                          bgcolor: act.url ? act.hoverBg : 'transparent',
-                                          borderColor: act.url ? act.color : '#E5E7EB'
-                                        }
-                                      }}
-                                    >
-                                      {act.label}
-                                    </Button>
-                                  ))}
-
-
-                                  <Box sx={{
-                                    p: 2,
-                                    borderRadius: 2.5,
-                                    bgcolor: '#F0FDF4',
-                                    border: '1px solid #BBF7D0',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 1.5,
-                                    mt: 1
-                                  }}>
-                                    <Typography variant="body2" sx={{ color: '#166534', fontWeight: 600, fontSize: '0.75rem' }}>
-                                      💡 Ready to publish? Click below to generate a data-rich SEO Hinglish post with all these resources.
+                              ) : (
+                                <Box sx={{ p: 3, display: 'flex', gap: 3, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+                                  {/* Left Content: Details Text Factsheet */}
+                                  <Box sx={{ flex: 1, minWidth: { xs: '100%', md: 0 } }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#374151', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      📖 Premium Job Blog Preview
                                     </Typography>
-                                    <Button
-                                      variant="contained"
-                                      size="small"
-                                      onClick={() => handleDraftPost(alert)}
-                                      disabled={draftingId !== null}
-                                      startIcon={draftingId === alert._id ? <CircularProgress size={12} color="inherit" /> : <WriteIcon />}
-                                      sx={{
-                                        fontWeight: 600,
-                                        textTransform: 'none',
-                                        fontSize: '0.75rem',
-                                        bgcolor: '#166534',
-                                        '&:hover': { bgcolor: '#14532D' }
-                                      }}
-                                    >
-                                      {draftingId === alert._id ? 'Drafting...' : alert.status === 'drafted' ? 'Re-draft Blog Post' : 'Draft Blog Post Now'}
-                                    </Button>
+                                    <Paper variant="outlined" sx={{ p: 3, bgcolor: 'white', borderRadius: 2.5, maxHeight: 650, overflowY: 'auto' }}>
+                                      {renderBlogContent(alert)}
+                                    </Paper>
+                                  </Box>
+
+                                  {/* Right Content: Direct Official Actions */}
+                                  <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#374151', mb: 0.5 }}>
+                                      🔗 Official Direct Resources
+                                    </Typography>
+
+                                    {getDynamicActions(alert).map((act, actIdx) => (
+                                      <Button
+                                        key={actIdx}
+                                        variant="outlined"
+                                        component={MuiLink}
+                                        href={act.url || '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        disabled={!act.url}
+                                        startIcon={act.icon}
+                                        sx={{
+                                          justifyContent: 'flex-start',
+                                          textTransform: 'none',
+                                          borderRadius: 2,
+                                          fontWeight: 600,
+                                          color: act.url ? act.color : '#9CA3AF',
+                                          borderColor: act.url ? act.borderColor : '#E5E7EB',
+                                          '&:hover': {
+                                            bgcolor: act.url ? act.hoverBg : 'transparent',
+                                            borderColor: act.url ? act.color : '#E5E7EB'
+                                          }
+                                        }}
+                                      >
+                                        {act.label}
+                                      </Button>
+                                    ))}
+
+
+                                    <Box sx={{
+                                      p: 2,
+                                      borderRadius: 2.5,
+                                      bgcolor: '#F0FDF4',
+                                      border: '1px solid #BBF7D0',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      gap: 1.5,
+                                      mt: 1
+                                    }}>
+                                      <Typography variant="body2" sx={{ color: '#166534', fontWeight: 600, fontSize: '0.75rem' }}>
+                                        💡 Ready to publish? Click below to generate a data-rich SEO Hinglish post with all these resources.
+                                      </Typography>
+                                      <Button
+                                        variant="contained"
+                                        size="small"
+                                        onClick={() => handleDraftPost(alert)}
+                                        disabled={draftingId !== null}
+                                        startIcon={draftingId === alert._id ? <CircularProgress size={12} color="inherit" /> : <WriteIcon />}
+                                        sx={{
+                                          fontWeight: 600,
+                                          textTransform: 'none',
+                                          fontSize: '0.75rem',
+                                          bgcolor: '#166534',
+                                          '&:hover': { bgcolor: '#14532D' }
+                                        }}
+                                      >
+                                        {draftingId === alert._id ? 'Drafting...' : alert.status === 'drafted' ? 'Re-draft Blog Post' : 'Draft Blog Post Now'}
+                                      </Button>
+                                    </Box>
                                   </Box>
                                 </Box>
-                              </Box>
+                              )}
                             </TableCell>
                           </TableRow>
                         )}

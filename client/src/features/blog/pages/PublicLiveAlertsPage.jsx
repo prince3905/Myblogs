@@ -745,7 +745,39 @@ export default function PublicLiveAlertsPage() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedState, setSelectedState] = useState('All States');
-  const [selectedAlert, setSelectedAlert] = useState(null);
+  const [selectedAlert, setSelectedAlertState] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [errorLoadingDetails, setErrorLoadingDetails] = useState('');
+
+  const setSelectedAlert = async (alert) => {
+    if (!alert) {
+      setSelectedAlertState(null);
+      return;
+    }
+    
+    setSelectedAlertState(alert);
+    
+    if (!alert.detailsText) {
+      setDetailsLoading(true);
+      setErrorLoadingDetails('');
+      try {
+        const res = await request(`/api/public/live-alerts/${alert._id}`);
+        if (res.success && res.data) {
+          setSelectedAlertState(res.data);
+          setAlerts(prevAlerts => prevAlerts.map(a => 
+            a._id === alert._id ? { ...a, ...res.data } : a
+          ));
+        } else {
+          setErrorLoadingDetails(res.message || 'Failed to fetch details from server');
+        }
+      } catch (err) {
+        setErrorLoadingDetails(err.message || 'Failed to connect to server');
+      } finally {
+        setDetailsLoading(false);
+      }
+    }
+  };
+
   const navigate = useNavigate();
 
   const hotLinks = useMemo(() => {
@@ -1677,7 +1709,18 @@ export default function PublicLiveAlertsPage() {
           </DialogTitle>
 
           <DialogContent dividers sx={{ p: { xs: 2, md: 3 }, bgcolor: '#F8FAFC' }}>
-            {renderBlogContent(selectedAlert)}
+            {detailsLoading ? (
+              <Box sx={{ py: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
+                <Typography variant="body2" sx={{ color: '#6B7280', fontWeight: 600 }}>
+                  Fetching official notification details factsheet...
+                </Typography>
+              </Box>
+            ) : errorLoadingDetails ? (
+              <Alert severity="error" sx={{ borderRadius: 2 }}>{errorLoadingDetails}</Alert>
+            ) : (
+              renderBlogContent(selectedAlert)
+            )}
           </DialogContent>
 
           <DialogActions sx={{ p: 2.5, borderTop: '1px solid #F1F5F9', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>

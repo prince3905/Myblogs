@@ -20,4 +20,7 @@ const liveAlertSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+liveAlertSchema.index({ status: 1, parsedPostDate: -1, createdAt: -1 });
+liveAlertSchema.index({ parsedPostDate: -1, createdAt: -1 });
+
 module.exports = mongoose.model('LiveAlert', liveAlertSchema);

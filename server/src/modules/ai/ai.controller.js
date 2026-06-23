@@ -30,7 +30,7 @@ Structure the post like a Sarkari result announcement or exam notification artic
 • परिणाम और महत्वपूर्ण आंकड़े (Results & Key Statistics)
 • स्टेप-बाय-स्टेप प्रोसेस (Step-by-Step Process)
 • पिछले वर्ष के आंकड़े (Previous Year Trends — cutoff, vacancies)
-• अक्सर पूछे जाने वाले सवाल (Frequently Asked Questions)
+• अक्सर पूछे जाने वाले सवाल (FAQ)
 - Focus on: official notifications, eligibility, deadlines, exam patterns, vacancy analysis.
 - Include exact numbers: vacancy count, application fees, salary range, age limit.
 - STRICTLY BANNED from this category: "How it works", "Key Benefits", "What is", "Step-by-Step Guide" (English), "Overview".
@@ -688,8 +688,8 @@ ${categoryFrameworkInstr}
 **1. GOOGLE SEO CORE RULES (STRICTLY MANDATORY):**
 - FOCUS KEYWORD & SLUG INTEGRATION Rules:
   - CRITICAL ENTRY CONSTRAINTS: The AI engine must explicitly pull the provided 'Focus Keyword' (from the simulated keyword strategy below) from the client request.
-  - FIRST PARAGRAPH LOCK: The exact focus keyword phrase must be integrated naturally within the first 60 words of the Introduction paragraph. No artificial padding allowed.
-  - SUBHEADING INJECTION: The exact focus keyword phrase must be embedded seamlessly inside at least ONE H2 Subheading tag.
+  - FIRST PARAGRAPH LOCK: The article must start directly with a short, hook-driven introduction paragraph (3-4 lines) BEFORE any H2 headings. The exact focus keyword phrase must be integrated naturally within the first 60 words of this Introduction paragraph. No artificial padding allowed.
+  - SUBHEADING INJECTION: The exact focus keyword phrase must be embedded seamlessly inside at least ONE H2 Subheading tag (e.g., "## Focus Keyword Eligibility Criteria" or similar framework headings containing the focus keyword).
   - URL SLUG VALIDATION: Ensure that the generated URL slug matches a strict hyphenated layout containing the core target focus keyword perfectly without special character symbols (e.g., "upsc-combined-geo-scientist-mains-exam-admit-card-2026").
 - SUPPORTING/SECONDARY KEYWORDS INJECTION Rules:
   - LATENT SEMANTIC CLUSTERING (LSI): The AI generator must pick secondary/supporting keywords from the metadata context/simulated keywords and naturally sprinkle them across H3 subheadings and bullet points.
@@ -704,7 +704,7 @@ ${categoryFrameworkInstr}
   - *Example*: Convert a query like "Do you know what is prompt engineering?" to "Prompt Engineering May Change Your Life" or similar high-impact copywriting statements.
   - The title must look professional, human-crafted, premium, and authoritative.
 - FOCUS KEYWORD PLACEMENT: The exact focus keyword provided must be injected naturally in the first 2-3 lines of the Introduction paragraph, inside at least one H2 subheading, and maintain a natural density of 1.0% to 1.5% throughout the text body.
-- WORD COUNT BOUNDS: Force a deep, comprehensive contextual envelope stretching strictly between 1,200 to 1,500 words minimum. Suppress thin content.
+- WORD COUNT BOUNDS: Force a deep, comprehensive contextual envelope stretching strictly between 1,200 to 1,500 words minimum. You MUST write at least 1,200 words of body content to pass the length checks. Suppress thin content.
 - RICH SNIPPETS DATA: Automatically structure a clean specification data table or comparison grid comparing the topic with current market competitors.
 - METADATA EXTRACTION: Generate a strict 140-150 character meta description containing the focus keyword at the very beginning.
 - KEYWORD RESEARCH RULES:
@@ -723,13 +723,13 @@ ${categoryFrameworkInstr}
 ${ADSENSE_CONSTRAINTS}
 
 **2. GENERATIVE ENGINE OPTIMIZATION (GEO) RULES (STRICTLY MANDATORY):**
-- AUTHORITATIVE CITATIONS: Embed journalistic attribution hooks naturally (e.g., "According to industry testing standards...", "Market data reveals that...", "According to recent studies..."). Citing real, credible sources or organizations is crucial for GEO citations and rankings.
-- CLARIFY CONCEPTS & GEO CITATION HOOKS: Always use clear defining verbs (e.g., "refers to", "is defined as", "essentially means", "is officially established by") when introducing technical AI, hardware, or core subject terminologies to help Google's Generative AI Engine understand the entities. Embed authoritative attribution hooks like "According to the official departmental notification criteria...".
-
+- AUTHORITATIVE CITATIONS: You MUST embed at least two clear journalistic attribution hooks naturally (e.g., "According to the official board notification criteria...", "As stated in the recruitment guidelines...", "According to industry standards..."). Citing real, credible sources or organizations is crucial for GEO citations and rankings.
+- CLARIFY CONCEPTS & GEO CITATION HOOKS: You MUST include at least one clear concept definition using defining verbs (e.g., "refers to", "is defined as", "essentially means", "is officially established by") when introducing technical terminologies, board names, or exam types to help Google's Generative AI Engine understand the entities.
+ 
 **3. ANSWER ENGINE & VOICE OPTIMIZATION (AEO) RULES (STRICTLY MANDATORY):**
 - CONVERSATIONAL HEADERS & AEO SNIPPETS: Use voice-search friendly question words like 'What is', 'How to', or 'Why' across H2 and H3 structures. Utilize conversational query terms like 'what is', 'how to', or 'why' across subheading distributions.
-- FAQ BLOCK TERMINATION: Every generated article must conclude with an explicit 'Frequently Asked Questions' section, keeping individual answer arrays strictly under 45 words for seamless Google Featured Snippet extraction.
-  - Format each FAQ item as: ### Question: question text? then answer in next line (under 45 words).
+- FAQ BLOCK TERMINATION: Every generated article must conclude with an explicit 'Frequently Asked Questions (FAQ)' section heading. You must include exactly 3 questions formatted as H3.
+  - Format each FAQ item EXACTLY as: "### Question: [Hinglish question using Latin script question words like Kaise, Kab, Kya, How to, What is]?" followed by the answer in the next line. Keep individual answers strictly under 45 words for seamless Google Featured Snippet extraction.
 - CTA LINK ANCHORING: All critical hyperlinks (Apply Online, Download Admit Card, Official Website) must be grouped cleanly under an explicit 'महत्वपूर्ण लिंक्स' H2 heading using clear bullet points and emoji indicators.
 
 **PAGE SPEED 100/100 RULES (MANDATORY):**
@@ -763,7 +763,7 @@ ${ADSENSE_CONSTRAINTS}
 - Use specific numbers, stats, data, real examples.
 - Avoid: "Frequ01", "interru01", "Q1" codes, horizontal lines (---, ___).
 - Use bold sparingly (max 3-4 per article). No over-quoting, no generic phrases.
-- ## Frequently Asked Questions section at end with 3 highly searched questions. Format each as: ### Question: question text? then answer in next line. Keep individual answer arrays strictly under 45 words.
+- ## Frequently Asked Questions (FAQ) section at end with 3 highly searched questions. Format each as: ### Question: question text? then answer in next line. Keep individual answer arrays strictly under 45 words.
 - ## Key Takeaways with 4-5 bullets at end.
 - HEADINGS must follow strict descending order: H2 → H3. NEVER skip levels. NEVER wrap entire paragraphs or bullet lists inside heading tags.`;
 
@@ -775,11 +775,13 @@ ${ADSENSE_CONSTRAINTS}
 
   let keywordInject = '';
   let kwResearchId = null;
+  let resolvedFocusKeyword = '';
   try {
     const kwData = await aggregateKeywordData(title);
     if (kwData && kwData.filtered.length > 0) {
       const allKws = kwData.filtered;
       const focus = allKws.find(k => k.type === 'short-tail') || allKws[0];
+      resolvedFocusKeyword = focus.keyword;
       const shortTail = allKws.filter(k => k.type === 'short-tail' || k.type === 'mid-tail').slice(0, 2);
       const longTail = allKws.filter(k => k.type === 'long-tail' || k.type === 'question-based').slice(0, 2);
       const lsiWords = allKws.filter(k => k.type === 'lsi').slice(0, 3);
@@ -815,6 +817,27 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
 
   let text = '';
 
+  const geminiResponseSchema = {
+    type: "OBJECT",
+    properties: {
+      title: { type: "STRING" },
+      category: { type: "STRING" },
+      permalink: { type: "STRING" },
+      slug: { type: "STRING" },
+      content: { type: "STRING" },
+      keywords: {
+        type: "ARRAY",
+        items: { type: "STRING" }
+      },
+      summary: { type: "STRING" },
+      imageTag: { type: "STRING" },
+      imagetag: { type: "STRING" },
+      seoTitle: { type: "STRING" },
+      seoDescription: { type: "STRING" }
+    },
+    required: ["title", "category", "permalink", "slug", "content", "keywords", "summary", "imageTag", "imagetag", "seoTitle", "seoDescription"]
+  };
+
   if (isGemini) {
     const primaryKey = GEMINI_API_KEY;
     const fallbackKey = GEMINI_API_KEY_2;
@@ -828,7 +851,8 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
           temperature: 0.7,
           maxOutputTokens: 8192,
           topP: 0.9,
-          responseMimeType: "application/json"
+          responseMimeType: "application/json",
+          responseSchema: geminiResponseSchema
         }
       }, {
         timeout: modelTimeout,
@@ -844,7 +868,8 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
               temperature: 0.7,
               maxOutputTokens: 8192,
               topP: 0.9,
-              responseMimeType: "application/json"
+              responseMimeType: "application/json",
+              responseSchema: geminiResponseSchema
             }
           }, {
             timeout: modelTimeout,
@@ -869,7 +894,10 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
                 timeout: 60000
               });
               text = groqFallback.data?.choices?.[0]?.message?.content || '';
-            } catch { throw fallbackErr; }
+            } catch (groqErr) {
+              console.error('Groq fallback error details:', groqErr.message, groqErr.response?.status, groqErr.response?.data);
+              throw fallbackErr;
+            }
           } else {
             throw fallbackErr;
           }
@@ -903,7 +931,7 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
         try {
           const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
             contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 8192, topP: 0.9, responseMimeType: "application/json" }
+            generationConfig: { temperature: 0.7, maxOutputTokens: 8192, topP: 0.9, responseMimeType: "application/json", responseSchema: geminiResponseSchema }
           }, { timeout: 60000, headers: { 'Content-Type': 'application/json' } });
           text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         } catch { throw groqErr; }
@@ -997,6 +1025,10 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
     : title;
   optimizedTitle = fallbackRephraseTitle(optimizedTitle, detectedCategory);
 
+  if (detectedCategory === 'Sarkari Jobs & Exams' && !optimizedTitle.toLowerCase().includes(title.toLowerCase())) {
+    optimizedTitle = `${title}: Notification, Exam Dates & Latest Updates`;
+  }
+
   const slug = (parsed?.slug && parsed.slug.length < 80 && !/\s/.test(parsed.slug)) 
     ? parsed.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') 
     : makeSlug(optimizedTitle);
@@ -1064,6 +1096,17 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
   const finalCategory = processed.category || detectedCategory;
   const permalink = 'digitalhomeblog.in/' + finalCategory.toLowerCase().replace(/\s+/g, '-') + '/' + slug;
 
+  let finalTags = processed.tags || keywords;
+  if (resolvedFocusKeyword) {
+    const cleanFocus = resolvedFocusKeyword.trim();
+    finalTags = [
+      cleanFocus,
+      ...finalTags.filter(t => t.toLowerCase().trim() !== cleanFocus.toLowerCase())
+    ];
+  } else if (finalTags.length > 0) {
+    resolvedFocusKeyword = finalTags[0];
+  }
+
   return {
     title: optimizedTitle,
     content: processed.content,
@@ -1072,7 +1115,7 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
     summary: processed.summary,
     seoTitle: processed.seoTitle,
     seoDescription: processed.seoDescription,
-    keywords: processed.tags || keywords,
+    keywords: finalTags,
     category: finalCategory,
     imageTag: processed.imageTag,
     imageKeywords: processed.imageKeywords

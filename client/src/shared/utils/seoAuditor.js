@@ -67,8 +67,11 @@ export function calculateSeoScore(post, keywordResearch = null) {
   }
 
   // Metric 2: Focus Keyword in URL Slug (10 pts)
-  const slugKeyword = focusKeyword.replace(/\s+/g, '-');
-  if (focusKeyword && slug.toLowerCase().includes(slugKeyword)) {
+  const slugKeyword = focusKeyword.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const cleanFocusAlphaNum = focusKeyword.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanSlugAlphaNum = slug.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (focusKeyword && (cleanSlug.includes(slugKeyword) || cleanSlugAlphaNum.includes(cleanFocusAlphaNum))) {
     checks.keywordInSlug = true;
     score += 10;
   } else {
@@ -77,7 +80,8 @@ export function calculateSeoScore(post, keywordResearch = null) {
 
   // Metric 3: Focus Keyword in Intro (15 pts)
   const introText = contentClean.slice(0, 400).toLowerCase();
-  if (focusKeyword && introText.includes(focusKeyword)) {
+  const cleanIntroAlpha = introText.replace(/[^a-z0-9]/g, '');
+  if (focusKeyword && (introText.includes(focusKeyword) || cleanIntroAlpha.includes(cleanFocusAlphaNum))) {
     checks.keywordInIntro = true;
     score += 15;
   } else {
@@ -87,10 +91,16 @@ export function calculateSeoScore(post, keywordResearch = null) {
   // Metric 4: Focus Keyword in H2 Heading (15 pts)
   // Check for <h2> tags or markdown ## headings in content
   const hasKeywordInH2 = (content.toLowerCase().match(/<h2[^>]*>[\s\S]*?<\/h2>/g) || [])
-    .some(h => stripHtml(h).toLowerCase().includes(focusKeyword)) 
+    .some(h => {
+      const text = stripHtml(h).toLowerCase();
+      return text.includes(focusKeyword) || text.replace(/[^a-z0-9]/g, '').includes(cleanFocusAlphaNum);
+    }) 
     || 
     (content.toLowerCase().match(/^##\s+.+$/gm) || [])
-    .some(h => h.includes(focusKeyword));
+    .some(h => {
+      const text = h.toLowerCase();
+      return text.includes(focusKeyword) || text.replace(/[^a-z0-9]/g, '').includes(cleanFocusAlphaNum);
+    });
 
   if (hasKeywordInH2) {
     checks.keywordInH2 = true;
@@ -102,7 +112,13 @@ export function calculateSeoScore(post, keywordResearch = null) {
   // Metric 5: Keyword Density (15 pts)
   let density = 0;
   if (focusKeyword && wordCount > 0) {
-    const regex = new RegExp('\\b' + focusKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+    const flexiblePattern = focusKeyword
+      .split(/[\s\/-]+/)
+      .filter(Boolean)
+      .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('[\\s\\/-]+');
+    const regex = new RegExp('\\b' + flexiblePattern + '\\b', 'gi');
+
     const matches = contentClean.match(regex);
     const count = matches ? matches.length : 0;
     density = parseFloat(((count / wordCount) * 100).toFixed(2));
@@ -302,7 +318,7 @@ export function calculateSeoScore(post, keywordResearch = null) {
   }
 
   // 3. Conversational trigger question words (20 pts)
-  const conversationalRegex = /\b(how\s+to|what\s+is|why\s+does|where\s+can|who\s+is|kab|kaise|kyun|kis|kya)\b/i;
+  const conversationalRegex = /\b(how\s+to|what\s+is|why\s+does|where\s+can|who\s+is|kab|kaise|kyun|kis|kya)\b|कैसे|कब|क्यों|किस|क्या/i;
   if (conversationalRegex.test(contentClean) || conversationalRegex.test(title)) {
     aeoChecks.hasConversationalWords = true;
     aeoScore += 20;

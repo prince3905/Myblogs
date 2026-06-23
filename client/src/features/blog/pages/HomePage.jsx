@@ -18,10 +18,10 @@ export default function HomePage() {
   const [loadingAlerts, setLoadingAlerts] = useState(true);
 
   useEffect(() => {
-    request('/api/public/live-alerts?status=active')
+    request('/api/public/live-alerts?status=active&limit=8')
       .then(res => {
         if (res.success) {
-          setAlerts((res.data || []).slice(0, 8));
+          setAlerts(res.data || []);
         }
       })
       .catch(err => console.error(err))
