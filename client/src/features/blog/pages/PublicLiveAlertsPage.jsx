@@ -479,7 +479,7 @@ function renderBlogContent(alert) {
 
         if (sect.type === 'table') {
           return (
-            <TableContainer key={idx} component={Paper} variant="outlined" sx={{ mb: 2.5, borderRadius: 2, overflow: 'hidden' }}>
+            <TableContainer key={idx} component={Paper} variant="outlined" sx={{ mb: 2.5, borderRadius: 2, overflowX: 'auto' }}>
               <Table size="small">
                 <TableBody>
                   {sect.rows.map((row, rowIdx) => {
@@ -489,7 +489,7 @@ function renderBlogContent(alert) {
                         key={rowIdx} 
                         sx={{ 
                           bgcolor: isHeader ? '#F3F4F6' : (rowIdx % 2 === 0 ? 'white' : '#F9FAFB'),
-                          '& td': { py: 1, px: 1.5 } 
+                          '& td': { py: 1, px: { xs: 1, sm: 1.5 } } 
                         }}
                       >
                         {row.map((col, colIdx) => (
@@ -1662,17 +1662,18 @@ export default function PublicLiveAlertsPage() {
           scroll="paper"
           PaperProps={{
             sx: {
-              borderRadius: '24px',
-              p: 1.5,
+              borderRadius: { xs: '16px', sm: '24px' },
+              p: { xs: 0, sm: 1.5 },
               bgcolor: '#FFFFFF',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+              boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+              margin: { xs: 1.5, sm: 4 }
             }
           }}
         >
           <DialogTitle 
             sx={{ 
               m: 0, 
-              p: 2.5, 
+              p: { xs: 2, sm: 2.5 }, 
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center',
@@ -1692,7 +1693,7 @@ export default function PublicLiveAlertsPage() {
                   sx={{ fontWeight: 700, fontSize: '0.68rem', bgcolor: '#F3F4F6', color: '#374151', borderRadius: '8px' }} 
                 />
               </Box>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827', mt: 1, lineHeight: 1.3 }}>
+              <Typography sx={{ fontWeight: 800, color: '#111827', mt: 1, lineHeight: 1.3, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
                 {selectedAlert.title}
               </Typography>
             </Box>
@@ -1708,7 +1709,7 @@ export default function PublicLiveAlertsPage() {
             </IconButton>
           </DialogTitle>
 
-          <DialogContent dividers sx={{ p: { xs: 2, md: 3 }, bgcolor: '#F8FAFC' }}>
+          <DialogContent dividers sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, bgcolor: '#F8FAFC' }}>
             {detailsLoading ? (
               <Box sx={{ py: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                 <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
@@ -1723,93 +1724,120 @@ export default function PublicLiveAlertsPage() {
             )}
           </DialogContent>
 
-          <DialogActions sx={{ p: 2.5, borderTop: '1px solid #F1F5F9', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
-            <Box sx={{ display: 'flex', gap: 1.2, flexWrap: 'wrap' }}>
-              {(() => {
-                const actionLinks = getDynamicActions(selectedAlert);
-                const pdfLink = actionLinks.find(l => l.label === 'Download Notification PDF')?.url;
-                const applyLink = actionLinks.find(l => l.label === 'Apply Online Now')?.url;
-                const officialWeb = actionLinks.find(l => l.label === 'Official Board Website')?.url;
+          <DialogActions 
+            sx={{ 
+              p: { xs: 1.5, sm: 2.5 }, 
+              borderTop: '1px solid #F1F5F9',
+              display: { xs: 'grid', sm: 'flex' },
+              gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'none' },
+              gap: 1.2,
+              alignItems: 'center',
+              width: '100%',
+              boxSizing: 'border-box'
+            }}
+          >
+            {(() => {
+              const actionLinks = getDynamicActions(selectedAlert);
+              const pdfLink = actionLinks.find(l => l.label === 'Download Notification PDF')?.url;
+              const applyLink = actionLinks.find(l => l.label === 'Apply Online Now')?.url;
+              const officialWeb = actionLinks.find(l => l.label === 'Official Board Website')?.url;
 
-                return (
-                  <>
-                    {pdfLink && (
-                      <Button
-                        variant="outlined"
-                        href={pdfLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        startIcon={<PdfIcon />}
-                        sx={{ 
-                          textTransform: 'none', 
-                          borderRadius: 2, 
-                          fontWeight: 700, 
-                          fontSize: '0.8rem',
-                          color: '#DC2626',
-                          borderColor: '#FCA5A5',
-                          px: 2.5,
-                          '&:hover': { bgcolor: '#FEF2F2', borderColor: '#DC2626' }
-                        }}
-                      >
-                        Official PDF
-                      </Button>
-                    )}
+              const activeButtonsCount = [pdfLink, applyLink, officialWeb].filter(Boolean).length + 1; // +1 for Close
+              const closeSpansTwo = activeButtonsCount % 2 !== 0;
 
-                    {applyLink && (
-                      <Button
-                        variant="contained"
-                        href={applyLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        startIcon={<ApplyIcon />}
-                        sx={{ 
-                          textTransform: 'none', 
-                          borderRadius: 2, 
-                          fontWeight: 700, 
-                          fontSize: '0.8rem',
-                          bgcolor: '#16A34A',
-                          px: 2.5,
-                          boxShadow: 'none',
-                          '&:hover': { bgcolor: '#15803D', boxShadow: 'none' }
-                        }}
-                      >
-                        Apply Online
-                      </Button>
-                    )}
+              return (
+                <>
+                  {pdfLink && (
+                    <Button
+                      variant="outlined"
+                      href={pdfLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      startIcon={<PdfIcon />}
+                      sx={{ 
+                        textTransform: 'none', 
+                        borderRadius: 2, 
+                        fontWeight: 700, 
+                        fontSize: '0.8rem',
+                        color: '#DC2626',
+                        borderColor: '#FCA5A5',
+                        px: 2.5,
+                        py: { xs: 1, sm: 1 },
+                        width: { xs: '100%', sm: 'auto' },
+                        '&:hover': { bgcolor: '#FEF2F2', borderColor: '#DC2626' }
+                      }}
+                    >
+                      Official PDF
+                    </Button>
+                  )}
 
-                    {officialWeb && (
-                      <Button
-                        variant="outlined"
-                        href={officialWeb}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        startIcon={<WebIcon />}
-                        sx={{ 
-                          textTransform: 'none', 
-                          borderRadius: 2, 
-                          fontWeight: 700, 
-                          fontSize: '0.8rem',
-                          color: '#2563EB',
-                          borderColor: '#93C5FD',
-                          px: 2.5,
-                          '&:hover': { bgcolor: '#EFF6FF', borderColor: '#2563EB' }
-                        }}
-                      >
-                        Board Website
-                      </Button>
-                    )}
-                  </>
-                );
-              })()}
-            </Box>
-            <Button 
-              onClick={() => setSelectedAlert(null)} 
-              variant="outlined" 
-              color="inherit"
-              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
-            >
-              Close
-            </Button>
+                  {applyLink && (
+                    <Button
+                      variant="contained"
+                      href={applyLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      startIcon={<ApplyIcon />}
+                      sx={{ 
+                        textTransform: 'none', 
+                        borderRadius: 2, 
+                        fontWeight: 700, 
+                        fontSize: '0.8rem',
+                        bgcolor: '#16A34A',
+                        px: 2.5,
+                        py: { xs: 1, sm: 1 },
+                        width: { xs: '100%', sm: 'auto' },
+                        boxShadow: 'none',
+                        '&:hover': { bgcolor: '#15803D', boxShadow: 'none' }
+                      }}
+                    >
+                      Apply Online
+                    </Button>
+                  )}
+
+                  {officialWeb && (
+                    <Button
+                      variant="outlined"
+                      href={officialWeb}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      startIcon={<WebIcon />}
+                      sx={{ 
+                        textTransform: 'none', 
+                        borderRadius: 2, 
+                        fontWeight: 700, 
+                        fontSize: '0.8rem',
+                        color: '#2563EB',
+                        borderColor: '#93C5FD',
+                        px: 2.5,
+                        py: { xs: 1, sm: 1 },
+                        width: { xs: '100%', sm: 'auto' },
+                        '&:hover': { bgcolor: '#EFF6FF', borderColor: '#2563EB' }
+                      }}
+                    >
+                      Board Website
+                    </Button>
+                  )}
+
+                  <Button 
+                    onClick={() => setSelectedAlert(null)} 
+                    variant="outlined" 
+                    color="inherit"
+                    sx={{ 
+                      borderRadius: 2, 
+                      textTransform: 'none', 
+                      fontWeight: 600,
+                      py: { xs: 1, sm: 1 },
+                      width: { xs: '100%', sm: 'auto' },
+                      ml: { sm: 'auto' },
+                      gridColumn: closeSpansTwo ? { xs: 'span 2', sm: 'auto' } : 'auto'
+                    }}
+                  >
+                    Close
+                  </Button>
+                </>
+              );
+            })()}
           </DialogActions>
         </Dialog>
       )}
