@@ -10,8 +10,7 @@ export default function RichTextEditor({ value, onChange }) {
       ['blockquote', 'code-block'],
       ['link', 'image'],
       ['clean']
-    ],
-    table: true
+    ]
   };
 
   const formats = [
