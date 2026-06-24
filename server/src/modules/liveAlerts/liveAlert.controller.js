@@ -96,10 +96,11 @@ FACTUAL METADATA:
 - Official Apply Portal URL: "${resolvedApply || ''}"
 
 CRITICAL DIRECTIVES:
-- You must strictly use the mandatory 'Sarkari Jobs & Exams' category framework headings in Hinglish/Hindi (e.g., महत्वपूर्ण तिथियाँ, आवेदन शुल्क, आयु सीमा, रिक्तियों का विवरण, योग्यता और पात्रता, चयन प्रक्रिया, आवेदन कैसे करें, महत्वपूर्ण लिंक्स, अक्सर पूछे जाने वाले सवाल). Do NOT use English headings.
-- Under EACH H2 heading, you MUST write at least 3-4 dense body paragraphs (each 4-5 sentences long) to explain the details in depth and guarantee a long-form article of at least 1,200+ words.
+- You must use the mandatory 'Sarkari Jobs & Exams' category framework headings in Hinglish/Hindi, but at least one of these H2 headings MUST contain the exact Focus Keyword/Title phrase "${cleanTitle}" (e.g., "## ${cleanTitle} की महत्वपूर्ण तिथियाँ" or "## ${cleanTitle} योग्यता और पात्रता" or prepend the title to any H2 heading). Do NOT use plain English headings.
+- Under EACH H2 heading, you MUST write at least 2 detailed body paragraphs (each 5-6 sentences long) to explain the details in depth and guarantee a long-form article of at least 1,250+ words to pass SEO length checks.
+- The generated 'seoDescription' and 'summary' JSON fields MUST start with the focus keyword/title and be strictly between 110 and 150 characters long.
 - You MUST embed at least two journalistic citations (e.g., using "According to the official board details..." or "As stated by the recruitment guidelines...") in the body paragraphs to satisfy trust checks.
-- You MUST define at least one core term using a clear defining verb like "refers to" or "is defined as" (e.g., "UPTGT recruitment refers to...").
+- You MUST define the main topic or focus keyword in the first paragraph using a clear defining phrase like "refers to" or "is defined as" or "ka matlab" (e.g., "This recruitment refers to..." or "${cleanTitle} refers to...").
 - In the "महत्वपूर्ण लिंक्स" (Important Links) H2 section, you MUST format the links EXACTLY as follows using these URLs:
   * 📝 Direct Link to Apply Online: [Apply Online](${resolvedApply || 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' apply online')})
   * 📄 Download Official Notification: [Notification PDF](${resolvedPdf || 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' recruitment notification pdf')})

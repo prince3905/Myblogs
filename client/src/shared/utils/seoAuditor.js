@@ -154,7 +154,8 @@ export function calculateSeoScore(post, keywordResearch = null) {
   }
 
   // Metric 7: Tables/Data Structure (10 pts)
-  if (content.toLowerCase().includes('<table') || content.toLowerCase().includes('class="comparison-table"') || content.toLowerCase().includes('class="data-table"')) {
+  const hasMarkdownTable = /\|[^\n]+\|\r?\n\s*\|[-:| ]+\|\r?\n\s*\|[^\n]+\|/.test(content);
+  if (content.toLowerCase().includes('<table') || content.toLowerCase().includes('class="comparison-table"') || content.toLowerCase().includes('class="data-table"') || hasMarkdownTable) {
     checks.hasTable = true;
     score += 10;
   } else {
@@ -281,7 +282,7 @@ export function calculateSeoScore(post, keywordResearch = null) {
   }
 
   // 4. Clear Concept Definitions (25 pts)
-  const definitionsRegex = /is\s+defined\s+as|refers\s+to|means\s+that|is\s+the\s+process\s+of|is\s+a\s+type\s+of/i;
+  const definitionsRegex = /is\s+defined\s+as|refers\s+to|means\s+that|is\s+the\s+process\s+of|is\s+a\s+type\s+of|defined\s+as|refers\s+as|ka\s+matlab\s+hai|ka\s+arth\s+hai|means\s+is|meaning\s+is/i;
   if (definitionsRegex.test(contentClean)) {
     geoChecks.hasDefinitions = true;
     geoScore += 25;
