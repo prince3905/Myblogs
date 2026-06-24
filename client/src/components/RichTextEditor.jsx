@@ -10,8 +10,18 @@ export default function RichTextEditor({ value, onChange }) {
       ['blockquote', 'code-block'],
       ['link', 'image'],
       ['clean']
-    ]
+    ],
+    table: true
   };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'blockquote', 'code-block',
+    'link', 'image',
+    'table'
+  ];
 
   return (
     <ReactQuill
@@ -19,6 +29,7 @@ export default function RichTextEditor({ value, onChange }) {
       value={value}
       onChange={onChange}
       modules={modules}
+      formats={formats}
       placeholder="Write your blog post content here..."
     />
   );
