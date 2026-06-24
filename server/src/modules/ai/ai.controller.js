@@ -860,7 +860,8 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
       });
       text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     } catch (geminiErr) {
-      if ((geminiErr.response?.status === 429 || geminiErr.response?.status === 503) && fallbackKey && fallbackKey !== primaryKey) {
+      console.warn(`[AI Controller] Primary Gemini call failed (Error: ${geminiErr.message}). Trying fallback key...`);
+      if (fallbackKey && fallbackKey !== primaryKey) {
         try {
           const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${fallbackKey}`, {
             contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
@@ -877,7 +878,8 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
           });
           text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         } catch (fallbackErr) {
-          if (GROQ_API_KEY && (fallbackErr.response?.status === 429 || fallbackErr.response?.status === 503)) {
+          console.warn(`[AI Controller] Fallback Gemini call failed (Error: ${fallbackErr.message}). Trying Groq...`);
+          if (GROQ_API_KEY) {
             try {
               const groqFallback = await axios.post(GROQ_CHAT_URL, {
                 model: 'llama-3.3-70b-versatile',
@@ -895,7 +897,7 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
               });
               text = groqFallback.data?.choices?.[0]?.message?.content || '';
             } catch (groqErr) {
-              console.error('Groq fallback error details:', groqErr.message, groqErr.response?.status, groqErr.response?.data);
+              console.error('[AI Controller] Groq fallback error details:', groqErr.message, groqErr.response?.status, groqErr.response?.data);
               throw fallbackErr;
             }
           } else {
@@ -903,7 +905,31 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
           }
         }
       } else {
-        throw geminiErr;
+        console.warn(`[AI Controller] No fallback Gemini key set. Trying Groq...`);
+        if (GROQ_API_KEY) {
+          try {
+            const groqFallback = await axios.post(GROQ_CHAT_URL, {
+              model: 'llama-3.3-70b-versatile',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+              ],
+              temperature: 0.7,
+              max_tokens: tokenBudget,
+              top_p: 0.9,
+              response_format: { type: "json_object" }
+            }, {
+              headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+              timeout: 60000
+            });
+            text = groqFallback.data?.choices?.[0]?.message?.content || '';
+          } catch (groqErr) {
+            console.error('[AI Controller] Groq fallback error details:', groqErr.message, groqErr.response?.status, groqErr.response?.data);
+            throw geminiErr;
+          }
+        } else {
+          throw geminiErr;
+        }
       }
     }
   } else if (isGroq) {

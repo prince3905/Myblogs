@@ -239,42 +239,47 @@ async function fetchGoogleSuggestions(topic) {
   const suggestions = new Set();
   const queries = [
     topic,
-    `best ${topic}`,
-    `how to ${topic}`,
-    `${topic} vs`,
-    `latest ${topic}`,
-    `${topic} tutorial`,
-    `${topic} guide`,
-    `${topic} 2026`
+    `latest ${topic}`
   ];
   
-  const promises = queries.map(async (q) => {
-    try {
-      const res = await axios.get(`https://suggestqueries.google.com/complete/search`, {
-        params: {
-          client: 'firefox',
-          hl: 'en',
-          gl: 'in',
-          q: q.trim()
-        },
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        },
-        timeout: 2000
-      });
-      const list = res.data[1] || [];
-      list.forEach(item => {
-        if (item && item.toLowerCase().trim() !== topic.toLowerCase().trim()) {
-          suggestions.add(item.toLowerCase().trim());
-        }
-      });
-    } catch (err) {
-      console.warn(`[SEO] Autocomplete failed for query "${q}":`, err.message);
-    }
+  const fetchPromise = (async () => {
+    const promises = queries.map(async (q) => {
+      try {
+        const res = await axios.get(`https://suggestqueries.google.com/complete/search`, {
+          params: {
+            client: 'firefox',
+            hl: 'en',
+            gl: 'in',
+            q: q.trim()
+          },
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          },
+          timeout: 2500
+        });
+        const list = res.data[1] || [];
+        list.forEach(item => {
+          if (item && item.toLowerCase().trim() !== topic.toLowerCase().trim()) {
+            suggestions.add(item.toLowerCase().trim());
+          }
+        });
+      } catch (err) {
+        console.warn(`[SEO] Autocomplete failed for query "${q}":`, err.message);
+      }
+    });
+
+    await Promise.all(promises);
+    return Array.from(suggestions).slice(0, 15);
+  })();
+
+  const timeoutPromise = new Promise((resolve) => {
+    setTimeout(() => {
+      console.warn(`[SEO] Autocomplete queries timed out after 3.5s for topic: "${topic}"`);
+      resolve([]);
+    }, 3500);
   });
 
-  await Promise.all(promises);
-  return Array.from(suggestions).slice(0, 35);
+  return Promise.race([fetchPromise, timeoutPromise]);
 }
 
 async function analyzeKeywordsWithGemini(topic, category, suggestions) {
