@@ -98,6 +98,10 @@ FACTUAL METADATA:
 CRITICAL DIRECTIVES:
 - You must use the mandatory 'Sarkari Jobs & Exams' category framework headings in Hinglish/Hindi, but at least one of these H2 headings MUST contain the exact Focus Keyword/Title phrase "${cleanTitle}" (e.g., "## ${cleanTitle} की महत्वपूर्ण तिथियाँ" or "## ${cleanTitle} योग्यता और पात्रता" or prepend the title to any H2 heading). Do NOT use plain English headings.
 - Under EACH H2 heading, you MUST write at least 2 detailed body paragraphs (each 5-6 sentences long) to explain the details in depth and guarantee a long-form article of at least 1,250+ words to pass SEO length checks.
+- To present details in a premium, highly readable format for students:
+  * Under the "## महत्वपूर्ण तिथियाँ" section, you MUST construct a neat Markdown table containing key dates (e.g., Event Name like Start Date / Last Date vs Date value).
+  * Under the "## आवेदन शुल्क" section, you MUST construct a neat Markdown table summarizing category-wise fee details (e.g., Category like Gen/OBC vs Fee amount).
+  * Under the "## रिक्तियों का विवरण" or "## योग्यता और पात्रता" section, you MUST construct a neat Markdown table showing: Post Name, Vacancies Count, Age Limit, and Eligibility Criteria.
 - The generated 'seoDescription' and 'summary' JSON fields MUST start with the focus keyword/title and be strictly between 110 and 150 characters long.
 - You MUST embed at least two journalistic citations (e.g., using "According to the official board details..." or "As stated by the recruitment guidelines...") in the body paragraphs to satisfy trust checks.
 - You MUST define the main topic or focus keyword in the first paragraph using a clear defining phrase like "refers to" or "is defined as" or "ka matlab" (e.g., "This recruitment refers to..." or "${cleanTitle} refers to...").
