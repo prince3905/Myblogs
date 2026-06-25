@@ -30,7 +30,7 @@ export default function HomePage() {
 
   return (
     <Layout>
-      <Seo title="Digital Home | Your Daily Dose of Information & Insights" description="Sarkari Result, Admit Card, Latest Jobs, Vacancies, Health, Education, Tech, and Career Insights from Digital Home Blog — researched and explained in simple language." keywords="sarkari result, admit card, latest jobs, vacancies, govt jobs, health tips, education updates, tech tutorials, all insights blog, digital home" />
+      <Seo title="Digital Home | Your Daily Dose of Information & Insights" description="Sarkari Result, Admit Card, Latest Jobs, Vacancies, Sarkari Result Tools, Kids Games (बचो का गेम), Health, Education, and Tech Insights from Digital Home Blog." keywords="sarkari result, admit card, latest jobs, vacancies, govt jobs, sarkari result tools, kids games, bacho ka game, health tips, education, tech tutorials, all insights blog, digital home" />
 
       {/* Live Job Alerts Board Section */}
       <Box 

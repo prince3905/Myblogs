@@ -3,10 +3,10 @@ import { Helmet } from 'react-helmet-async';
 export default function Seo({ title, description, image, url, canonical, keywords, jsonLd }) {
   const siteName = 'Digital Home';
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
-  const desc = description || 'Sarkari Result, Admit Card, Latest Jobs, Vacancies, Health, Education, Tech, and Career Insights from Digital Home Blog — researched and explained in simple language.';
+  const desc = description || 'Sarkari Result, Admit Card, Latest Jobs, Vacancies, Sarkari Result Tools, Kids Games (बचो का गेम), Health, Education, Tech, and Career Insights from Digital Home Blog.';
   const pageUrl = url || window.location.href;
   const canonicalUrl = canonical || pageUrl;
-  const keys = keywords || 'Sarkari Result, Admit Card, Latest Jobs, Govt Vacancies, Health Tips, Education, Tech Insights, All Insights Blog, Digital Home';
+  const keys = keywords || 'Sarkari Result, Admit Card, Latest Jobs, Govt Vacancies, Sarkari Result Tools, Kids Games, Bacho Ka Game, Health Tips, Education, Tech Insights, All Insights Blog, Digital Home';
 
   const enhanceSingle = (schema) => {
     if (!schema) return null;
@@ -68,7 +68,9 @@ export default function Seo({ title, description, image, url, canonical, keyword
             "Digital Home Health",
             "Digital Home Education",
             "Digital Home Insights",
-            "All Insights Blog"
+            "All Insights Blog",
+            "Sarkari Result Tool",
+            "Digital Home Kids Games"
           ],
           'url': typeof window !== 'undefined' ? window.location.origin : 'https://digitalhomeblog.in',
           'logo': {
