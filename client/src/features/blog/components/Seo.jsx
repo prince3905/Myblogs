@@ -3,9 +3,10 @@ import { Helmet } from 'react-helmet-async';
 export default function Seo({ title, description, image, url, canonical, keywords, jsonLd }) {
   const siteName = 'Digital Home';
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
-  const desc = description || 'Sarkari Jobs, Exams, Health, Education, Tech, Finance, and Career Insights — researched and explained in simple language.';
+  const desc = description || 'Sarkari Result, Admit Card, Latest Jobs, Vacancies, Health, Education, Tech, and Career Insights from Digital Home Blog — researched and explained in simple language.';
   const pageUrl = url || window.location.href;
   const canonicalUrl = canonical || pageUrl;
+  const keys = keywords || 'Sarkari Result, Admit Card, Latest Jobs, Govt Vacancies, Health Tips, Education, Tech Insights, All Insights Blog, Digital Home';
 
   const enhanceSingle = (schema) => {
     if (!schema) return null;
@@ -36,7 +37,7 @@ export default function Seo({ title, description, image, url, canonical, keyword
       <link rel="canonical" href={canonicalUrl} />
       <meta name="description" content={desc} />
       <meta name="robots" content="max-image-preview:large, index, follow" />
-      {keywords && <meta name="keywords" content={keywords} />}
+      <meta name="keywords" content={keys} />
 
       {/* Open Graph */}
       <meta property="og:title" content={fullTitle} />
