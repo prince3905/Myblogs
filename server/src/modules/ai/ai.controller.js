@@ -725,6 +725,18 @@ ${ADSENSE_CONSTRAINTS}
 **2. GENERATIVE ENGINE OPTIMIZATION (GEO) RULES (STRICTLY MANDATORY):**
 - AUTHORITATIVE CITATIONS: You MUST embed at least two clear journalistic attribution hooks naturally (e.g., "According to the official board notification criteria...", "As stated in the recruitment guidelines...", "According to industry standards..."). Citing real, credible sources or organizations is crucial for GEO citations and rankings.
 - CLARIFY CONCEPTS & GEO CITATION HOOKS: You MUST include at least one clear concept definition using defining verbs (e.g., "refers to", "is defined as", "essentially means", "is officially established by") when introducing technical terminologies, board names, or exam types to help Google's Generative AI Engine understand the entities.
+- DYNAMIC CATEGORY-BASED FOOTER BRANDING (MANDATORY):
+  You must check the category of the post being generated and append a high-authority HTML Brand Signature Block at the absolute end of the 'content' field:
+  * IF CATEGORY IS 'Sarkari Jobs & Exams' (or related to Jobs, Sarkari Result, Admit Card):
+    Append this exact HTML block:
+    <div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>
+    <p>यह महत्वपूर्ण जानकारी <strong>Digital Home Blog</strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong>Sarkari Result 2026</strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong>Home</strong> और <strong>Blog</strong> सेक्शन को जरूर एक्सप्लोर करें।</p>
+    </div>
+  * IF CATEGORY IS ANY OTHER (such as Health & Wellness, Tech & Tutorials, AI & Web Tools, News & Trends, Finance & Business, or any Health/Tech/General topics):
+    Append this exact HTML block:
+    <div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>
+    <p>यह लेख <strong>Digital Home Blog</strong> के एक्सपर्ट्स द्वारा रिसर्च करके तैयार किया गया है। हम अपने पाठकों तक हेल्थ, एजुकेशन, लाइफस्टाइल और टेक की सटीक जानकारियां (All Insights Blog) पहुंचाते हैं। यदि आप छात्र हैं, तो हमारे पोर्टल पर लाइव <strong>Sarkari Result</strong> और न्यू वैकेंसी अलर्ट्स का लाभ उठाने के लिए सीधे हमारे <strong>Job Alerts</strong> कैटेगरी पर विजिट कर सकते हैं।</p>
+    </div>
  
 **3. ANSWER ENGINE & VOICE OPTIMIZATION (AEO) RULES (STRICTLY MANDATORY):**
 - CONVERSATIONAL HEADERS & AEO SNIPPETS: Use voice-search friendly question words like 'What is', 'How to', or 'Why' across H2 and H3 structures. Utilize conversational query terms like 'what is', 'how to', or 'why' across subheading distributions.

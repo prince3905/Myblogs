@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 export default function Seo({ title, description, image, url, canonical, keywords, jsonLd }) {
   const siteName = 'Digital Home';
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
-  const desc = description || 'Technology, Finance, Career, Tutorials, and Trends — researched and explained in simple language.';
+  const desc = description || 'Sarkari Jobs, Exams, Health, Education, Tech, Finance, and Career Insights — researched and explained in simple language.';
   const pageUrl = url || window.location.href;
   const canonicalUrl = canonical || pageUrl;
 
@@ -53,6 +53,31 @@ export default function Seo({ title, description, image, url, canonical, keyword
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={desc} />
       {image && <meta name="twitter:image" content={image} />}
+
+      <script type="application/ld+json">
+        {JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          '@id': `${typeof window !== 'undefined' ? window.location.origin : 'https://digitalhomeblog.in'}/#organization`,
+          'name': siteName,
+          'alternateName': [
+            "Digital Home",
+            "Digital Home Blog",
+            "Sarkari Result Digital Home",
+            "Digital Home Health",
+            "Digital Home Education",
+            "Digital Home Insights",
+            "All Insights Blog"
+          ],
+          'url': typeof window !== 'undefined' ? window.location.origin : 'https://digitalhomeblog.in',
+          'logo': {
+            '@type': 'ImageObject',
+            'url': `${typeof window !== 'undefined' ? window.location.origin : 'https://digitalhomeblog.in'}/logo.png`,
+            'width': 190,
+            'height': 60
+          }
+        })}
+      </script>
 
       {enhancedJsonLd && (
         Array.isArray(enhancedJsonLd) ? (

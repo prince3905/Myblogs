@@ -613,6 +613,18 @@ async function processAIOutput(data) {
   processedContent = sanitizeThirdPartyLinks(processedContent);
   processedContent = injectStudentToolsPromo(processedContent, category);
 
+  // Dynamic Category-Based Footer Branding (100% SEO Accuracy)
+  if (!processedContent.includes('brand-authority-block')) {
+    const isSarkariCategory = category === 'Sarkari Jobs & Exams';
+    let brandBlock = '';
+    if (isSarkariCategory) {
+      brandBlock = `\n<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>\n<p>यह महत्वपूर्ण जानकारी <strong>Digital Home Blog</strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong>Sarkari Result 2026</strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong>Home</strong> और <strong>Blog</strong> सेक्शन को जरूर एक्सप्लोर करें।</p>\n</div>`;
+    } else {
+      brandBlock = `\n<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>\n<p>यह लेख <strong>Digital Home Blog</strong> के एक्सपर्ट्स द्वारा रिसर्च करके तैयार किया गया है। हम अपने पाठकों तक हेल्थ, एजुकेशन, लाइफस्टाइल और टेक की सटीक जानकारियां (All Insights Blog) पहुंचाते हैं। यदि आप छात्र हैं, तो हमारे पोर्टल पर लाइव <strong>Sarkari Result</strong> और न्यू वैकेंसी अलर्ट्स का लाभ उठाने के लिए सीधे हमारे <strong>Job Alerts</strong> कैटेगरी पर विजिट कर सकते हैं।</p>\n</div>`;
+    }
+    processedContent = processedContent + brandBlock;
+  }
+
   const tags = generateTags(title, processedContent, keywords, category);
 
   // Generate SEO-friendly fallbacks for all fields
