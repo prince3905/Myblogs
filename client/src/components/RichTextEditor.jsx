@@ -1,5 +1,25 @@
-import ReactQuill from 'react-quill';
+import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+
+// Register custom block embed for tables to prevent Quill from stripping them
+const BlockEmbed = Quill.import('blots/block/embed');
+
+class TableEmbed extends BlockEmbed {
+  static create(value) {
+    const node = super.create();
+    node.innerHTML = value;
+    return node;
+  }
+
+  static value(node) {
+    return node.innerHTML;
+  }
+}
+TableEmbed.blotName = 'table-embed';
+TableEmbed.tagName = 'div';
+TableEmbed.className = 'ql-table-embed';
+
+Quill.register(TableEmbed);
 
 export default function RichTextEditor({ value, onChange }) {
   const modules = {
@@ -19,7 +39,7 @@ export default function RichTextEditor({ value, onChange }) {
     'list', 'bullet',
     'blockquote', 'code-block',
     'link', 'image',
-    'table'
+    'table-embed'
   ];
 
   return (

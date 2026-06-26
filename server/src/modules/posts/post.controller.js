@@ -49,7 +49,8 @@ function mapPayload(body) {
     sponsored: body.sponsored === true || body.sponsored === 'true',
     affiliateDisclosure: body.affiliateDisclosure === true || body.affiliateDisclosure === 'true',
     rating: body.rating ? parseInt(body.rating) : null,
-    videoUrl: `${body.videoUrl || ''}`.trim()
+    videoUrl: `${body.videoUrl || ''}`.trim(),
+    seoScore: body.seoScore !== undefined ? parseInt(body.seoScore, 10) : undefined
   };
 }
 

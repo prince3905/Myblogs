@@ -703,8 +703,8 @@ ${categoryFrameworkInstr}
   - Rephrase the user's initial input topic/keyword into a powerful, click-worthy copywriting statement that keeps the exact original meaning but changes the wording and structure completely to ensure it does not look like a direct copy of search engine results or other websites.
   - *Example*: Convert a query like "Do you know what is prompt engineering?" to "Prompt Engineering May Change Your Life" or similar high-impact copywriting statements.
   - The title must look professional, human-crafted, premium, and authoritative.
-- FOCUS KEYWORD PLACEMENT: The exact focus keyword provided must be injected naturally in the first 2-3 lines of the Introduction paragraph, inside at least one H2 subheading, and maintain a natural density of 1.0% to 1.5% throughout the text body.
-- WORD COUNT BOUNDS: Force a deep, comprehensive contextual envelope stretching strictly between 1,200 to 1,500 words minimum. You MUST write at least 1,200 words of body content to pass the length checks. Suppress thin content.
+- FOCUS KEYWORD PLACEMENT: The exact focus keyword provided must be injected naturally in the generated Title, the first 2-3 lines of the Introduction paragraph, inside at least one H2 subheading, and maintain a natural density of 1.0% to 1.5% throughout the text body.
+- WORD COUNT BOUNDS: Force a deep, comprehensive contextual envelope stretching strictly as per the selected Structure instructions (up to 2500 words for long-form posts). Suppress thin content.
 - RICH SNIPPETS DATA: Automatically structure a clean specification data table or comparison grid comparing the topic with current market competitors.
 - METADATA EXTRACTION: Generate a strict 140-150 character meta description containing the focus keyword at the very beginning.
 - KEYWORD RESEARCH RULES:
@@ -780,10 +780,11 @@ ${ADSENSE_CONSTRAINTS}
 - HEADINGS must follow strict descending order: H2 → H3. NEVER skip levels. NEVER wrap entire paragraphs or bullet lists inside heading tags.`;
 
   const toneInstr = toneMap[tone] || toneMap.informative;
-  const sectionInstr = sectionMap[length] || sectionMap.medium;
+  const targetLength = length || 'long';
+  const sectionInstr = sectionMap[targetLength];
   const customInstr = command ? `\n\nAuthor's extra instruction: ${command}` : '';
 
-  const tokenBudget = length === 'short' ? 4096 : length === 'long' ? 8192 : 6144;
+  const tokenBudget = targetLength === 'short' ? 4096 : targetLength === 'long' ? 8192 : 6144;
 
   let keywordInject = '';
   let kwResearchId = null;
@@ -1123,6 +1124,7 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
     imageTag,
     imageKeywords,
     summary,
+    length: targetLength,
     seoTitle: (parsed?.seotitle && typeof parsed.seotitle === 'string' && parsed.seotitle.trim())
       ? parsed.seotitle.trim()
       : (optimizedTitle.length > 70 ? optimizedTitle.slice(0, 67) + '...' : optimizedTitle),
@@ -1134,15 +1136,20 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
   const finalCategory = processed.category || detectedCategory;
   const permalink = 'digitalhomeblog.in/' + finalCategory.toLowerCase().replace(/\s+/g, '-') + '/' + slug;
 
+  if (!resolvedFocusKeyword && title) {
+    resolvedFocusKeyword = title.replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2');
+  }
+
   let finalTags = processed.tags || keywords;
   if (resolvedFocusKeyword) {
-    const cleanFocus = resolvedFocusKeyword.trim();
+    let cleanFocus = resolvedFocusKeyword.trim();
+    if (cleanFocus.includes('-') && !cleanFocus.includes(' ')) {
+      cleanFocus = cleanFocus.replace(/-/g, ' ');
+    }
     finalTags = [
       cleanFocus,
       ...finalTags.filter(t => t.toLowerCase().trim() !== cleanFocus.toLowerCase())
     ];
-  } else if (finalTags.length > 0) {
-    resolvedFocusKeyword = finalTags[0];
   }
 
   return {

@@ -1,5 +1,5 @@
 /**
- * Real-time SEO Auditor & Google Rank Predictor Helper
+ * Real-time SEO Auditor & Google Rank Predictor Helper (Backend CommonJS Version)
  */
 
 function stripHtml(html) {
@@ -7,7 +7,7 @@ function stripHtml(html) {
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-export function calculateSeoScore(post, keywordResearch = null) {
+function calculateSeoScore(post, keywordResearch = null) {
   const title = post.title || '';
   const content = post.content || '';
   const contentClean = stripHtml(content);
@@ -95,7 +95,6 @@ export function calculateSeoScore(post, keywordResearch = null) {
   }
 
   // Metric 4: Focus Keyword in H2 Heading (15 pts)
-  // Check for <h2> tags or markdown ## headings in content
   const hasKeywordInH2 = (content.toLowerCase().match(/<h2[^>]*>[\s\S]*?<\/h2>/g) || [])
     .some(h => {
       const text = stripHtml(h).toLowerCase();
@@ -134,10 +133,10 @@ export function calculateSeoScore(post, keywordResearch = null) {
       score += 15;
     } else if (density > 2.2) {
       suggestions.push(`Keyword density zyada hai (${density}%). Keyword stuffing se bachein aur count thoda kam karein.`);
-      score += 8; // partial points
+      score += 8;
     } else if (density > 0 && density < 0.7) {
       suggestions.push(`Keyword density thodi kam hai (${density}%). Focus keyword ko pure body me 2-3 baar aur naturally insert karein.`);
-      score += 8; // partial points
+      score += 8;
     } else {
       suggestions.push("Content ke body text me focus keyword ko naturally 3-5 baar use karein.");
     }
@@ -246,7 +245,7 @@ export function calculateSeoScore(post, keywordResearch = null) {
         range: "Page 3+ (Very Hard)",
         potential: "Low",
         badgeColor: "#ef4444",
-        description: "Hard keyword (KD > 55%). Is keyword par rank karne ke liye aapko high-quality backlinks aur massive traffic chahiye."
+        description: "Hard keyword (KD > 55%). Is keyword par rank karne के लिए आपको high-quality backlinks और massive traffic चाहिए।"
       };
     }
   }
@@ -368,3 +367,5 @@ export function calculateSeoScore(post, keywordResearch = null) {
     rankPrediction
   };
 }
+
+module.exports = { calculateSeoScore };

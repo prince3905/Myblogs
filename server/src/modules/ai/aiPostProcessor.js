@@ -395,6 +395,18 @@ function boostWordCount(content, category, targetWordCount = 1150) {
     {
       heading: "सरकारी नौकरी के लाभ और करियर सुरक्षा (Benefits of a Government Career)",
       text: "सरकारी नौकरी में करियर बनाना न केवल भविष्य को वित्तीय रूप से सुरक्षित (Financial Stability) बनाता है बल्कि समाज में एक प्रतिष्ठित स्थान भी प्रदान करता है। नियमित वेतन वृद्धि, चिकित्सा सुविधाएं, पेंशन लाभ और सुरक्षित कार्य वातावरण इस नौकरी को हर युवा के लिए पहली पसंद बनाते हैं। यही मुख्य कारण है कि सरकारी नौकरियों के लिए होने वाली प्रतियोगी परीक्षाओं में हर साल देश भर से लाखों योग्य और प्रतिभाशाली युवा भाग लेते हैं। इस सुनहरे अवसर को हाथ से न जाने दें, आज से ही अपनी तैयारी को एक नई दिशा दें और पूरे समर्पण के साथ पढ़ाई में जुट जाएं।"
+    },
+    {
+      heading: "परीक्षा की तैयारी के दौरान तनाव प्रबंधन (Stress Management Tips)",
+      text: "प्रतियोगी परीक्षाओं की तैयारी के दौरान मानसिक तनाव (Mental Stress) होना एक आम बात है, लेकिन इसे अपने प्रदर्शन पर हावी न होने देना ही सफलता की कुंजी है। नियमित रूप से छोटे-छोटे ब्रेक लें, योग या ध्यान (Meditation) का अभ्यास करें, और अपने परिवार व मित्रों से बातचीत करें। सकारात्मक लोगों के बीच रहें और अपने लक्ष्य के प्रति आश्वस्त रहें। यह ध्यान रखें कि परीक्षा केवल आपके ज्ञान का परीक्षण है, आपके जीवन की अंतिम सीमा नहीं। शांत और स्वस्थ मन से दी गई परीक्षा हमेशा बेहतर परिणाम देती है।"
+    },
+    {
+      heading: "आवेदन फॉर्म में सुधार की प्रक्रिया (Application Form Correction Process)",
+      text: "कभी-कभी उम्मीदवार आवेदन फॉर्म भरते समय असावधानीवश गलतियाँ कर बैठते हैं, जैसे नाम की वर्तनी में त्रुटि, गलत जन्मतिथि, या गलत श्रेणी का चयन। ऐसे मामलों में, अधिकांश भर्ती बोर्ड एक निश्चित समय के लिए 'Correction Window' (सुधार लिंक) खोलते हैं। उम्मीदवारों को निर्धारित तिथियों के भीतर आधिकारिक वेबसाइट पर लॉगिन करके आवश्यक सुधार करने का अवसर दिया जाता है। इसके लिए कुछ मामलों में बोर्ड द्वारा अतिरिक्त शुल्क (Correction Fee) भी लिया जा सकता है। सुधार की प्रक्रिया पूरी करने के बाद संशोधित आवेदन पत्र का प्रिंटआउट लेना न भूलें।"
+    },
+    {
+      heading: "परीक्षा परिणाम और साक्षात्कार की तैयारी (Result & Interview Preparation)",
+      text: "लिखित परीक्षा में सफलता प्राप्त करने के बाद, कई महत्वपूर्ण पदों के लिए साक्षात्कार (Interview) या दस्तावेज़ सत्यापन का चरण आता है। साक्षात्कार की तैयारी के लिए अपने विषय के बुनियादी ज्ञान के साथ-साथ समसामयिक घटनाओं (Current Affairs) पर भी मजबूत पकड़ बनाएं। अपने संचार कौशल (Communication Skills) और शारीरिक भाषा (Body Language) को सुधारने के लिए मॉक इंटरव्यू की प्रैक्टिस करें। अपने सभी शैक्षणिक और व्यक्तिगत प्रमाणपत्रों को व्यवस्थित रूप से एक फाइल में तैयार रखें ताकि सत्यापन के समय किसी प्रकार की जल्दबाजी या असुविधा का सामना न करना पड़े।"
     }
   ];
 
@@ -410,6 +422,18 @@ function boostWordCount(content, category, targetWordCount = 1150) {
     {
       heading: "निष्कर्ष और अंतिम विचार (Conclusion & Final Thoughts)",
       text: "संक्षेप में कहें तो, इस विषय की गहराई को समझना और इसे व्यावहारिक रूप से लागू करना आपके व्यक्तिगत और व्यावसायिक जीवन में क्रांतिकारी बदलाव ला सकता है। आशा है कि इस लेख में दी गई विस्तृत जानकारी आपके लिए अत्यंत उपयोगी और ज्ञानवर्धक साबित होगी। यदि आपके मन में इससे जुड़ा कोई भी सवाल या शंका है, तो आप नीचे दिए गए अक्सर पूछे जाने वाले सवाल (FAQ) अनुभाग को पढ़ सकते हैं या हमसे संपर्क कर सकते हैं।"
+    },
+    {
+      heading: "लगातार सीखने की आदत और उसका लाभ (Continuous Learning Benefits)",
+      text: "आज की तेज़ी से बदलती दुनिया में नई चीज़ें सीखते रहना बेहद महत्वपूर्ण है। जब आप प्रतिदिन कुछ नया सीखने का प्रयास करते हैं, तो आपकी सोचने-समझने की क्षमता और अधिक विकसित होती है। यह प्रक्रिया आपको न केवल आपके कार्यक्षेत्र में अधिक कुशल बनाती है, बल्कि आपके आत्मविश्वास को भी बढ़ाती है। ज्ञान का संचय कभी व्यर्थ नहीं जाता, इसलिए पुस्तकों को पढ़ें, नए ऑनलाइन कोर्सेज करें और कुशल लोगों के अनुभवों से लगातार प्रेरणा लेते रहें।"
+    },
+    {
+      heading: "डिजिटल युग में समय का सही प्रबंधन (Time Management in the Digital Age)",
+      text: "स्मार्टफोन और सोशल मीडिया के इस दौर में हमारा ध्यान भटकना बेहद आसान हो गया है। इसलिए समय का सही प्रबंधन (Time Management) करना पहले से कहीं अधिक आवश्यक है। दैनिक रूप से 'To-Do List' बनाएं और अपने सबसे महत्वपूर्ण कार्यों को दिन के शुरुआती समय में पूरा करें। डिजिटल टूल्स का उपयोग केवल उपयोगी जानकारी प्राप्त करने के लिए ही करें और काम के दौरान सोशल मीडिया नोटिफिकेशन्स को बंद रखें। सही समय प्रबंधन से आप कम समय में अधिक और बेहतर कार्य कर सकते हैं।"
+    },
+    {
+      heading: "स्वास्थ्य और मानसिक संतुलन का महत्व (Health and Mental Balance)",
+      text: "कहा जाता है कि एक स्वस्थ शरीर में ही स्वस्थ मस्तिष्क का निवास होता है। काम की व्यस्तता और जीवन की भागदौड़ में अक्सर हम अपनी सेहत को नज़रअंदाज़ कर देते हैं, जो लंबे समय में हमारे प्रदर्शन को प्रभावित करता है। संतुलित आहार लें, रोज़ाना कम से कम 30 मिनट का व्यायाम या पैदल चलना सुनिश्चित करें, और पर्याप्त नींद लें। मानसिक शांति के लिए कुछ समय शांत बैठकर बिताएं या संगीत सुनें। जब आप शारीरिक और मानसिक रूप से फिट रहेंगे, तभी जीवन के हर क्षेत्र में अपना सर्वश्रेष्ठ योगदान दे पाएंगे।"
     }
   ];
 
@@ -418,7 +442,6 @@ function boostWordCount(content, category, targetWordCount = 1150) {
     : generalBoosters;
 
   let c = content;
-  const faqIdx = c.indexOf('<h2>अक्सर पूछे जाने वाले सवाल');
   
   for (const b of boosters) {
     cleanText = c.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
@@ -430,8 +453,9 @@ function boostWordCount(content, category, targetWordCount = 1150) {
     }
 
     const boosterHtml = `\n<h2>${b.heading}</h2>\n<p>${b.text}</p>\n`;
-    if (faqIdx > 0) {
-      c = c.slice(0, faqIdx) + boosterHtml + c.slice(faqIdx);
+    const currentFaqIdx = c.indexOf('<h2>अक्सर पूछे जाने वाले सवाल');
+    if (currentFaqIdx > 0) {
+      c = c.slice(0, currentFaqIdx) + boosterHtml + c.slice(currentFaqIdx);
     } else {
       c = c + boosterHtml;
     }
@@ -517,7 +541,7 @@ function injectStudentToolsPromo(content, category) {
 }
 
 async function processAIOutput(data) {
-  const { title, content, keywords, category } = data;
+  const { title, content, keywords, category, length } = data;
 
   if (!content) return data;
   if (content.trim().startsWith('{') || content.trim().startsWith('[')) {
@@ -534,7 +558,7 @@ async function processAIOutput(data) {
   processedContent = cleanContent(processedContent, category);
 
   // Concept Definition Check (GEO)
-  const definitionsRegex = /is\s+defined\s+as|refers\s+to|means\s+that|is\s+the\s+process\s+of|is\s+a\s+type\s+of/i;
+  const definitionsRegex = /is\s+defined\s+as|refers\s+to|means\s+that|is\s+the\s+process\s+of|is\s+a\s+type\s+of|defined\s+as|refers\s+as|ka\s+matlab\s+hai|ka\s+arth\s+hai|means\s+is|meaning\s+is/i;
   if (!definitionsRegex.test(stripHtml(processedContent).toLowerCase())) {
     const defParagraph = `\n<p>अधिसूचना विवरण के अनुसार: <strong>${title} refers to</strong> the official recruitment updates, eligibility criteria, and selection notification released by the conducting board. Candidates are advised to read the full notification and verify all parameters carefully.</p>\n`;
     const firstP = processedContent.indexOf('</p>');
@@ -551,10 +575,20 @@ async function processAIOutput(data) {
   } else if (typeof keywords === 'string') {
     focusKeyword = keywords.split(',')[0];
   }
-  if (!focusKeyword && title) {
-    focusKeyword = title.replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2');
+  const genericKeywords = new Set([
+    'govt jobs', 'latest job', 'admit card', 'sarkari result', 'exam date', 'recruitment', 'job alert',
+    'career', 'education', 'technology', 'finance', 'health', 'tutorial', 'news', 'trending', 'viral',
+    'general', 'blog', 'post', 'updates', 'details', 'notification'
+  ]);
+  if (!focusKeyword || genericKeywords.has(focusKeyword.toLowerCase().trim())) {
+    if (title) {
+      focusKeyword = title.replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2');
+    }
   }
   focusKeyword = (focusKeyword || '').toLowerCase().trim();
+  if (focusKeyword.includes('-') && !focusKeyword.includes(' ')) {
+    focusKeyword = focusKeyword.replace(/-/g, ' ');
+  }
 
   if (focusKeyword) {
     processedContent = ensureH2Keyword(processedContent, focusKeyword);
@@ -605,13 +639,29 @@ async function processAIOutput(data) {
     }
   }
 
-  processedContent = boostWordCount(processedContent, category);
+  const targetWordCount = length === 'long' ? 1800 : length === 'short' ? 800 : 1150;
+  processedContent = boostWordCount(processedContent, category, targetWordCount);
   processedContent = await addInternalLinks(processedContent, category);
   processedContent = ensureKeywordFrequency(processedContent, title, keywords);
   
   // Sanitize bad external tools links and inject local promotional tools card
   processedContent = sanitizeThirdPartyLinks(processedContent);
   processedContent = injectStudentToolsPromo(processedContent, category);
+
+  // Key Takeaways Check (GEO Summary)
+  const summaryRegex = /key\s+takeaways|takeaway|summary|take-away|निष्कर्ष/i;
+  if (!summaryRegex.test(stripHtml(processedContent).toLowerCase()) && length === 'long') {
+    const takeawaysHtml = `
+<h2>Key Takeaways (महत्वपूर्ण निष्कर्ष)</h2>
+<ul>
+  <li>इस अधिसूचना से संबंधित सभी तिथियों और शुल्कों की जाँच आधिकारिक वेबसाइट पर अवश्य करें।</li>
+  <li>आवेदन पत्र भरने से पहले अपनी पात्रता (Eligibility Criteria) और आयु सीमा को ध्यानपूर्वक पढ़ लें।</li>
+  <li>अंतिम तिथि से पहले आवेदन प्रक्रिया पूरी करें ताकि तकनीकी समस्याओं से बचा जा सके।</li>
+  <li>परीक्षा की तैयारी के लिए नियमित रूप से सिलेबस और पिछले वर्षों के पेपर्स का अध्ययन करें।</li>
+</ul>
+`;
+    processedContent = processedContent + '\n' + takeawaysHtml;
+  }
 
   // Dynamic Category-Based Footer Branding (100% SEO Accuracy)
   if (!processedContent.includes('brand-authority-block')) {

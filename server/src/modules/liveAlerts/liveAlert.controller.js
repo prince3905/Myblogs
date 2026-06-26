@@ -77,7 +77,7 @@ async function draftPostFromAlert(req, res) {
     const aiParams = {
       title: cleanTitle,
       model: 'gemini-flash-latest',
-      length: 'medium', // Target 1,200 - 1,500 words
+      length: 'long', // Target 1800 - 2500 words
       tone: 'informative',
       language: 'hinglish',
       category: 'Sarkari Jobs & Exams',
@@ -97,7 +97,7 @@ FACTUAL METADATA:
 
 CRITICAL DIRECTIVES:
 - You must use the mandatory 'Sarkari Jobs & Exams' category framework headings in Hinglish/Hindi, but at least one of these H2 headings MUST contain the exact Focus Keyword/Title phrase "${cleanTitle}" (e.g., "## ${cleanTitle} की महत्वपूर्ण तिथियाँ" or "## ${cleanTitle} योग्यता और पात्रता" or prepend the title to any H2 heading). Do NOT use plain English headings.
-- Under EACH H2 heading, you MUST write at least 2 detailed body paragraphs (each 5-6 sentences long) to explain the details in depth and guarantee a long-form article of at least 1,250+ words to pass SEO length checks.
+- Under EACH H2 heading, you MUST write at least 2 detailed body paragraphs (each 5-6 sentences long) to explain the details in depth and guarantee a long-form article of at least 1,800+ words to pass SEO length checks.
 - To present details in a premium, highly readable format for students:
   * Under the "## महत्वपूर्ण तिथियाँ" section, you MUST construct a neat Markdown table containing key dates (e.g., Event Name like Start Date / Last Date vs Date value).
   * Under the "## आवेदन शुल्क" section, you MUST construct a neat Markdown table summarizing category-wise fee details (e.g., Category like Gen/OBC vs Fee amount).

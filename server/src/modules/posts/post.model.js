@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { calculateSeoScore } = require('../../shared/utils/seoAuditor');
 
 const blogPostSchema = new mongoose.Schema(
   {
@@ -13,6 +14,7 @@ const blogPostSchema = new mongoose.Schema(
     seoTitle: { type: String, trim: true, default: '' },
     seoDescription: { type: String, trim: true, default: '' },
     seoKeywords: { type: [String], default: [] },
+    seoScore: { type: Number, default: 0 },
     canonicalUrl: { type: String, trim: true, default: '' },
     publishedAt: { type: Date, default: null },
     readingTime: { type: Number, default: 1 },
@@ -35,6 +37,29 @@ const blogPostSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+blogPostSchema.pre('save', function (next) {
+  try {
+    const post = this;
+    // Calculate SEO score if not explicitly set
+    if (!post.seoScore) {
+      const audit = calculateSeoScore({
+        title: post.title,
+        content: post.content,
+        seoTitle: post.seoTitle,
+        seoDescription: post.seoDescription,
+        slug: post.slug,
+        tags: post.tags,
+        excerpt: post.excerpt,
+        canonicalUrl: post.canonicalUrl
+      });
+      post.seoScore = audit.score || 0;
+    }
+  } catch (err) {
+    console.error('Error calculating seoScore in post pre-save hook:', err.message);
+  }
+  next();
+});
 
 blogPostSchema.index({ title: 'text', content: 'text', excerpt: 'text' });
 blogPostSchema.index({ status: 1, publishedAt: -1, createdAt: -1 });

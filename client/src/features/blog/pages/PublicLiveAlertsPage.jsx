@@ -213,18 +213,26 @@ function renderTextWithLinks(text) {
         target="_blank"
         rel="noopener noreferrer"
         sx={{
-          fontWeight: 650,
-          color: '#4F46E5',
-          textDecoration: 'underline',
-          '&:hover': { color: '#312E81' },
+          fontWeight: 700,
+          color: '#ffffff',
+          bgcolor: '#4F46E5',
+          textDecoration: 'none',
+          px: 1.2,
+          py: 0.4,
+          borderRadius: '4px',
+          fontSize: '0.72rem',
+          '&:hover': { bgcolor: '#312E81', textDecoration: 'none' },
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 0.2,
+          gap: 0.3,
           mx: 0.5,
-          wordBreak: 'break-all'
+          transition: 'background-color 0.2s',
+          boxShadow: '0 2px 4px rgba(79, 70, 229, 0.15)',
+          verticalAlign: 'middle',
+          whiteSpace: 'nowrap'
         }}
       >
-        {cleanUrl.length > 40 ? cleanUrl.substring(0, 38) + '...' : cleanUrl} ↗
+        Click Here ↗
       </MuiLink>
     );
 

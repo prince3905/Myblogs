@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Box, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination, Tooltip } from '@mui/material';
 import { Article, Mail, Comment, Add, Edit, Delete, Forum, MarkEmailRead, Schedule, Visibility, TrendingUp } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
@@ -9,6 +9,7 @@ import { calculateSeoScore } from '../../../shared/utils/seoAuditor';
 export default function AdminDashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [posts, setPosts] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [activity, setActivity] = useState(null);
@@ -40,7 +41,7 @@ export default function AdminDashboardPage() {
       .catch(() => {});
   }
 
-  useEffect(() => { loadPosts(); loadSubscribers(); loadActivity(); loadAnalytics(); }, []);
+  useEffect(() => { loadPosts(); loadSubscribers(); loadActivity(); loadAnalytics(); }, [location.pathname]);
 
   async function handleDelete() {
     await request(`/api/admin/posts/${deleteId}`, { method: 'DELETE' });
@@ -246,6 +247,9 @@ export default function AdminDashboardPage() {
               <TableBody>
                 {pagePosts.map((post, i) => {
                   const seoAudit = calculateSeoScore(post);
+                  const displayScore = post.seoScore !== undefined && post.seoScore !== null ? post.seoScore : seoAudit.score;
+                  const displayPotential = displayScore >= 80 ? 'High' : displayScore >= 50 ? 'Medium' : 'Low';
+                  const displayBadgeColor = displayScore >= 80 ? '#10b981' : displayScore >= 50 ? '#f59e0b' : '#ef4444';
                   return (
                     <TableRow key={post._id} sx={{
                       '& td': { py: 1.8, px: 3, borderBottom: i < pagePosts.length - 1 ? '1px solid #ECECEC' : 'none' },
@@ -271,16 +275,16 @@ export default function AdminDashboardPage() {
                         <Tooltip title={seoAudit.rankPrediction.description || ''}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Chip
-                              label={`${seoAudit.score}%`}
+                              label={`${displayScore}%`}
                               size="small"
                               sx={{
                                 fontWeight: 700, fontSize: '0.7rem', height: 22,
-                                bgcolor: seoAudit.score >= 80 ? '#D1FAE5' : seoAudit.score >= 50 ? '#FEF3C7' : '#FEE2E2',
-                                color: seoAudit.score >= 80 ? '#065F46' : seoAudit.score >= 50 ? '#92400E' : '#991B1B',
+                                bgcolor: displayScore >= 80 ? '#D1FAE5' : displayScore >= 50 ? '#FEF3C7' : '#FEE2E2',
+                                color: displayScore >= 80 ? '#065F46' : displayScore >= 50 ? '#92400E' : '#991B1B',
                               }}
                             />
-                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: seoAudit.rankPrediction.badgeColor }}>
-                              {seoAudit.rankPrediction.potential} Pot.
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: displayBadgeColor }}>
+                              {displayPotential} Pot.
                             </Typography>
                           </Box>
                         </Tooltip>

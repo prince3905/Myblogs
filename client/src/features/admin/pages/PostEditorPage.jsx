@@ -37,7 +37,7 @@ export default function PostEditorPage() {
   const [aiStep, setAiStep] = useState('');
   const [aiProgress, setAiProgress] = useState(0);
   const [aiModel, setAiModel] = useState('gemini-pro-latest');
-  const [aiLength, setAiLength] = useState('medium');
+  const [aiLength, setAiLength] = useState('long');
   const [aiTone, setAiTone] = useState('informative');
   const [aiLanguage, setAiLanguage] = useState('hinglish');
   const [aiCommand, setAiCommand] = useState('');
@@ -198,7 +198,8 @@ export default function PostEditorPage() {
     const payload = {
       ...form,
       tags: form.tags,
-      seoKeywords: form.seoKeywords
+      seoKeywords: form.seoKeywords,
+      seoScore: seoAudit.score
     };
 
     try {
@@ -218,6 +219,258 @@ export default function PostEditorPage() {
       setError(err.message);
     }
   }
+
+  const getFixAction = (suggestion) => {
+    const text = suggestion.toLowerCase();
+    const kw = seoAudit.focusKeyword || '';
+    if (!kw) return null;
+
+    if (text.includes('title me apna focus keyword') || (text.includes('title') && text.includes('focus keyword'))) {
+      return {
+        label: 'Fix Title',
+        handler: () => {
+          const cap = kw.replace(/\b\w/g, l => l.toUpperCase());
+          const currentTitle = form.title || '';
+          if (currentTitle.toLowerCase().includes(kw.toLowerCase())) {
+            addToast('Already fixed: Title already contains focus keyword!', 'error');
+            return;
+          }
+          const newTitle = `${cap} - ${currentTitle}`;
+          updateField('title', newTitle);
+          addToast('Title optimized with focus keyword!', 'success');
+        }
+      };
+    }
+    if (text.includes('url slug') || (text.includes('slug') && text.includes('focus keyword'))) {
+      return {
+        label: 'Fix Slug',
+        handler: () => {
+          const slugKeyword = kw.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          const newSlug = form.slug || '';
+          if (newSlug.toLowerCase().includes(slugKeyword)) {
+            addToast('Already fixed: URL Slug already optimized with focus keyword!', 'error');
+            return;
+          }
+          updateField('slug', slugKeyword);
+          addToast('URL Slug optimized with focus keyword!', 'success');
+        }
+      };
+    }
+    if (text.includes('pehli 2-3 lines') || text.includes('introduction') || text.includes('intro')) {
+      return {
+        label: 'Fix Intro',
+        handler: () => {
+          let content = form.content || '';
+          const cap = kw.replace(/\b\w/g, l => l.toUpperCase());
+          
+          // Strip HTML to see if keyword is already present in the introduction text
+          const cleanText = content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+          const introPart = cleanText.slice(0, 400).toLowerCase();
+          if (introPart.includes(kw.toLowerCase())) {
+            addToast('Already fixed: Introduction already contains focus keyword!', 'error');
+            return;
+          }
+
+          if (content.includes('<p>')) {
+            content = content.replace('<p>', `<p>In this article, we look at <strong>${cap}</strong> and everything related to it. `);
+          } else {
+            content = `<p>In this article, we look at <strong>${cap}</strong> and everything related to it.</p>${content}`;
+          }
+          updateField('content', content);
+          addToast('Focus keyword added to introduction!', 'success');
+        }
+      };
+    }
+    if (text.includes('h2 subheading') || text.includes('h2')) {
+      return {
+        label: 'Fix H2',
+        handler: () => {
+          let content = form.content || '';
+          const cap = kw.replace(/\b\w/g, l => l.toUpperCase());
+          
+          // Check if any H2 already has the focus keyword
+          const h2Matches = content.match(/<h2[^>]*>([\s\S]*?)<\/h2>/gi) || [];
+          const hasKeywordInH2 = h2Matches.some(h2 => h2.toLowerCase().replace(/<[^>]*>/g, '').includes(kw.toLowerCase()));
+          if (hasKeywordInH2) {
+            addToast('Already fixed: An H2 subheading already contains focus keyword!', 'error');
+            return;
+          }
+
+          if (content.includes('<h2>')) {
+            content = content.replace('<h2>', `<h2>${cap}: `);
+          } else {
+            const pIndex = content.indexOf('</p>');
+            if (pIndex !== -1) {
+              content = content.slice(0, pIndex + 4) + `\n<h2>Everything You Need to Know About ${cap}</h2>\n` + content.slice(pIndex + 4);
+            } else {
+              content = `<h2>Everything You Need to Know About ${cap}</h2>\n` + content;
+            }
+          }
+          updateField('content', content);
+          addToast('H2 Heading optimized with focus keyword!', 'success');
+        }
+      };
+    }
+    if (text.includes('keyword density') || text.includes('density') || (text.includes('body text') && text.includes('focus keyword')) || text.includes('body text me focus keyword ko naturally')) {
+      return {
+        label: 'Fix Density',
+        handler: () => {
+          if (seoAudit.checks.keywordDensityOk) {
+            addToast('Already fixed: Keyword density is already optimal!', 'error');
+            return;
+          }
+
+          let content = form.content || '';
+          const cap = kw.replace(/\b\w/g, l => l.toUpperCase());
+          
+          // Clean content text to count words
+          const cleanText = content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+          const words = cleanText.split(/\s+/).filter(Boolean);
+          const wCount = words.length;
+
+          // How many times does focus keyword currently appear?
+          const flexiblePattern = kw
+            .split(/[\s\/-]+/)
+            .filter(Boolean)
+            .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+            .join('[\\s\\/-]+');
+          const regex = new RegExp('\\b' + flexiblePattern + '\\b', 'gi');
+          const matches = cleanText.match(regex);
+          const currentCount = matches ? matches.length : 0;
+
+          // Target count for ~0.9% density
+          const targetCount = Math.max(3, Math.ceil(wCount * 0.009));
+          const needed = targetCount - currentCount;
+
+          if (needed <= 0) {
+            addToast('Already fixed: Keyword density is already optimal!', 'error');
+            return;
+          }
+
+          const parts = content.split('</p>');
+          if (parts.length > 2) {
+            let inserted = 0;
+            let updated = '';
+            for (let idx = 0; idx < parts.length - 1; idx++) {
+              updated += parts[idx];
+              // Only insert if we still need more and alternate paragraphs
+              if (inserted < needed && idx % 2 === 0) {
+                const injectText = ` (Learn more about <strong>${cap}</strong>)`;
+                if (!parts[idx].includes(injectText)) {
+                  updated += injectText;
+                  inserted++;
+                }
+              }
+              updated += '</p>';
+            }
+            updated += parts[parts.length - 1];
+            content = updated;
+            
+            // If we still need more (e.g. not enough paragraphs), append at the end
+            if (inserted < needed) {
+              const remaining = needed - inserted;
+              for (let r = 0; r < remaining; r++) {
+                content += ` <p>Explore all the details and specs of <strong>${cap}</strong> inside this complete portal report.</p>`;
+              }
+            }
+          } else {
+            for (let r = 0; r < needed; r++) {
+              content += ` <p>Read more facts and news regarding <strong>${cap}</strong> here.</p>`;
+            }
+          }
+
+          updateField('content', content);
+          addToast('Focus keyword naturally integrated to reach optimal density!', 'success');
+        }
+      };
+    }
+    if (text.includes('table') || text.includes('comparison-table') || text.includes('data-table')) {
+      return {
+        label: 'Insert Table',
+        handler: () => {
+          let content = form.content || '';
+          const cap = kw.replace(/\b\w/g, l => l.toUpperCase());
+
+          const hasTable = content.toLowerCase().includes('<table') || 
+                            content.toLowerCase().includes('class="comparison-table"') || 
+                            content.toLowerCase().includes('class="data-table"') || 
+                            /\|[^\n]+\|\r?\n\s*\|[-:| ]+\|\r?\n\s*\|[^\n]+\|/.test(content);
+          
+          if (hasTable) {
+            addToast('Already fixed: A data / specs table already exists in the content!', 'error');
+            return;
+          }
+
+          // Styled HTML table compatible with ReactQuill and custom blot
+          const tableHtml = `
+<div class="ql-table-embed">
+  <table class="comparison-table" style="width: 100%; border-collapse: collapse; margin: 20px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color: #374151; background-color: #ffffff; border: 1px solid #E5E7EB; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden;">
+    <thead>
+      <tr style="background-color: #F9FAFB; border-bottom: 2px solid #E5E7EB;">
+        <th style="border: 1px solid #E5E7EB; padding: 12px 16px; text-align: left; font-weight: 600; color: #111827;">Key Parameter</th>
+        <th style="border: 1px solid #E5E7EB; padding: 12px 16px; text-align: left; font-weight: 600; color: #111827;">Value & Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid #E5E7EB;">
+        <td style="border: 1px solid #E5E7EB; padding: 12px 16px; font-weight: 600; color: #111827; background-color: #ffffff;">Primary Topic</td>
+        <td style="border: 1px solid #E5E7EB; padding: 12px 16px; color: #374151; background-color: #ffffff;">${cap}</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #E5E7EB;">
+        <td style="border: 1px solid #E5E7EB; padding: 12px 16px; font-weight: 600; color: #111827; background-color: #F9FAFB;">Category Classification</td>
+        <td style="border: 1px solid #E5E7EB; padding: 12px 16px; color: #374151; background-color: #F9FAFB;">${form.category || 'Sarkari Jobs & Exams'}</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #E5E7EB;">
+        <td style="border: 1px solid #E5E7EB; padding: 12px 16px; font-weight: 600; color: #111827; background-color: #ffffff;">Information Authenticity</td>
+        <td style="border: 1px solid #E5E7EB; padding: 12px 16px; color: #059669; font-weight: 700; background-color: #ffffff;">✓ 100% Genuine & Verified</td>
+      </tr>
+      <tr style="border-bottom: none;">
+        <td style="border: 1px solid #E5E7EB; padding: 12px 16px; font-weight: 600; color: #111827; background-color: #F9FAFB;">Last Updated On</td>
+        <td style="border: 1px solid #E5E7EB; padding: 12px 16px; color: #374151; background-color: #F9FAFB;">2026 Live Portal</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
+          const lastPIndex = content.lastIndexOf('<p>');
+          if (lastPIndex !== -1) {
+            content = content.slice(0, lastPIndex) + tableHtml + content.slice(lastPIndex);
+          } else {
+            content += tableHtml;
+          }
+          updateField('content', content);
+          addToast('SEO Spec Table inserted successfully!', 'success');
+        }
+      };
+    }
+    if (text.includes('meta description') || text.includes('seo description')) {
+      return {
+        label: 'Fix Meta',
+        handler: () => {
+          const cap = kw.replace(/\b\w/g, l => l.toUpperCase());
+          let currentDesc = form.seoDescription || form.excerpt || '';
+          
+          if (currentDesc.toLowerCase().includes(kw.toLowerCase()) && currentDesc.length >= 100 && currentDesc.length <= 165) {
+            addToast('Already fixed: SEO description already optimized!', 'error');
+            return;
+          }
+
+          if (!currentDesc.toLowerCase().includes(kw.toLowerCase())) {
+            currentDesc = `${cap}: ${currentDesc}`;
+          }
+          if (currentDesc.length < 110) {
+            currentDesc = `${currentDesc} Get all the detailed updates and specifications about ${kw} on our official information blog.`;
+          }
+          if (currentDesc.length > 155) {
+            currentDesc = currentDesc.slice(0, 152) + '...';
+          }
+          updateField('seoDescription', currentDesc);
+          addToast('SEO Description optimized!', 'success');
+        }
+      };
+    }
+    return null;
+  };
 
   return (
     <>
@@ -747,12 +1000,43 @@ export default function PostEditorPage() {
                       <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#b91c1c', mb: 0.75 }}>
                         ⚠️ Actions Required to Rank:
                       </Typography>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                        {seoAudit.suggestions.map((sug, idx) => (
-                          <Typography key={idx} sx={{ fontSize: '0.65rem', color: '#7f1d1d', bgcolor: '#fef2f2', p: 0.75, borderRadius: 1.5, borderLeft: '3px solid #ef4444' }}>
-                            • {sug}
-                          </Typography>
-                        ))}
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {seoAudit.suggestions.map((sug, idx) => {
+                          const fixAction = getFixAction(sug);
+                          return (
+                            <Box key={idx} sx={{
+                              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                              bgcolor: '#fef2f2', p: 1, borderRadius: 2, borderLeft: '3px solid #ef4444',
+                              gap: 1.5
+                            }}>
+                              <Typography sx={{ fontSize: '0.68rem', color: '#7f1d1d', flex: 1, fontWeight: 500 }}>
+                                • {sug}
+                              </Typography>
+                              {fixAction && (
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={fixAction.handler}
+                                  sx={{
+                                    bgcolor: '#ef4444',
+                                    color: 'white',
+                                    fontSize: '0.62rem',
+                                    fontWeight: 700,
+                                    py: 0.4,
+                                    px: 1.2,
+                                    borderRadius: 1.5,
+                                    minWidth: 'auto',
+                                    flexShrink: 0,
+                                    textTransform: 'none',
+                                    '&:hover': { bgcolor: '#b91c1c' }
+                                  }}
+                                >
+                                  {fixAction.label}
+                                </Button>
+                              )}
+                            </Box>
+                          );
+                        })}
                       </Box>
                     </>
                   )}
