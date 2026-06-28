@@ -111,7 +111,7 @@ export default function App() {
         <Route path="/search" element={<SearchPageSuspense />} />
         <Route path="/tools" element={<ToolsPageSuspense />} />
         <Route path="/games" element={<GamesPageSuspense />} />
-        <Route path="/live-alerts" element={<PublicLiveAlertsPageSuspense />} />
+        <Route path="/job-alerts" element={<PublicLiveAlertsPageSuspense />} />
         <Route path="/admin/login" element={<AdminLoginPageSuspense />} />
         <Route path="/admin" element={<AdminRoute><AdminLayoutSuspense /></AdminRoute>}>
           <Route index element={<AdminDashboardPageSuspense />} />

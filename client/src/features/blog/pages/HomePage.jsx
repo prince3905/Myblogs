@@ -71,7 +71,7 @@ export default function HomePage() {
             </Box>
             <Button
               component={Link}
-              to="/live-alerts"
+              to="/job-alerts"
               sx={{
                 fontWeight: 700, fontSize: '0.85rem',
                 color: '#EF4444',
@@ -106,7 +106,7 @@ export default function HomePage() {
                 const isNew = new Date() - new Date(alert.createdAt) < 3 * 24 * 60 * 60 * 1000;
 
                 return (
-                  <Link key={alert._id} to="/live-alerts" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+                  <Link key={alert._id} to="/job-alerts" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
                     <Box
                       sx={{
                         p: { xs: 1.2, sm: 1.5 },
