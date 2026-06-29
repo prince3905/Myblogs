@@ -174,7 +174,7 @@ export default function PostPage() {
                 <Chip icon={<MonetizationOn />} label="Sponsored" size="small" color="warning" sx={{ bgcolor: 'rgba(255,255,255,0.9)', fontWeight: 600 }} />
               )}
             </Box>
-            <Typography variant="h2" sx={{ color: 'white', fontWeight: 700, mb: 2, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+            <Typography variant="h2" component="h1" sx={{ color: 'white', fontWeight: 700, mb: 2, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
               {post.title}
             </Typography>
             <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)', mb: 2 }}>

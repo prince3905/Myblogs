@@ -45,7 +45,7 @@ export default function BlogListPage() {
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2 }}>
             <Box>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', letterSpacing: '-0.02em', fontSize: { xs: '1.35rem', md: '1.65rem' } }}>
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary', letterSpacing: '-0.02em', fontSize: { xs: '1.35rem', md: '1.65rem' } }}>
                 All Insights
               </Typography>
             </Box>

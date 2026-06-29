@@ -1,8 +1,13 @@
 import { Helmet } from 'react-helmet-async';
 
 export default function Seo({ title, description, image, url, canonical, keywords, jsonLd }) {
-  const siteName = 'Digital Home';
-  const fullTitle = title ? `${title} | ${siteName}` : siteName;
+  const siteName = 'Digital Home Sarkari Result';
+  
+  let cleanTitle = title || '';
+  // Strip any trailing "| Digital Home" or "| Inkspire Blog" or "| Sarkari Result" suffixes
+  cleanTitle = cleanTitle.replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '');
+
+  const fullTitle = cleanTitle ? `${cleanTitle} | ${siteName}` : siteName;
   const desc = description || 'Sarkari Result, Admit Card, Latest Jobs, Vacancies, Sarkari Result Tools, Kids Games (बचो का गेम), Health, Education, Tech, and Career Insights from Digital Home Blog.';
   const pageUrl = url || window.location.href;
   const canonicalUrl = canonical || pageUrl;

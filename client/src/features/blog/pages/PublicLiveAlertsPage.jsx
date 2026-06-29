@@ -908,6 +908,7 @@ export default function PublicLiveAlertsPage() {
           </Typography>
           <Typography 
             variant="h4" 
+            component="h1"
             sx={{ 
               fontWeight: 800, 
               mt: 0.5, 

@@ -41,6 +41,11 @@ const blogPostSchema = new mongoose.Schema(
 blogPostSchema.pre('save', function (next) {
   try {
     const post = this;
+    // Ensure seoDescription is filled if not provided
+    if (!post.seoDescription) {
+      const contentClean = (post.content || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+      post.seoDescription = contentClean.slice(0, 145) || post.excerpt || '';
+    }
     // Calculate SEO score if not explicitly set
     if (!post.seoScore) {
       const audit = calculateSeoScore({

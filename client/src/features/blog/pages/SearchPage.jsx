@@ -52,7 +52,7 @@ export default function SearchPage() {
       <Seo title={q ? `Search: ${q} | Digital Home` : 'Search | Digital Home'} description="Search articles on Digital Home" />
 
       <>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>Search Insights</Typography>
+        <Typography variant="h5" component="h1" sx={{ fontWeight: 700, mb: 0.5 }}>Search Insights</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           Search all articles by title, content, and excerpt
         </Typography>

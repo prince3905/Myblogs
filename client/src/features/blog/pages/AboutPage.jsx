@@ -33,7 +33,7 @@ export default function AboutPage() {
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>
             About Us
           </Typography>
-          <Typography variant="h2" sx={{ mt: 2, mb: 3, maxWidth: 700, mx: 'auto' }}>
+          <Typography variant="h2" component="h1" sx={{ mt: 2, mb: 3, maxWidth: 700, mx: 'auto' }}>
             Digital Home: Aapka Universal Information Partner
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 650, mx: 'auto', lineHeight: 1.8 }}>

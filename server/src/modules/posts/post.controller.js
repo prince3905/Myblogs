@@ -33,6 +33,11 @@ function mapPayload(body) {
   const category = `${body.category || ''}`.trim();
   const status = body.status === 'published' ? 'published' : 'draft';
 
+  // Strip HTML to get clean introduction text (first 145 chars)
+  const plainText = content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  const introText = plainText.slice(0, 145);
+  const seoDescription = `${body.seoDescription || body.metaDescription || ''}`.trim() || introText || excerpt;
+
   return {
     title,
     excerpt,
@@ -42,7 +47,7 @@ function mapPayload(body) {
     tags: normalizeCsvOrArray(body.tags),
     status,
     seoTitle: `${body.seoTitle || ''}`.trim() || title,
-    seoDescription: `${body.seoDescription || ''}`.trim() || excerpt,
+    seoDescription,
     seoKeywords: normalizeCsvOrArray(body.seoKeywords),
     canonicalUrl: `${body.canonicalUrl || ''}`.trim(),
     readingTime: calculateReadingTime(content),

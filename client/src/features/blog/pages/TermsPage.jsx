@@ -11,7 +11,7 @@ export default function TermsPage() {
         <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>
           Legal
         </Typography>
-        <Typography variant="h2" sx={{ fontWeight: 700, mt: 2, mb: 2 }}>
+        <Typography variant="h2" component="h1" sx={{ fontWeight: 700, mt: 2, mb: 2 }}>
           Terms & Disclaimer
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 6 }}>

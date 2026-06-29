@@ -34,7 +34,7 @@ export default function CategoryPage() {
               <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>
                 Category
               </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 800, mt: 1, letterSpacing: '-0.02em', color: '#111827' }}>
+              <Typography variant="h3" component="h1" sx={{ fontWeight: 800, mt: 1, letterSpacing: '-0.02em', color: '#111827' }}>
                 {category}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

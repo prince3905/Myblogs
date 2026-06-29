@@ -35,7 +35,9 @@ export default function TagPage() {
                 Browse by Tag
               </Typography>
               <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                <Chip label={`#${tag}`} size="large" sx={{ fontWeight: 800, fontSize: '1.25rem', px: 1.5, py: 2.5, borderRadius: '12px', bgcolor: 'primary.main', color: 'white' }} />
+                <h1 style={{ margin: 0, fontSize: 'inherit', fontWeight: 'inherit', display: 'inline-flex' }}>
+                  <Chip label={`#${tag}`} size="large" sx={{ fontWeight: 800, fontSize: '1.25rem', px: 1.5, py: 2.5, borderRadius: '12px', bgcolor: 'primary.main', color: 'white' }} />
+                </h1>
                 <Typography variant="body2" color="text.secondary">
                   {loading ? 'Loading...' : `${total} article${total !== 1 ? 's' : ''} found`}
                 </Typography>

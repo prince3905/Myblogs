@@ -45,6 +45,7 @@ export default function ContactPage() {
           </Typography>
           <Typography
             variant="h3"
+            component="h1"
             sx={{ fontWeight: 800, mt: 1.5, mb: 2, fontSize: { xs: '1.75rem', md: '2.5rem' } }}
           >
             Get in Touch
