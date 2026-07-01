@@ -5,9 +5,14 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const GEMINI_MODEL = 'gemini-flash-latest';
 
-function needsTranslation(ip) {
-  // All countries (including India) get English translation if content is Hindi/Hinglish
-  if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+function needsTranslation(ip, headers = {}) {
+  // Skip translation for visitors from India (e.g. via Cloudflare or other country headers)
+  const country = (headers['cf-ipcountry'] || headers['x-country-code'] || '').toUpperCase();
+  if (country === 'IN') {
+    return false;
+  }
+
+  if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip === 'localhost') {
     return false;
   }
   return true;
@@ -114,8 +119,54 @@ function geoTranslateMiddleware(req, res, next) {
     || req.ip
     || '127.0.0.1';
 
-  req.needsTranslation = needsTranslation(ip);
+  req.needsTranslation = needsTranslation(ip, req.headers);
   next();
+}
+
+// In-memory queue to track posts currently being translated
+const activeTranslations = new Set();
+
+async function performBackgroundTranslation(post) {
+  const postIdStr = post._id.toString();
+  if (activeTranslations.has(postIdStr)) return;
+
+  activeTranslations.add(postIdStr);
+  try {
+    const needsTranslateContent = post.content && !isEnglish(post.content);
+    const needsTranslateExcerpt = post.excerpt && !isEnglish(post.excerpt);
+    const needsMetaTranslate = (post.seoTitle || post.title) && !isEnglish(post.seoTitle || post.title);
+
+    if (!needsTranslateContent && !needsTranslateExcerpt && !needsMetaTranslate) {
+      const BlogPost = mongoose.model('BlogPost');
+      await BlogPost.findByIdAndUpdate(post._id, {
+        $set: { 'translations.en.content': post.content || '' }
+      });
+      return;
+    }
+
+    // Call Gemini API in background
+    const [newContent, newExcerpt, meta] = await Promise.all([
+      needsTranslateContent ? translateContent(post.content) : Promise.resolve(post.content),
+      needsTranslateExcerpt ? translateContent(post.excerpt) : Promise.resolve(post.excerpt),
+      needsMetaTranslate ? translateMeta(post.seoTitle || post.title, post.seoDescription || post.excerpt) : Promise.resolve({ title: post.seoTitle || post.title, description: post.seoDescription || post.excerpt })
+    ]);
+
+    const BlogPost = mongoose.model('BlogPost');
+    await BlogPost.findByIdAndUpdate(post._id, {
+      $set: {
+        'translations.en.title': meta.title || post.title,
+        'translations.en.content': newContent,
+        'translations.en.excerpt': newExcerpt || post.excerpt,
+        'translations.en.seoTitle': meta.title || post.seoTitle,
+        'translations.en.seoDescription': meta.description || post.seoDescription
+      }
+    });
+    console.log(`[GeoTranslate] Background translation successfully cached for post: ${post.title}`);
+  } catch (err) {
+    console.error(`[GeoTranslate] Background translation failed for post ID ${postIdStr}:`, err.message);
+  } finally {
+    activeTranslations.delete(postIdStr);
+  }
 }
 
 // Translate a single post, storing result in DB for zero-delay next time
@@ -135,50 +186,13 @@ async function translatePost(post, req) {
       };
     }
 
-    // If content is English, skip translation entirely
-    const needsTranslateContent = post.content && !isEnglish(post.content);
-    const needsTranslateExcerpt = post.excerpt && !isEnglish(post.excerpt);
-    const needsMetaTranslate = (post.seoTitle || post.title) && !isEnglish(post.seoTitle || post.title);
-
-    if (!needsTranslateContent && !needsTranslateExcerpt && !needsMetaTranslate) {
-      // Content is already English, nothing to translate — still mark in DB so we skip next time
-      if (post._id) {
-        const BlogPost = mongoose.model('BlogPost');
-        BlogPost.findByIdAndUpdate(post._id, {
-          $set: { 'translations.en.content': post.content || '' }
-        }).catch(() => {});
-      }
-      return post;
-    }
-
-    // Translate via Gemini
-    const [newContent, newExcerpt, meta] = await Promise.all([
-      needsTranslateContent ? translateContent(post.content) : Promise.resolve(post.content),
-      needsTranslateExcerpt ? translateContent(post.excerpt) : Promise.resolve(post.excerpt),
-      needsMetaTranslate ? translateMeta(post.seoTitle || post.title, post.seoDescription || post.excerpt) : Promise.resolve({ title: post.seoTitle || post.title, description: post.seoDescription || post.excerpt })
-    ]);
-
-    // Store in DB for future visitors (fire-and-forget)
+    // Trigger translation asynchronously in background
     if (post._id) {
-      const BlogPost = mongoose.model('BlogPost');
-      BlogPost.findByIdAndUpdate(post._id, {
-        $set: {
-          'translations.en.title': meta.title || post.title,
-          'translations.en.content': newContent,
-          'translations.en.excerpt': newExcerpt || post.excerpt,
-          'translations.en.seoTitle': meta.title || post.seoTitle,
-          'translations.en.seoDescription': meta.description || post.seoDescription
-        }
-      }).catch(() => {});
+      performBackgroundTranslation(post).catch(() => {});
     }
 
-    return {
-      ...post,
-      content: newContent,
-      excerpt: newExcerpt || post.excerpt,
-      seoTitle: meta.title || post.seoTitle,
-      seoDescription: meta.description || post.seoDescription
-    };
+    // Return the original post immediately to prevent any blocking delay
+    return post;
   } catch {
     return post; // Fail gracefully, return original
   }
