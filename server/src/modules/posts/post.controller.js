@@ -372,16 +372,33 @@ async function siteMeta(req, res) {
 }
 
 async function sitemap(req, res) {
+  // Prevent CDN and browser caching of sitemap XML to ensure updates show immediately
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+
   const posts = await BlogPost.find({ status: 'published' }).sort({ updatedAt: -1 });
   const urls = posts
     .map((post) => `<url><loc>${postUrl(post)}</loc><lastmod>${post.updatedAt.toISOString()}</lastmod></url>`)
     .join('');
 
-  const staticPages = ['/about', '/contact', '/privacy', '/search', '/archive', '/tools', '/games', '/terms'].map(p =>
+  const staticPages = ['/about', '/contact', '/privacy', '/search', '/archive', '/tools', '/games', '/terms', '/job-alerts'].map(p =>
     `<url><loc>${env.siteUrl}${p}</loc><priority>0.8</priority></url>`
   ).join('');
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${env.siteUrl}</loc><priority>1.0</priority></url><url><loc>${env.siteUrl}/blog</loc><priority>0.9</priority></url>${staticPages}${urls}</urlset>`;
+  // Include category pages dynamically
+  const categories = await BlogPost.distinct('category', { status: 'published' });
+  const categoryUrls = categories
+    .filter(Boolean)
+    .map((cat) => `<url><loc>${env.siteUrl}/category/${catUrlSlug(cat)}</loc><priority>0.7</priority></url>`)
+    .join('');
+
+  // Include tag pages dynamically
+  const tags = await BlogPost.distinct('tags', { status: 'published' });
+  const tagUrls = tags
+    .filter(Boolean)
+    .map((tag) => `<url><loc>${env.siteUrl}/tags/${encodeURIComponent(tag.toLowerCase())}</loc><priority>0.6</priority></url>`)
+    .join('');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${env.siteUrl}</loc><priority>1.0</priority></url><url><loc>${env.siteUrl}/blog</loc><priority>0.9</priority></url>${staticPages}${categoryUrls}${tagUrls}${urls}</urlset>`;
   res.type('application/xml');
   return res.send(xml);
 }
