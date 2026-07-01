@@ -64,7 +64,12 @@ const animalData = [
 
 function playAnimalSound(animal) {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -324,7 +329,12 @@ function pickRandom(arr) {
 
 function playHappyVoice() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     const t = ctx.currentTime;
     [523, 659, 784, 1047].forEach((freq, i) => {
       const o = ctx.createOscillator();
@@ -350,7 +360,12 @@ function playHappyVoice() {
 
 function playSadVoice() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     const t = ctx.currentTime;
     const o = ctx.createOscillator();
     const g = ctx.createGain();
