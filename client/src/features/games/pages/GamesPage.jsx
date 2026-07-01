@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
 import { 
   Container, Typography, Box, Button, Grid, Card, CardContent, 
-  Paper, IconButton, Chip, Slider, LinearProgress, Avatar, Dialog, DialogTitle, DialogContent, DialogContentText
+  Paper, IconButton, Chip, LinearProgress
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import Layout from '../../blog/components/Layout';
@@ -13,83 +13,60 @@ import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import SchoolIcon from '@mui/icons-material/School';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import StarIcon from '@mui/icons-material/Star';
-import ReplayIcon from '@mui/icons-material/Replay';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StarsIcon from '@mui/icons-material/Stars';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
-// --- SOUND SYSTEM WITH MOBILE FIX ---
-let globalAudioCtx = null;
+// --- DATASETS FROM PREVIOUS WORK ---
+const alphabetData = [
+  { letter: 'A', word: 'Apple', emoji: '🍎' },
+  { letter: 'B', word: 'Banana', emoji: '🍌' },
+  { letter: 'C', word: 'Cat', emoji: '🐱' },
+  { letter: 'D', word: 'Dog', emoji: '🐕' },
+  { letter: 'E', word: 'Elephant', emoji: '🐘' },
+  { letter: 'F', word: 'Fish', emoji: '🐟' },
+  { letter: 'G', word: 'Grapes', emoji: '🍇' },
+  { letter: 'H', word: 'Hat', emoji: '🎩' },
+  { letter: 'I', word: 'Ice Cream', emoji: '🍦' },
+  { letter: 'J', word: 'Juice', emoji: '🧃' },
+  { letter: 'K', word: 'Kite', emoji: '🪁' },
+  { letter: 'L', word: 'Lion', emoji: '🦁' },
+  { letter: 'M', word: 'Mango', emoji: '🥭' },
+  { letter: 'N', word: 'Nest', emoji: '🪺' },
+  { letter: 'O', word: 'Orange', emoji: '🍊' },
+  { letter: 'P', word: 'Parrot', emoji: '🦜' },
+  { letter: 'Q', word: 'Queen', emoji: '👑' },
+  { letter: 'R', word: 'Rabbit', emoji: '🐰' },
+  { letter: 'S', word: 'Sun', emoji: '☀️' },
+  { letter: 'T', word: 'Tiger', emoji: '🐯' },
+  { letter: 'U', word: 'Umbrella', emoji: '☂️' },
+  { letter: 'V', word: 'Violin', emoji: '🎻' },
+  { letter: 'W', word: 'Watch', emoji: '⌚' },
+  { letter: 'X', word: 'Xylophone', emoji: '🎵' },
+  { letter: 'Y', word: 'Yacht', emoji: '⛵' },
+  { letter: 'Z', word: 'Zebra', emoji: '🦓' },
+];
 
-function getAudioCtx() {
-  if (!globalAudioCtx) {
-    globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (globalAudioCtx.state === 'suspended') {
-    globalAudioCtx.resume().catch(() => {});
-  }
-  return globalAudioCtx;
-}
+const animalData = [
+  { name: 'Lion', emoji: '🦁', category: 'bigCat' },
+  { name: 'Tiger', emoji: '🐯', category: 'bigCat' },
+  { name: 'Elephant', emoji: '🐘', category: 'giant' },
+  { name: 'Bear', emoji: '🐻', category: 'giant' },
+  { name: 'Dog', emoji: '🐕', category: 'pet' },
+  { name: 'Cat', emoji: '🐱', category: 'pet' },
+  { name: 'Monkey', emoji: '🐵', category: 'trickster' },
+  { name: 'Cow', emoji: '🐄', category: 'farm' },
+  { name: 'Horse', emoji: '🐴', category: 'farm' },
+  { name: 'Pig', emoji: '🐷', category: 'farm' },
+  { name: 'Sheep', emoji: '🐑', category: 'farm' },
+  { name: 'Duck', emoji: '🦆', category: 'bird' },
+  { name: 'Owl', emoji: '🦉', category: 'bird' },
+  { name: 'Frog', emoji: '🐸', category: 'trickster' },
+  { name: 'Giraffe', emoji: '🦒', category: 'giant' },
+  { name: 'Zebra', emoji: '🦓', category: 'giant' },
+  { name: 'Rabbit', emoji: '🐰', category: 'pet' },
+  { name: 'Fox', emoji: '🦊', category: 'trickster' },
+];
 
-function playSound(type, isMuted) {
-  if (isMuted) return;
-  try {
-    const ctx = getAudioCtx();
-    const t = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    if (type === 'success') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(523.25, t); // C5
-      osc.frequency.setValueAtTime(659.25, t + 0.1); // E5
-      osc.frequency.setValueAtTime(783.99, t + 0.2); // G5
-      gain.gain.setValueAtTime(0.12, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
-      osc.start(t);
-      osc.stop(t + 0.35);
-      speakVoice("Great job!", isMuted);
-    } else if (type === 'error') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(220, t); // A3
-      osc.frequency.exponentialRampToValueAtTime(130, t + 0.25);
-      gain.gain.setValueAtTime(0.1, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
-      osc.start(t);
-      osc.stop(t + 0.3);
-      speakVoice("Try again!", isMuted);
-    } else if (type === 'pop') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, t);
-      osc.frequency.exponentialRampToValueAtTime(1200, t + 0.08);
-      gain.gain.setValueAtTime(0.15, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-      osc.start(t);
-      osc.stop(t + 0.1);
-    } else {
-      // standard click
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(440, t);
-      gain.gain.setValueAtTime(0.08, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-      osc.start(t);
-      osc.stop(t + 0.1);
-    }
-  } catch (err) {}
-}
-
-function speakVoice(text, isMuted) {
-  if (isMuted) return;
-  if ('speechSynthesis' in window) {
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.95;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-  }
-}
-
-// --- DATASETS ---
 const EMOJIS = [
   { char: '🐱', name: 'Cat', group: 'animal' },
   { char: '🐶', name: 'Dog', group: 'animal' },
@@ -121,12 +98,153 @@ const COLORS = [
   { name: 'Purple', hex: '#8B5CF6' }
 ];
 
+// --- SHUFFLE / RANDOM HELPERS ---
+function shuffle(a) {
+  const arr = [...a];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// --- AUDIO & VOICE FEEDBACK HELPERS ---
+let globalAudioCtx = null;
+
+function getAudioCtx() {
+  if (!globalAudioCtx) {
+    globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (globalAudioCtx.state === 'suspended') {
+    globalAudioCtx.resume().catch(() => {});
+  }
+  return globalAudioCtx;
+}
+
+function playAnimalSound(animal, isMuted) {
+  if (isMuted) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+
+    const t = ctx.currentTime;
+    const cat = animal.category;
+    if (cat === 'bigCat') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(70, t);
+      osc.frequency.exponentialRampToValueAtTime(130, t + 0.25);
+      osc.frequency.exponentialRampToValueAtTime(90, t + 0.4);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.55);
+      osc.start(t); osc.stop(t + 0.55);
+    } else if (cat === 'giant') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(110, t);
+      osc.frequency.setValueAtTime(160, t + 0.15);
+      osc.frequency.setValueAtTime(120, t + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+      osc.start(t); osc.stop(t + 0.5);
+    } else if (cat === 'pet') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, t);
+      osc.frequency.exponentialRampToValueAtTime(600, t + 0.1);
+      osc.frequency.exponentialRampToValueAtTime(450, t + 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+      osc.start(t); osc.stop(t + 0.3);
+    } else if (cat === 'farm') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, t);
+      osc.frequency.linearRampToValueAtTime(220, t + 0.2);
+      osc.frequency.linearRampToValueAtTime(190, t + 0.35);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.45);
+      osc.start(t); osc.stop(t + 0.45);
+    } else if (cat === 'bird') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, t);
+      osc.frequency.setValueAtTime(900, t + 0.08);
+      osc.frequency.setValueAtTime(700, t + 0.16);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+      osc.start(t); osc.stop(t + 0.25);
+    } else {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(250, t);
+      osc.frequency.linearRampToValueAtTime(350, t + 0.12);
+      osc.frequency.linearRampToValueAtTime(280, t + 0.25);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+      osc.start(t); osc.stop(t + 0.35);
+    }
+  } catch {}
+}
+
+function playSound(type, isMuted) {
+  if (isMuted) return;
+  try {
+    const ctx = getAudioCtx();
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (type === 'success') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, t); // C5
+      osc.frequency.setValueAtTime(659.25, t + 0.1); // E5
+      osc.frequency.setValueAtTime(783.99, t + 0.2); // G5
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+      osc.start(t);
+      osc.stop(t + 0.35);
+    } else if (type === 'error') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, t); // A3
+      osc.frequency.exponentialRampToValueAtTime(130, t + 0.25);
+      gain.gain.setValueAtTime(0.1, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+      osc.start(t);
+      osc.stop(t + 0.3);
+    } else if (type === 'pop') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, t);
+      osc.frequency.exponentialRampToValueAtTime(1200, t + 0.08);
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+      osc.start(t);
+      osc.stop(t + 0.1);
+    } else {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, t);
+      gain.gain.setValueAtTime(0.08, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+      osc.start(t);
+      osc.stop(t + 0.1);
+    }
+  } catch {}
+}
+
+function speakVoice(text, isMuted) {
+  if (isMuted) return;
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+}
+
 // --- 1. GRADE SELECTOR ---
 function GradeSelector({ onSelect }) {
   const options = [
-    { id: 'preschool', title: 'LKG & UKG (Preschool)', age: 'Age 3-5', color: '#10B981', emoji: '🧸', desc: 'Visual recognition, count to 10, colors & shadows.' },
-    { id: 'primary', title: 'Class 1 & 2', age: 'Age 6-7', color: '#3B82F6', emoji: '🎒', desc: 'Spelling, addition, patterns, and odd-one-out.' },
-    { id: 'upper', title: 'Class 3 to 5', age: 'Age 8-10', color: '#8B5CF6', emoji: '🎓', desc: 'Arithmetic, speed memory, complex logic & unscrambling.' }
+    { id: 'preschool', title: 'LKG & UKG (Preschool)', age: 'Age 3-5', color: '#10B981', emoji: '🧸', desc: 'Visual recognition, count to 10, colors & animal shadows.' },
+    { id: 'primary', title: 'Class 1 & 2', age: 'Age 6-7', color: '#3B82F6', emoji: '🎒', desc: 'Alphabet phonics, math addition, patterns, and memory match.' },
+    { id: 'upper', title: 'Class 3 to 5', age: 'Age 8-10', color: '#8B5CF6', emoji: '🎓', desc: 'Arithmetic calculation speed, complex sequences, spelling & tapper.' }
   ];
 
   return (
@@ -184,9 +302,9 @@ function GradeSelector({ onSelect }) {
 
 // --- 2. GAME LIST / DASHBOARD ---
 const GAME_LIST = [
-  { id: 'shadow', name: 'Shadow Matcher 👤', desc: 'Find the silhouette matching the colorful emoji.' },
+  { id: 'shadow', name: 'Shadow & Sound 👤', desc: 'Hear the sound, look at the shadow, and guess the animal.' },
   { id: 'phonics', name: 'Alphabet Phonics 🔠', desc: 'Identify correct items starting with the letter.' },
-  { id: 'math', name: 'Math Booster 🧮', desc: 'Count items or solve arithmetic speed questions.' },
+  { id: 'math', name: 'Math Booster 🧮', desc: 'Count items or solve arithmetic speed equations.' },
   { id: 'memory', name: 'Memory Cards 🧠', desc: 'Match emoji card pairs under the time limit.' },
   { id: 'pattern', name: 'Pattern Completer 🧩', desc: 'Look at the emoji pattern and pick the next object.' },
   { id: 'odd', name: 'Odd One Out 🚫', desc: 'Spot the object that does not belong to the group.' },
@@ -252,317 +370,343 @@ function GamesDashboard({ grade, onSelectGame, onChangeGrade }) {
   );
 }
 
-// --- INDIVIDUAL INTERACTIVE GAMES CONTROLLERS ---
+// --- 3. THE 10 GAMES IMPLEMENTATIONS ---
 
-// --- GAME 1: SHADOW MATCHER ---
+// --- GAME 1: SHADOW & SOUND (ORIGINAL RESTORED AND SCALED) ---
 function GameShadowMatcher({ grade, onWin, onLose, isMuted }) {
-  const [question, setQuestion] = useState(null);
-  const [options, setOptions] = useState([]);
+  const [current, setCurrent] = useState(() => pickRandom(animalData));
   const [feedback, setFeedback] = useState(null);
+  const [locked, setLocked] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+
+  // Generate options based on grade difficulty
+  const options = useMemo(() => {
+    const others = animalData.filter(d => d.name !== current.name);
+    const count = grade === 'preschool' ? 2 : grade === 'primary' ? 3 : 4;
+    const wrong = shuffle(others).slice(0, count);
+    return shuffle([current, ...wrong]);
+  }, [current, grade]);
 
   const init = () => {
-    const list = [...EMOJIS];
-    const target = list[Math.floor(Math.random() * list.length)];
-    const count = grade === 'preschool' ? 3 : grade === 'primary' ? 4 : 5;
-    
-    let pool = list.filter(item => item.char !== target.char);
-    const opts = [target];
-    for (let i = 0; i < count - 1; i++) {
-      const idx = Math.floor(Math.random() * pool.length);
-      opts.push(pool[idx]);
-      pool.splice(idx, 1);
-    }
-    
-    setQuestion(target);
-    setOptions(opts.sort(() => Math.random() - 0.5));
+    setCurrent(pickRandom(animalData));
     setFeedback(null);
+    setRevealed(false);
+    setLocked(false);
   };
 
-  useEffect(() => { init(); }, []);
+  useEffect(() => {
+    speakVoice("Guess who hides behind the shadow! Listen to the sound.", isMuted);
+  }, [current]);
 
-  const handleSelect = (item) => {
-    if (feedback) return;
-    if (item.char === question.char) {
+  const handleAnswer = (animal) => {
+    if (locked) return;
+    if (animal.name === current.name) {
       setFeedback('correct');
       playSound('success', isMuted);
+      speakVoice(`Correct! It is a ${current.name}!`, isMuted);
+      setRevealed(true);
+      setLocked(true);
       setTimeout(() => {
         onWin(10);
         init();
-      }, 1200);
+      }, 2000);
     } else {
       setFeedback('wrong');
       playSound('error', isMuted);
-      setTimeout(() => {
-        onLose(5);
-        setFeedback(null);
-      }, 1200);
+      setTimeout(() => setFeedback(null), 1200);
     }
   };
 
-  if (!question) return null;
-
   return (
-    <Box sx={{ textAlign: 'center', py: 2 }}>
-      <Typography variant="h6" sx={{ mb: 4, fontWeight: 700 }}>Identify the correct emoji that matches this shadow!</Typography>
-      
-      {/* Target Shadow */}
-      <Box 
-        sx={{ 
-          fontSize: '6rem', 
-          mx: 'auto', 
-          width: 150, 
-          height: 150, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          filter: 'brightness(0) contrast(100%)', // turn completely black/shadow
-          bgcolor: '#F3F4F6',
-          borderRadius: '50%',
-          mb: 5
-        }}
-      >
-        {question.char}
+    <Box sx={{ textAlign: 'center', py: 2, width: '100%' }}>
+      <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>Who hides behind the shadow? Listen closely! 👤</Typography>
+
+      <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', mb: 4 }}>
+        {/* Grey/White Outer circle */}
+        <Box sx={{
+          width: 170, height: 170,
+          borderRadius: '50%', bgcolor: '#ffffff',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: '2px solid #E5E7EB',
+          overflow: 'hidden', position: 'relative',
+        }}>
+          {/* ONLY the emoji character gets the black silhouette filter, NOT the circle background! */}
+          <Typography
+            sx={{
+              fontSize: '6.5rem',
+              lineHeight: 1,
+              filter: revealed ? 'none' : 'brightness(0) contrast(1)', // turns only the text black
+              transition: 'filter 0.4s ease',
+            }}
+          >
+            {current.emoji}
+          </Typography>
+        </Box>
+
+        {/* Audio trigger button */}
+        <IconButton
+          onClick={() => playAnimalSound(current, isMuted)}
+          disabled={locked}
+          sx={{
+            position: 'absolute', bottom: -4, right: -4,
+            bgcolor: '#F59E0B', color: '#ffffff',
+            width: 50, height: 50,
+            boxShadow: '0 6px 20px rgba(245, 158, 11, 0.45)',
+            '&:hover': { bgcolor: '#D97706', transform: 'scale(1.08)' },
+            transition: 'all 0.2s ease',
+            '&.Mui-disabled': { bgcolor: '#D1D5DB', color: '#9CA3AF', boxShadow: 'none' }
+          }}
+        >
+          <VolumeUpIcon sx={{ fontSize: '1.5rem' }} />
+        </IconButton>
       </Box>
 
       {/* Options */}
-      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-        {options.map((opt) => (
-          <Paper
-            key={opt.char}
-            onClick={() => handleSelect(opt)}
-            elevation={feedback ? 0 : 2}
-            sx={{
-              p: 2, fontSize: '3rem', cursor: 'pointer', borderRadius: '16px',
-              width: 80, height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '2px solid transparent',
-              transition: 'all 0.2s',
-              '&:hover': { transform: 'scale(1.1)', borderColor: 'primary.main' }
-            }}
-          >
-            {opt.char}
-          </Paper>
-        ))}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, maxWidth: 440, mx: 'auto' }}>
+        {options.map((animal, i) => {
+          const isCorrect = animal.name === current.name;
+          let bg = '#ffffff', border = '#E5E7EB';
+          if (feedback === 'correct' && isCorrect) { bg = '#BBF7D0'; border = '#22C55E'; }
+          if (feedback === 'wrong' && isCorrect) { bg = '#FECACA'; border = '#EF4444'; }
+          
+          return (
+            <Button
+              key={animal.name}
+              onClick={() => handleAnswer(animal)}
+              disabled={locked}
+              sx={{
+                display: 'flex', alignItems: 'center', gap: 2,
+                p: 2, borderRadius: '16px', minHeight: 60,
+                bgcolor: bg, color: '#1F2937',
+                border: '2px solid', borderColor: border,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                '&:hover': !locked ? {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 8px 20px rgba(245, 158, 11, 0.15)',
+                  borderColor: '#FBBF24',
+                  bgcolor: '#FFFBEB',
+                } : {},
+                textTransform: 'none',
+                justifyContent: 'flex-start',
+              }}
+            >
+              <Typography sx={{ fontSize: '1.8rem', lineHeight: 1 }}>{animal.emoji}</Typography>
+              <Typography variant="body2" fontWeight={700} sx={{ color: '#374151' }}>{animal.name}</Typography>
+            </Button>
+          );
+        })}
       </Box>
     </Box>
   );
 }
 
-// --- GAME 2: ALPHABET PHONICS ---
+// --- GAME 2: ALPHABET PHONICS (ORIGINAL QUIZ STYLE) ---
 function GameAlphabetPhonics({ grade, onWin, onLose, isMuted }) {
-  const [letter, setLetter] = useState('');
-  const [options, setOptions] = useState([]);
-  const [answer, setAnswer] = useState(null);
+  const [current, setCurrent] = useState(() => pickRandom(alphabetData));
   const [feedback, setFeedback] = useState(null);
+  const [locked, setLocked] = useState(false);
+
+  const options = useMemo(() => {
+    const others = alphabetData.filter(d => d.letter !== current.letter);
+    const count = grade === 'preschool' ? 2 : grade === 'primary' ? 3 : 4;
+    const wrong = shuffle(others).slice(0, count);
+    return shuffle([current, ...wrong]);
+  }, [current, grade]);
 
   const init = () => {
-    const list = EMOJIS.filter(e => e.name.length > 2);
-    const target = list[Math.floor(Math.random() * list.length)];
-    const targetLetter = target.name[0].toUpperCase();
-    
-    // Choose pool of distractors that do NOT start with this letter
-    let pool = list.filter(e => e.name[0].toUpperCase() !== targetLetter);
-    const count = grade === 'preschool' ? 3 : 4;
-    const opts = [target];
-    for (let i = 0; i < count - 1; i++) {
-      if (pool.length === 0) break;
-      const idx = Math.floor(Math.random() * pool.length);
-      opts.push(pool[idx]);
-      pool.splice(idx, 1);
-    }
-
-    setLetter(targetLetter);
-    setAnswer(target);
-    setOptions(opts.sort(() => Math.random() - 0.5));
+    setCurrent(pickRandom(alphabetData));
     setFeedback(null);
-    speakVoice(`Which object starts with the letter ${targetLetter}?`, isMuted);
+    setLocked(false);
   };
 
-  useEffect(() => { init(); }, []);
+  useEffect(() => {
+    speakVoice(`Which one starts with the letter ${current.letter}?`, isMuted);
+  }, [current]);
 
-  const handleSelect = (item) => {
-    if (feedback) return;
-    if (item.char === answer.char) {
+  const handleAnswer = (item) => {
+    if (locked) return;
+    if (item.letter === current.letter) {
       setFeedback('correct');
       playSound('success', isMuted);
-      speakVoice(`${letter} is for ${item.name}!`, isMuted);
+      speakVoice(`Yes! ${current.letter} is for ${current.word}!`, isMuted);
+      setLocked(true);
       setTimeout(() => {
         onWin(10);
         init();
+      }, 2000);
+    } else {
+      setFeedback('wrong');
+      playSound('error', isMuted);
+      setTimeout(() => setFeedback(null), 1200);
+    }
+  };
+
+  return (
+    <Box sx={{ textAlign: 'center', py: 2, width: '100%' }}>
+      <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>Find the picture that starts with letter:</Typography>
+
+      <Box sx={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 100, height: 100, borderRadius: '50%', bgcolor: '#ffffff',
+        boxShadow: '0 8px 30px rgba(139, 92, 246, 0.1)', mb: 4,
+        border: '3px solid #7C3AED'
+      }}>
+        <Typography variant="h2" fontWeight={900} sx={{ color: '#7C3AED' }}>{current.letter}</Typography>
+      </Box>
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, maxWidth: 440, mx: 'auto' }}>
+        {options.map((item, idx) => {
+          const isCorrect = item.letter === current.letter;
+          let bg = '#ffffff', border = '#E5E7EB';
+          if (feedback === 'correct' && isCorrect) { bg = '#BBF7D0'; border = '#22C55E'; }
+          if (feedback === 'wrong' && isCorrect) { bg = '#FECACA'; border = '#EF4444'; }
+
+          return (
+            <Button
+              key={idx}
+              onClick={() => handleAnswer(item)}
+              disabled={locked}
+              sx={{
+                display: 'flex', flexDirection: 'column', p: 2, borderRadius: '16px', minHeight: 90,
+                bgcolor: bg, color: '#1F2937', border: '2px solid', borderColor: border,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                '&:hover': !locked ? {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 8px 20px rgba(139, 92, 246, 0.15)',
+                  bgcolor: '#FDF2F8',
+                  borderColor: '#F9A8D4'
+                } : {},
+                textTransform: 'none'
+              }}
+            >
+              <span style={{ fontSize: '2.5rem', lineHeight: 1.1 }}>{item.emoji}</span>
+              <Typography variant="body2" fontWeight={700} sx={{ mt: 0.5, color: '#4B5563' }}>
+                {grade === 'preschool' ? '???' : item.word}
+              </Typography>
+            </Button>
+          );
+        })}
+      </Box>
+    </Box>
+  );
+}
+
+// --- GAME 3: MATH BOOSTER (WITH VISUAL APPLES) ---
+function GameMathBooster({ grade, onWin, onLose, isMuted }) {
+  const [problem, setProblem] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [locked, setLocked] = useState(false);
+
+  const genProblem = useCallback(() => {
+    let a, b, op, correct;
+    if (grade === 'preschool') {
+      a = Math.floor(Math.random() * 8) + 2; // 2 to 9
+      b = 0;
+      op = '=';
+      correct = a;
+    } else if (grade === 'primary') {
+      a = Math.floor(Math.random() * 10) + 4;
+      b = Math.floor(Math.random() * a) + 1;
+      op = Math.random() < 0.5 ? '+' : '-';
+      correct = op === '+' ? a + b : a - b;
+    } else {
+      a = Math.floor(Math.random() * 20) + 10;
+      b = Math.floor(Math.random() * 12) + 2;
+      op = Math.random() < 0.4 ? '+' : Math.random() < 0.7 ? '-' : '×';
+      correct = op === '+' ? a + b : op === '-' ? a - b : a * b;
+    }
+
+    const wrongs = new Set();
+    while (wrongs.size < 3) {
+      const offset = Math.floor(Math.random() * 9) - 4;
+      const w = correct + (offset === 0 ? 1 : offset);
+      if (w !== correct && w >= 0) wrongs.add(w);
+    }
+    const opts = shuffle([correct, ...wrongs]);
+    return { a, b, op, correct, opts };
+  }, [grade]);
+
+  useEffect(() => {
+    setProblem(genProblem());
+    setFeedback(null);
+    setLocked(false);
+  }, [genProblem]);
+
+  const handleAnswer = (val) => {
+    if (locked) return;
+    if (val === problem.correct) {
+      setFeedback('correct');
+      playSound('success', isMuted);
+      setLocked(true);
+      setTimeout(() => {
+        onWin(10);
+        setProblem(genProblem());
+        setFeedback(null);
+        setLocked(false);
       }, 1500);
     } else {
       setFeedback('wrong');
       playSound('error', isMuted);
-      setTimeout(() => {
-        onLose(5);
-        setFeedback(null);
-      }, 1200);
+      setTimeout(() => setFeedback(null), 1200);
     }
   };
 
-  return (
-    <Box sx={{ textAlign: 'center', py: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>Find the object starting with letter:</Typography>
-      <Box sx={{ fontSize: '7rem', fontWeight: 900, color: 'primary.main', mb: 4 }}>
-        {letter}
-      </Box>
+  if (!problem) return null;
 
-      <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap' }}>
-        {options.map((opt) => (
-          <Paper
-            key={opt.char}
-            onClick={() => handleSelect(opt)}
-            sx={{
-              p: 3, cursor: 'pointer', borderRadius: '24px', width: 140,
-              textAlign: 'center', transition: 'all 0.2s', border: '2px solid transparent',
-              '&:hover': { transform: 'translateY(-4px)', borderColor: 'primary.main' }
-            }}
-          >
-            <Box sx={{ fontSize: '3.5rem', mb: 1 }}>{opt.char}</Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#374151' }}>
-              {grade === 'preschool' ? '???' : opt.name}
-            </Typography>
-          </Paper>
-        ))}
-      </Box>
+  // Apples counter display
+  const visualApples = problem.a <= 12 && (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center', mb: 3, fontSize: '1.8rem' }}>
+      {Array.from({ length: problem.a }).map((_, idx) => (
+        <span key={idx} style={{ display: 'inline-block', animation: 'bounceIn 0.3s ease' }}>🍎</span>
+      ))}
     </Box>
   );
-}
-
-// --- GAME 3: MATH BOOSTER ---
-function GameMathBooster({ grade, onWin, onLose, isMuted }) {
-  const [question, setQuestion] = useState('');
-  const [visualItems, setVisualItems] = useState([]);
-  const [options, setOptions] = useState([]);
-  const [answer, setAnswer] = useState(0);
-  const [feedback, setFeedback] = useState(null);
-
-  const init = () => {
-    setFeedback(null);
-    if (grade === 'preschool') {
-      // Counting mode
-      const num = Math.floor(Math.random() * 8) + 2; // 2 to 9
-      const emoji = ['🍎', '🍒', '⭐', '🐶', '🚗'][Math.floor(Math.random() * 5)];
-      const items = Array(num).fill(emoji);
-      setVisualItems(items);
-      setQuestion(`Count the objects! How many ${emoji} do you see?`);
-      setAnswer(num);
-
-      const opts = new Set([num]);
-      while (opts.size < 4) {
-        opts.add(Math.floor(Math.random() * 8) + 2);
-      }
-      setOptions([...opts].sort(() => Math.random() - 0.5));
-    } else {
-      // Sums mode
-      setVisualItems([]);
-      let num1, num2, symbol, ans;
-      const isUpper = grade === 'upper';
-
-      if (isUpper) {
-        // Class 3-5: Add, subtract, multiply
-        const op = Math.floor(Math.random() * 3);
-        if (op === 0) {
-          num1 = Math.floor(Math.random() * 40) + 10;
-          num2 = Math.floor(Math.random() * 40) + 10;
-          symbol = '+';
-          ans = num1 + num2;
-        } else if (op === 1) {
-          num1 = Math.floor(Math.random() * 80) + 20;
-          num2 = Math.floor(Math.random() * num1);
-          symbol = '-';
-          ans = num1 - num2;
-        } else {
-          num1 = Math.floor(Math.random() * 8) + 2;
-          num2 = Math.floor(Math.random() * 11) + 2;
-          symbol = '×';
-          ans = num1 * num2;
-        }
-      } else {
-        // Class 1-2: Add or subtract under 20
-        const op = Math.floor(Math.random() * 2);
-        num1 = Math.floor(Math.random() * 10) + 5;
-        num2 = Math.floor(Math.random() * num1);
-        if (op === 0) {
-          symbol = '+';
-          ans = num1 + num2;
-        } else {
-          symbol = '-';
-          ans = num1 - num2;
-        }
-      }
-
-      setQuestion(`${num1} ${symbol} ${num2} = ?`);
-      setAnswer(ans);
-
-      const opts = new Set([ans]);
-      while (opts.size < 4) {
-        const offset = Math.floor(Math.random() * 9) - 4;
-        opts.add(ans + offset);
-      }
-      setOptions([...opts].sort(() => Math.random() - 0.5));
-    }
-  };
-
-  useEffect(() => { init(); }, [grade]);
-
-  const handleSelect = (val) => {
-    if (feedback) return;
-    if (val === answer) {
-      setFeedback('correct');
-      playSound('success', isMuted);
-      setTimeout(() => {
-        onWin(10);
-        init();
-      }, 1200);
-    } else {
-      setFeedback('wrong');
-      playSound('error', isMuted);
-      setTimeout(() => {
-        onLose(5);
-        setFeedback(null);
-      }, 1200);
-    }
-  };
 
   return (
-    <Box sx={{ textAlign: 'center', py: 2 }}>
-      <Typography variant="h5" sx={{ mb: 4, fontWeight: 800, color: 'text.primary' }}>
-        {question}
+    <Box sx={{ textAlign: 'center', py: 2, width: '100%' }}>
+      <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
+        {grade === 'preschool' ? 'Count the apples and choose the number! 🍎' : 'Solve the math problem!'}
       </Typography>
 
-      {/* Visual Counters for Preschoolers */}
-      {visualItems.length > 0 && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center', maxWidth: 400, mx: 'auto', mb: 5 }}>
-          {visualItems.map((emoji, idx) => (
-            <Box 
-              key={idx} 
-              sx={{ 
-                fontSize: '3rem', animation: 'bounce 1s infinite alternate',
-                animationDelay: `${idx * 0.1}s`
-              }}
-            >
-              {emoji}
-            </Box>
-          ))}
-        </Box>
-      )}
+      {/* Visual Counters */}
+      {visualApples}
+
+      {/* Problem statement */}
+      <Typography variant="h3" fontWeight={800} sx={{ color: '#1F2937', mb: 4, fontSize: { xs: '2.4rem', sm: '3.2rem' } }}>
+        {grade === 'preschool' ? `Total = ?` : `${problem.a} ${problem.op} ${problem.b} = ?`}
+      </Typography>
 
       {/* Options */}
-      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-        {options.map((opt) => (
-          <Button
-            key={opt}
-            variant="contained"
-            onClick={() => handleSelect(opt)}
-            sx={{
-              borderRadius: '20px', minWidth: 90, py: 2, fontSize: '1.5rem', fontWeight: 800,
-              bgcolor: 'background.paper', color: 'primary.main', border: '2px solid', borderColor: 'primary.main',
-              boxShadow: 'none', '&:hover': { bgcolor: 'primary.main', color: 'white' }
-            }}
-          >
-            {opt}
-          </Button>
-        ))}
+      <Box sx={{ display: 'flex', gap: 2.5, justifyContent: 'center', flexWrap: 'wrap' }}>
+        {problem.opts.map((val, i) => {
+          const isCorrect = val === problem.correct;
+          let bg = '#ffffff', border = '#E5E7EB';
+          if (feedback === 'correct' && isCorrect) { bg = '#BBF7D0'; border = '#22C55E'; }
+          if (feedback === 'wrong' && isCorrect) { bg = '#FECACA'; border = '#EF4444'; }
+
+          return (
+            <Button
+              key={i}
+              onClick={() => handleAnswer(val)}
+              disabled={locked}
+              sx={{
+                width: 75, height: 75, borderRadius: '50%', fontSize: '1.8rem', fontWeight: 800,
+                bgcolor: bg, color: '#1F2937', border: '3px solid', borderColor: border,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.02)', minWidth: 0, p: 0,
+                '&:hover': !locked ? {
+                  transform: 'scale(1.08)',
+                  boxShadow: '0 8px 24px rgba(34, 197, 94, 0.2)',
+                  borderColor: '#10B981',
+                  bgcolor: '#ECFDF5',
+                } : {},
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+            >
+              {val}
+            </Button>
+          );
+        })}
       </Box>
     </Box>
   );
@@ -580,7 +724,6 @@ function GameMemoryFlip({ grade, onWin, onLose, isMuted }) {
     const pairCount = grade === 'preschool' ? 2 : grade === 'primary' ? 4 : 6;
     const selected = list.slice(0, pairCount);
     
-    // Duplicate and shuffle
     const paired = [...selected, ...selected]
       .map((item, idx) => ({ ...item, id: idx }))
       .sort(() => Math.random() - 0.5);
@@ -593,7 +736,6 @@ function GameMemoryFlip({ grade, onWin, onLose, isMuted }) {
 
   useEffect(() => { init(); }, [grade]);
 
-  // Countdown timer for Upper level
   useEffect(() => {
     if (grade !== 'upper') return;
     const timer = setInterval(() => {
@@ -625,7 +767,6 @@ function GameMemoryFlip({ grade, onWin, onLose, isMuted }) {
         setFlipped([]);
         playSound('success', isMuted);
 
-        // Check if finished
         if (solved.length + 2 === cards.length) {
           setTimeout(() => {
             onWin(20);
@@ -695,15 +836,12 @@ function GamePatternCompleter({ grade, onWin, onLose, isMuted }) {
     let ans = '';
 
     if (grade === 'preschool') {
-      // ABAB pattern (e.g. 🍎 🍌 🍎 🍌)
       seq = [item1.char, item2.char, item1.char, item2.char];
       ans = item1.char;
     } else if (grade === 'primary') {
-      // ABBABB pattern (e.g. 🦁 🐶 🐶 🦁 🐶 [?])
       seq = [item1.char, item2.char, item2.char, item1.char, item2.char];
       ans = item2.char;
     } else {
-      // AABAAB (e.g. 🎈 🎈 🧸 🎈 🎈 [?])
       seq = [item1.char, item1.char, item2.char, item1.char, item1.char];
       ans = item2.char;
     }
@@ -743,7 +881,6 @@ function GamePatternCompleter({ grade, onWin, onLose, isMuted }) {
     <Box sx={{ textAlign: 'center', py: 2 }}>
       <Typography variant="h6" sx={{ mb: 4, fontWeight: 700 }}>Look closely! Complete the pattern sequence:</Typography>
 
-      {/* Pattern Row */}
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, mb: 6, flexWrap: 'wrap' }}>
         {pattern.map((char, idx) => (
           <Paper 
@@ -768,7 +905,6 @@ function GamePatternCompleter({ grade, onWin, onLose, isMuted }) {
         </Paper>
       </Box>
 
-      {/* Options */}
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
         {options.map((opt) => (
           <Paper
@@ -801,7 +937,6 @@ function GameOddOneOut({ grade, onWin, onLose, isMuted }) {
     const primaryGroup = groups[Math.floor(Math.random() * groups.length)];
     const oddGroup = groups.filter(g => g !== primaryGroup)[Math.floor(Math.random() * (groups.length - 1))];
 
-    // Pick 3 from primaryGroup and 1 from oddGroup
     const primaryItems = [...EMOJIS].filter(e => e.group === primaryGroup).sort(() => Math.random() - 0.5);
     const oddItem = [...EMOJIS].filter(e => e.group === oddGroup)[Math.floor(Math.random() * 3)] || EMOJIS[0];
 
@@ -873,7 +1008,6 @@ function GameWordBuilder({ grade, onWin, onLose, isMuted }) {
     setFeedback(null);
     setSelections([]);
     
-    // Choose list by grade
     const maxLen = grade === 'preschool' ? 3 : grade === 'primary' ? 5 : 7;
     const pool = EMOJIS.filter(e => e.name.length <= maxLen && e.name.indexOf(' ') === -1);
     const target = pool[Math.floor(Math.random() * pool.length)] || EMOJIS[0];
@@ -882,7 +1016,6 @@ function GameWordBuilder({ grade, onWin, onLose, isMuted }) {
     setWord(wordUpper);
     setEmoji(target.char);
     
-    // Scramble letters
     const letters = wordUpper.split('').map((char, idx) => ({ char, originalIndex: idx, id: idx }));
     setScrambled(letters.sort(() => Math.random() - 0.5));
   };
@@ -924,12 +1057,10 @@ function GameWordBuilder({ grade, onWin, onLose, isMuted }) {
     <Box sx={{ textAlign: 'center', py: 2 }}>
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>Build the word for the picture!</Typography>
       
-      {/* Emoji Hint */}
       <Box sx={{ fontSize: '5rem', mb: 3 }}>
         {emoji}
       </Box>
 
-      {/* Answer Board */}
       <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', mb: 4, minHeight: 60 }}>
         {Array(word.length).fill(null).map((_, idx) => {
           const selectedLetter = selections[idx];
@@ -950,7 +1081,6 @@ function GameWordBuilder({ grade, onWin, onLose, isMuted }) {
         })}
       </Box>
 
-      {/* Scrambled Bank */}
       <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap' }}>
         {scrambled.map((item) => (
           <Button
@@ -978,37 +1108,28 @@ function GameBalloonPop({ grade, onWin, onLose, isMuted }) {
   const canvasRef = useRef(null);
 
   const init = () => {
-    // Generate rules
     let ruleText = '';
-    let validator = () => false;
     
     if (grade === 'preschool') {
-      const num = Math.floor(Math.random() * 5) + 1; // Find all 1s, 2s, 3s, etc.
+      const num = Math.floor(Math.random() * 5) + 1;
       ruleText = `Pop only balloons with the number ${num}!`;
-      validator = (val) => val === num;
     } else if (grade === 'primary') {
       const ruleType = Math.floor(Math.random() * 2);
       if (ruleType === 0) {
         ruleText = 'Pop only EVEN numbers!';
-        validator = (val) => val % 2 === 0;
       } else {
         ruleText = 'Pop only ODD numbers!';
-        validator = (val) => val % 2 !== 0;
       }
     } else {
-      // Upper level logic: solve equations
       const op = Math.floor(Math.random() * 2);
       const val1 = Math.floor(Math.random() * 8) + 1;
       const val2 = Math.floor(Math.random() * 7) + 1;
-      const result = op === 0 ? val1 + val2 : val1 * val2;
       ruleText = `Pop the balloon with the answer to: ${val1} ${op === 0 ? '+' : '×'} ${val2}`;
-      validator = (val) => val === result;
     }
 
     setTargetRule(ruleText);
     speakVoice(ruleText, isMuted);
 
-    // Initial balloons
     const list = [];
     for (let i = 0; i < 6; i++) {
       list.push(generateBalloon(i));
@@ -1020,8 +1141,8 @@ function GameBalloonPop({ grade, onWin, onLose, isMuted }) {
     return {
       id: Math.random(),
       value: Math.floor(Math.random() * 15) + 1,
-      x: Math.random() * 80 + 10, // percentage left
-      y: 105 + (index * 15), // start below canvas
+      x: Math.random() * 80 + 10,
+      y: 105 + (index * 15),
       speed: Math.random() * 0.8 + 0.4,
       color: ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'][Math.floor(Math.random() * 6)]
     };
@@ -1029,14 +1150,12 @@ function GameBalloonPop({ grade, onWin, onLose, isMuted }) {
 
   useEffect(() => { init(); }, [grade]);
 
-  // Balloon animator loop
   useEffect(() => {
     const interval = setInterval(() => {
       setBalloons(prev => {
         return prev.map(b => {
           let nextY = b.y - b.speed;
           if (nextY < -15) {
-            // Respawn balloon at bottom
             return generateBalloon(0);
           }
           return { ...b, y: nextY };
@@ -1049,7 +1168,6 @@ function GameBalloonPop({ grade, onWin, onLose, isMuted }) {
   const handlePop = (balloon) => {
     playSound('pop', isMuted);
     
-    // Evaluate if popped correctly
     let correct = false;
     if (grade === 'preschool') {
       const match = targetRule.match(/\d+/);
@@ -1058,7 +1176,6 @@ function GameBalloonPop({ grade, onWin, onLose, isMuted }) {
       if (targetRule.includes('EVEN') && balloon.value % 2 === 0) correct = true;
       if (targetRule.includes('ODD') && balloon.value % 2 !== 0) correct = true;
     } else {
-      // Evaluate basic sum from string
       const numbers = targetRule.match(/\d+/g);
       if (numbers && numbers.length === 2) {
         const n1 = parseInt(numbers[0]);
@@ -1075,7 +1192,6 @@ function GameBalloonPop({ grade, onWin, onLose, isMuted }) {
     } else {
       playSound('error', isMuted);
       onLose(5);
-      // Remove balloon popped incorrectly
       setBalloons(prev => prev.filter(b => b.id !== balloon.id));
     }
   };
@@ -1137,11 +1253,9 @@ function GameColorMixer({ grade, onWin, onLose, isMuted }) {
     setFeedback(null);
     
     if (grade === 'preschool') {
-      // Just identify colors
       const col = COLORS[Math.floor(Math.random() * COLORS.length)];
       setTarget({ name: col.name, color: col.hex, simple: true });
     } else {
-      // Mixing mode
       const combo = combinations[Math.floor(Math.random() * combinations.length)];
       setTarget({ name: combo.target, simple: false, mix: combo.items });
       speakVoice(`Mix two colors to make ${combo.target}!`, isMuted);
@@ -1171,7 +1285,6 @@ function GameColorMixer({ grade, onWin, onLose, isMuted }) {
         }, 1200);
       }
     } else {
-      // Mixer mode
       const nextSelected = [...selected, color.name];
       setSelected(nextSelected);
 
@@ -1203,7 +1316,6 @@ function GameColorMixer({ grade, onWin, onLose, isMuted }) {
         {target?.simple ? `Identify the color: "${target.name}"` : `Mix colors to make: "${target?.name}"`}
       </Typography>
 
-      {/* Target Color Visualizer */}
       <Box 
         sx={{ 
           width: 100, height: 100, borderRadius: '24px', mx: 'auto', mb: 4,
@@ -1212,7 +1324,6 @@ function GameColorMixer({ grade, onWin, onLose, isMuted }) {
         }} 
       />
 
-      {/* Show Selected for Mixing */}
       {!target?.simple && (
         <Box sx={{ minHeight: 40, mb: 3 }}>
           <Typography variant="subtitle2" color="text.secondary">
@@ -1221,7 +1332,6 @@ function GameColorMixer({ grade, onWin, onLose, isMuted }) {
         </Box>
       )}
 
-      {/* Color Palette */}
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
         {COLORS.slice(0, 3).map((col) => (
           <Button
@@ -1257,7 +1367,6 @@ function GameSpeedTapper({ grade, onWin, onLose, isMuted }) {
 
   useEffect(() => { init(); }, [grade]);
 
-  // Reflex loop
   useEffect(() => {
     const speed = grade === 'preschool' ? 1400 : grade === 'primary' ? 1000 : 700;
     const interval = setInterval(() => {
@@ -1296,7 +1405,6 @@ function GameSpeedTapper({ grade, onWin, onLose, isMuted }) {
         Score: {score} / 10
       </Typography>
 
-      {/* Grid */}
       <Grid 
         container 
         spacing={2} 
@@ -1348,7 +1456,6 @@ export default function GamesPage() {
     }
   }, [grade]);
 
-  // Full screen toggle handler
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       gameWrapperRef.current.requestFullscreen()
@@ -1376,6 +1483,15 @@ export default function GamesPage() {
         description="Enhance logic, memory, and arithmetic with 10 free interactive educational games for kids from LKG/UKG to Class 5."
         keywords="kids games, brain booster, educational games class 1, bacho ke game, maths booster games, shadow match game"
       />
+
+      <style>{`
+        @keyframes bounceIn {
+          0% { transform: scale(0.3); opacity: 0; }
+          50% { transform: scale(1.05); opacity: 0.8; }
+          70% { transform: scale(0.9); opacity: 0.9; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
 
       <Container maxWidth="lg" sx={{ py: 2 }}>
         {!grade ? (
