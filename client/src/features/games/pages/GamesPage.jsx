@@ -608,7 +608,53 @@ function playSadVoice() {
   } catch {}
 }
 
-function playSuccess() { playHappyVoice(); }
+function triggerConfetti() {
+  if (typeof document === 'undefined') return;
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.inset = 0;
+  container.style.pointerEvents = 'none';
+  container.style.zIndex = '999999';
+  document.body.appendChild(container);
+
+  const emojis = ['🎉', '✨', '⭐', '🌟', '🎈', '❤️', '🌈', '🥳', '🐱', '🐶', '🦄', '🍎', '🍭'];
+  const count = 25;
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.position = 'absolute';
+    el.style.left = '50%';
+    el.style.top = '50%';
+    el.style.fontSize = Math.floor(Math.random() * 20 + 24) + 'px';
+    el.style.transform = 'translate(-50%, -50%)';
+    container.appendChild(el);
+
+    const angle = Math.random() * Math.PI * 2;
+    const velocity = Math.random() * 140 + 90;
+    const x = Math.cos(angle) * velocity;
+    const y = Math.sin(angle) * velocity - 120;
+
+    el.animate([
+      { transform: 'translate(-50%, -50%) scale(0.3)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(1.3)`, opacity: 0.9 },
+      { transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y + 280}px)) scale(0.7)`, opacity: 0 }
+    ], {
+      duration: 1100 + Math.random() * 500,
+      easing: 'cubic-bezier(0.1, 0.8, 0.3, 1)',
+      fill: 'forwards'
+    });
+  }
+
+  setTimeout(() => {
+    container.remove();
+  }, 2000);
+}
+
+function playSuccess() {
+  playHappyVoice();
+  triggerConfetti();
+}
 function playError() { playSadVoice(); }
 
 function AlphabetQuiz({ selectedGrade }) {
@@ -1904,7 +1950,7 @@ function VarnamalaBoard() {
           return next;
         });
         setFeedback('correct');
-        playHappyVoice();
+        playSuccess();
         setLocked(true);
         setTimeout(() => {
           initGameTarget();
@@ -2162,7 +2208,7 @@ function NumberSequence({ selectedGrade }) {
         return next;
       });
       setFeedback('correct');
-      playHappyVoice();
+      playSuccess();
       setLocked(true);
       setTimeout(() => {
         initRound();
@@ -2341,7 +2387,7 @@ function PictureBoard() {
           return next;
         });
         setFeedback('correct');
-        playHappyVoice();
+        playSuccess();
         setLocked(true);
         setTimeout(() => {
           initGameTarget();
