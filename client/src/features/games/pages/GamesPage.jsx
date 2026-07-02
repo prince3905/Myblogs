@@ -62,6 +62,32 @@ const animalData = [
   { name: 'Fox', emoji: '🦊', category: 'trickster' },
 ];
 
+const spellingWords = [
+  { word: 'CAT', emoji: '🐱', grade: 'preschool' },
+  { word: 'DOG', emoji: '🐕', grade: 'preschool' },
+  { word: 'PIG', emoji: '🐷', grade: 'preschool' },
+  { word: 'COW', emoji: '🐄', grade: 'preschool' },
+  { word: 'SUN', emoji: '☀️', grade: 'preschool' },
+  { word: 'FOX', emoji: '🦊', grade: 'preschool' },
+  { word: 'OWL', emoji: '🦉', grade: 'preschool' },
+  
+  { word: 'FROG', emoji: '🐸', grade: 'primary' },
+  { word: 'DUCK', emoji: '🦆', grade: 'primary' },
+  { word: 'LION', emoji: '🦁', grade: 'primary' },
+  { word: 'BEAR', emoji: '🐻', grade: 'primary' },
+  { word: 'APPLE', emoji: '🍎', grade: 'primary' },
+  { word: 'GRAPE', emoji: '🍇', grade: 'primary' },
+  { word: 'MELON', emoji: '🍉', grade: 'primary' },
+  
+  { word: 'BANANA', emoji: '🍌', grade: 'upper' },
+  { word: 'MONKEY', emoji: '🐵', grade: 'upper' },
+  { word: 'ORANGE', emoji: '🍊', grade: 'upper' },
+  { word: 'CHERRY', emoji: '🍒', grade: 'upper' },
+  { word: 'ROCKET', emoji: '🚀', grade: 'upper' },
+  { word: 'PENCIL', emoji: '✏️', grade: 'upper' },
+  { word: 'ELEPHANT', emoji: '🐘', grade: 'upper' },
+];
+
 function playAnimalSound(animal) {
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -899,6 +925,229 @@ function SpeedTapper({ selectedGrade }) {
   );
 }
 
+function WordBuilder({ selectedGrade }) {
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('word_builder_high') || '0', 10));
+  const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong' | null
+  const [locked, setLocked] = useState(false);
+
+  const wordPool = useMemo(() => {
+    return spellingWords.filter(w => w.grade === selectedGrade);
+  }, [selectedGrade]);
+
+  const [current, setCurrent] = useState(() => pickRandom(wordPool) || spellingWords[0]);
+  const [scrambled, setScrambled] = useState([]);
+  const [spelled, setSpelled] = useState([]); // Array of { id, letter }
+
+  const initWord = useCallback((wordObj) => {
+    setCurrent(wordObj);
+    setSpelled([]);
+    setFeedback(null);
+    setLocked(false);
+
+    const letters = wordObj.word.split('').map((l, index) => ({ id: index, letter: l, used: false }));
+    let scrambledList = shuffle([...letters]);
+    while (scrambledList.map(item => item.letter).join('') === wordObj.word && wordObj.word.length > 1) {
+      scrambledList = shuffle([...letters]);
+    }
+    setScrambled(scrambledList);
+  }, []);
+
+  useEffect(() => {
+    initWord(pickRandom(wordPool) || spellingWords[0]);
+  }, [wordPool, initWord]);
+
+  const handleLetterTap = (item) => {
+    if (locked || item.used) return;
+
+    setScrambled(prev => prev.map(x => x.id === item.id ? { ...x, used: true } : x));
+    const nextSpelled = [...spelled, item];
+    setSpelled(nextSpelled);
+
+    if (nextSpelled.length === current.word.length) {
+      const spelledStr = nextSpelled.map(x => x.letter).join('');
+      if (spelledStr === current.word) {
+        setScore(s => {
+          const next = s + 1;
+          if (next > highScore) {
+            setHighScore(next);
+            localStorage.setItem('word_builder_high', next.toString());
+          }
+          return next;
+        });
+        setFeedback('correct');
+        playHappyVoice(); // success audio
+        setLocked(true);
+        setTimeout(() => {
+          const nextWord = pickRandom(wordPool.filter(w => w.word !== current.word)) || pickRandom(wordPool);
+          initWord(nextWord);
+        }, 1500);
+      } else {
+        setFeedback('wrong');
+        playSadVoice(); // error sound
+        setLocked(true);
+        setTimeout(() => {
+          setSpelled([]);
+          setScrambled(prev => prev.map(x => ({ ...x, used: false })));
+          setFeedback(null);
+          setLocked(false);
+        }, 1200);
+      }
+    }
+  };
+
+  const handleRemoveSpelled = (item) => {
+    if (locked) return;
+    setSpelled(prev => prev.filter(x => x.id !== item.id));
+    setScrambled(prev => prev.map(x => x.id === item.id ? { ...x, used: false } : x));
+  };
+
+  if (!current) return null;
+
+  return (
+    <GameFullscreen>
+    <Card sx={{
+      borderRadius: '24px',
+      background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
+      boxShadow: '0 12px 40px rgba(79, 70, 229, 0.15)',
+      overflow: 'visible',
+      position: 'relative',
+      border: 'none',
+      width: '100%',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(79, 70, 229, 0.15)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#4F46E5', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+            <StarsIcon sx={{ color: '#FBBF24' }} /> Word Builder
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              icon={<EmojiEventsIcon />}
+              label={`Score: ${score}`}
+              sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#E0E7FF', color: '#312E81', borderRadius: '12px', px: 0.5 }}
+            />
+            {highScore > 0 && (
+              <Chip
+                label={`Best: ${highScore}`}
+                sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#FEF3C7', color: '#B45309', borderRadius: '12px' }}
+              />
+            )}
+            <GameFullscreenButton />
+          </Box>
+        </Box>
+
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          <Typography variant="body1" sx={{ color: '#6B7280', mb: 3, fontWeight: 600, fontSize: '0.95rem' }}>
+            Tap the letters to spell the word! ✍️
+          </Typography>
+
+          <Box sx={{
+            width: { xs: 100, sm: 130 }, height: { xs: 100, sm: 130 },
+            borderRadius: '50%', bgcolor: '#ffffff',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            mx: 'auto', mb: 4,
+            animation: feedback === 'correct' ? 'bounceIn 0.5s ease' : 'none'
+          }}>
+            <Typography sx={{ fontSize: { xs: '3.5rem', sm: '4.5rem' } }}>
+              {current.emoji}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 4, flexWrap: 'wrap' }}>
+            {Array.from({ length: current.word.length }).map((_, idx) => {
+              const letterObj = spelled[idx];
+              return (
+                <Box
+                  key={idx}
+                  onClick={() => letterObj && handleRemoveSpelled(letterObj)}
+                  sx={{
+                    width: { xs: 40, sm: 50 },
+                    height: { xs: 40, sm: 50 },
+                    borderRadius: '12px',
+                    border: '3px dashed',
+                    borderColor: letterObj ? '#4F46E5' : '#C7D2FE',
+                    bgcolor: letterObj ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: letterObj ? 'pointer' : 'default',
+                    fontSize: { xs: '1.4rem', sm: '1.8rem' },
+                    fontWeight: 900,
+                    color: '#4F46E5',
+                    transition: 'all 0.15s ease',
+                    transform: letterObj ? 'scale(1.05)' : 'none',
+                    boxShadow: letterObj ? '0 4px 10px rgba(79, 70, 229, 0.15)' : 'none',
+                    '&:hover': {
+                      borderColor: letterObj ? '#3730A3' : '#C7D2FE',
+                      bgcolor: letterObj ? '#F3F4F6' : 'rgba(255, 255, 255, 0.4)'
+                    }
+                  }}
+                >
+                  {letterObj ? letterObj.letter : ''}
+                </Box>
+              );
+            })}
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap', mb: 3 }}>
+            {scrambled.map((item) => (
+              <Button
+                key={item.id}
+                onClick={() => handleLetterTap(item)}
+                disabled={item.used || locked}
+                sx={{
+                  width: { xs: 48, sm: 58 },
+                  height: { xs: 48, sm: 58 },
+                  borderRadius: '16px',
+                  bgcolor: '#FFFFFF',
+                  color: '#1F2937',
+                  border: '3px solid #E5E7EB',
+                  fontSize: { xs: '1.3rem', sm: '1.6rem' },
+                  fontWeight: 800,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  textTransform: 'none',
+                  minWidth: 0,
+                  p: 0,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: '#4F46E5',
+                    boxShadow: '0 6px 16px rgba(79, 70, 229, 0.15)'
+                  },
+                  '&.Mui-disabled': {
+                    bgcolor: 'rgba(229, 231, 235, 0.5)',
+                    borderColor: 'rgba(229, 231, 235, 0.5)',
+                    color: 'rgba(156, 163, 175, 0.5)',
+                    boxShadow: 'none'
+                  }
+                }}
+              >
+                {item.letter}
+              </Button>
+            ))}
+          </Box>
+
+          <Box sx={{ minHeight: 60 }}>
+            {feedback === 'correct' && (
+              <Typography variant="h6" fontWeight={800} sx={{ color: '#10B981', animation: 'bounceIn 0.3s ease' }}>
+                🎉 Great job! Correct!
+              </Typography>
+            )}
+            {feedback === 'wrong' && (
+              <Typography variant="h6" fontWeight={800} sx={{ color: '#EF4444', animation: 'shake 0.3s ease' }}>
+                ❌ Try again!
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+    </GameFullscreen>
+  );
+}
+
 function ResetButton({ onReset }) {
   return (
     <Button
@@ -1029,6 +1278,7 @@ const gameTabs = [
   { id: 'math', label: 'Math Booster', emoji: '➕', color: '#059669', gradient: 'linear-gradient(135deg, #F0FFF0 0%, #E0F4FF 100%)', hoverBg: 'rgba(5, 150, 105, 0.08)' },
   { id: 'shadow', label: 'Shadow & Sound', emoji: '👀', color: '#D97706', gradient: 'linear-gradient(135deg, #FEF9C3 0%, #FED7AA 100%)', hoverBg: 'rgba(217, 119, 6, 0.08)' },
   { id: 'speed', label: 'Speed Tapper', emoji: '⚡', color: '#EC4899', gradient: 'linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%)', hoverBg: 'rgba(236, 72, 153, 0.08)' },
+  { id: 'spelling', label: 'Word Builder', emoji: '✍️', color: '#4F46E5', gradient: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)', hoverBg: 'rgba(79, 70, 229, 0.08)' },
 ];
 
 export default function GamesPage() {
@@ -1037,6 +1287,7 @@ export default function GamesPage() {
   const [mathKey, setMathKey] = useState(0);
   const [shadowKey, setShadowKey] = useState(0);
   const [speedKey, setSpeedKey] = useState(0);
+  const [spellingKey, setSpellingKey] = useState(0);
   const [selectedGrade, setSelectedGrade] = useState(() => localStorage.getItem('kids_grade') || 'primary');
 
   useEffect(() => {
@@ -1247,6 +1498,23 @@ export default function GamesPage() {
               </Typography>
               <Box key={`${speedKey}_${selectedGrade}`}>
                 <SpeedTapper selectedGrade={selectedGrade} />
+              </Box>
+            </section>
+          )}
+
+          {activeGame === 'spelling' && (
+            <section aria-label="Kids Word Builder Spelling Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#4F46E5', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  ✍️ Word Builder
+                </Typography>
+                <ResetButton onReset={() => setSpellingKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Arrange scrambled letters to spell the word shown by the emoji clue. Tap a letter to place it or remove it!
+              </Typography>
+              <Box key={`${spellingKey}_${selectedGrade}`}>
+                <WordBuilder selectedGrade={selectedGrade} />
               </Box>
             </section>
           )}
