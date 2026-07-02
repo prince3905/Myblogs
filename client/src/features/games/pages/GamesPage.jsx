@@ -1911,11 +1911,14 @@ function VarnamalaBoard() {
       '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(245, 158, 11, 0.15)' }
     }}>
       <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
           <Typography variant="h6" fontWeight={800} sx={{ color: '#D97706', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
             <StarsIcon sx={{ color: '#FBBF24' }} /> Language Board
           </Typography>
-          
+          <GameFullscreenButton />
+        </Box>
+        
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
             <Button
               variant={lang === 'english' ? 'contained' : 'outlined'}
@@ -1931,11 +1934,13 @@ function VarnamalaBoard() {
             >
               Hindi (अ-ज्ञ)
             </Button>
+          </Box>
 
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
             <Button
               variant={mode === 'learn' ? 'contained' : 'outlined'}
               onClick={() => setMode('learn')}
-              sx={{ ml: 1, borderRadius: 6, textTransform: 'none', fontWeight: 700, px: 2, bgcolor: mode === 'learn' ? '#059669' : 'transparent', color: mode === 'learn' ? '#fff' : '#059669', borderColor: '#059669', '&:hover': { bgcolor: mode === 'learn' ? '#047857' : 'rgba(5, 150, 105, 0.08)' } }}
+              sx={{ borderRadius: 6, textTransform: 'none', fontWeight: 700, px: 2, bgcolor: mode === 'learn' ? '#059669' : 'transparent', color: mode === 'learn' ? '#fff' : '#059669', borderColor: '#059669', '&:hover': { bgcolor: mode === 'learn' ? '#047857' : 'rgba(5, 150, 105, 0.08)' } }}
             >
               Learning Mode 📖
             </Button>
@@ -2343,11 +2348,14 @@ function PictureBoard() {
       '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(6, 182, 212, 0.15)' }
     }}>
       <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
           <Typography variant="h6" fontWeight={800} sx={{ color: '#0891B2', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
             <StarsIcon sx={{ color: '#FBBF24' }} /> Picture Board
           </Typography>
-          
+          <GameFullscreenButton />
+        </Box>
+
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
             {['animals', 'fruits', 'vehicles', 'birds'].map((cat) => (
               <Button
@@ -2365,11 +2373,13 @@ function PictureBoard() {
                 {cat === 'animals' ? '🦁 Animals' : cat === 'fruits' ? '🍎 Fruits' : cat === 'vehicles' ? '🚗 Vehicles' : '🦚 Birds'}
               </Button>
             ))}
+          </Box>
 
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
             <Button
               variant={mode === 'learn' ? 'contained' : 'outlined'}
               onClick={() => setMode('learn')}
-              sx={{ ml: { sm: 2 }, borderRadius: 6, textTransform: 'none', fontWeight: 700, px: 2, bgcolor: mode === 'learn' ? '#059669' : 'transparent', color: mode === 'learn' ? '#fff' : '#059669', borderColor: '#059669', '&:hover': { bgcolor: mode === 'learn' ? '#047857' : 'rgba(5, 150, 105, 0.08)' } }}
+              sx={{ borderRadius: 6, textTransform: 'none', fontWeight: 700, px: 2, bgcolor: mode === 'learn' ? '#059669' : 'transparent', color: mode === 'learn' ? '#fff' : '#059669', borderColor: '#059669', '&:hover': { bgcolor: mode === 'learn' ? '#047857' : 'rgba(5, 150, 105, 0.08)' } }}
             >
               Study 📖
             </Button>
