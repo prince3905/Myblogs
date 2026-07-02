@@ -139,14 +139,10 @@ function ShadowGame({ selectedGrade }) {
     return animalData;
   }, [selectedGrade]);
 
-  const [current, setCurrent] = useState(() => pickRandom(pool));
-
-  // Sync current animal when grade changes
-  useEffect(() => {
-    setCurrent(pickRandom(pool));
-  }, [pool]);
+  const [current, setCurrent] = useState(() => pickRandom(pool) || animalData[0]);
 
   const options = useMemo(() => {
+    if (!current) return [];
     const others = pool.filter(d => d.name !== current.name);
     const count = selectedGrade === 'preschool' ? 1 : selectedGrade === 'primary' ? 2 : 3;
     const wrong = shuffle(others).slice(0, count);
@@ -155,11 +151,13 @@ function ShadowGame({ selectedGrade }) {
 
   const nextRound = useCallback(() => {
     setRound(r => r + 1);
-    setCurrent(pickRandom(pool));
+    setCurrent(pickRandom(pool) || animalData[0]);
     setFeedback(null);
     setRevealed(false);
     setLocked(false);
   }, [pool]);
+
+  if (!current) return null;
 
   const handleAnswer = useCallback((animal) => {
     if (locked) return;
@@ -1196,7 +1194,7 @@ export default function GamesPage() {
               <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
                 Match the letter to the correct picture! Tap the right emoji to earn points.
               </Typography>
-              <Box key={alphabetKey}>
+              <Box key={`${alphabetKey}_${selectedGrade}`}>
                 <AlphabetQuiz selectedGrade={selectedGrade} />
               </Box>
             </section>
@@ -1213,7 +1211,7 @@ export default function GamesPage() {
               <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
                 Solve fun addition & subtraction problems. Get streak bonuses for consecutive correct answers!
               </Typography>
-              <Box key={mathKey}>
+              <Box key={`${mathKey}_${selectedGrade}`}>
                 <MathBooster selectedGrade={selectedGrade} />
               </Box>
             </section>
@@ -1230,7 +1228,7 @@ export default function GamesPage() {
               <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
                 Look at the shadow silhouette, play the animal sound, and guess who it is! Tap the right answer to reveal the animal.
               </Typography>
-              <Box key={shadowKey}>
+              <Box key={`${shadowKey}_${selectedGrade}`}>
                 <ShadowGame selectedGrade={selectedGrade} />
               </Box>
             </section>
@@ -1247,7 +1245,7 @@ export default function GamesPage() {
               <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
                 Test your reflexes! Tap the emoji as fast as you can. It moves faster as your score increases!
               </Typography>
-              <Box key={speedKey}>
+              <Box key={`${speedKey}_${selectedGrade}`}>
                 <SpeedTapper selectedGrade={selectedGrade} />
               </Box>
             </section>
