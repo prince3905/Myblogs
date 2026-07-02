@@ -878,7 +878,7 @@ function MathBooster({ selectedGrade }) {
           {visualCount}
 
           <Typography variant="h3" fontWeight={800} sx={{ color: '#1F2937', mb: 3, fontSize: { xs: '2.4rem', sm: '3rem', md: '3.5rem' } }}>
-            {selectedGrade === 'preschool' ? 'Total' : `${problem.a} ${problem.op === '+' ? '+' : '−'} ${problem.b}`} = ?
+            {selectedGrade === 'preschool' ? 'Total' : `${problem.a} ${problem.op === '+' ? '+' : (problem.op === '×' ? '×' : '−')} ${problem.b}`} = ?
           </Typography>
 
           <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2, maxWidth: 360, mx: 'auto' }}>
