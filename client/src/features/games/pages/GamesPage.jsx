@@ -80,6 +80,83 @@ const oddOutPuzzles = [
   { category: 'upper', common: '📈', odd: '📉' }
 ];
 
+const hindiAlphabet = [
+  { letter: 'अ', word: 'अनार', emoji: '🍎', description: 'अ से अनार' },
+  { letter: 'आ', word: 'आम', emoji: '🥭', description: 'आ से आम' },
+  { letter: 'इ', word: 'इमली', emoji: '🫚', description: 'इ से इमली' },
+  { letter: 'ई', word: 'ईख', emoji: '🎋', description: 'ई से ईख' },
+  { letter: 'उ', word: 'उल्लू', emoji: '🦉', description: 'उ से उल्लू' },
+  { letter: 'ऊ', word: 'ऊन', emoji: '🧶', description: 'ऊ से ऊन' },
+  { letter: 'ए', word: 'एड़ी', emoji: '🦶', description: 'ए से एड़ी' },
+  { letter: 'ऐ', word: 'ऐनक', emoji: '👓', description: 'ऐ से ऐनक' },
+  { letter: 'ओ', word: 'ओखली', emoji: '🥣', description: 'ओ से ओखली' },
+  { letter: 'औ', word: 'औरत', emoji: '👩', description: 'औ से औरत' },
+  { letter: 'अं', word: 'अंगूर', emoji: '🍇', description: 'अं से अंगूर' },
+  
+  { letter: 'क', word: 'कबूतर', emoji: '🐦', description: 'क से कबूतर' },
+  { letter: 'ख', word: 'खरगोश', emoji: '🐰', description: 'ख से खरगोश' },
+  { letter: 'ग', word: 'गमला', emoji: '🪴', description: 'ग से गमला' },
+  { letter: 'घ', word: 'घर', emoji: '🏠', description: 'घ से घर' },
+  { letter: 'च', word: 'चम्मच', emoji: '🥄', description: 'च से चम्मच' },
+  { letter: 'छ', word: 'छाता', emoji: '☂️', description: 'छ से छाता' },
+  { letter: 'ज', word: 'जहाज', emoji: '🚢', description: 'ज से जहाज' },
+  { letter: 'झ', word: 'झंडा', emoji: '🇮🇳', description: 'झ से झंडा' },
+  { letter: 'ट', word: 'टमाटर', emoji: '🍅', description: 'ट से टमाटर' },
+  { letter: 'ठ', word: 'ठठेरा', emoji: '👨‍🏭', description: 'ठ से ठठेरा' },
+  { letter: 'ड', word: 'डमरू', emoji: '🥁', description: 'ड से डमरू' },
+  { letter: 'ढ', word: 'ढक्कन', emoji: '🫙', description: 'ढ से ढक्कन' },
+  { letter: 'त', word: 'तरबूज', emoji: '🍉', description: 'त से तरबूज' },
+  { letter: 'थ', word: 'थरमस', emoji: '🧴', description: 'थ से थरमस' },
+  { letter: 'द', word: 'दवात', emoji: '✒️', description: 'द से दवात' },
+  { letter: 'ध', word: 'धनुष', emoji: '🏹', description: 'ध से धनुष' },
+  { letter: 'न', word: 'नल', emoji: '🚰', description: 'न से नल' },
+  { letter: 'प', word: 'पतंग', emoji: '🪁', description: 'प से पतंग' },
+  { letter: 'फ', word: 'फल', emoji: '🍎', description: 'फ से फल' },
+  { letter: 'ब', word: 'बत्तख', emoji: '🦆', description: 'ब से बत्तख' },
+  { letter: 'भ', word: 'भालू', emoji: '🐻', description: 'भ से भालू' },
+  { letter: 'म', word: 'मछली', emoji: '🐟', description: 'म से मछली' },
+  { letter: 'य', word: 'यज्ञ', emoji: '🔥', description: 'य से यज्ञ' },
+  { letter: 'र', word: 'रथ', emoji: '🛒', description: 'र से रथ' },
+  { letter: 'ल', word: 'लट्टू', emoji: '🪀', description: 'ल से लट्टू' },
+  { letter: 'व', word: 'वन', emoji: '🌳', description: 'व से वन' },
+  { letter: 'श', word: 'शलगम', emoji: '🍠', description: 'श से shalgam' },
+  { letter: 'ष', word: 'षट्कोण', emoji: '⬡', description: 'ष से षट्कोण' },
+  { letter: 'स', word: 'सपेरा', emoji: '🐍', description: 'स से सपेरा' },
+  { letter: 'ह', word: 'हाथी', emoji: '🐘', description: 'ह से हाथी' },
+  { letter: 'क्ष', word: 'क्षत्रिय', emoji: '⚔️', description: 'क्ष से क्षत्रिय' },
+  { letter: 'त्र', word: 'त्रिशूल', emoji: '🔱', description: 'त्र से त्रिशूल' },
+  { letter: 'ज्ञ', word: 'ज्ञानी', emoji: '👨‍🏫', description: 'ज्ञ से ज्ञानी' },
+];
+
+const englishAlphabet = [
+  { letter: 'A', word: 'Apple', emoji: '🍎', description: 'A for Apple' },
+  { letter: 'B', word: 'Banana', emoji: '🍌', description: 'B for Banana' },
+  { letter: 'C', word: 'Cat', emoji: '🐱', description: 'C for Cat' },
+  { letter: 'D', word: 'Dog', emoji: '🐕', description: 'D for Dog' },
+  { letter: 'E', word: 'Elephant', emoji: '🐘', description: 'E for Elephant' },
+  { letter: 'F', word: 'Fish', emoji: '🐟', description: 'F for Fish' },
+  { letter: 'G', word: 'Grapes', emoji: '🍇', description: 'G for Grapes' },
+  { letter: 'H', word: 'Hat', emoji: '🎩', description: 'H for Hat' },
+  { letter: 'I', word: 'Ice Cream', emoji: '🍦', description: 'I for Ice Cream' },
+  { letter: 'J', word: 'Jellyfish', emoji: '🪼', description: 'J for Jellyfish' },
+  { letter: 'K', word: 'Kangaroo', emoji: '🦘', description: 'K for Kangaroo' },
+  { letter: 'L', word: 'Lion', emoji: '🦁', description: 'L for Lion' },
+  { letter: 'M', word: 'Monkey', emoji: '🐒', description: 'M for Monkey' },
+  { letter: 'N', word: 'Nest', emoji: '🪹', description: 'N for Nest' },
+  { letter: 'O', word: 'Orange', emoji: '🍊', description: 'O for Orange' },
+  { letter: 'P', word: 'Penguin', emoji: '🐧', description: 'P for Penguin' },
+  { letter: 'Q', word: 'Queen', emoji: '👸', description: 'Q for Queen' },
+  { letter: 'R', word: 'Rabbit', emoji: '🐰', description: 'R for Rabbit' },
+  { letter: 'S', word: 'Sun', emoji: '☀️', description: 'S for Sun' },
+  { letter: 'T', word: 'Tiger', emoji: '🐅', description: 'T for Tiger' },
+  { letter: 'U', word: 'Umbrella', emoji: '☂️', description: 'U for Umbrella' },
+  { letter: 'V', word: 'Violin', emoji: '🎻', description: 'V for Violin' },
+  { letter: 'W', word: 'Watermelon', emoji: '🍉', description: 'W for Watermelon' },
+  { letter: 'X', word: 'Xylophone', emoji: '🪘', description: 'X for Xylophone' },
+  { letter: 'Y', word: 'Yak', emoji: '🐂', description: 'Y for Yak' },
+  { letter: 'Z', word: 'Zebra', emoji: '🦓', description: 'Z for Zebra' },
+];
+
 const spellingWords = [
   { word: 'CAT', emoji: '🐱', grade: 'preschool' },
   { word: 'DOG', emoji: '🐕', grade: 'preschool' },
@@ -1698,6 +1775,237 @@ function LetterSearch({ selectedGrade }) {
   );
 }
 
+function VarnamalaBoard() {
+  const [lang, setLang] = useState('english'); // 'english' | 'hindi'
+  const [mode, setMode] = useState('learn'); // 'learn' | 'game'
+  const [selected, setSelected] = useState(null);
+  
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('varnamala_high') || '0', 10));
+  const [target, setTarget] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [locked, setLocked] = useState(false);
+
+  const activeAlphabet = lang === 'english' ? englishAlphabet : hindiAlphabet;
+
+  useEffect(() => {
+    setSelected(activeAlphabet[0]);
+  }, [lang, activeAlphabet]);
+
+  const initGameTarget = useCallback(() => {
+    const list = lang === 'english' ? englishAlphabet : hindiAlphabet;
+    const targetObj = pickRandom(list);
+    setTarget(targetObj);
+    setFeedback(null);
+    setLocked(false);
+  }, [lang]);
+
+  useEffect(() => {
+    if (mode === 'game') {
+      initGameTarget();
+    }
+  }, [mode, initGameTarget]);
+
+  const handleLetterClick = (item) => {
+    if (mode === 'learn') {
+      setSelected(item);
+      playHappyVoice();
+    } else {
+      if (locked) return;
+      if (item.letter === target.letter) {
+        setScore(s => {
+          const next = s + 1;
+          if (next > highScore) {
+            setHighScore(next);
+            localStorage.setItem('varnamala_high', next.toString());
+          }
+          return next;
+        });
+        setFeedback('correct');
+        playHappyVoice();
+        setLocked(true);
+        setTimeout(() => {
+          initGameTarget();
+        }, 1200);
+      } else {
+        setFeedback('wrong');
+        playSadVoice();
+        setLocked(true);
+        setTimeout(() => {
+          setFeedback(null);
+          setLocked(false);
+        }, 1000);
+      }
+    }
+  };
+
+  return (
+    <GameFullscreen>
+    <Card sx={{
+      borderRadius: '24px',
+      background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+      boxShadow: '0 12px 40px rgba(245, 158, 11, 0.15)',
+      overflow: 'visible',
+      position: 'relative',
+      border: 'none',
+      width: '100%',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(245, 158, 11, 0.15)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#D97706', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+            <StarsIcon sx={{ color: '#FBBF24' }} /> Language Board
+          </Typography>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Button
+              variant={lang === 'english' ? 'contained' : 'outlined'}
+              onClick={() => setLang('english')}
+              sx={{ borderRadius: 6, textTransform: 'none', fontWeight: 700, px: 2, bgcolor: lang === 'english' ? '#D97706' : 'transparent', color: lang === 'english' ? '#fff' : '#D97706', borderColor: '#D97706', '&:hover': { bgcolor: lang === 'english' ? '#B45309' : 'rgba(217, 119, 6, 0.08)' } }}
+            >
+              English (A-Z)
+            </Button>
+            <Button
+              variant={lang === 'hindi' ? 'contained' : 'outlined'}
+              onClick={() => setLang('hindi')}
+              sx={{ borderRadius: 6, textTransform: 'none', fontWeight: 700, px: 2, bgcolor: lang === 'hindi' ? '#D97706' : 'transparent', color: lang === 'hindi' ? '#fff' : '#D97706', borderColor: '#D97706', '&:hover': { bgcolor: lang === 'hindi' ? '#B45309' : 'rgba(217, 119, 6, 0.08)' } }}
+            >
+              Hindi (अ-ज्ञ)
+            </Button>
+
+            <Button
+              variant={mode === 'learn' ? 'contained' : 'outlined'}
+              onClick={() => setMode('learn')}
+              sx={{ ml: 1, borderRadius: 6, textTransform: 'none', fontWeight: 700, px: 2, bgcolor: mode === 'learn' ? '#059669' : 'transparent', color: mode === 'learn' ? '#fff' : '#059669', borderColor: '#059669', '&:hover': { bgcolor: mode === 'learn' ? '#047857' : 'rgba(5, 150, 105, 0.08)' } }}
+            >
+              Learning Mode 📖
+            </Button>
+            <Button
+              variant={mode === 'game' ? 'contained' : 'outlined'}
+              onClick={() => setMode('game')}
+              sx={{ borderRadius: 6, textTransform: 'none', fontWeight: 700, px: 2, bgcolor: mode === 'game' ? '#059669' : 'transparent', color: mode === 'game' ? '#fff' : '#059669', borderColor: '#059669', '&:hover': { bgcolor: mode === 'game' ? '#047857' : 'rgba(5, 150, 105, 0.08)' } }}
+            >
+              Find Game 🎮
+            </Button>
+          </Box>
+        </Box>
+
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          {mode === 'learn' && selected && (
+            <Box sx={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              bgcolor: '#FFFFFF', borderRadius: '20px', p: 3, mb: 4,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+              animation: 'fadeIn 0.3s ease'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Typography sx={{ fontSize: { xs: '4.5rem', sm: '6rem' }, fontWeight: 900, color: '#D97706' }}>
+                  {selected.letter}
+                </Typography>
+                <Typography sx={{ fontSize: { xs: '4.5rem', sm: '6.5rem' } }}>
+                  {selected.emoji}
+                </Typography>
+                <Box sx={{ textAlign: 'left' }}>
+                  <Typography variant="h5" fontWeight={850} sx={{ color: '#1F2937' }}>
+                    {selected.word}
+                  </Typography>
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#6B7280', mt: 0.5 }}>
+                    {selected.description}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          )}
+
+          {mode === 'game' && target && (
+            <Box sx={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              bgcolor: '#FFFFFF', borderRadius: '20px', p: 3, mb: 4,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+              animation: 'fadeIn 0.3s ease'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Chip
+                  icon={<EmojiEventsIcon />}
+                  label={`Score: ${score}`}
+                  sx={{ fontWeight: 700, fontSize: '0.95rem', bgcolor: '#FEF3C7', color: '#B45309' }}
+                />
+                {highScore > 0 && (
+                  <Chip
+                    label={`Best: ${highScore}`}
+                    sx={{ fontWeight: 700, fontSize: '0.95rem', bgcolor: '#E0F2FE', color: '#0369A1' }}
+                  />
+                )}
+              </Box>
+              <Typography variant="h4" fontWeight={900} sx={{ color: '#374151', my: 2, fontSize: { xs: '1.6rem', sm: '2.2rem' } }}>
+                Find the letter: <span style={{ color: '#D97706', textDecoration: 'underline' }}>{target.letter}</span> ({target.word} {target.emoji})
+              </Typography>
+              <Box sx={{ minHeight: 40 }}>
+                {feedback === 'correct' && (
+                  <Typography variant="h6" fontWeight={800} sx={{ color: '#10B981', animation: 'bounceIn 0.3s ease' }}>
+                    🎉 Wow! Correct!
+                  </Typography>
+                )}
+                {feedback === 'wrong' && (
+                  <Typography variant="h6" fontWeight={800} sx={{ color: '#EF4444', animation: 'shake 0.3s ease' }}>
+                    ❌ Look closer! Try again.
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          )}
+
+          <Typography variant="body2" sx={{ color: '#78350F', fontWeight: 700, mb: 2, textAlign: 'left' }}>
+            {mode === 'learn' ? "Tap any letter to study 📖" : "Tap the correct letter bubble 🎯"}
+          </Typography>
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(5, 1fr)',
+              sm: 'repeat(7, 1fr)',
+              md: 'repeat(9, 1fr)',
+              lg: 'repeat(10, 1fr)'
+            },
+            gap: 1.5,
+            mx: 'auto'
+          }}>
+            {activeAlphabet.map((item) => {
+              const isCurrentSelected = mode === 'learn' && selected?.letter === item.letter;
+              return (
+                <Button
+                  key={item.letter}
+                  onClick={() => handleLetterClick(item)}
+                  sx={{
+                    aspectRatio: '1',
+                    borderRadius: '50%',
+                    bgcolor: isCurrentSelected ? '#D97706' : '#FFFFFF',
+                    color: isCurrentSelected ? '#FFFFFF' : '#B45309',
+                    border: '3px solid',
+                    borderColor: isCurrentSelected ? '#B45309' : '#FDE68A',
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+                    fontSize: { xs: '1.25rem', sm: '1.6rem' },
+                    fontWeight: 900,
+                    p: 0, minWidth: 0,
+                    transition: 'all 0.15s',
+                    '&:hover': {
+                      transform: 'scale(1.1)',
+                      bgcolor: isCurrentSelected ? '#D97706' : '#FEF3C7',
+                      borderColor: '#D97706'
+                    }
+                  }}
+                >
+                  {item.letter}
+                </Button>
+              );
+            })}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+    </GameFullscreen>
+  );
+}
+
 function ResetButton({ onReset }) {
   return (
     <Button
@@ -1832,6 +2140,7 @@ const gameTabs = [
   { id: 'memory', label: 'Memory Match', emoji: '🧠', color: '#D946EF', gradient: 'linear-gradient(135deg, #FDF4FF 0%, #F5D0FE 100%)', hoverBg: 'rgba(217, 70, 239, 0.08)' },
   { id: 'oddout', label: 'Odd One Out', emoji: '🔍', color: '#0284C7', gradient: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)', hoverBg: 'rgba(2, 132, 199, 0.08)' },
   { id: 'findletter', label: 'Letter Search', emoji: '🅰️', color: '#84CC16', gradient: 'linear-gradient(135deg, #F7FEE7 0%, #ECFCCB 100%)', hoverBg: 'rgba(132, 204, 22, 0.08)' },
+  { id: 'varnamala', label: 'Language Board', emoji: '🏫', color: '#D97706', gradient: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)', hoverBg: 'rgba(217, 119, 6, 0.08)' },
 ];
 
 export default function GamesPage() {
@@ -1844,6 +2153,7 @@ export default function GamesPage() {
   const [memoryKey, setMemoryKey] = useState(0);
   const [oddoutKey, setOddoutKey] = useState(0);
   const [findletterKey, setFindletterKey] = useState(0);
+  const [varnamalaKey, setVarnamalaKey] = useState(0);
   const [selectedGrade, setSelectedGrade] = useState(() => localStorage.getItem('kids_grade') || 'primary');
 
   useEffect(() => {
@@ -2125,6 +2435,23 @@ export default function GamesPage() {
               </Typography>
               <Box key={`${findletterKey}_${selectedGrade}`}>
                 <LetterSearch selectedGrade={selectedGrade} />
+              </Box>
+            </section>
+          )}
+
+          {activeGame === 'varnamala' && (
+            <section aria-label="Hindi Varnamala and English Alphabet Learning Board" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#D97706', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  🏫 Language Board (Varnamala & ABC)
+                </Typography>
+                <ResetButton onReset={() => setVarnamalaKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Learn basic English Alphabet (A-Z) and Hindi Varnamala (अ-ज्ञ) with words and pictures, or play a letter-finding quiz!
+              </Typography>
+              <Box key={`${varnamalaKey}_${selectedGrade}`}>
+                <VarnamalaBoard />
               </Box>
             </section>
           )}
