@@ -2006,6 +2006,207 @@ function VarnamalaBoard() {
   );
 }
 
+function NumberSequence({ selectedGrade }) {
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('num_sequence_high') || '0', 10));
+  const [sequence, setSequence] = useState([]); // Array of numbers or null for blank
+  const [correctAnswer, setCorrectAnswer] = useState(null);
+  const [options, setOptions] = useState([]);
+  const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong' | null
+  const [locked, setLocked] = useState(false);
+
+  const initRound = useCallback(() => {
+    setFeedback(null);
+    setLocked(false);
+
+    let start = 1;
+    let step = 1;
+    let length = 4;
+    let blankIdx = 2; // Default to index 2
+
+    if (selectedGrade === 'preschool') {
+      start = Math.floor(Math.random() * 6) + 1; // 1 to 6
+      step = 1;
+      length = 4;
+      blankIdx = Math.floor(Math.random() * 2) + 1; // index 1 or 2
+    } else if (selectedGrade === 'primary') {
+      start = Math.floor(Math.random() * 20) + 1; // 1 to 20
+      step = pickRandom([1, 2, 5]);
+      length = 4;
+      blankIdx = Math.floor(Math.random() * 3) + 1; // index 1, 2 or 3
+    } else {
+      start = Math.floor(Math.random() * 50) + 10; // 10 to 60
+      step = pickRandom([3, 5, 10, -2, -5]);
+      length = 5;
+      blankIdx = Math.floor(Math.random() * 3) + 1; // index 1, 2 or 3
+    }
+
+    const rawList = Array.from({ length }).map((_, idx) => start + idx * step);
+    const correct = rawList[blankIdx];
+    setCorrectAnswer(correct);
+
+    const seqWithBlank = rawList.map((val, idx) => idx === blankIdx ? null : val);
+    setSequence(seqWithBlank);
+
+    const pool = new Set([correct]);
+    while (pool.size < 3) {
+      const offset = pickRandom([-1, 1, -step, step, 2, -2]);
+      const potentialOption = correct + offset;
+      if (potentialOption > 0) {
+        pool.add(potentialOption);
+      }
+    }
+    setOptions(shuffle(Array.from(pool)));
+  }, [selectedGrade]);
+
+  useEffect(() => {
+    initRound();
+  }, [initRound]);
+
+  const handleOptionClick = (val) => {
+    if (locked) return;
+    if (val === correctAnswer) {
+      setScore(s => {
+        const next = s + 1;
+        if (next > highScore) {
+          setHighScore(next);
+          localStorage.setItem('num_sequence_high', next.toString());
+        }
+        return next;
+      });
+      setFeedback('correct');
+      playHappyVoice();
+      setLocked(true);
+      setTimeout(() => {
+        initRound();
+      }, 1200);
+    } else {
+      setFeedback('wrong');
+      playSadVoice();
+      setLocked(true);
+      setTimeout(() => {
+        setFeedback(null);
+        setLocked(false);
+      }, 1000);
+    }
+  };
+
+  if (sequence.length === 0) return null;
+
+  return (
+    <GameFullscreen>
+    <Card sx={{
+      borderRadius: '24px',
+      background: 'linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%)',
+      boxShadow: '0 12px 40px rgba(244, 63, 94, 0.15)',
+      overflow: 'visible',
+      position: 'relative',
+      border: 'none',
+      width: '100%',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(244, 63, 94, 0.15)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#E11D48', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+            <StarsIcon sx={{ color: '#FBBF24' }} /> Number Line
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              icon={<EmojiEventsIcon />}
+              label={`Score: ${score}`}
+              sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#FFE4E6', color: '#9F1239', borderRadius: '12px', px: 0.5 }}
+            />
+            {highScore > 0 && (
+              <Chip
+                label={`Best: ${highScore}`}
+                sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#FEF3C7', color: '#B45309', borderRadius: '12px' }}
+              />
+            )}
+            <GameFullscreenButton />
+          </Box>
+        </Box>
+
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          <Typography variant="body1" sx={{ color: '#6B7280', mb: 4, fontWeight: 600, fontSize: '0.95rem' }}>
+            Find the missing number to complete the line! 🔢
+          </Typography>
+
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mb: 4, flexWrap: 'wrap' }}>
+            {sequence.map((num, idx) => (
+              <Box
+                key={idx}
+                sx={{
+                  width: { xs: 52, sm: 66 },
+                  height: { xs: 52, sm: 66 },
+                  borderRadius: '50%',
+                  border: '4px solid',
+                  borderColor: num === null ? '#E11D48' : '#FDA4AF',
+                  bgcolor: num === null ? 'rgba(253, 164, 175, 0.2)' : '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: { xs: '1.4rem', sm: '1.8rem' },
+                  fontWeight: 900,
+                  color: num === null ? '#E11D48' : '#9F1239',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.04)',
+                  animation: num === null ? 'pulse 1.5s infinite' : 'none'
+                }}
+              >
+                {num === null ? '?' : num}
+              </Box>
+            ))}
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mb: 3 }}>
+            {options.map((val) => (
+              <Button
+                key={val}
+                onClick={() => handleOptionClick(val)}
+                disabled={locked}
+                sx={{
+                  width: { xs: 58, sm: 70 },
+                  height: { xs: 58, sm: 70 },
+                  borderRadius: '20px',
+                  bgcolor: '#FFFFFF',
+                  color: '#9F1239',
+                  border: '3px solid #FDA4AF',
+                  fontSize: { xs: '1.4rem', sm: '1.8rem' },
+                  fontWeight: 900,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  minWidth: 0,
+                  p: 0,
+                  transition: 'all 0.15s',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: '#E11D48',
+                    boxShadow: '0 6px 16px rgba(225, 29, 72, 0.15)'
+                  }
+                }}
+              >
+                {val}
+              </Button>
+            ))}
+          </Box>
+
+          <Box sx={{ minHeight: 60 }}>
+            {feedback === 'correct' && (
+              <Typography variant="h6" fontWeight={800} sx={{ color: '#10B981', animation: 'bounceIn 0.3s ease' }}>
+                🎉 Great job! Correct!
+              </Typography>
+            )}
+            {feedback === 'wrong' && (
+              <Typography variant="h6" fontWeight={800} sx={{ color: '#EF4444', animation: 'shake 0.3s ease' }}>
+                ❌ Think again!
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+    </GameFullscreen>
+  );
+}
+
 function ResetButton({ onReset }) {
   return (
     <Button
@@ -2141,6 +2342,7 @@ const gameTabs = [
   { id: 'oddout', label: 'Odd One Out', emoji: '🔍', color: '#0284C7', gradient: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)', hoverBg: 'rgba(2, 132, 199, 0.08)' },
   { id: 'findletter', label: 'Letter Search', emoji: '🅰️', color: '#84CC16', gradient: 'linear-gradient(135deg, #F7FEE7 0%, #ECFCCB 100%)', hoverBg: 'rgba(132, 204, 22, 0.08)' },
   { id: 'varnamala', label: 'Language Board', emoji: '🏫', color: '#D97706', gradient: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)', hoverBg: 'rgba(217, 119, 6, 0.08)' },
+  { id: 'sequence', label: 'Number Line', emoji: '🔢', color: '#F43F5E', gradient: 'linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%)', hoverBg: 'rgba(244, 63, 94, 0.08)' },
 ];
 
 export default function GamesPage() {
@@ -2154,6 +2356,7 @@ export default function GamesPage() {
   const [oddoutKey, setOddoutKey] = useState(0);
   const [findletterKey, setFindletterKey] = useState(0);
   const [varnamalaKey, setVarnamalaKey] = useState(0);
+  const [sequenceKey, setSequenceKey] = useState(0);
   const [selectedGrade, setSelectedGrade] = useState(() => localStorage.getItem('kids_grade') || 'primary');
 
   useEffect(() => {
@@ -2452,6 +2655,23 @@ export default function GamesPage() {
               </Typography>
               <Box key={`${varnamalaKey}_${selectedGrade}`}>
                 <VarnamalaBoard />
+              </Box>
+            </section>
+          )}
+
+          {activeGame === 'sequence' && (
+            <section aria-label="Kids Number Sequence Missing Number Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#E11D48', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  🔢 Number Line (Missing Number)
+                </Typography>
+                <ResetButton onReset={() => setSequenceKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Find the correct number to fill in the missing space and complete the sequence!
+              </Typography>
+              <Box key={`${sequenceKey}_${selectedGrade}`}>
+                <NumberSequence selectedGrade={selectedGrade} />
               </Box>
             </section>
           )}
