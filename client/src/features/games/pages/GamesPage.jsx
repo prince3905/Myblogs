@@ -80,6 +80,65 @@ const oddOutPuzzles = [
   { category: 'upper', common: '📈', odd: '📉' }
 ];
 
+const pictureBoardData = {
+  animals: [
+    { nameEn: 'Lion', nameHi: 'शेर', emoji: '🦁' },
+    { nameEn: 'Elephant', nameHi: 'हाथी', emoji: '🐘' },
+    { nameEn: 'Tiger', nameHi: 'बाघ', emoji: '🐅' },
+    { nameEn: 'Cow', nameHi: 'गाय', emoji: '🐄' },
+    { nameEn: 'Dog', nameHi: 'कुत्ता', emoji: '🐕' },
+    { nameEn: 'Cat', nameHi: 'बिल्ली', emoji: '🐈' },
+    { nameEn: 'Rabbit', nameHi: 'खरगोश', emoji: '🐰' },
+    { nameEn: 'Monkey', nameHi: 'बंदर', emoji: '🐒' },
+    { nameEn: 'Horse', nameHi: 'घोड़ा', emoji: '🐎' },
+    { nameEn: 'Bear', nameHi: 'भालू', emoji: '🐻' },
+    { nameEn: 'Deer', nameHi: 'हिरण', emoji: '🦌' },
+    { nameEn: 'Sheep', nameHi: 'भेड़', emoji: '🐑' },
+  ],
+  fruits: [
+    { nameEn: 'Apple', nameHi: 'सेब', emoji: '🍎' },
+    { nameEn: 'Banana', nameHi: 'केला', emoji: '🍌' },
+    { nameEn: 'Mango', nameHi: 'आम', emoji: '🥭' },
+    { nameEn: 'Watermelon', nameHi: 'तरबूज', emoji: '🍉' },
+    { nameEn: 'Grapes', nameHi: 'अंगूर', emoji: '🍇' },
+    { nameEn: 'Orange', nameHi: 'संतरा', emoji: '🍊' },
+    { nameEn: 'Pineapple', nameHi: 'अनानास', emoji: '🍍' },
+    { nameEn: 'Strawberry', nameHi: 'स्ट्रॉबेरी', emoji: '🍓' },
+    { nameEn: 'Pomegranate', nameHi: 'अनार', emoji: '🍎' },
+    { nameEn: 'Papaya', nameHi: 'पपीता', emoji: '🍈' },
+    { nameEn: 'Cherry', nameHi: 'चेरी', emoji: '🍒' },
+    { nameEn: 'Coconut', nameHi: 'नारियल', emoji: '🥥' },
+  ],
+  vehicles: [
+    { nameEn: 'Car', nameHi: 'कार', emoji: '🚗' },
+    { nameEn: 'Bicycle', nameHi: 'साइकिल', emoji: '🚲' },
+    { nameEn: 'Bus', nameHi: 'बस', emoji: '🚌' },
+    { nameEn: 'Train', nameHi: 'रेलगाड़ी', emoji: '🚂' },
+    { nameEn: 'Aeroplane', nameHi: 'हवाई जहाज', emoji: '✈️' },
+    { nameEn: 'Ship', nameHi: 'पानी का जहाज', emoji: '🚢' },
+    { nameEn: 'Motorcycle', nameHi: 'मोटर साइकिल', emoji: '🏍️' },
+    { nameEn: 'Helicopter', nameHi: 'हेलीकॉप्टर', emoji: '🚁' },
+    { nameEn: 'Truck', nameHi: 'ट्रक', emoji: '🚚' },
+    { nameEn: 'Ambulance', nameHi: 'एम्बुलेंस', emoji: '🚑' },
+    { nameEn: 'Tractor', nameHi: 'ट्रैक्टर', emoji: '🚜' },
+    { nameEn: 'Rocket', nameHi: 'रॉकेट', emoji: '🚀' },
+  ],
+  birds: [
+    { nameEn: 'Peacock', nameHi: 'मोर', emoji: '🦚' },
+    { nameEn: 'Parrot', nameHi: 'तोता', emoji: '🦜' },
+    { nameEn: 'Crow', nameHi: 'कौआ', emoji: '🐦' },
+    { nameEn: 'Pigeon', nameHi: 'कबूतर', emoji: '🐦' },
+    { nameEn: 'Duck', nameHi: 'बत्तख', emoji: '🦆' },
+    { nameEn: 'Hen', nameHi: 'मुर्गी', emoji: '🐔' },
+    { nameEn: 'Owl', nameHi: 'उल्लू', emoji: '🦉' },
+    { nameEn: 'Eagle', nameHi: 'चील', emoji: '🦅' },
+    { nameEn: 'Swan', nameHi: 'हंस', emoji: '🦢' },
+    { nameEn: 'Sparrow', nameHi: 'गौरैया', emoji: '🐦' },
+    { nameEn: 'Penguin', nameHi: 'पेंगुइन', emoji: '🐧' },
+    { nameEn: 'Woodpecker', nameHi: 'कटफोड़वा', emoji: '🐦' },
+  ]
+};
+
 const hindiAlphabet = [
   { letter: 'अ', word: 'अनार', emoji: '🍎', description: 'अ से अनार' },
   { letter: 'आ', word: 'आम', emoji: '🥭', description: 'आ से आम' },
@@ -2207,6 +2266,235 @@ function NumberSequence({ selectedGrade }) {
   );
 }
 
+function PictureBoard() {
+  const [category, setCategory] = useState('animals'); // 'animals' | 'fruits' | 'vehicles' | 'birds'
+  const [mode, setMode] = useState('learn'); // 'learn' | 'game'
+  const [selected, setSelected] = useState(null);
+  
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('pic_board_high') || '0', 10));
+  const [target, setTarget] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [locked, setLocked] = useState(false);
+
+  const activeList = pictureBoardData[category];
+
+  useEffect(() => {
+    setSelected(activeList[0]);
+  }, [category, activeList]);
+
+  const initGameTarget = useCallback(() => {
+    const list = pictureBoardData[category];
+    const targetObj = pickRandom(list);
+    setTarget(targetObj);
+    setFeedback(null);
+    setLocked(false);
+  }, [category]);
+
+  useEffect(() => {
+    if (mode === 'game') {
+      initGameTarget();
+    }
+  }, [mode, initGameTarget]);
+
+  const handleItemClick = (item) => {
+    if (mode === 'learn') {
+      setSelected(item);
+      playHappyVoice();
+    } else {
+      if (locked) return;
+      if (item.nameEn === target.nameEn) {
+        setScore(s => {
+          const next = s + 1;
+          if (next > highScore) {
+            setHighScore(next);
+            localStorage.setItem('pic_board_high', next.toString());
+          }
+          return next;
+        });
+        setFeedback('correct');
+        playHappyVoice();
+        setLocked(true);
+        setTimeout(() => {
+          initGameTarget();
+        }, 1200);
+      } else {
+        setFeedback('wrong');
+        playSadVoice();
+        setLocked(true);
+        setTimeout(() => {
+          setFeedback(null);
+          setLocked(false);
+        }, 1000);
+      }
+    }
+  };
+
+  return (
+    <GameFullscreen>
+    <Card sx={{
+      borderRadius: '24px',
+      background: 'linear-gradient(135deg, #ECFEFF 0%, #CFFAFE 100%)',
+      boxShadow: '0 12px 40px rgba(6, 182, 212, 0.15)',
+      overflow: 'visible',
+      position: 'relative',
+      border: 'none',
+      width: '100%',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(6, 182, 212, 0.15)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#0891B2', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+            <StarsIcon sx={{ color: '#FBBF24' }} /> Picture Board
+          </Typography>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {['animals', 'fruits', 'vehicles', 'birds'].map((cat) => (
+              <Button
+                key={cat}
+                variant={category === cat ? 'contained' : 'outlined'}
+                onClick={() => setCategory(cat)}
+                sx={{
+                  borderRadius: 6, textTransform: 'capitalize', fontWeight: 700, px: 1.5,
+                  bgcolor: category === cat ? '#0891B2' : 'transparent',
+                  color: category === cat ? '#fff' : '#0891B2',
+                  borderColor: '#0891B2',
+                  '&:hover': { bgcolor: category === cat ? '#0e7490' : 'rgba(6, 182, 212, 0.08)' }
+                }}
+              >
+                {cat === 'animals' ? '🦁 Animals' : cat === 'fruits' ? '🍎 Fruits' : cat === 'vehicles' ? '🚗 Vehicles' : '🦚 Birds'}
+              </Button>
+            ))}
+
+            <Button
+              variant={mode === 'learn' ? 'contained' : 'outlined'}
+              onClick={() => setMode('learn')}
+              sx={{ ml: { sm: 2 }, borderRadius: 6, textTransform: 'none', fontWeight: 700, px: 2, bgcolor: mode === 'learn' ? '#059669' : 'transparent', color: mode === 'learn' ? '#fff' : '#059669', borderColor: '#059669', '&:hover': { bgcolor: mode === 'learn' ? '#047857' : 'rgba(5, 150, 105, 0.08)' } }}
+            >
+              Study 📖
+            </Button>
+            <Button
+              variant={mode === 'game' ? 'contained' : 'outlined'}
+              onClick={() => setMode('game')}
+              sx={{ borderRadius: 6, textTransform: 'none', fontWeight: 700, px: 2, bgcolor: mode === 'game' ? '#059669' : 'transparent', color: mode === 'game' ? '#fff' : '#059669', borderColor: '#059669', '&:hover': { bgcolor: mode === 'game' ? '#047857' : 'rgba(5, 150, 105, 0.08)' } }}
+            >
+              Quiz 🎮
+            </Button>
+          </Box>
+        </Box>
+
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          {mode === 'learn' && selected && (
+            <Box sx={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              bgcolor: '#FFFFFF', borderRadius: '20px', p: 3, mb: 4,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+              animation: 'fadeIn 0.3s ease'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Typography sx={{ fontSize: { xs: '5.5rem', sm: '7rem' } }}>
+                  {selected.emoji}
+                </Typography>
+                <Box sx={{ textAlign: 'left' }}>
+                  <Typography variant="h4" fontWeight={900} sx={{ color: '#0891B2' }}>
+                    {selected.nameEn}
+                  </Typography>
+                  <Typography variant="h5" fontWeight={800} sx={{ color: '#0891B2', mt: 0.5 }}>
+                    {selected.nameHi}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          )}
+
+          {mode === 'game' && target && (
+            <Box sx={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              bgcolor: '#FFFFFF', borderRadius: '20px', p: 3, mb: 4,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+              animation: 'fadeIn 0.3s ease'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Chip
+                  icon={<EmojiEventsIcon />}
+                  label={`Score: ${score}`}
+                  sx={{ fontWeight: 700, fontSize: '0.95rem', bgcolor: '#CFFAFE', color: '#0891B2' }}
+                />
+                {highScore > 0 && (
+                  <Chip
+                    label={`Best: ${highScore}`}
+                    sx={{ fontWeight: 700, fontSize: '0.95rem', bgcolor: '#FEF3C7', color: '#B45309' }}
+                  />
+                )}
+              </Box>
+              <Typography variant="h4" fontWeight={900} sx={{ color: '#374151', my: 2, fontSize: { xs: '1.6rem', sm: '2.2rem' } }}>
+                Find: <span style={{ color: '#0891B2', textDecoration: 'underline' }}>{target.nameHi} / {target.nameEn}</span>
+              </Typography>
+              <Box sx={{ minHeight: 40 }}>
+                {feedback === 'correct' && (
+                  <Typography variant="h6" fontWeight={800} sx={{ color: '#10B981', animation: 'bounceIn 0.3s ease' }}>
+                    🎉 Correct! Superb!
+                  </Typography>
+                )}
+                {feedback === 'wrong' && (
+                  <Typography variant="h6" fontWeight={800} sx={{ color: '#EF4444', animation: 'shake 0.3s ease' }}>
+                    ❌ Keep trying!
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          )}
+
+          <Typography variant="body2" sx={{ color: '#0891B2', fontWeight: 700, mb: 2, textAlign: 'left' }}>
+            {mode === 'learn' ? "Tap any item to study 📖" : "Tap the correct item bubble 🎯"}
+          </Typography>
+          
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(4, 1fr)',
+              sm: 'repeat(6, 1fr)',
+              md: 'repeat(8, 1fr)',
+              lg: 'repeat(12, 1fr)'
+            },
+            gap: 1.8,
+            mx: 'auto'
+          }}>
+            {activeList.map((item) => {
+              const isCurrentSelected = mode === 'learn' && selected?.nameEn === item.nameEn;
+              return (
+                <Button
+                  key={item.nameEn}
+                  onClick={() => handleItemClick(item)}
+                  sx={{
+                    aspectRatio: '1',
+                    borderRadius: '24px',
+                    bgcolor: isCurrentSelected ? '#0891B2' : '#FFFFFF',
+                    border: '3px solid',
+                    borderColor: isCurrentSelected ? '#0e7490' : '#CFFAFE',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+                    fontSize: { xs: '2.2rem', sm: '2.8rem' },
+                    p: 0, minWidth: 0,
+                    transition: 'all 0.15s',
+                    '&:hover': {
+                      transform: 'scale(1.1)',
+                      bgcolor: isCurrentSelected ? '#0891B2' : '#ECFEFF',
+                      borderColor: '#0891B2'
+                    }
+                  }}
+                >
+                  {item.emoji}
+                </Button>
+              );
+            })}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+    </GameFullscreen>
+  );
+}
+
 function ResetButton({ onReset }) {
   return (
     <Button
@@ -2343,6 +2631,7 @@ const gameTabs = [
   { id: 'findletter', label: 'Letter Search', emoji: '🅰️', color: '#84CC16', gradient: 'linear-gradient(135deg, #F7FEE7 0%, #ECFCCB 100%)', hoverBg: 'rgba(132, 204, 22, 0.08)' },
   { id: 'varnamala', label: 'Language Board', emoji: '🏫', color: '#D97706', gradient: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)', hoverBg: 'rgba(217, 119, 6, 0.08)' },
   { id: 'sequence', label: 'Number Line', emoji: '🔢', color: '#F43F5E', gradient: 'linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%)', hoverBg: 'rgba(244, 63, 94, 0.08)' },
+  { id: 'picboard', label: 'Picture Board', emoji: '🧸', color: '#06B6D4', gradient: 'linear-gradient(135deg, #ECFEFF 0%, #CFFAFE 100%)', hoverBg: 'rgba(6, 182, 212, 0.08)' },
 ];
 
 export default function GamesPage() {
@@ -2357,6 +2646,7 @@ export default function GamesPage() {
   const [findletterKey, setFindletterKey] = useState(0);
   const [varnamalaKey, setVarnamalaKey] = useState(0);
   const [sequenceKey, setSequenceKey] = useState(0);
+  const [picboardKey, setPicboardKey] = useState(0);
   const [selectedGrade, setSelectedGrade] = useState(() => localStorage.getItem('kids_grade') || 'primary');
 
   useEffect(() => {
@@ -2672,6 +2962,23 @@ export default function GamesPage() {
               </Typography>
               <Box key={`${sequenceKey}_${selectedGrade}`}>
                 <NumberSequence selectedGrade={selectedGrade} />
+              </Box>
+            </section>
+          )}
+
+          {activeGame === 'picboard' && (
+            <section aria-label="Kids Picture Board Vocabulary Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#0891B2', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  🧸 Picture Board (Animals, Fruits, Vehicles, Birds)
+                </Typography>
+                <ResetButton onReset={() => setPicboardKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Learn names of Animals, Fruits, Vehicles, and Birds in English and Hindi, or take a visual search quiz!
+              </Typography>
+              <Box key={`${picboardKey}_${selectedGrade}`}>
+                <PictureBoard />
               </Box>
             </section>
           )}
