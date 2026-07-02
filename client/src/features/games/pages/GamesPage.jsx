@@ -242,14 +242,45 @@ const spellingWords = [
   { word: 'ELEPHANT', emoji: '🐘', grade: 'upper' },
 ];
 
-function playAnimalSound(animal) {
+let globalAudioCtx = null;
+
+function getAudioCtx() {
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
+    if (!AudioContextClass) return null;
+    if (!globalAudioCtx) {
+      globalAudioCtx = new AudioContextClass();
     }
+    if (globalAudioCtx.state === 'suspended') {
+      globalAudioCtx.resume().catch(() => {});
+    }
+    return globalAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  const unlockAudio = () => {
+    const ctx = getAudioCtx();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+      }).catch(() => {});
+    } else if (ctx) {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    }
+  };
+  window.addEventListener('click', unlockAudio);
+  window.addEventListener('touchstart', unlockAudio);
+}
+
+function playAnimalSound(animal) {
+  try {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -524,12 +555,8 @@ function pickRandom(arr) {
 
 function playHappyVoice() {
   try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
+    const ctx = getAudioCtx();
+    if (!ctx) return;
     const t = ctx.currentTime;
     [523, 659, 784, 1047].forEach((freq, i) => {
       const o = ctx.createOscillator();
@@ -555,12 +582,8 @@ function playHappyVoice() {
 
 function playSadVoice() {
   try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
+    const ctx = getAudioCtx();
+    if (!ctx) return;
     const t = ctx.currentTime;
     const o = ctx.createOscillator();
     const g = ctx.createGain();
