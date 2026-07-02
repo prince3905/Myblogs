@@ -277,6 +277,22 @@ if (typeof window !== 'undefined') {
   window.addEventListener('touchstart', unlockAudio);
 }
 
+function speakHint(text) {
+  try {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.85;
+      if (/[\u0900-\u097F]/.test(text)) {
+        utterance.lang = 'hi-IN';
+      } else {
+        utterance.lang = 'en-US';
+      }
+      window.speechSynthesis.speak(utterance);
+    }
+  } catch {}
+}
+
 function playAnimalSound(animal) {
   try {
     const ctx = getAudioCtx();
@@ -341,8 +357,8 @@ function ShadowGame({ selectedGrade }) {
   const [feedback, setFeedback] = useState(null);
   const [locked, setLocked] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
-  // Filter animals: preschool gets easy common pets/birds/farm animals
   const pool = useMemo(() => {
     if (selectedGrade === 'preschool') {
       return animalData.filter(a => a.category === 'pet' || a.category === 'farm' || a.category === 'bird');
@@ -366,7 +382,13 @@ function ShadowGame({ selectedGrade }) {
     setFeedback(null);
     setRevealed(false);
     setLocked(false);
+    setShowHint(false);
   }, [pool]);
+
+  const handleHint = () => {
+    setShowHint(true);
+    speakHint("It is a " + current.name);
+  };
 
   if (!current) return null;
 
@@ -402,6 +424,19 @@ function ShadowGame({ selectedGrade }) {
             <StarsIcon sx={{ color: '#FBBF24' }} /> Shadow & Sound
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              onClick={handleHint}
+              size="small"
+              disabled={locked}
+              sx={{
+                borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                color: '#D97706', bgcolor: 'rgba(217, 119, 6, 0.08)',
+                '&:hover': { bgcolor: 'rgba(217, 119, 6, 0.16)' },
+                px: 1.5, py: 0.5, fontSize: '0.85rem'
+              }}
+            >
+              💡 Hint
+            </Button>
             <Chip
               icon={<EmojiEventsIcon />}
               label={`Score: ${score}`}
@@ -462,9 +497,14 @@ function ShadowGame({ selectedGrade }) {
             {options.map((animal, i) => {
               const label = String.fromCharCode(65 + i);
               const isCorrect = animal.name === current.name;
-              let bg = '#ffffff', border = 'rgba(0,0,0,0.06)';
+              let bg = '#ffffff', border = 'rgba(0,0,0,0.06)', borderStyle = 'solid', borderWidth = '2px';
               if (feedback === 'correct' && isCorrect) { bg = '#BBF7D0'; border = '#22C55E'; }
               if (feedback === 'wrong' && isCorrect) { bg = '#FECACA'; border = '#EF4444'; }
+              if (showHint && isCorrect) {
+                border = '#FBBF24';
+                borderStyle = 'dashed';
+                borderWidth = '3.5px';
+              }
               return (
                 <Button
                   key={animal.name}
@@ -475,7 +515,7 @@ function ShadowGame({ selectedGrade }) {
                     display: 'flex', alignItems: 'center', gap: 1.5,
                     p: { xs: 1.5, sm: 1.8 }, borderRadius: '16px', minHeight: { xs: 56, sm: 64 },
                     bgcolor: bg, color: '#1F2937',
-                    border: '2px solid', borderColor: border,
+                    border: `${borderWidth} ${borderStyle}`, borderColor: border,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                     '&:hover': !locked ? {
                       transform: 'translateY(-3px)',
@@ -663,6 +703,7 @@ function AlphabetQuiz({ selectedGrade }) {
   const [feedback, setFeedback] = useState(null);
   const [locked, setLocked] = useState(false);
   const [current, setCurrent] = useState(() => pickRandom(alphabetData));
+  const [showHint, setShowHint] = useState(false);
 
   const options = useRef([]);
   if (options.current.length === 0 || locked === false) {
@@ -679,7 +720,13 @@ function AlphabetQuiz({ selectedGrade }) {
     options.current = [];
     setFeedback(null);
     setLocked(false);
+    setShowHint(false);
   }, []);
+
+  const handleHint = () => {
+    setShowHint(true);
+    speakHint("Look for the picture of the " + current.word);
+  };
 
   const handleAnswer = useCallback((item) => {
     if (locked) return;
@@ -712,6 +759,19 @@ function AlphabetQuiz({ selectedGrade }) {
             <StarsIcon sx={{ color: '#FBBF24' }} /> Alphabet Quiz
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              onClick={handleHint}
+              size="small"
+              disabled={locked}
+              sx={{
+                borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                color: '#8B5CF6', bgcolor: 'rgba(139, 92, 246, 0.08)',
+                '&:hover': { bgcolor: 'rgba(139, 92, 246, 0.16)' },
+                px: 1.5, py: 0.5, fontSize: '0.85rem'
+              }}
+            >
+              💡 Hint
+            </Button>
             <Chip
               icon={<EmojiEventsIcon />}
               label={`Score: ${score}`}
@@ -738,41 +798,48 @@ function AlphabetQuiz({ selectedGrade }) {
           </Box>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: selectedGrade === 'preschool' ? '1fr' : '1fr 1fr', gap: 1.5, maxWidth: 480, mx: 'auto' }}>
-            {options.current.map((item, i) => (
-              <Button
-                key={i}
-                onClick={() => handleAnswer(item)}
-                disabled={locked}
-                aria-label={`Select ${item.word} for letter ${current.letter}`}
-                sx={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-                  p: { xs: 1.5, sm: 2 }, borderRadius: '16px', minHeight: { xs: 85, sm: 100 },
-                  bgcolor: feedback === 'correct' && item.letter === current.letter
-                    ? '#BBF7D0' : feedback === 'wrong' && item.letter === current.letter
-                    ? '#FECACA' : '#ffffff',
-                  color: '#1F2937',
-                  fontSize: '2.5rem',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                  border: '2px solid',
-                  borderColor: feedback === 'correct' && item.letter === current.letter
-                    ? '#22C55E' : feedback === 'wrong' && item.letter === current.letter
-                    ? '#EF4444' : 'rgba(0,0,0,0.06)',
-                  '&:hover': !locked ? {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 20px rgba(139, 92, 246, 0.15)',
-                    bgcolor: '#FDF2F8',
-                    borderColor: '#F9A8D4',
-                  } : {},
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  textTransform: 'none',
-                }}
-              >
+            {options.current.map((item, i) => {
+              const isCorrect = item.letter === current.letter;
+              let bg = '#ffffff', border = 'rgba(0,0,0,0.06)', borderStyle = 'solid', borderWidth = '2px';
+              if (feedback === 'correct' && isCorrect) { bg = '#BBF7D0'; border = '#22C55E'; }
+              if (feedback === 'wrong' && isCorrect) { bg = '#FECACA'; border = '#EF4444'; }
+              if (showHint && isCorrect) {
+                border = '#8B5CF6';
+                borderStyle = 'dashed';
+                borderWidth = '3.5px';
+              }
+              return (
+                <Button
+                  key={i}
+                  onClick={() => handleAnswer(item)}
+                  disabled={locked}
+                  aria-label={`Select ${item.word} for letter ${current.letter}`}
+                  sx={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                    p: { xs: 1.5, sm: 2 }, borderRadius: '16px', minHeight: { xs: 85, sm: 100 },
+                    bgcolor: bg,
+                    color: '#1F2937',
+                    fontSize: '2.5rem',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                    border: `${borderWidth} ${borderStyle}`,
+                    borderColor: border,
+                    '&:hover': !locked ? {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 8px 20px rgba(139, 92, 246, 0.15)',
+                      bgcolor: '#FDF2F8',
+                      borderColor: '#F9A8D4',
+                    } : {},
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    textTransform: 'none',
+                  }}
+                >
                 <span style={{ fontSize: { xs: '2rem', sm: '2.4rem' }, lineHeight: 1.1 }}>{item.emoji}</span>
                 <Typography variant="body2" fontWeight={700} sx={{ fontSize: '0.85rem', color: '#4B5563' }}>
                   {item.word}
                 </Typography>
               </Button>
-            ))}
+              );
+            })}
           </Box>
         </Box>
 
@@ -818,6 +885,7 @@ function MathBooster({ selectedGrade }) {
   const [streak, setStreak] = useState(0);
   const [feedback, setFeedback] = useState(null);
   const [locked, setLocked] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const genProblem = useCallback(() => {
     let op, a, b, correct;
@@ -868,7 +936,21 @@ function MathBooster({ selectedGrade }) {
     setProblem(genProblem());
     setFeedback(null);
     setLocked(false);
+    setShowHint(false);
   }, [genProblem]);
+
+  const handleHint = () => {
+    setShowHint(true);
+    let opWord = 'plus';
+    if (problem.op === '×') opWord = 'times';
+    if (problem.op === '-') opWord = 'minus';
+    
+    let text = `${problem.a} ${opWord} ${problem.b} equals ${problem.correct}`;
+    if (selectedGrade === 'preschool') {
+      text = `There are ${problem.a} apples. The answer is ${problem.correct}`;
+    }
+    speakHint(text);
+  };
 
   const handleAnswer = useCallback((val) => {
     if (locked) return;
@@ -928,6 +1010,19 @@ function MathBooster({ selectedGrade }) {
             <StarsIcon sx={{ color: '#FBBF24' }} /> Math Booster
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Button
+              onClick={handleHint}
+              size="small"
+              disabled={locked}
+              sx={{
+                borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                color: '#059669', bgcolor: 'rgba(5, 150, 105, 0.08)',
+                '&:hover': { bgcolor: 'rgba(5, 150, 105, 0.16)' },
+                px: 1.5, py: 0.5, fontSize: '0.85rem'
+              }}
+            >
+              💡 Hint
+            </Button>
             <Chip
               label={`Score: ${score}`}
               sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#DCFCE7', color: '#166534', borderRadius: '12px' }}
@@ -955,8 +1050,15 @@ function MathBooster({ selectedGrade }) {
               const isCorrect = val === problem.correct;
               let bg = '#ffffff';
               let border = 'rgba(0,0,0,0.06)';
+              let borderStyle = 'solid';
+              let borderWidth = '3px';
               if (feedback === 'correct' && isCorrect) { bg = '#BBF7D0'; border = '#22C55E'; }
               if (feedback === 'wrong' && isCorrect) { bg = '#FECACA'; border = '#EF4444'; }
+              if (showHint && isCorrect) {
+                border = '#F59E0B';
+                borderStyle = 'dashed';
+                borderWidth = '4.5px';
+              }
               return (
                 <Button
                   key={i}
@@ -1028,6 +1130,7 @@ function MathBooster({ selectedGrade }) {
 function SpeedTapper({ selectedGrade }) {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('speed_tapper_high') || '0', 10));
+  const [showHint, setShowHint] = useState(false);
   
   const gridSize = selectedGrade === 'preschool' ? 4 : selectedGrade === 'primary' ? 9 : 16;
   const [activeIdx, setActiveIdx] = useState(() => Math.floor(Math.random() * gridSize));
@@ -1046,13 +1149,20 @@ function SpeedTapper({ selectedGrade }) {
         }
         return next;
       });
-      playHappyVoice(); // pops/chimes sound
+      playSuccess(); // pops/chimes sound & confetti
       setActiveIdx(Math.floor(Math.random() * gridSize));
       setActiveEmoji(pickRandom(emojisList));
+      setShowHint(false);
     } else {
       playSadVoice(); // error sound
       setScore(s => Math.max(0, s - 1));
     }
+  };
+
+  const handleHint = () => {
+    setShowHint(true);
+    speakHint("Tap the active emoji quickly");
+    setTimeout(() => setShowHint(false), 1500);
   };
 
   useEffect(() => {
@@ -1087,6 +1197,18 @@ function SpeedTapper({ selectedGrade }) {
             <StarsIcon sx={{ color: '#FBBF24' }} /> Speed Tapper
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              onClick={handleHint}
+              size="small"
+              sx={{
+                borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                color: '#EC4899', bgcolor: 'rgba(236, 72, 153, 0.08)',
+                '&:hover': { bgcolor: 'rgba(236, 72, 153, 0.16)' },
+                px: 1.5, py: 0.5, fontSize: '0.85rem'
+              }}
+            >
+              💡 Hint
+            </Button>
             <Chip
               icon={<EmojiEventsIcon />}
               label={`Score: ${score}`}
@@ -1125,8 +1247,8 @@ function SpeedTapper({ selectedGrade }) {
                     aspectRatio: '1',
                     borderRadius: '20px',
                     bgcolor: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)',
-                    border: '3px solid',
-                    borderColor: isActive ? '#EC4899' : 'transparent',
+                    border: showHint && isActive ? '4px dashed #F59E0B' : '3px solid',
+                    borderColor: isActive ? (showHint ? '#F59E0B' : '#EC4899') : 'transparent',
                     boxShadow: isActive ? '0 8px 20px rgba(236, 72, 153, 0.2)' : 'none',
                     transition: 'all 0.1s ease',
                     '&:hover': {
@@ -1153,6 +1275,7 @@ function WordBuilder({ selectedGrade }) {
   const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('word_builder_high') || '0', 10));
   const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong' | null
   const [locked, setLocked] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const wordPool = useMemo(() => {
     return spellingWords.filter(w => w.grade === selectedGrade);
@@ -1167,6 +1290,7 @@ function WordBuilder({ selectedGrade }) {
     setSpelled([]);
     setFeedback(null);
     setLocked(false);
+    setShowHint(false);
 
     const letters = wordObj.word.split('').map((l, index) => ({ id: index, letter: l, used: false }));
     let scrambledList = shuffle([...letters]);
@@ -1179,6 +1303,11 @@ function WordBuilder({ selectedGrade }) {
   useEffect(() => {
     initWord(pickRandom(wordPool) || spellingWords[0]);
   }, [wordPool, initWord]);
+
+  const handleHint = () => {
+    setShowHint(true);
+    speakHint("Spell the word " + current.word);
+  };
 
   const handleLetterTap = (item) => {
     if (locked || item.used) return;
@@ -1199,7 +1328,7 @@ function WordBuilder({ selectedGrade }) {
           return next;
         });
         setFeedback('correct');
-        playHappyVoice(); // success audio
+        playSuccess(); // success audio
         setLocked(true);
         setTimeout(() => {
           const nextWord = pickRandom(wordPool.filter(w => w.word !== current.word)) || pickRandom(wordPool);
@@ -1245,6 +1374,19 @@ function WordBuilder({ selectedGrade }) {
             <StarsIcon sx={{ color: '#FBBF24' }} /> Word Builder
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              onClick={handleHint}
+              size="small"
+              disabled={locked}
+              sx={{
+                borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                color: '#4F46E5', bgcolor: 'rgba(79, 70, 229, 0.08)',
+                '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.16)' },
+                px: 1.5, py: 0.5, fontSize: '0.85rem'
+              }}
+            >
+              💡 Hint
+            </Button>
             <Chip
               icon={<EmojiEventsIcon />}
               label={`Score: ${score}`}
@@ -1315,41 +1457,45 @@ function WordBuilder({ selectedGrade }) {
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap', mb: 3 }}>
-            {scrambled.map((item) => (
-              <Button
-                key={item.id}
-                onClick={() => handleLetterTap(item)}
-                disabled={item.used || locked}
-                sx={{
-                  width: { xs: 48, sm: 58 },
-                  height: { xs: 48, sm: 58 },
-                  borderRadius: '16px',
-                  bgcolor: '#FFFFFF',
-                  color: '#1F2937',
-                  border: '3px solid #E5E7EB',
-                  fontSize: { xs: '1.3rem', sm: '1.6rem' },
-                  fontWeight: 800,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                  textTransform: 'none',
-                  minWidth: 0,
-                  p: 0,
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    borderColor: '#4F46E5',
-                    boxShadow: '0 6px 16px rgba(79, 70, 229, 0.15)'
-                  },
-                  '&.Mui-disabled': {
-                    bgcolor: 'rgba(229, 231, 235, 0.5)',
-                    borderColor: 'rgba(229, 231, 235, 0.5)',
-                    color: 'rgba(156, 163, 175, 0.5)',
-                    boxShadow: 'none'
-                  }
-                }}
-              >
-                {item.letter}
-              </Button>
-            ))}
+            {scrambled.map((item, idx) => {
+              const nextTargetLetter = current.word[spelled.length];
+              const isNextCorrect = showHint && !item.used && item.letter === nextTargetLetter && scrambled.findIndex(s => !s.used && s.letter === nextTargetLetter) === idx;
+              return (
+                <Button
+                  key={item.id}
+                  onClick={() => handleLetterTap(item)}
+                  disabled={item.used || locked}
+                  sx={{
+                    width: { xs: 48, sm: 58 },
+                    height: { xs: 48, sm: 58 },
+                    borderRadius: '16px',
+                    bgcolor: '#FFFFFF',
+                    color: '#1F2937',
+                    border: isNextCorrect ? '3.5px dashed #F59E0B' : '3px solid #E5E7EB',
+                    fontSize: { xs: '1.3rem', sm: '1.6rem' },
+                    fontWeight: 800,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                    textTransform: 'none',
+                    minWidth: 0,
+                    p: 0,
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      borderColor: '#4F46E5',
+                      boxShadow: '0 6px 16px rgba(79, 70, 229, 0.15)'
+                    },
+                    '&.Mui-disabled': {
+                      bgcolor: 'rgba(229, 231, 235, 0.5)',
+                      borderColor: 'rgba(229, 231, 235, 0.5)',
+                      color: 'rgba(156, 163, 175, 0.5)',
+                      boxShadow: 'none'
+                    }
+                  }}
+                >
+                  {item.letter}
+                </Button>
+              );
+            })}
           </Box>
 
           <Box sx={{ minHeight: 60 }}>
@@ -1396,6 +1542,18 @@ function MemoryMatch({ selectedGrade }) {
     setLocked(false);
   }, [selectedGrade]);
 
+  const handleHint = () => {
+    if (locked) return;
+    setLocked(true);
+    speakHint("Take a quick look at all the cards!");
+    const originalCards = cards.map(c => ({ ...c }));
+    setCards(prev => prev.map(c => ({ ...c, isFlipped: true })));
+    setTimeout(() => {
+      setCards(originalCards);
+      setLocked(false);
+    }, 1500);
+  };
+
   useEffect(() => {
     initGame();
   }, [initGame]);
@@ -1429,6 +1587,7 @@ function MemoryMatch({ selectedGrade }) {
             }
             return next;
           });
+          playSuccess(); // Victory celebration confetti!
         }
       } else {
         setLocked(true);
@@ -1464,6 +1623,19 @@ function MemoryMatch({ selectedGrade }) {
             <StarsIcon sx={{ color: '#FBBF24' }} /> Memory Match
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              onClick={handleHint}
+              size="small"
+              disabled={locked || isWon}
+              sx={{
+                borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                color: '#D946EF', bgcolor: 'rgba(217, 70, 239, 0.08)',
+                '&:hover': { bgcolor: 'rgba(217, 70, 239, 0.16)' },
+                px: 1.5, py: 0.5, fontSize: '0.85rem'
+              }}
+            >
+              💡 Hint
+            </Button>
             <Chip
               icon={<EmojiEventsIcon />}
               label={`Score: ${score}`}
@@ -1552,6 +1724,7 @@ function OddOneOut({ selectedGrade }) {
   const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('odd_one_out_high') || '0', 10));
   const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong' | null
   const [locked, setLocked] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const puzzles = useMemo(() => {
     return oddOutPuzzles.filter(p => p.category === selectedGrade);
@@ -1564,6 +1737,7 @@ function OddOneOut({ selectedGrade }) {
     setCurrent(puzzle);
     setFeedback(null);
     setLocked(false);
+    setShowHint(false);
 
     const size = selectedGrade === 'preschool' ? 4 : selectedGrade === 'primary' ? 6 : 9;
     const oddIdx = Math.floor(Math.random() * size);
@@ -1579,6 +1753,11 @@ function OddOneOut({ selectedGrade }) {
     initRound(pickRandom(puzzles) || oddOutPuzzles[0]);
   }, [puzzles, initRound]);
 
+  const handleHint = () => {
+    setShowHint(true);
+    speakHint("Find the emoji that is different from the others");
+  };
+
   const handleCellClick = (item) => {
     if (locked) return;
     if (item.isOdd) {
@@ -1591,7 +1770,7 @@ function OddOneOut({ selectedGrade }) {
         return next;
       });
       setFeedback('correct');
-      playHappyVoice();
+      playSuccess();
       setLocked(true);
       setTimeout(() => {
         const nextPuzzle = pickRandom(puzzles.filter(p => p.odd !== current.odd)) || pickRandom(puzzles);
@@ -1628,6 +1807,19 @@ function OddOneOut({ selectedGrade }) {
             <StarsIcon sx={{ color: '#FBBF24' }} /> Odd One Out
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              onClick={handleHint}
+              size="small"
+              disabled={locked}
+              sx={{
+                borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                color: '#0284C7', bgcolor: 'rgba(2, 132, 199, 0.08)',
+                '&:hover': { bgcolor: 'rgba(2, 132, 199, 0.16)' },
+                px: 1.5, py: 0.5, fontSize: '0.85rem'
+              }}
+            >
+              💡 Hint
+            </Button>
             <Chip
               icon={<EmojiEventsIcon />}
               label={`Score: ${score}`}
@@ -1665,7 +1857,7 @@ function OddOneOut({ selectedGrade }) {
                   aspectRatio: '1',
                   borderRadius: '20px',
                   bgcolor: '#FFFFFF',
-                  border: '3px solid #E0F2FE',
+                  border: showHint && item.isOdd ? '4px dashed #F59E0B' : '3px solid #E0F2FE',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
                   fontSize: { xs: '2.5rem', sm: '3rem' },
                   p: 0, minWidth: 0,
@@ -1708,6 +1900,7 @@ function LetterSearch({ selectedGrade }) {
   const [grid, setGrid] = useState([]);
   const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong' | null
   const [locked, setLocked] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const lowercase = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -1715,6 +1908,7 @@ function LetterSearch({ selectedGrade }) {
   const initRound = useCallback(() => {
     setFeedback(null);
     setLocked(false);
+    setShowHint(false);
 
     let size = 9;
     let targetChar = '';
@@ -1780,6 +1974,11 @@ function LetterSearch({ selectedGrade }) {
     initRound();
   }, [initRound]);
 
+  const handleHint = () => {
+    setShowHint(true);
+    speakHint("Find the letter " + target);
+  };
+
   const handleCellClick = (item) => {
     if (locked) return;
     if (item.isTarget) {
@@ -1792,7 +1991,7 @@ function LetterSearch({ selectedGrade }) {
         return next;
       });
       setFeedback('correct');
-      playHappyVoice();
+      playSuccess();
       setLocked(true);
       setTimeout(() => {
         initRound();
@@ -1828,6 +2027,19 @@ function LetterSearch({ selectedGrade }) {
             <StarsIcon sx={{ color: '#FBBF24' }} /> Letter Search
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              onClick={handleHint}
+              size="small"
+              disabled={locked}
+              sx={{
+                borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                color: '#65A30D', bgcolor: 'rgba(101, 163, 13, 0.08)',
+                '&:hover': { bgcolor: 'rgba(101, 163, 13, 0.16)' },
+                px: 1.5, py: 0.5, fontSize: '0.85rem'
+              }}
+            >
+              💡 Hint
+            </Button>
             <Chip
               icon={<EmojiEventsIcon />}
               label={`Score: ${score}`}
@@ -1865,7 +2077,7 @@ function LetterSearch({ selectedGrade }) {
                   aspectRatio: '1',
                   borderRadius: '20px',
                   bgcolor: '#FFFFFF',
-                  border: '3px solid #ECFCCB',
+                  border: showHint && item.isTarget ? '4px dashed #F59E0B' : '3px solid #ECFCCB',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
                   fontSize: { xs: '1.8rem', sm: '2.4rem' },
                   fontWeight: 900,
@@ -1913,6 +2125,7 @@ function VarnamalaBoard() {
   const [target, setTarget] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [locked, setLocked] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const activeAlphabet = lang === 'english' ? englishAlphabet : hindiAlphabet;
 
@@ -1926,13 +2139,25 @@ function VarnamalaBoard() {
     setTarget(targetObj);
     setFeedback(null);
     setLocked(false);
+    setShowHint(false);
   }, [lang]);
 
   useEffect(() => {
+    setShowHint(false);
     if (mode === 'game') {
       initGameTarget();
     }
   }, [mode, initGameTarget]);
+
+  const handleHint = () => {
+    setShowHint(true);
+    if (target) {
+      const text = lang === 'english'
+        ? `Find the letter ${target.letter} for ${target.word}`
+        : `खोजें अक्षर ${target.letter} से ${target.word}`;
+      speakHint(text);
+    }
+  };
 
   const handleLetterClick = (item) => {
     if (mode === 'learn') {
@@ -1984,7 +2209,24 @@ function VarnamalaBoard() {
           <Typography variant="h6" fontWeight={800} sx={{ color: '#D97706', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
             <StarsIcon sx={{ color: '#FBBF24' }} /> Language Board
           </Typography>
-          <GameFullscreenButton />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {mode === 'game' && (
+              <Button
+                onClick={handleHint}
+                size="small"
+                disabled={locked}
+                sx={{
+                  borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                  color: '#D97706', bgcolor: 'rgba(217, 119, 6, 0.08)',
+                  '&:hover': { bgcolor: 'rgba(217, 119, 6, 0.16)' },
+                  px: 1.5, py: 0.5, fontSize: '0.85rem'
+                }}
+              >
+                💡 Hint
+              </Button>
+            )}
+            <GameFullscreenButton />
+          </Box>
         </Box>
         
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3 }}>
@@ -2104,6 +2346,7 @@ function VarnamalaBoard() {
           }}>
             {activeAlphabet.map((item) => {
               const isCurrentSelected = mode === 'learn' && selected?.letter === item.letter;
+              const isTargetHint = showHint && mode === 'game' && item.letter === target?.letter;
               return (
                 <Button
                   key={item.letter}
@@ -2113,8 +2356,8 @@ function VarnamalaBoard() {
                     borderRadius: '50%',
                     bgcolor: isCurrentSelected ? '#D97706' : '#FFFFFF',
                     color: isCurrentSelected ? '#FFFFFF' : '#B45309',
-                    border: '3px solid',
-                    borderColor: isCurrentSelected ? '#B45309' : '#FDE68A',
+                    border: isTargetHint ? '4px dashed #F59E0B' : '3px solid',
+                    borderColor: isCurrentSelected ? '#B45309' : (isTargetHint ? '#F59E0B' : '#FDE68A'),
                     boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
                     fontSize: { xs: '1.25rem', sm: '1.6rem' },
                     fontWeight: 900,
@@ -2147,10 +2390,12 @@ function NumberSequence({ selectedGrade }) {
   const [options, setOptions] = useState([]);
   const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong' | null
   const [locked, setLocked] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const initRound = useCallback(() => {
     setFeedback(null);
     setLocked(false);
+    setShowHint(false);
 
     let start = 1;
     let step = 1;
@@ -2195,6 +2440,11 @@ function NumberSequence({ selectedGrade }) {
   useEffect(() => {
     initRound();
   }, [initRound]);
+
+  const handleHint = () => {
+    setShowHint(true);
+    speakHint("The missing number is " + correctAnswer);
+  };
 
   const handleOptionClick = (val) => {
     if (locked) return;
@@ -2244,6 +2494,19 @@ function NumberSequence({ selectedGrade }) {
             <StarsIcon sx={{ color: '#FBBF24' }} /> Number Line
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              onClick={handleHint}
+              size="small"
+              disabled={locked}
+              sx={{
+                borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                color: '#E11D48', bgcolor: 'rgba(225, 29, 72, 0.08)',
+                '&:hover': { bgcolor: 'rgba(225, 29, 72, 0.16)' },
+                px: 1.5, py: 0.5, fontSize: '0.85rem'
+              }}
+            >
+              💡 Hint
+            </Button>
             <Chip
               icon={<EmojiEventsIcon />}
               label={`Score: ${score}`}
@@ -2291,34 +2554,37 @@ function NumberSequence({ selectedGrade }) {
           </Box>
 
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mb: 3 }}>
-            {options.map((val) => (
-              <Button
-                key={val}
-                onClick={() => handleOptionClick(val)}
-                disabled={locked}
-                sx={{
-                  width: { xs: 58, sm: 70 },
-                  height: { xs: 58, sm: 70 },
-                  borderRadius: '20px',
-                  bgcolor: '#FFFFFF',
-                  color: '#9F1239',
-                  border: '3px solid #FDA4AF',
-                  fontSize: { xs: '1.4rem', sm: '1.8rem' },
-                  fontWeight: 900,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                  minWidth: 0,
-                  p: 0,
-                  transition: 'all 0.15s',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    borderColor: '#E11D48',
-                    boxShadow: '0 6px 16px rgba(225, 29, 72, 0.15)'
-                  }
-                }}
-              >
-                {val}
-              </Button>
-            ))}
+            {options.map((val) => {
+              const isCorrect = val === correctAnswer;
+              return (
+                <Button
+                  key={val}
+                  onClick={() => handleOptionClick(val)}
+                  disabled={locked}
+                  sx={{
+                    width: { xs: 58, sm: 70 },
+                    height: { xs: 58, sm: 70 },
+                    borderRadius: '20px',
+                    bgcolor: '#FFFFFF',
+                    color: '#9F1239',
+                    border: showHint && isCorrect ? '4px dashed #F59E0B' : '3px solid #FDA4AF',
+                    fontSize: { xs: '1.4rem', sm: '1.8rem' },
+                    fontWeight: 900,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                    minWidth: 0,
+                    p: 0,
+                    transition: 'all 0.15s',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      borderColor: '#E11D48',
+                      boxShadow: '0 6px 16px rgba(225, 29, 72, 0.15)'
+                    }
+                  }}
+                >
+                  {val}
+                </Button>
+              );
+            })}
           </Box>
 
           <Box sx={{ minHeight: 60 }}>
@@ -2350,6 +2616,7 @@ function PictureBoard() {
   const [target, setTarget] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [locked, setLocked] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const activeList = pictureBoardData[category];
 
@@ -2363,13 +2630,22 @@ function PictureBoard() {
     setTarget(targetObj);
     setFeedback(null);
     setLocked(false);
+    setShowHint(false);
   }, [category]);
 
   useEffect(() => {
+    setShowHint(false);
     if (mode === 'game') {
       initGameTarget();
     }
   }, [mode, initGameTarget]);
+
+  const handleHint = () => {
+    setShowHint(true);
+    if (target) {
+      speakHint(`Find the picture of ${target.nameEn} which is ${target.nameHi}`);
+    }
+  };
 
   const handleItemClick = (item) => {
     if (mode === 'learn') {
@@ -2421,7 +2697,24 @@ function PictureBoard() {
           <Typography variant="h6" fontWeight={800} sx={{ color: '#0891B2', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
             <StarsIcon sx={{ color: '#FBBF24' }} /> Picture Board
           </Typography>
-          <GameFullscreenButton />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {mode === 'game' && (
+              <Button
+                onClick={handleHint}
+                size="small"
+                disabled={locked}
+                sx={{
+                  borderRadius: 3, textTransform: 'none', fontWeight: 700,
+                  color: '#0891B2', bgcolor: 'rgba(8, 145, 178, 0.08)',
+                  '&:hover': { bgcolor: 'rgba(8, 145, 178, 0.16)' },
+                  px: 1.5, py: 0.5, fontSize: '0.85rem'
+                }}
+              >
+                💡 Hint
+              </Button>
+            )}
+            <GameFullscreenButton />
+          </Box>
         </Box>
 
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3 }}>
@@ -2541,6 +2834,7 @@ function PictureBoard() {
           }}>
             {activeList.map((item) => {
               const isCurrentSelected = mode === 'learn' && selected?.nameEn === item.nameEn;
+              const isTargetHint = showHint && mode === 'game' && item.nameEn === target?.nameEn;
               return (
                 <Button
                   key={item.nameEn}
@@ -2549,8 +2843,8 @@ function PictureBoard() {
                     aspectRatio: '1',
                     borderRadius: '24px',
                     bgcolor: isCurrentSelected ? '#0891B2' : '#FFFFFF',
-                    border: '3px solid',
-                    borderColor: isCurrentSelected ? '#0e7490' : '#CFFAFE',
+                    border: isTargetHint ? '4px dashed #F59E0B' : '3px solid',
+                    borderColor: isCurrentSelected ? '#0e7490' : (isTargetHint ? '#F59E0B' : '#CFFAFE'),
                     boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
                     fontSize: { xs: '2.2rem', sm: '2.8rem' },
                     p: 0, minWidth: 0,
