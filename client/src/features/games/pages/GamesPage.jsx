@@ -2728,6 +2728,18 @@ export default function GamesPage() {
   const [picboardKey, setPicboardKey] = useState(0);
   const [selectedGrade, setSelectedGrade] = useState(() => localStorage.getItem('kids_grade') || 'primary');
 
+  const gameContainerRef = useRef(null);
+
+  const handleTabClick = (id) => {
+    setActiveGame(id);
+    setTimeout(() => {
+      if (gameContainerRef.current) {
+        const topOffset = gameContainerRef.current.getBoundingClientRect().top + window.pageYOffset - 90;
+        window.scrollTo({ top: topOffset, behavior: 'smooth' });
+      }
+    }, 80);
+  };
+
   useEffect(() => {
     localStorage.setItem('kids_grade', selectedGrade);
   }, [selectedGrade]);
@@ -2837,7 +2849,7 @@ export default function GamesPage() {
             return (
               <Button
                 key={g.id}
-                onClick={() => setActiveGame(g.id)}
+                onClick={() => handleTabClick(g.id)}
                 sx={{
                   width: '100%',
                   display: 'flex',
@@ -2874,7 +2886,7 @@ export default function GamesPage() {
           })}
         </Box>
 
-        <Box sx={{ minHeight: 400 }}>
+        <Box ref={gameContainerRef} sx={{ minHeight: 400 }}>
           {activeGame === 'alphabet' && (
             <section aria-label="Alphabet Matching Quiz Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
