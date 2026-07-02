@@ -1148,6 +1148,182 @@ function WordBuilder({ selectedGrade }) {
   );
 }
 
+function MemoryMatch({ selectedGrade }) {
+  const [cards, setCards] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [locked, setLocked] = useState(false);
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('memory_match_high') || '0', 10));
+
+  const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🦄', '🐝'];
+
+  const initGame = useCallback(() => {
+    const numPairs = selectedGrade === 'preschool' ? 2 : selectedGrade === 'primary' ? 6 : 8;
+    const selectedEmojis = shuffle([...emojis]).slice(0, numPairs);
+    const gameEmojis = [...selectedEmojis, ...selectedEmojis];
+    const shuffledCards = shuffle(gameEmojis).map((emoji, index) => ({
+      id: index,
+      emoji,
+      isFlipped: false,
+      isMatched: false
+    }));
+
+    setCards(shuffledCards);
+    setSelected([]);
+    setLocked(false);
+  }, [selectedGrade]);
+
+  useEffect(() => {
+    initGame();
+  }, [initGame]);
+
+  const handleCardClick = (idx) => {
+    if (locked || cards[idx].isFlipped || cards[idx].isMatched) return;
+
+    const updatedCards = [...cards];
+    updatedCards[idx].isFlipped = true;
+    setCards(updatedCards);
+
+    const nextSelected = [...selected, idx];
+    setSelected(nextSelected);
+
+    if (nextSelected.length === 2) {
+      const [firstIdx, secondIdx] = nextSelected;
+      if (cards[firstIdx].emoji === cards[secondIdx].emoji) {
+        updatedCards[firstIdx].isMatched = true;
+        updatedCards[secondIdx].isMatched = true;
+        setCards(updatedCards);
+        setSelected([]);
+        
+        playHappyVoice(); // success sound
+
+        if (updatedCards.every(c => c.isMatched)) {
+          setScore(s => {
+            const next = s + 10;
+            if (next > highScore) {
+              setHighScore(next);
+              localStorage.setItem('memory_match_high', next.toString());
+            }
+            return next;
+          });
+        }
+      } else {
+        setLocked(true);
+        playSadVoice(); // error sound
+        setTimeout(() => {
+          updatedCards[firstIdx].isFlipped = false;
+          updatedCards[secondIdx].isFlipped = false;
+          setCards(updatedCards);
+          setSelected([]);
+          setLocked(false);
+        }, 1000);
+      }
+    }
+  };
+
+  const isWon = cards.length > 0 && cards.every(c => c.isMatched);
+
+  return (
+    <GameFullscreen>
+    <Card sx={{
+      borderRadius: '24px',
+      background: 'linear-gradient(135deg, #FDF4FF 0%, #F5D0FE 100%)',
+      boxShadow: '0 12px 40px rgba(217, 70, 239, 0.15)',
+      overflow: 'visible',
+      position: 'relative',
+      border: 'none',
+      width: '100%',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(217, 70, 239, 0.15)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#D946EF', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+            <StarsIcon sx={{ color: '#FBBF24' }} /> Memory Match
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              icon={<EmojiEventsIcon />}
+              label={`Score: ${score}`}
+              sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#F5D0FE', color: '#701A75', borderRadius: '12px', px: 0.5 }}
+            />
+            {highScore > 0 && (
+              <Chip
+                label={`Best: ${highScore}`}
+                sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#FEF3C7', color: '#B45309', borderRadius: '12px' }}
+              />
+            )}
+            <GameFullscreenButton />
+          </Box>
+        </Box>
+
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          <Typography variant="body1" sx={{ color: '#6B7280', mb: 3, fontWeight: 600, fontSize: '0.95rem' }}>
+            {isWon ? "🎉 Wow! You matched all pairs!" : "Flip two cards to find matching emojis! 🧠"}
+          </Typography>
+
+          {isWon ? (
+            <Box sx={{ py: 3 }}>
+              <Typography variant="h4" fontWeight={900} sx={{ color: '#A21CAF', mb: 3, fontSize: { xs: '1.8rem', sm: '2.2rem' } }}>
+                Fantastic Memory! 🏆
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={initGame}
+                sx={{
+                  borderRadius: '16px', bgcolor: '#D946EF', '&:hover': { bgcolor: '#C084FC' },
+                  px: 5, py: 1.8, fontSize: '1.2rem', fontWeight: 800, textTransform: 'none',
+                  boxShadow: '0 8px 24px rgba(217, 70, 239, 0.4)'
+                }}
+              >
+                Play Again! 🔄
+              </Button>
+            </Box>
+          ) : (
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${selectedGrade === 'preschool' ? 2 : 4}, 1fr)`,
+              gap: 2,
+              maxWidth: selectedGrade === 'preschool' ? 180 : 360,
+              mx: 'auto',
+              mb: 2
+            }}>
+              {cards.map((card, idx) => {
+                const showFace = card.isFlipped || card.isMatched;
+                return (
+                  <Button
+                    key={card.id}
+                    onClick={() => handleCardClick(idx)}
+                    sx={{
+                      aspectRatio: '1',
+                      borderRadius: '16px',
+                      bgcolor: showFace ? '#FFFFFF' : '#D946EF',
+                      color: showFace ? '#1F2937' : '#FFFFFF',
+                      border: '3px solid',
+                      borderColor: showFace ? '#F5D0FE' : 'transparent',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                      transition: 'all 0.2s',
+                      fontSize: showFace ? { xs: '1.8rem', sm: '2.3rem' } : { xs: '1.5rem', sm: '1.8rem' },
+                      fontWeight: 800,
+                      p: 0, minWidth: 0,
+                      '&:hover': {
+                        bgcolor: showFace ? '#FFFFFF' : '#C026D3',
+                        transform: 'translateY(-2px)'
+                      }
+                    }}
+                  >
+                    {showFace ? card.emoji : '❓'}
+                  </Button>
+                );
+              })}
+            </Box>
+          )}
+        </Box>
+      </CardContent>
+    </Card>
+    </GameFullscreen>
+  );
+}
+
 function ResetButton({ onReset }) {
   return (
     <Button
@@ -1279,6 +1455,7 @@ const gameTabs = [
   { id: 'shadow', label: 'Shadow & Sound', emoji: '👀', color: '#D97706', gradient: 'linear-gradient(135deg, #FEF9C3 0%, #FED7AA 100%)', hoverBg: 'rgba(217, 119, 6, 0.08)' },
   { id: 'speed', label: 'Speed Tapper', emoji: '⚡', color: '#EC4899', gradient: 'linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%)', hoverBg: 'rgba(236, 72, 153, 0.08)' },
   { id: 'spelling', label: 'Word Builder', emoji: '✍️', color: '#4F46E5', gradient: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)', hoverBg: 'rgba(79, 70, 229, 0.08)' },
+  { id: 'memory', label: 'Memory Match', emoji: '🧠', color: '#D946EF', gradient: 'linear-gradient(135deg, #FDF4FF 0%, #F5D0FE 100%)', hoverBg: 'rgba(217, 70, 239, 0.08)' },
 ];
 
 export default function GamesPage() {
@@ -1288,6 +1465,7 @@ export default function GamesPage() {
   const [shadowKey, setShadowKey] = useState(0);
   const [speedKey, setSpeedKey] = useState(0);
   const [spellingKey, setSpellingKey] = useState(0);
+  const [memoryKey, setMemoryKey] = useState(0);
   const [selectedGrade, setSelectedGrade] = useState(() => localStorage.getItem('kids_grade') || 'primary');
 
   useEffect(() => {
@@ -1515,6 +1693,23 @@ export default function GamesPage() {
               </Typography>
               <Box key={`${spellingKey}_${selectedGrade}`}>
                 <WordBuilder selectedGrade={selectedGrade} />
+              </Box>
+            </section>
+          )}
+
+          {activeGame === 'memory' && (
+            <section aria-label="Kids Memory Match Brain Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#D946EF', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  🧠 Memory Match
+                </Typography>
+                <ResetButton onReset={() => setMemoryKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Find matching pairs of emojis! Test your visual memory and match them all.
+              </Typography>
+              <Box key={`${memoryKey}_${selectedGrade}`}>
+                <MemoryMatch selectedGrade={selectedGrade} />
               </Box>
             </section>
           )}
