@@ -124,25 +124,42 @@ function playAnimalSound(animal) {
   } catch {}
 }
 
-function ShadowGame() {
+function ShadowGame({ selectedGrade }) {
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState(null);
   const [locked, setLocked] = useState(false);
   const [revealed, setRevealed] = useState(false);
-  const [current, setCurrent] = useState(() => pickRandom(animalData));
 
-  const others = animalData.filter(d => d.name !== current.name);
-  const wrong = shuffle(others).slice(0, 3);
-  const options = shuffle([current, ...wrong]);
+  // Filter animals: preschool gets easy common pets/birds/farm animals
+  const pool = useMemo(() => {
+    if (selectedGrade === 'preschool') {
+      return animalData.filter(a => a.category === 'pet' || a.category === 'farm' || a.category === 'bird');
+    }
+    return animalData;
+  }, [selectedGrade]);
+
+  const [current, setCurrent] = useState(() => pickRandom(pool));
+
+  // Sync current animal when grade changes
+  useEffect(() => {
+    setCurrent(pickRandom(pool));
+  }, [pool]);
+
+  const options = useMemo(() => {
+    const others = pool.filter(d => d.name !== current.name);
+    const count = selectedGrade === 'preschool' ? 1 : selectedGrade === 'primary' ? 2 : 3;
+    const wrong = shuffle(others).slice(0, count);
+    return shuffle([current, ...wrong]);
+  }, [current, pool, selectedGrade]);
 
   const nextRound = useCallback(() => {
     setRound(r => r + 1);
-    setCurrent(pickRandom(animalData));
+    setCurrent(pickRandom(pool));
     setFeedback(null);
     setRevealed(false);
     setLocked(false);
-  }, []);
+  }, [pool]);
 
   const handleAnswer = useCallback((animal) => {
     if (locked) return;
@@ -393,7 +410,7 @@ function playSadVoice() {
 function playSuccess() { playHappyVoice(); }
 function playError() { playSadVoice(); }
 
-function AlphabetQuiz() {
+function AlphabetQuiz({ selectedGrade }) {
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState(null);
@@ -402,8 +419,9 @@ function AlphabetQuiz() {
 
   const options = useRef([]);
   if (options.current.length === 0 || locked === false) {
+    const count = selectedGrade === 'preschool' ? 1 : selectedGrade === 'primary' ? 2 : 3;
     const others = alphabetData.filter(d => d.letter !== current.letter);
-    const wrong = shuffle(others).slice(0, 3);
+    const wrong = shuffle(others).slice(0, count);
     options.current = shuffle([current, ...wrong]);
   }
 
@@ -472,7 +490,7 @@ function AlphabetQuiz() {
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, maxWidth: 480, mx: 'auto' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: selectedGrade === 'preschool' ? '1fr' : '1fr 1fr', gap: 1.5, maxWidth: 480, mx: 'auto' }}>
             {options.current.map((item, i) => (
               <Button
                 key={i}
@@ -547,7 +565,7 @@ function AlphabetQuiz() {
   );
 }
 
-function MathBooster() {
+function MathBooster({ selectedGrade }) {
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -555,27 +573,48 @@ function MathBooster() {
   const [locked, setLocked] = useState(false);
 
   const genProblem = useCallback(() => {
-    const op = Math.random() < 0.5 ? '+' : '-';
-    let a, b;
-    if (op === '+') {
-      a = Math.floor(Math.random() * 15) + 2;
-      b = Math.floor(Math.random() * 10) + 1;
+    let op, a, b, correct;
+    if (selectedGrade === 'preschool') {
+      op = '=';
+      a = Math.floor(Math.random() * 5) + 2; // 2 to 6 apples
+      b = 0;
+      correct = a;
+    } else if (selectedGrade === 'primary') {
+      op = Math.random() < 0.5 ? '+' : '-';
+      a = Math.floor(Math.random() * 8) + 3; // 3 to 10
+      b = Math.floor(Math.random() * (a - 1)) + 1;
+      correct = op === '+' ? a + b : a - b;
     } else {
-      a = Math.floor(Math.random() * 15) + 5;
-      b = Math.floor(Math.random() * a) + 1;
+      const rand = Math.random();
+      if (rand < 0.33) {
+        op = '×';
+        a = Math.floor(Math.random() * 8) + 2;
+        b = Math.floor(Math.random() * 8) + 2;
+        correct = a * b;
+      } else if (rand < 0.66) {
+        op = '+';
+        a = Math.floor(Math.random() * 30) + 10;
+        b = Math.floor(Math.random() * 30) + 10;
+        correct = a + b;
+      } else {
+        op = '-';
+        a = Math.floor(Math.random() * 50) + 20;
+        b = Math.floor(Math.random() * a);
+        correct = a - b;
+      }
     }
-    const correct = op === '+' ? a + b : a - b;
     const wrongs = new Set();
-    while (wrongs.size < 3) {
+    const count = selectedGrade === 'preschool' ? 2 : 3;
+    while (wrongs.size < count) {
       const offset = Math.floor(Math.random() * 7) - 3;
       const w = correct + (offset === 0 ? 1 : offset);
       if (w !== correct && w >= 0) wrongs.add(w);
     }
     const opts = shuffle([correct, ...wrongs]);
     return { a, b, op, correct, opts };
-  }, []);
+  }, [selectedGrade]);
 
-  const [problem, setProblem] = useState(genProblem);
+  const [problem, setProblem] = useState(() => genProblem());
 
   const nextRound = useCallback(() => {
     setRound(r => r + 1);
@@ -600,13 +639,30 @@ function MathBooster() {
     }
   }, [problem, locked, streak]);
 
-  const visualCount = problem.a > 12 
-    ? <Typography variant="h6" fontWeight={800} sx={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>🔢 {problem.a} apples</Typography>
-    : <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center', fontSize: { xs: '1.4rem', sm: '1.8rem' } }}>
-        {Array.from({ length: problem.a }).map((_, idx) => (
-          <span key={idx} role="img" aria-label="apple" style={{ display: 'inline-block', animation: 'bounceIn 0.3s ease', animationDelay: `${idx * 0.04}s` }}>🍎</span>
-        ))}
-      </Box>;
+  const visualCount = (selectedGrade === 'preschool' || selectedGrade === 'primary') && (
+    <Box sx={{
+      bgcolor: '#ffffff', borderRadius: '16px', p: 2, mb: 3,
+      boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.03)',
+      minHeight: 60,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.85rem', mb: 0.8, fontWeight: 600 }}>
+        Count and solve:
+      </Typography>
+      {problem.a <= 12 ? (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center', fontSize: { xs: '1.4rem', sm: '1.8rem' } }}>
+          {Array.from({ length: problem.a }).map((_, idx) => (
+            <span key={idx} role="img" aria-label="apple" style={{ display: 'inline-block', animation: 'bounceIn 0.3s ease', animationDelay: `${idx * 0.04}s` }}>🍎</span>
+          ))}
+        </Box>
+      ) : (
+        <Typography variant="h6" fontWeight={800} sx={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>🔢 {problem.a} apples</Typography>
+      )}
+    </Box>
+  );
 
   return (
     <GameFullscreen>
@@ -641,23 +697,10 @@ function MathBooster() {
         </Box>
 
         <Box sx={{ textAlign: 'center', py: 1 }}>
-          <Box sx={{
-            bgcolor: '#ffffff', borderRadius: '16px', p: 2, mb: 3,
-            boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.03)',
-            minHeight: 60,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-            <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.85rem', mb: 0.8, fontWeight: 600 }}>
-              Count and solve:
-            </Typography>
-            {visualCount}
-          </Box>
+          {visualCount}
 
           <Typography variant="h3" fontWeight={800} sx={{ color: '#1F2937', mb: 3, fontSize: { xs: '2.4rem', sm: '3rem', md: '3.5rem' } }}>
-            {problem.a} {problem.op === '+' ? <span style={{color:'#059669'}}>+</span> : <span style={{color:'#DC2626'}}>−</span>} {problem.b} = ?
+            {selectedGrade === 'preschool' ? 'Total' : `${problem.a} ${problem.op === '+' ? '+' : '−'} ${problem.b}`} = ?
           </Typography>
 
           <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2, maxWidth: 360, mx: 'auto' }}>
@@ -735,10 +778,12 @@ function MathBooster() {
   );
 }
 
-function SpeedTapper() {
+function SpeedTapper({ selectedGrade }) {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('speed_tapper_high') || '0', 10));
-  const [activeIdx, setActiveIdx] = useState(() => Math.floor(Math.random() * 9));
+  
+  const gridSize = selectedGrade === 'preschool' ? 4 : selectedGrade === 'primary' ? 9 : 16;
+  const [activeIdx, setActiveIdx] = useState(() => Math.floor(Math.random() * gridSize));
   const [activeEmoji, setActiveEmoji] = useState('😃');
   const gameIntervalRef = useRef(null);
 
@@ -755,7 +800,7 @@ function SpeedTapper() {
         return next;
       });
       playHappyVoice(); // pops/chimes sound
-      setActiveIdx(Math.floor(Math.random() * 9));
+      setActiveIdx(Math.floor(Math.random() * gridSize));
       setActiveEmoji(pickRandom(emojisList));
     } else {
       playSadVoice(); // error sound
@@ -765,16 +810,17 @@ function SpeedTapper() {
 
   useEffect(() => {
     // Speed up dynamically based on current score
-    const speed = Math.max(600, 1400 - (score * 40));
+    const baseSpeed = selectedGrade === 'preschool' ? 1400 : selectedGrade === 'primary' ? 1000 : 700;
+    const speed = Math.max(450, baseSpeed - (score * 35));
     gameIntervalRef.current = setInterval(() => {
-      setActiveIdx(Math.floor(Math.random() * 9));
+      setActiveIdx(Math.floor(Math.random() * gridSize));
       setActiveEmoji(pickRandom(emojisList));
     }, speed);
 
     return () => {
       clearInterval(gameIntervalRef.current);
     };
-  }, [score]);
+  }, [score, selectedGrade, gridSize]);
 
   return (
     <GameFullscreen>
@@ -816,13 +862,13 @@ function SpeedTapper() {
 
           <Box sx={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(3, 1fr)', 
+            gridTemplateColumns: `repeat(${selectedGrade === 'preschool' ? 2 : selectedGrade === 'primary' ? 3 : 4}, 1fr)`, 
             gap: 2, 
-            maxWidth: 300, 
+            maxWidth: selectedGrade === 'preschool' ? 200 : selectedGrade === 'primary' ? 300 : 400, 
             mx: 'auto',
             mb: 2
           }}>
-            {Array.from({ length: 9 }).map((_, idx) => {
+            {Array.from({ length: gridSize }).map((_, idx) => {
               const isActive = idx === activeIdx;
               return (
                 <Button
@@ -993,6 +1039,17 @@ export default function GamesPage() {
   const [mathKey, setMathKey] = useState(0);
   const [shadowKey, setShadowKey] = useState(0);
   const [speedKey, setSpeedKey] = useState(0);
+  const [selectedGrade, setSelectedGrade] = useState(() => localStorage.getItem('kids_grade') || 'primary');
+
+  useEffect(() => {
+    localStorage.setItem('kids_grade', selectedGrade);
+  }, [selectedGrade]);
+
+  const grades = [
+    { id: 'preschool', label: 'Preschool (LKG/UKG) 🧸', color: '#10B981', hoverBg: 'rgba(16, 185, 129, 0.08)' },
+    { id: 'primary', label: 'Class 1 & 2 🎒', color: '#3B82F6', hoverBg: 'rgba(59, 130, 246, 0.08)' },
+    { id: 'upper', label: 'Class 3 to 5 🎓', color: '#8B5CF6', hoverBg: 'rgba(139, 92, 246, 0.08)' }
+  ];
 
   return (
     <Layout>
@@ -1043,9 +1100,37 @@ export default function GamesPage() {
           >
             🎮 Kids Educational Game Zone
           </Typography>
-          <Typography variant="h6" sx={{ color: '#4B5563', fontWeight: 600, fontSize: { xs: '0.95rem', sm: '1.1rem', md: '1.2rem' } }}>
+          <Typography variant="h6" sx={{ color: '#4B5563', fontWeight: 600, fontSize: { xs: '0.95rem', sm: '1.1rem', md: '1.2rem' }, mb: 3 }}>
             Fun learning games for toddlers and kindergarteners worldwide 🌎
           </Typography>
+
+          {/* Difficulty Class Selector Chips */}
+          <Box sx={{ 
+            display: 'inline-flex', flexWrap: 'wrap', gap: 1.5, justifyContent: 'center',
+            bgcolor: '#F3F4F6', p: 1, borderRadius: '9999px', border: '1px solid #E5E7EB'
+          }}>
+            {grades.map(g => {
+              const isSelected = selectedGrade === g.id;
+              return (
+                <Button
+                  key={g.id}
+                  onClick={() => setSelectedGrade(g.id)}
+                  sx={{
+                    borderRadius: '9999px', px: { xs: 2, sm: 3 }, py: 0.8, textTransform: 'none', fontWeight: 800,
+                    bgcolor: isSelected ? g.color : 'transparent',
+                    color: isSelected ? '#FFFFFF' : '#4B5563',
+                    boxShadow: isSelected ? `0 4px 12px ${g.color}33` : 'none',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: isSelected ? g.color : 'rgba(0, 0, 0, 0.04)',
+                    }
+                  }}
+                >
+                  {g.label}
+                </Button>
+              );
+            })}
+          </Box>
         </Box>
 
         <Box sx={{
@@ -1112,7 +1197,7 @@ export default function GamesPage() {
                 Match the letter to the correct picture! Tap the right emoji to earn points.
               </Typography>
               <Box key={alphabetKey}>
-                <AlphabetQuiz />
+                <AlphabetQuiz selectedGrade={selectedGrade} />
               </Box>
             </section>
           )}
@@ -1129,7 +1214,7 @@ export default function GamesPage() {
                 Solve fun addition & subtraction problems. Get streak bonuses for consecutive correct answers!
               </Typography>
               <Box key={mathKey}>
-                <MathBooster />
+                <MathBooster selectedGrade={selectedGrade} />
               </Box>
             </section>
           )}
@@ -1146,7 +1231,7 @@ export default function GamesPage() {
                 Look at the shadow silhouette, play the animal sound, and guess who it is! Tap the right answer to reveal the animal.
               </Typography>
               <Box key={shadowKey}>
-                <ShadowGame />
+                <ShadowGame selectedGrade={selectedGrade} />
               </Box>
             </section>
           )}
@@ -1163,7 +1248,7 @@ export default function GamesPage() {
                 Test your reflexes! Tap the emoji as fast as you can. It moves faster as your score increases!
               </Typography>
               <Box key={speedKey}>
-                <SpeedTapper />
+                <SpeedTapper selectedGrade={selectedGrade} />
               </Box>
             </section>
           )}
