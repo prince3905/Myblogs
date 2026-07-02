@@ -735,6 +735,185 @@ function MathBooster() {
   );
 }
 
+function SpeedTapper() {
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('speed_tapper_high') || '0', 10));
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [activeIdx, setActiveIdx] = useState(null);
+  const [activeEmoji, setActiveEmoji] = useState('😃');
+  const timerRef = useRef(null);
+  const gameIntervalRef = useRef(null);
+
+  const emojisList = ['😃', '🌟', '🎈', '🍭', '🦁', '🐸', '🦄', '🧁', '🎨', '🚀'];
+
+  const startGame = useCallback(() => {
+    setScore(0);
+    setTimeLeft(30);
+    setIsPlaying(true);
+    setActiveIdx(Math.floor(Math.random() * 9));
+    setActiveEmoji(pickRandom(emojisList));
+  }, []);
+
+  const handleCellTap = (idx) => {
+    if (!isPlaying) return;
+    if (idx === activeIdx) {
+      setScore(s => {
+        const next = s + 1;
+        if (next > highScore) {
+          setHighScore(next);
+          localStorage.setItem('speed_tapper_high', next.toString());
+        }
+        return next;
+      });
+      playHappyVoice(); // pops/chimes sound
+      setActiveIdx(Math.floor(Math.random() * 9));
+      setActiveEmoji(pickRandom(emojisList));
+    } else {
+      playSadVoice(); // error sound
+      setScore(s => Math.max(0, s - 1));
+    }
+  };
+
+  useEffect(() => {
+    if (isPlaying) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            setIsPlaying(false);
+            clearInterval(timerRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      const speed = Math.max(550, 1300 - (score * 40));
+      gameIntervalRef.current = setInterval(() => {
+        setActiveIdx(Math.floor(Math.random() * 9));
+        setActiveEmoji(pickRandom(emojisList));
+      }, speed);
+    }
+
+    return () => {
+      clearInterval(timerRef.current);
+      clearInterval(gameIntervalRef.current);
+    };
+  }, [isPlaying, score]);
+
+  return (
+    <GameFullscreen>
+    <Card sx={{
+      borderRadius: '24px',
+      background: 'linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%)',
+      boxShadow: '0 12px 40px rgba(236, 72, 153, 0.15)',
+      overflow: 'visible',
+      position: 'relative',
+      border: 'none',
+      width: '100%',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(236, 72, 153, 0.15)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#EC4899', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+            <StarsIcon sx={{ color: '#FBBF24' }} /> Speed Tapper
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              icon={<EmojiEventsIcon />}
+              label={`Score: ${score}`}
+              sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#FCE7F3', color: '#BE185D', borderRadius: '12px', px: 0.5 }}
+            />
+            <GameFullscreenButton />
+          </Box>
+        </Box>
+
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          {!isPlaying ? (
+            <Box sx={{ py: 4 }}>
+              <Typography variant="h4" fontWeight={800} sx={{ color: '#BE185D', mb: 2, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+                ⚡ Speed Tapper
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#6B7280', mb: 4, fontWeight: 600, fontSize: '0.95rem' }}>
+                Tap the emoji as fast as you can before it hops!
+              </Typography>
+              {highScore > 0 && (
+                <Typography variant="h6" fontWeight={700} sx={{ color: '#F59E0B', mb: 4, fontSize: '1.1rem' }}>
+                  🏆 High Score: {highScore}
+                </Typography>
+              )}
+              <Button
+                variant="contained"
+                onClick={startGame}
+                sx={{
+                  borderRadius: '16px', bgcolor: '#EC4899', '&:hover': { bgcolor: '#DB2777' },
+                  px: 5, py: 2, fontSize: '1.25rem', fontWeight: 800, textTransform: 'none',
+                  boxShadow: '0 8px 24px rgba(236, 72, 153, 0.4)'
+                }}
+              >
+                Start Game! 🚀
+              </Button>
+            </Box>
+          ) : (
+            <Box>
+              <Box sx={{ mb: 4, maxWidth: 320, mx: 'auto' }}>
+                <Typography variant="subtitle2" sx={{ color: '#6B7280', mb: 1, fontWeight: 700 }}>
+                  ⏳ Time Left: {timeLeft}s
+                </Typography>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={(timeLeft / 30) * 100} 
+                  sx={{ 
+                    height: 10, borderRadius: 5, 
+                    bgcolor: '#E5E7EB', 
+                    '& .MuiLinearProgress-bar': { bgcolor: '#EC4899' } 
+                  }} 
+                />
+              </Box>
+
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(3, 1fr)', 
+                gap: 2, 
+                maxWidth: 300, 
+                mx: 'auto',
+                mb: 2
+              }}>
+                {Array.from({ length: 9 }).map((_, idx) => {
+                  const isActive = idx === activeIdx;
+                  return (
+                    <Button
+                      key={idx}
+                      onClick={() => handleCellTap(idx)}
+                      sx={{
+                        aspectRatio: '1',
+                        borderRadius: '20px',
+                        bgcolor: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)',
+                        border: '3px solid',
+                        borderColor: isActive ? '#EC4899' : 'transparent',
+                        boxShadow: isActive ? '0 8px 20px rgba(236, 72, 153, 0.2)' : 'none',
+                        transition: 'all 0.1s ease',
+                        '&:hover': {
+                          bgcolor: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
+                        },
+                        fontSize: '2.5rem',
+                        p: 0, minWidth: 0
+                      }}
+                    >
+                      {isActive ? activeEmoji : ''}
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
+        </Box>
+      </CardContent>
+    </Card>
+    </GameFullscreen>
+  );
+}
+
 function ResetButton({ onReset }) {
   return (
     <Button
@@ -864,6 +1043,7 @@ const gameTabs = [
   { id: 'alphabet', label: 'Alphabet Quiz', emoji: '🔤', color: '#8B5CF6', gradient: 'linear-gradient(135deg, #FFF0F5 0%, #E6E6FA 100%)', hoverBg: 'rgba(139, 92, 246, 0.08)' },
   { id: 'math', label: 'Math Booster', emoji: '➕', color: '#059669', gradient: 'linear-gradient(135deg, #F0FFF0 0%, #E0F4FF 100%)', hoverBg: 'rgba(5, 150, 105, 0.08)' },
   { id: 'shadow', label: 'Shadow & Sound', emoji: '👀', color: '#D97706', gradient: 'linear-gradient(135deg, #FEF9C3 0%, #FED7AA 100%)', hoverBg: 'rgba(217, 119, 6, 0.08)' },
+  { id: 'speed', label: 'Speed Tapper', emoji: '⚡', color: '#EC4899', gradient: 'linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%)', hoverBg: 'rgba(236, 72, 153, 0.08)' },
 ];
 
 export default function GamesPage() {
@@ -871,6 +1051,7 @@ export default function GamesPage() {
   const [alphabetKey, setAlphabetKey] = useState(0);
   const [mathKey, setMathKey] = useState(0);
   const [shadowKey, setShadowKey] = useState(0);
+  const [speedKey, setSpeedKey] = useState(0);
 
   return (
     <Layout>
@@ -1025,6 +1206,23 @@ export default function GamesPage() {
               </Typography>
               <Box key={shadowKey}>
                 <ShadowGame />
+              </Box>
+            </section>
+          )}
+
+          {activeGame === 'speed' && (
+            <section aria-label="Speed Tapper Reflex Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#EC4899', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  ⚡ Speed Tapper
+                </Typography>
+                <ResetButton onReset={() => setSpeedKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Test your reflexes! Tap the emoji as fast as you can. It moves faster as your score increases!
+              </Typography>
+              <Box key={speedKey}>
+                <SpeedTapper />
               </Box>
             </section>
           )}
