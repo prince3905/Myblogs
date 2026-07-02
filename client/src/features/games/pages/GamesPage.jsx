@@ -1735,10 +1735,13 @@ export default function GamesPage() {
         </Box>
 
         <Box sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'center',
-          alignItems: 'stretch',
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(2, 1fr)',
+            sm: 'repeat(3, 1fr)',
+            md: 'repeat(4, 1fr)',
+            lg: 'repeat(5, 1fr)'
+          },
           gap: 2,
           mb: 5,
           px: { xs: 1, sm: 0 }
@@ -1750,7 +1753,7 @@ export default function GamesPage() {
                 key={g.id}
                 onClick={() => setActiveGame(g.id)}
                 sx={{
-                  flex: 1,
+                  width: '100%',
                   display: 'flex',
                   flexDirection: 'row',
                   alignItems: 'center',
