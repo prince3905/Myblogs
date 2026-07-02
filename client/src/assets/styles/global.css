@@ -323,3 +323,44 @@ html {
   background-color: #0f172a;
 }
 
+/* Blog Content Action Buttons */
+.blog-content .btn-link-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none !important;
+  border-radius: 8px;
+  margin: 8px 12px 8px 0;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+}
+
+.blog-content .btn-link-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  opacity: 0.95;
+}
+
+.blog-content .btn-apply {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  border: 1px solid #059669;
+}
+
+.blog-content .btn-notification {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid #dc2626;
+}
+
+.blog-content .btn-website {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border: 1px solid #2563eb;
+}
+
+

@@ -422,7 +422,10 @@ function markdownToHtml(text) {
       trimmed.startsWith('<thead') ||
       trimmed.startsWith('</thead') ||
       trimmed.startsWith('<tbody') ||
-      trimmed.startsWith('</tbody')
+      trimmed.startsWith('</tbody') ||
+      trimmed.startsWith('<a') ||
+      trimmed.startsWith('<div') ||
+      trimmed.startsWith('</div')
     ) {
       result.push(trimmed);
     } else {
