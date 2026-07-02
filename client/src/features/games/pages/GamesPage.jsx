@@ -1496,6 +1496,208 @@ function OddOneOut({ selectedGrade }) {
   );
 }
 
+function LetterSearch({ selectedGrade }) {
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('letter_search_high') || '0', 10));
+  const [target, setTarget] = useState('');
+  const [grid, setGrid] = useState([]);
+  const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong' | null
+  const [locked, setLocked] = useState(false);
+
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+  const initRound = useCallback(() => {
+    setFeedback(null);
+    setLocked(false);
+
+    let size = 9;
+    let targetChar = '';
+    let pool = [];
+
+    if (selectedGrade === 'preschool') {
+      size = 4;
+      targetChar = pickRandom(uppercase);
+      const otherLetters = uppercase.filter(l => l !== targetChar);
+      pool = shuffle(otherLetters).slice(0, 3);
+    } else if (selectedGrade === 'primary') {
+      size = 9;
+      const useSimilar = Math.random() > 0.4;
+      if (useSimilar) {
+        const groups = [
+          ['b', 'd', 'p', 'q', 'g', 'h'],
+          ['m', 'n', 'u', 'w', 'v'],
+          ['o', 'c', 'e', 'a', 'd'],
+          ['t', 'f', 'l', 'i', 'j']
+        ];
+        const group = pickRandom(groups);
+        targetChar = pickRandom(group);
+        const distractors = group.filter(x => x !== targetChar);
+        pool = shuffle(distractors).slice(0, 8);
+        while (pool.length < 8) {
+          const rand = pickRandom(lowercase);
+          if (rand !== targetChar && !pool.includes(rand)) {
+            pool.push(rand);
+          }
+        }
+      } else {
+        targetChar = pickRandom(lowercase);
+        const distractors = lowercase.filter(x => x !== targetChar);
+        pool = shuffle(distractors).slice(0, 8);
+      }
+    } else {
+      size = 16;
+      const hardGroups = [
+        { target: 'E', distractors: ['F'] },
+        { target: 'O', distractors: ['Q'] },
+        { target: 'I', distractors: ['l', '1'] },
+        { target: 'V', distractors: ['U', 'W'] },
+        { target: 'C', distractors: ['G'] },
+        { target: 'K', distractors: ['X', 'Y'] },
+        { target: 'Z', distractors: ['2'] }
+      ];
+      const selectedGroup = pickRandom(hardGroups);
+      targetChar = selectedGroup.target;
+      pool = Array.from({ length: 15 }).map(() => pickRandom(selectedGroup.distractors));
+    }
+
+    const itemsList = shuffle([...pool, targetChar]).map((letter, idx) => ({
+      id: idx,
+      letter,
+      isTarget: letter === targetChar
+    }));
+
+    setTarget(targetChar);
+    setGrid(itemsList);
+  }, [selectedGrade]);
+
+  useEffect(() => {
+    initRound();
+  }, [initRound]);
+
+  const handleCellClick = (item) => {
+    if (locked) return;
+    if (item.isTarget) {
+      setScore(s => {
+        const next = s + 1;
+        if (next > highScore) {
+          setHighScore(next);
+          localStorage.setItem('letter_search_high', next.toString());
+        }
+        return next;
+      });
+      setFeedback('correct');
+      playHappyVoice();
+      setLocked(true);
+      setTimeout(() => {
+        initRound();
+      }, 1200);
+    } else {
+      setFeedback('wrong');
+      playSadVoice();
+      setLocked(true);
+      setTimeout(() => {
+        setFeedback(null);
+        setLocked(false);
+      }, 1000);
+    }
+  };
+
+  if (!target || grid.length === 0) return null;
+
+  return (
+    <GameFullscreen>
+    <Card sx={{
+      borderRadius: '24px',
+      background: 'linear-gradient(135deg, #F7FEE7 0%, #ECFCCB 100%)',
+      boxShadow: '0 12px 40px rgba(132, 204, 22, 0.15)',
+      overflow: 'visible',
+      position: 'relative',
+      border: 'none',
+      width: '100%',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(132, 204, 22, 0.15)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#65A30D', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+            <StarsIcon sx={{ color: '#FBBF24' }} /> Letter Search
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              icon={<EmojiEventsIcon />}
+              label={`Score: ${score}`}
+              sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#ECFCCB', color: '#3F6212', borderRadius: '12px', px: 0.5 }}
+            />
+            {highScore > 0 && (
+              <Chip
+                label={`Best: ${highScore}`}
+                sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#FEF3C7', color: '#B45309', borderRadius: '12px' }}
+              />
+            )}
+            <GameFullscreenButton />
+          </Box>
+        </Box>
+
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          <Typography variant="h4" fontWeight={900} sx={{ color: '#3F6212', mb: 3, fontSize: { xs: '1.6rem', sm: '2rem' } }}>
+            Find the letter: <span style={{ textDecoration: 'underline', color: '#65A30D' }}>{target}</span>
+          </Typography>
+
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${selectedGrade === 'preschool' ? 2 : selectedGrade === 'primary' ? 3 : 4}, 1fr)`,
+            gap: 2,
+            maxWidth: selectedGrade === 'preschool' ? 180 : selectedGrade === 'primary' ? 270 : 360,
+            mx: 'auto',
+            mb: 3
+          }}>
+            {grid.map((item) => (
+              <Button
+                key={item.id}
+                onClick={() => handleCellClick(item)}
+                disabled={locked}
+                sx={{
+                  aspectRatio: '1',
+                  borderRadius: '20px',
+                  bgcolor: '#FFFFFF',
+                  border: '3px solid #ECFCCB',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+                  fontSize: { xs: '1.8rem', sm: '2.4rem' },
+                  fontWeight: 900,
+                  color: '#3F6212',
+                  p: 0, minWidth: 0,
+                  transition: 'all 0.15s',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: '#84CC16',
+                    boxShadow: '0 6px 16px rgba(132, 204, 22, 0.15)'
+                  }
+                }}
+              >
+                {item.letter}
+              </Button>
+            ))}
+          </Box>
+
+          <Box sx={{ minHeight: 60 }}>
+            {feedback === 'correct' && (
+              <Typography variant="h6" fontWeight={800} sx={{ color: '#10B981', animation: 'bounceIn 0.3s ease' }}>
+                🎉 Awesome! Correct!
+              </Typography>
+            )}
+            {feedback === 'wrong' && (
+              <Typography variant="h6" fontWeight={800} sx={{ color: '#EF4444', animation: 'shake 0.3s ease' }}>
+                ❌ Look closely! Try again.
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+    </GameFullscreen>
+  );
+}
+
 function ResetButton({ onReset }) {
   return (
     <Button
@@ -1629,6 +1831,7 @@ const gameTabs = [
   { id: 'spelling', label: 'Word Builder', emoji: '✍️', color: '#4F46E5', gradient: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)', hoverBg: 'rgba(79, 70, 229, 0.08)' },
   { id: 'memory', label: 'Memory Match', emoji: '🧠', color: '#D946EF', gradient: 'linear-gradient(135deg, #FDF4FF 0%, #F5D0FE 100%)', hoverBg: 'rgba(217, 70, 239, 0.08)' },
   { id: 'oddout', label: 'Odd One Out', emoji: '🔍', color: '#0284C7', gradient: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)', hoverBg: 'rgba(2, 132, 199, 0.08)' },
+  { id: 'findletter', label: 'Letter Search', emoji: '🅰️', color: '#84CC16', gradient: 'linear-gradient(135deg, #F7FEE7 0%, #ECFCCB 100%)', hoverBg: 'rgba(132, 204, 22, 0.08)' },
 ];
 
 export default function GamesPage() {
@@ -1640,6 +1843,7 @@ export default function GamesPage() {
   const [spellingKey, setSpellingKey] = useState(0);
   const [memoryKey, setMemoryKey] = useState(0);
   const [oddoutKey, setOddoutKey] = useState(0);
+  const [findletterKey, setFindletterKey] = useState(0);
   const [selectedGrade, setSelectedGrade] = useState(() => localStorage.getItem('kids_grade') || 'primary');
 
   useEffect(() => {
@@ -1904,6 +2108,23 @@ export default function GamesPage() {
               </Typography>
               <Box key={`${oddoutKey}_${selectedGrade}`}>
                 <OddOneOut selectedGrade={selectedGrade} />
+              </Box>
+            </section>
+          )}
+
+          {activeGame === 'findletter' && (
+            <section aria-label="Kids Letter Search Identification Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#84CC16', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  🅰️ Letter Search
+                </Typography>
+                <ResetButton onReset={() => setFindletterKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Scan the grid to find and tap the target letter!
+              </Typography>
+              <Box key={`${findletterKey}_${selectedGrade}`}>
+                <LetterSearch selectedGrade={selectedGrade} />
               </Box>
             </section>
           )}
