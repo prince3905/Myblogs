@@ -62,6 +62,24 @@ const animalData = [
   { name: 'Fox', emoji: '🦊', category: 'trickster' },
 ];
 
+const oddOutPuzzles = [
+  { category: 'preschool', common: '🍎', odd: '🐱' },
+  { category: 'preschool', common: '🐶', odd: '🍌' },
+  { category: 'preschool', common: '🚗', odd: '🐸' },
+  { category: 'preschool', common: '🎈', odd: '🔑' },
+  
+  { category: 'primary', common: '🍎', odd: '🍏' },
+  { category: 'primary', common: '🦁', odd: '🐈' },
+  { category: 'primary', common: '✈️', odd: '⛵' },
+  { category: 'primary', common: '🍪', odd: '🍕' },
+  
+  { category: 'upper', common: '😀', odd: '😬' },
+  { category: 'upper', common: '⏰', odd: '🕰️' },
+  { category: 'upper', common: '⚽', odd: '⚾' },
+  { category: 'upper', common: '🍀', odd: '☘️' },
+  { category: 'upper', common: '📈', odd: '📉' }
+];
+
 const spellingWords = [
   { word: 'CAT', emoji: '🐱', grade: 'preschool' },
   { word: 'DOG', emoji: '🐕', grade: 'preschool' },
@@ -1324,6 +1342,160 @@ function MemoryMatch({ selectedGrade }) {
   );
 }
 
+function OddOneOut({ selectedGrade }) {
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('odd_one_out_high') || '0', 10));
+  const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong' | null
+  const [locked, setLocked] = useState(false);
+
+  const puzzles = useMemo(() => {
+    return oddOutPuzzles.filter(p => p.category === selectedGrade);
+  }, [selectedGrade]);
+
+  const [current, setCurrent] = useState(() => pickRandom(puzzles) || oddOutPuzzles[0]);
+  const [items, setItems] = useState([]);
+
+  const initRound = useCallback((puzzle) => {
+    setCurrent(puzzle);
+    setFeedback(null);
+    setLocked(false);
+
+    const size = selectedGrade === 'preschool' ? 4 : selectedGrade === 'primary' ? 6 : 9;
+    const oddIdx = Math.floor(Math.random() * size);
+    const list = Array.from({ length: size }).map((_, idx) => ({
+      id: idx,
+      emoji: idx === oddIdx ? puzzle.odd : puzzle.common,
+      isOdd: idx === oddIdx
+    }));
+    setItems(list);
+  }, [selectedGrade]);
+
+  useEffect(() => {
+    initRound(pickRandom(puzzles) || oddOutPuzzles[0]);
+  }, [puzzles, initRound]);
+
+  const handleCellClick = (item) => {
+    if (locked) return;
+    if (item.isOdd) {
+      setScore(s => {
+        const next = s + 1;
+        if (next > highScore) {
+          setHighScore(next);
+          localStorage.setItem('odd_one_out_high', next.toString());
+        }
+        return next;
+      });
+      setFeedback('correct');
+      playHappyVoice();
+      setLocked(true);
+      setTimeout(() => {
+        const nextPuzzle = pickRandom(puzzles.filter(p => p.odd !== current.odd)) || pickRandom(puzzles);
+        initRound(nextPuzzle);
+      }, 1200);
+    } else {
+      setFeedback('wrong');
+      playSadVoice();
+      setLocked(true);
+      setTimeout(() => {
+        setFeedback(null);
+        setLocked(false);
+      }, 1000);
+    }
+  };
+
+  if (!current || items.length === 0) return null;
+
+  return (
+    <GameFullscreen>
+    <Card sx={{
+      borderRadius: '24px',
+      background: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)',
+      boxShadow: '0 12px 40px rgba(2, 132, 199, 0.15)',
+      overflow: 'visible',
+      position: 'relative',
+      border: 'none',
+      width: '100%',
+      '&:hover': { transform: 'none', boxShadow: '0 12px 40px rgba(2, 132, 199, 0.15)' }
+    }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+          <Typography variant="h6" fontWeight={800} sx={{ color: '#0284C7', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+            <StarsIcon sx={{ color: '#FBBF24' }} /> Odd One Out
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              icon={<EmojiEventsIcon />}
+              label={`Score: ${score}`}
+              sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#E0F2FE', color: '#0369A1', borderRadius: '12px', px: 0.5 }}
+            />
+            {highScore > 0 && (
+              <Chip
+                label={`Best: ${highScore}`}
+                sx={{ fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, bgcolor: '#FEF3C7', color: '#B45309', borderRadius: '12px' }}
+              />
+            )}
+            <GameFullscreenButton />
+          </Box>
+        </Box>
+
+        <Box sx={{ textAlign: 'center', py: 1 }}>
+          <Typography variant="body1" sx={{ color: '#6B7280', mb: 4, fontWeight: 600, fontSize: '0.95rem' }}>
+            Find the emoji that is different from the others! 🔍
+          </Typography>
+
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${selectedGrade === 'preschool' ? 2 : 3}, 1fr)`,
+            gap: 2.5,
+            maxWidth: selectedGrade === 'preschool' ? 200 : 300,
+            mx: 'auto',
+            mb: 3
+          }}>
+            {items.map((item) => (
+              <Button
+                key={item.id}
+                onClick={() => handleCellClick(item)}
+                disabled={locked}
+                sx={{
+                  aspectRatio: '1',
+                  borderRadius: '20px',
+                  bgcolor: '#FFFFFF',
+                  border: '3px solid #E0F2FE',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+                  fontSize: { xs: '2.5rem', sm: '3rem' },
+                  p: 0, minWidth: 0,
+                  transition: 'all 0.15s',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: '#0284C7',
+                    boxShadow: '0 6px 16px rgba(2, 132, 199, 0.15)'
+                  }
+                }}
+              >
+                {item.emoji}
+              </Button>
+            ))}
+          </Box>
+
+          <Box sx={{ minHeight: 60 }}>
+            {feedback === 'correct' && (
+              <Typography variant="h6" fontWeight={800} sx={{ color: '#10B981', animation: 'bounceIn 0.3s ease' }}>
+                🎉 Spot on! You found it!
+              </Typography>
+            )}
+            {feedback === 'wrong' && (
+              <Typography variant="h6" fontWeight={800} sx={{ color: '#EF4444', animation: 'shake 0.3s ease' }}>
+                ❌ Look closer!
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+    </GameFullscreen>
+  );
+}
+
 function ResetButton({ onReset }) {
   return (
     <Button
@@ -1456,6 +1628,7 @@ const gameTabs = [
   { id: 'speed', label: 'Speed Tapper', emoji: '⚡', color: '#EC4899', gradient: 'linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%)', hoverBg: 'rgba(236, 72, 153, 0.08)' },
   { id: 'spelling', label: 'Word Builder', emoji: '✍️', color: '#4F46E5', gradient: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)', hoverBg: 'rgba(79, 70, 229, 0.08)' },
   { id: 'memory', label: 'Memory Match', emoji: '🧠', color: '#D946EF', gradient: 'linear-gradient(135deg, #FDF4FF 0%, #F5D0FE 100%)', hoverBg: 'rgba(217, 70, 239, 0.08)' },
+  { id: 'oddout', label: 'Odd One Out', emoji: '🔍', color: '#0284C7', gradient: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)', hoverBg: 'rgba(2, 132, 199, 0.08)' },
 ];
 
 export default function GamesPage() {
@@ -1466,6 +1639,7 @@ export default function GamesPage() {
   const [speedKey, setSpeedKey] = useState(0);
   const [spellingKey, setSpellingKey] = useState(0);
   const [memoryKey, setMemoryKey] = useState(0);
+  const [oddoutKey, setOddoutKey] = useState(0);
   const [selectedGrade, setSelectedGrade] = useState(() => localStorage.getItem('kids_grade') || 'primary');
 
   useEffect(() => {
@@ -1710,6 +1884,23 @@ export default function GamesPage() {
               </Typography>
               <Box key={`${memoryKey}_${selectedGrade}`}>
                 <MemoryMatch selectedGrade={selectedGrade} />
+              </Box>
+            </section>
+          )}
+
+          {activeGame === 'oddout' && (
+            <section aria-label="Kids Odd One Out Identification Game" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: { xs: 0.5, sm: 0 } }}>
+                <Typography variant="h5" component="h2" fontWeight={800} sx={{ color: '#0284C7', fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' } }}>
+                  🔍 Odd One Out
+                </Typography>
+                <ResetButton onReset={() => setOddoutKey(k => k + 1)} />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#6B7280', mb: 3, px: { xs: 0.5, sm: 0 }, fontWeight: 500 }}>
+                Find the one item that is different from all the others!
+              </Typography>
+              <Box key={`${oddoutKey}_${selectedGrade}`}>
+                <OddOneOut selectedGrade={selectedGrade} />
               </Box>
             </section>
           )}
