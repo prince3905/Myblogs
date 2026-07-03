@@ -733,12 +733,12 @@ ${ADSENSE_CONSTRAINTS}
   * IF CATEGORY IS 'Sarkari Jobs & Exams' (or related to Jobs, Sarkari Result, Admit Card):
     Append this exact HTML block:
     <div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>
-    <p>यह महत्वपूर्ण जानकारी <strong>Digital Home Blog</strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong>Sarkari Result 2026</strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong>Home</strong> और <strong>Blog</strong> सेक्शन को जरूर एक्सप्लोर करें।</p>
+    <p>यह महत्वपूर्ण जानकारी <strong><a href="/">Digital Home Blog</a></strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong><a href="/">Sarkari Result 2026</a></strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong><a href="/">Home</a></strong> और <strong><a href="/blog">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>
     </div>
   * IF CATEGORY IS ANY OTHER (such as Health & Wellness, Tech & Tutorials, AI & Web Tools, News & Trends, Finance & Business, or any Health/Tech/General topics):
     Append this exact HTML block:
     <div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>
-    <p>यह लेख <strong>Digital Home Blog</strong> के एक्सपर्ट्स द्वारा रिसर्च करके तैयार किया गया है। हम अपने पाठकों तक हेल्थ, एजुकेशन, लाइफस्टाइल और टेक की सटीक जानकारियां (All Insights Blog) पहुंचाते हैं। यदि आप छात्र हैं, तो हमारे पोर्टल पर लाइव <strong>Sarkari Result</strong> और न्यू वैकेंसी अलर्ट्स का लाभ उठाने के लिए सीधे हमारे <strong>Job Alerts</strong> कैटेगरी पर विजिट कर सकते हैं।</p>
+    <p>यह लेख <strong><a href="/">Digital Home Blog</a></strong> के एक्सपर्ट्स द्वारा रिसर्च करके तैयार किया गया है। हम अपने पाठकों तक हेल्थ, एजुकेशन, लाइफस्टाइल और टेक की सटीक जानकारियां (All Insights Blog) पहुंचाते हैं। यदि आप छात्र हैं, तो हमारे पोर्टल पर लाइव <strong><a href="/">Sarkari Result</a></strong> और न्यू वैकेंसी अलर्ट्स का लाभ उठाने के लिए सीधे हमारे <strong><a href="/category/sarkari-jobs-exams">Job Alerts</a></strong> कैटेगरी पर विजिट कर सकते हैं।</p>
     </div>
  
 **3. ANSWER ENGINE & VOICE OPTIMIZATION (AEO) RULES (STRICTLY MANDATORY):**

@@ -49,6 +49,29 @@ async function triggerScrape(req, res) {
   }
 }
 
+// Helper to extract links from scraped text
+function extractLinksFromText(text) {
+  const parsedLinks = [];
+  if (!text) return parsedLinks;
+  const lines = text.split('\n');
+  const linkRegex = /\((?:Link|link):\s*([^)]+)\)/i;
+  
+  for (const line of lines) {
+    const match = linkRegex.exec(line);
+    if (match) {
+      const url = match[1].trim();
+      let label = line.split(/\((?:Link|link):/i)[0].replace(/^[-*\s]+/, '').trim();
+      if (label.endsWith(':')) {
+        label = label.slice(0, -1).trim();
+      }
+      if (url && label) {
+        parsedLinks.push({ name: label, url });
+      }
+    }
+  }
+  return parsedLinks;
+}
+
 // Create a draft post from alert metadata
 async function draftPostFromAlert(req, res) {
   try {
@@ -73,6 +96,74 @@ async function draftPostFromAlert(req, res) {
     const resolvedPdf = alert.officialPdfUrl || '';
     const resolvedApply = alert.officialApplyUrl || '';
     const detailsTextContext = alert.detailsText || '';
+
+    // Extract all links programmatically from scraped factsheet details
+    const detailsLinks = extractLinksFromText(detailsTextContext);
+
+    // Build unique URL map
+    const allLinksMap = new Map();
+
+    // Prioritize explicitly stored URL fields
+    if (resolvedApply) allLinksMap.set('apply online', resolvedApply);
+    if (resolvedPdf) allLinksMap.set('download notification', resolvedPdf);
+    if (resolvedUrl) allLinksMap.set('official website', resolvedUrl);
+
+    // Merge in any other parsed links from the text details
+    detailsLinks.forEach(link => {
+      const nameLower = link.name.toLowerCase();
+      if (nameLower.includes('apply')) {
+        allLinksMap.set('apply online', link.url);
+      } else if (nameLower.includes('notification') || nameLower.includes('pdf') || nameLower.includes('advertisement') || nameLower.includes('notice')) {
+        allLinksMap.set('download notification', link.url);
+      } else if (nameLower.includes('website') || nameLower.includes('homepage') || nameLower.includes('official site')) {
+        allLinksMap.set('official website', link.url);
+      } else {
+        // Any other unique link (e.g. Syllabus, Answer Key, Result, Exam City, etc.)
+        allLinksMap.set(link.name, link.url);
+      }
+    });
+
+    // Create the final beautiful HTML buttons block
+    const buttonHtmls = [];
+    allLinksMap.forEach((url, name) => {
+      let btnClass = 'btn-apply';
+      let label = name;
+      const lower = name.toLowerCase();
+
+      if (lower.includes('apply')) {
+        btnClass = 'btn-apply';
+        label = `Apply Online (यहाँ क्लिक करें)`;
+      } else if (lower.includes('notification') || lower.includes('pdf') || lower.includes('advertisement') || lower.includes('notice')) {
+        btnClass = 'btn-notification';
+        label = `Download Official Notification (देखें अभी)`;
+      } else if (lower.includes('website') || lower.includes('homepage') || lower.includes('official site')) {
+        btnClass = 'btn-website';
+        label = `Official Website (विजिट करें)`;
+      } else if (lower.includes('syllabus')) {
+        btnClass = 'btn-notification';
+        label = `Download Syllabus (पाठ्यक्रम डाउनलोड करें)`;
+      } else {
+        btnClass = 'btn-website';
+        label = `${name} (यहाँ देखें)`;
+      }
+      buttonHtmls.push(`<a href="${url}" class="btn-link-action ${btnClass}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+    });
+
+    // Enforce default fallback search buttons if the main 3 fields were not in details
+    if (!allLinksMap.has('apply online')) {
+      const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' apply online');
+      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer">Apply Online (यहाँ क्लिक करें)</a>`);
+    }
+    if (!allLinksMap.has('download notification')) {
+      const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' recruitment notification pdf');
+      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer">Download Official Notification (देखें अभी)</a>`);
+    }
+    if (!allLinksMap.has('official website')) {
+      const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' official website');
+      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer">Official Website (विजिट करें)</a>`);
+    }
+
+    const buttonHtmlBlock = buttonHtmls.join('\n');
 
     const aiParams = {
       title: cleanTitle,
@@ -105,11 +196,9 @@ CRITICAL DIRECTIVES:
 - The generated 'seoDescription' and 'summary' JSON fields MUST start with the focus keyword/title and be strictly between 110 and 150 characters long.
 - You MUST embed at least two journalistic citations (e.g., using "According to the official board details..." or "As stated by the recruitment guidelines...") in the body paragraphs to satisfy trust checks.
 - You MUST define the main topic or focus keyword in the first paragraph using a clear defining phrase like "refers to" or "is defined as" or "ka matlab" (e.g., "This recruitment refers to..." or "${cleanTitle} refers to...").
-- In the "महत्वपूर्ण लिंक्स" (Important Links) H2 section, you MUST generate direct HTML call-to-action buttons (anchor tags) formatted EXACTLY as follows on separate lines:
-  <a href="${resolvedApply || 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' apply online')}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer">Apply Online (यहाँ क्लिक करें)</a>
-  <a href="${resolvedPdf || 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' recruitment notification pdf')}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer">Download Official Notification (देखें अभी)</a>
-  <a href="${resolvedUrl || 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' official website')}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer">Official Website (विजिट करें)</a>
-  Do NOT use standard markdown bullet format (* or -) for these buttons; output the raw HTML anchor tags directly on new lines so they display as premium, gorgeous buttons!
+- In the "महत्वपूर्ण लिंक्स" (Important Links) H2 section, you MUST output the following EXACT HTML block containing the Call-to-Action buttons. Do NOT modify, translate, rewrite, or omit any part of this HTML block. Output it exactly same-to-same on separate lines:
+${buttonHtmlBlock}
+- You MUST naturally link to other pages of our portal inside the post content body paragraphs (e.g. using anchor text like "Digital Home Blog", "Sarkari Result", "latest government jobs" pointing to root URL "/").
 - The FAQ section heading MUST be exactly "## अक्सर पूछे जाने वाले सवाल (FAQ)" so it is detected correctly.
 - Under the FAQ section, provide exactly 3 questions formatted as H3. Each question must be in Hinglish using Latin query words like "Kaise", "Kab", "Kya", "How", or "What" (e.g., "### Question: UPTGT 2026 Apply Kaise Karein?"). Each answer must be immediately below it and strictly under 45 words.`
     };
