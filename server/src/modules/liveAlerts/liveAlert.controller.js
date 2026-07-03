@@ -114,7 +114,12 @@ async function draftPostFromAlert(req, res) {
       if (nameLower.includes('apply')) {
         allLinksMap.set('apply online', link.url);
       } else if (nameLower.includes('notification') || nameLower.includes('pdf') || nameLower.includes('advertisement') || nameLower.includes('notice')) {
-        allLinksMap.set('download notification', link.url);
+        // Skip utility tools links so they don't overwrite download notification link
+        if (link.url !== '/tools' && !nameLower.includes('utility tools') && !nameLower.includes('resizer')) {
+          allLinksMap.set('download notification', link.url);
+        } else {
+          allLinksMap.set('student utility tools', '/tools');
+        }
       } else if (nameLower.includes('website') || nameLower.includes('homepage') || nameLower.includes('official site')) {
         allLinksMap.set('official website', link.url);
       } else {
@@ -142,6 +147,9 @@ async function draftPostFromAlert(req, res) {
       } else if (lower.includes('syllabus')) {
         btnClass = 'btn-notification';
         label = `Download Syllabus (पाठ्यक्रम डाउनलोड करें)`;
+      } else if (lower.includes('tools')) {
+        btnClass = 'btn-website';
+        label = `Photo & Sign Resizer Tools (यहाँ क्लिक करें)`;
       } else {
         btnClass = 'btn-website';
         label = `${name} (यहाँ देखें)`;
@@ -206,12 +214,58 @@ ${buttonHtmlBlock}
     // Trigger backend AI post generator
     const generatedData = await generateBlogContentCore(aiParams);
 
+    let finalContent = generatedData.content || '';
+
+    // Standardize & inject important links section programmatically
+    const linksHeaderRegex = /<h[23]>(?:महत्वपूर्ण लिंक्स|Important Links)<\/h[23]>/i;
+    const hasLinksSection = linksHeaderRegex.test(finalContent);
+    const standardLinksBlock = `\n<h2>महत्वपूर्ण लिंक्स</h2>\n${buttonHtmlBlock}\n`;
+
+    if (hasLinksSection) {
+      // Replace the existing links section to ensure standard verified buttons are used
+      const match = finalContent.match(linksHeaderRegex);
+      const startIndex = match.index;
+      
+      const nextHeadingRegex = /<h[23]>/gi;
+      nextHeadingRegex.lastIndex = startIndex + match[0].length;
+      const nextHeadingMatch = nextHeadingRegex.exec(finalContent);
+      
+      if (nextHeadingMatch) {
+        finalContent = finalContent.slice(0, startIndex) + standardLinksBlock + finalContent.slice(nextHeadingMatch.index);
+      } else {
+        finalContent = finalContent.slice(0, startIndex) + standardLinksBlock;
+      }
+    } else {
+      // Inject before FAQ section
+      const faqHeaderRegex = /<h[23]>(?:अक्सर पूछे जाने वाले सवाल \(FAQ\)|Frequently Asked Questions)<\/h[23]>/i;
+      const faqMatch = finalContent.match(faqHeaderRegex);
+      
+      if (faqMatch) {
+        finalContent = finalContent.slice(0, faqMatch.index) + standardLinksBlock + '\n' + finalContent.slice(faqMatch.index);
+      } else {
+        // Inject before Key Takeaways
+        const takeawaysRegex = /<h[23]>(?:Key Takeaways|महत्वपूर्ण निष्कर्ष)<\/h[23]>/i;
+        const takeawaysMatch = finalContent.match(takeawaysRegex);
+        if (takeawaysMatch) {
+          finalContent = finalContent.slice(0, takeawaysMatch.index) + standardLinksBlock + '\n' + finalContent.slice(takeawaysMatch.index);
+        } else {
+          // Inject before brand block
+          const brandIndex = finalContent.indexOf("<div class='brand-authority-block'");
+          if (brandIndex !== -1) {
+            finalContent = finalContent.slice(0, brandIndex) + standardLinksBlock + '\n' + finalContent.slice(brandIndex);
+          } else {
+            finalContent += '\n' + standardLinksBlock;
+          }
+        }
+      }
+    }
+
     // Create and save Mongoose BlogPost document
     const newPost = new BlogPost({
       title: generatedData.title,
       slug: generatedData.slug,
       excerpt: generatedData.summary.slice(0, 320),
-      content: generatedData.content,
+      content: finalContent,
       featuredImage: '', // Will fetch image or fallback in editor
       category: 'Sarkari Jobs & Exams',
       tags: generatedData.keywords || [],

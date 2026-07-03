@@ -330,7 +330,7 @@ async function scrapeDetailedUrls(pageUrl) {
     const excludes = [
       'instagram.com', 'facebook.com', 'twitter.com', 'x.com', 't.me', 'telegram.me',
       'whatsapp.com', 'youtube.com', 'threads.net', 'threads.com', 'play.google.com',
-      'apps.apple.com', 'contactus', 'about-us', 'terms-and-conditions', 'disclaimer',
+      'apps.apple.com', 'itunes.apple.com', 'contactus', 'about-us', 'terms-and-conditions', 'disclaimer',
       'privacy-policy', 'googlesyndication.com', 'doubleclick.net', 'share.google'
     ];
 

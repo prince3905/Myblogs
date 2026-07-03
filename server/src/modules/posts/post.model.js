@@ -41,6 +41,31 @@ const blogPostSchema = new mongoose.Schema(
 blogPostSchema.pre('save', function (next) {
   try {
     const post = this;
+
+    // Ensure preschool educational games promotion is appended
+    if (post.content && !post.content.includes('games-promo-block')) {
+      const gamesPromo = `\n<div class="games-promo-block" style="margin: 30px 0; padding: 24px; border-radius: 16px; border: 1px solid #e5e7eb; background: linear-gradient(135deg, #fef08a 0%, #fef9c3 100%); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); text-align: left; position: relative; overflow: hidden;">
+  <div style="display: flex; align-items: flex-start; gap: 16px;">
+    <div style="font-size: 32px; line-height: 1;">🎮</div>
+    <div>
+      <h3 style="margin: 0 0 8px 0; color: #854d0e; font-size: 1.25rem; font-weight: 800; border: none; padding: 0;">Preschool Learning & Brain Booster Games for Kids!</h3>
+      <p style="margin: 0 0 16px 0; color: #a16207; font-size: 0.95rem; line-height: 1.6; font-weight: 500;">
+        Apne bacho ki concentration, memory, aur problem-solving skills ko boost karne ke liye humare <strong>100% Free & Ad-Free educational games</strong> ko try karein. Kids-friendly UI ke sath banaya gaya jo learning ko fun banata hai!
+      </p>
+      <a href="/games" style="display: inline-block; padding: 10px 20px; background: #ca8a04; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.85rem; box-shadow: 0 4px 6px -1px rgba(133, 77, 14, 0.2);">Play Free Brain Booster Games Now 🚀</a>
+    </div>
+  </div>
+</div>\n`;
+
+      // Insert before the brand authority block if it exists
+      const brandIndex = post.content.indexOf("<div class='brand-authority-block'");
+      if (brandIndex !== -1) {
+        post.content = post.content.slice(0, brandIndex) + gamesPromo + '\n' + post.content.slice(brandIndex);
+      } else {
+        post.content += '\n' + gamesPromo;
+      }
+    }
+
     // Ensure seoDescription is filled if not provided
     if (!post.seoDescription) {
       const contentClean = (post.content || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
