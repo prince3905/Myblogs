@@ -154,24 +154,24 @@ async function draftPostFromAlert(req, res) {
         btnClass = 'btn-website';
         label = `${name} (यहाँ देखें)`;
       }
-      buttonHtmls.push(`<a href="${url}" class="btn-link-action ${btnClass}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+      buttonHtmls.push(`<a href="${url}" class="btn-link-action ${btnClass}" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">${label}</a>`);
     });
 
     // Enforce default fallback search buttons if the main 3 fields were not in details
     if (!allLinksMap.has('apply online')) {
       const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' apply online');
-      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer">Apply Online (यहाँ क्लिक करें)</a>`);
+      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Apply Online (यहाँ क्लिक करें)</a>`);
     }
     if (!allLinksMap.has('download notification')) {
       const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' recruitment notification pdf');
-      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer">Download Official Notification (देखें अभी)</a>`);
+      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Download Official Notification (देखें अभी)</a>`);
     }
     if (!allLinksMap.has('official website')) {
       const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' official website');
-      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer">Official Website (विजिट करें)</a>`);
+      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Official Website (विजिट करें)</a>`);
     }
 
-    const buttonHtmlBlock = buttonHtmls.join('\n');
+    const buttonHtmlBlock = `<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>`;
 
     const aiParams = {
       title: cleanTitle,
@@ -206,7 +206,7 @@ CRITICAL DIRECTIVES:
 - You MUST define the main topic or focus keyword in the first paragraph using a clear defining phrase like "refers to" or "is defined as" or "ka matlab" (e.g., "This recruitment refers to..." or "${cleanTitle} refers to...").
 - In the "महत्वपूर्ण लिंक्स" (Important Links) H2 section, you MUST output the following EXACT HTML block containing the Call-to-Action buttons. Do NOT modify, translate, rewrite, or omit any part of this HTML block. Output it exactly same-to-same on separate lines:
 ${buttonHtmlBlock}
-- You MUST naturally link to other pages of our portal inside the post content body paragraphs (e.g. using anchor text like "Digital Home Blog", "Sarkari Result", "latest government jobs" pointing to root URL "/").
+- You MUST naturally link to other pages of our portal inside the post content body paragraphs (e.g. using anchor text like "Digital Home Blog", "Government Job Vacancy & Result 2026", "latest government jobs" pointing to root URL "/").
 - The FAQ section heading MUST be exactly "## अक्सर पूछे जाने वाले सवाल (FAQ)" so it is detected correctly.
 - Under the FAQ section, provide exactly 3 questions formatted as H3. Each question must be in Hinglish using Latin query words like "Kaise", "Kab", "Kya", "How", or "What" (e.g., "### Question: UPTGT 2026 Apply Kaise Karein?"). Each answer must be immediately below it and strictly under 45 words.`
     };
