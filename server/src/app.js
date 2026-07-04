@@ -26,6 +26,15 @@ const { sitemap, robots, rssFeed, getHomepageData } = require('./modules/posts/p
 const app = express();
 const publicPath = path.join(__dirname, '../public');
 
+// Canonical domain redirect: digitalhomeblog.in -> www.digitalhomeblog.in
+app.use((req, res, next) => {
+  const host = req.headers.host;
+  if (host === 'digitalhomeblog.in') {
+    return res.redirect(301, `https://www.digitalhomeblog.in${req.originalUrl}`);
+  }
+  next();
+});
+
 // Middleware
 app.use(compression());
 app.use(cors({
