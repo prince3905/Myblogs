@@ -39,6 +39,43 @@ function uploadImage(req, res, next) {
 
 const { generateImagePrompt } = require('../ai/ai.controller');
 
+function getPhotographicFallbackPrompt(title) {
+  const lower = title.toLowerCase();
+  
+  if (lower.includes('krashi') || lower.includes('agri') || lower.includes('agriculture') || lower.includes('kisan') || lower.includes('farmer')) {
+    return 'Green lush agriculture crop field, modern farming, tractor path, natural bright daylight';
+  }
+  if (lower.includes('police') || lower.includes('constable') || lower.includes('inspector') || lower.includes('si') || lower.includes('bpssc') || lower.includes('daroga') || lower.includes('jail')) {
+    return 'Official police badge on professional desk, police station background, dramatic natural lighting';
+  }
+  if (lower.includes('teacher') || lower.includes('tet') || lower.includes('jhtet') || lower.includes('school') || lower.includes('kvs') || lower.includes('tgt') || lower.includes('pgt') || lower.includes('ctet')) {
+    return 'A neat classroom teacher desk with stacks of books, notebook, and glasses, chalkboard background';
+  }
+  if (lower.includes('railway') || lower.includes('rrc') || lower.includes('rrb') || lower.includes('train') || lower.includes('station')) {
+    return 'Modern train approaching passenger platform, high speed railway station, motion blur, natural light';
+  }
+  if (lower.includes('navy') || lower.includes('coast') || lower.includes('army') || lower.includes('force') || lower.includes('airforce') || lower.includes('military') || lower.includes('soldier')) {
+    return 'Military defense aircraft jet fighter on runway tarmac, hangar background, majestic sunset lighting';
+  }
+  if (lower.includes('bank') || lower.includes('sbi') || lower.includes('ibps') || lower.includes('finance') || lower.includes('clerk') || lower.includes('rbi')) {
+    return 'A modern bank office interior, secure vault gate in distance, financial papers on table';
+  }
+  if (lower.includes('medical') || lower.includes('doctor') || lower.includes('nurse') || lower.includes('hospital') || lower.includes('health') || lower.includes('aiims') || lower.includes('pharmacist')) {
+    return 'A professional stethoscope resting on medical reports, bright modern hospital corridor background';
+  }
+  if (lower.includes('computer') || lower.includes('tech') || lower.includes('it') || lower.includes('software') || lower.includes('engineer')) {
+    return 'Modern tech office workstation with glowing computer monitors, code lines visible, desk lamp';
+  }
+  if (lower.includes('admit card') || lower.includes('admitcard') || lower.includes('hall ticket') || lower.includes('exam')) {
+    return 'An examination desk with printed exam hall ticket, pen, and student ID card, focused lighting';
+  }
+  if (lower.includes('result') || lower.includes('merit') || lower.includes('marks') || lower.includes('score')) {
+    return 'A graduation cap resting on a study table next to open books, celebration background, warm lighting';
+  }
+  
+  return 'A professional wooden office desk with official documents, gold pen, and calculator, cozy corporate workspace';
+}
+
 async function generateAiThumbnail(req, res) {
   try {
     const { title } = req.body;
@@ -52,8 +89,8 @@ async function generateAiThumbnail(req, res) {
       prompt = await generateImagePrompt(title);
       console.log(`[AI Thumbnail] Gemini generated prompt: "${prompt}"`);
     } catch (aiErr) {
-      console.error('[AI Thumbnail] Gemini prompt generation failed, using fallback prompt:', aiErr.message);
-      prompt = `Realistic professional stock photograph for ${title}, DSLR, natural lighting`;
+      console.error('[AI Thumbnail] Gemini prompt generation failed, using keyword fallback prompt:', aiErr.message);
+      prompt = getPhotographicFallbackPrompt(title);
     }
 
     // Force realistic photographic style
