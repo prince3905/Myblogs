@@ -6,6 +6,7 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import BuildIcon from '@mui/icons-material/Build';
 import CampaignIcon from '@mui/icons-material/Campaign';
+import ArticleIcon from '@mui/icons-material/Article';
 
 const stats = [
   { label: 'Verified Job Updates', value: '5,000+' },
@@ -29,6 +30,11 @@ const offerings = [
     title: 'Student Form Resizer Tools',
     desc: 'Government exam forms bharte samay photo aur signature size limitations ko solve karne ke liye hamare high-speed custom Resizer Tools (/tools) help karte hain.',
     icon: <BuildIcon color="success" sx={{ fontSize: 40 }} />
+  },
+  {
+    title: 'All Insights Blog & Public Information',
+    desc: 'We publish highly useful, research-backed public information articles in English & Hinglish across diverse categories like Technology, AI updates, Personal Finance, Careers, and Health & Wellness to help readers make smart decisions.',
+    icon: <ArticleIcon color="warning" sx={{ fontSize: 40 }} />
   }
 ];
 
@@ -141,7 +147,7 @@ export default function AboutPage() {
             </Typography>
             <Grid container spacing={4}>
               {offerings.map(item => (
-                <Grid item xs={12} md={4} key={item.title}>
+                <Grid item xs={12} sm={6} md={3} key={item.title}>
                   <Card elevation={0} sx={{ height: '100%', borderRadius: 4, border: '1px solid', borderColor: 'divider', transition: '0.3s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 12px 30px rgba(0,0,0,0.06)' } }}>
                     <CardContent sx={{ p: 4 }}>
                       <Box sx={{ display: 'inline-flex', p: 1.5, borderRadius: 3, bgcolor: 'grey.50', mb: 2 }}>
