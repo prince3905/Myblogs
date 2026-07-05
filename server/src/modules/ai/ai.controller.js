@@ -1238,10 +1238,10 @@ async function generateAIContent(req, res) {
 
 async function generateImagePrompt(title) {
   const prompt = `Write a highly descriptive, professional prompt for an AI Image generator to generate a featured thumbnail image for a blog post with the title: "${title}".
-The prompt MUST describe a realistic, professional, high-resolution DSLR stock photograph. Focus on real-life environments, professional workers, or candidate exams.
-CRITICAL: Do NOT use cartoon, illustration, vector art, 3D render, drawing, or painting style. It must look 100% like a real-life photograph.
-Do NOT include any text, letters, or words in the image description.
-Return ONLY the description prompt in plain text (maximum 40 words, no quotes, no conversational filler).`;
+The prompt MUST describe a realistic, professional, high-resolution DSLR stock photograph. Focus on real-life environments, professional workers, or candidate exams related to the title.
+Include in the description a prominent text overlay to be rendered on the image. The text overlay should read a short, catchy, high-impact English title derived from the post (e.g., "RAILWAY JOBS 2026", "GOVT JOB 2026", "EXAM RESULT", "ADMIT CARD"). Specify that this text is written in bold, clean, modern, high-contrast typography.
+CRITICAL: Do NOT use cartoon, illustration, vector art, 3D render, drawing, or painting style. The scene must look 100% like a real-life photograph.
+Return ONLY the description prompt in plain text (maximum 45 words, no quotes, no conversational filler).`;
 
   const keys = [
     process.env.GEMINI_API_KEY,
@@ -1265,10 +1265,10 @@ Return ONLY the description prompt in plain text (maximum 40 words, no quotes, n
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 150,
+          maxOutputTokens: 1024,
         }
       }, {
-        timeout: 10000,
+        timeout: 25000,
         headers: { 'Content-Type': 'application/json' }
       });
       const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
