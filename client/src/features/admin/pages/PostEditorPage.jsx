@@ -167,7 +167,7 @@ export default function PostEditorPage() {
         updateField('tags', kw);
         updateField('seoKeywords', kw);
         try {
-          const res = await request('/api/uploads/generate-thumbnail', {
+          const res = await request('/api/admin/generate-thumbnail', {
             method: 'POST',
             body: JSON.stringify({ title: finalTitle })
           });
@@ -711,7 +711,7 @@ export default function PostEditorPage() {
                       }
                       addToast('AI Image generate ho rahi hai (Cloudinary par save ho rahi hai)... 🚀', 'info');
                       try {
-                        const res = await request('/api/uploads/generate-thumbnail', {
+                        const res = await request('/api/admin/generate-thumbnail', {
                           method: 'POST',
                           body: JSON.stringify({ title: form.title })
                         });
