@@ -662,7 +662,7 @@ Generate:
 
 Return strictly a JSON object with keys: "headings" (array of strings), "lsi" (array of strings), "targetWordCount" (integer). DO NOT include markdown code blocks.`;
 
-      const aiRes = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+      const aiRes = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${GEMINI_API_KEY}`, {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.3,

@@ -218,7 +218,7 @@ async function draftAlertToPostDoc(alert) {
 
   const aiParams = {
     title: cleanTitle,
-    model: 'gemini-flash-latest',
+    model: 'gemini-2.5-pro',
     length: 'long',
     tone: 'informative',
     language: 'hinglish',
@@ -306,7 +306,11 @@ ${buttonHtmlBlock}
     } catch (promptErr) {
       imgPrompt = getPhotographicFallbackPrompt(generatedData.title);
     }
-    const styledPrompt = `${imgPrompt}, highly realistic photography style, DSLR camera, professional natural lighting, 4k resolution, stock photo look, no cartoon, no drawings`;
+    const mainPart = generatedData.title.split(/[:|]/)[0].trim();
+    const words = mainPart.split(/\s+/);
+    const overlayText = words.length > 5 ? words.slice(0, 4).join(' ').toUpperCase() : mainPart.toUpperCase();
+
+    const styledPrompt = `${imgPrompt}, highly realistic photography style, DSLR camera, professional natural lighting, 4k resolution, stock photo look, no cartoon, no drawings, with a bold high-contrast text overlay that reads "${overlayText}" clearly visible on the image`;
     const seed = Math.floor(Math.random() * 1000000);
     const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(styledPrompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
 

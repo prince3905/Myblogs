@@ -14,7 +14,7 @@ const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models
 const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
 
-const aiModel = 'gemini-flash-latest';
+const aiModel = 'gemini-2.5-pro';
 
 // API key active flags (dynamic deactivation)
 let isGeminiKey1Active = !!GEMINI_API_KEY;

@@ -2,6 +2,7 @@ const Post = require('./post.model');
 const BlogPost = Post;
 const env = require('../../config/env');
 const { makeSlug, normalizeCsvOrArray, calculateReadingTime, toTitleCase } = require('../../shared/utils/post.helpers');
+const { processAIOutput } = require('../ai/aiPostProcessor');
 
 function catUrlSlug(category) {
   if (!category) return 'blog';
@@ -261,6 +262,21 @@ async function createPost(req, res, next) {
       return res.status(400).json({ message: validationError });
     }
 
+    // Fix all red SEO checklist issues before saving to draft
+    const processed = await processAIOutput({
+      title: payload.title,
+      content: payload.content,
+      keywords: payload.tags || [],
+      category: payload.category,
+      length: 'long',
+      seoTitle: payload.seoTitle,
+      seoDescription: payload.seoDescription,
+    });
+    payload.content = processed.content;
+    payload.tags = processed.tags;
+    payload.seoTitle = processed.seoTitle;
+    payload.seoDescription = processed.seoDescription;
+
     const baseSlug = makeSlug(req.body.slug || payload.title);
     payload.slug = await ensureUniqueSlug(baseSlug);
     payload.publishedAt = payload.status === 'published' ? new Date() : null;
@@ -296,6 +312,21 @@ async function updatePost(req, res, next) {
     if (validationError) {
       return res.status(400).json({ message: validationError });
     }
+
+    // Fix all red SEO checklist issues before saving to draft
+    const processed = await processAIOutput({
+      title: payload.title,
+      content: payload.content,
+      keywords: payload.tags || [],
+      category: payload.category,
+      length: 'long',
+      seoTitle: payload.seoTitle,
+      seoDescription: payload.seoDescription,
+    });
+    payload.content = processed.content;
+    payload.tags = processed.tags;
+    payload.seoTitle = processed.seoTitle;
+    payload.seoDescription = processed.seoDescription;
 
     const baseSlug = makeSlug(req.body.slug || payload.title);
     payload.slug = await ensureUniqueSlug(baseSlug, existing._id);

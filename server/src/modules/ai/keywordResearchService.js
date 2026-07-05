@@ -312,7 +312,7 @@ Do not include any thinking, markdown, backticks, or other text outside the JSON
   // 1. Try Gemini Primary Key
   if (primaryKey) {
     try {
-      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${primaryKey}`, {
+      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${primaryKey}`, {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.2,
@@ -333,7 +333,7 @@ Do not include any thinking, markdown, backticks, or other text outside the JSON
   if (!text && fallbackKey && fallbackKey !== primaryKey) {
     try {
       console.log('[SEO] Trying fallback Gemini key...');
-      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${fallbackKey}`, {
+      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${fallbackKey}`, {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.2,

@@ -830,7 +830,7 @@ Structure: ${sectionInstr}. Include 1 data table in body, and FAQ with 3 questio
 
 Return ONLY valid JSON with fields: title (the creative, professional copywriting-optimized title), category, permalink (digitalhomeblog.in/{category-url-slug}/{slug}), content (string with ## headings on separate lines, NEVER inside lists/tables), slug (no stop words), keywords (array), summary (140-160 chars Hinglish with CTA), imageTag, imagetag, seoTitle, seoDescription. content MUST be a STRING. Natural Hinglish. Dense 3-4 line paragraphs.`;
 
-  const aiModel = model || 'gemini-flash-latest';
+  const aiModel = model || 'gemini-2.5-pro';
   const isOpenAI = aiModel.startsWith('gpt-');
   const isGemini = aiModel.startsWith('gemini-');
   const isGroq = GROQ_MODELS.includes(aiModel);
@@ -860,31 +860,31 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
   };
 
   if (isGemini) {
-    const primaryKey = GEMINI_API_KEY;
-    const fallbackKey = GEMINI_API_KEY_2;
-    if (!primaryKey && !fallbackKey) {
+    const keys = [
+      process.env.GEMINI_API_KEY,
+      process.env.GEMINI_API_KEY_2,
+      process.env.GEMINI_API_KEY_3,
+      process.env.GEMINI_API_KEY_4,
+      process.env.GEMINI_API_KEY_5,
+      process.env.GEMINI_API_KEY_6,
+      process.env.GEMINI_API_KEY_7
+    ].filter(Boolean);
+
+    if (keys.length === 0) {
       throw new Error('No Gemini API key set in .env');
     }
-    try {
-      const geminiResponse = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${primaryKey}`, {
-        contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 8192,
-          topP: 0.9,
-          responseMimeType: "application/json",
-          responseSchema: geminiResponseSchema
-        }
-      }, {
-        timeout: modelTimeout,
-        headers: { 'Content-Type': 'application/json' }
-      });
-      text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    } catch (geminiErr) {
-      console.warn(`[AI Controller] Primary Gemini call failed (Error: ${geminiErr.message}). Trying fallback key...`);
-      if (fallbackKey && fallbackKey !== primaryKey) {
+
+    let lastGeminiErr = null;
+    for (const key of keys) {
+      const modelsToTry = [aiModel];
+      if (aiModel === 'gemini-2.5-pro') {
+        modelsToTry.push('gemini-2.5-flash');
+      }
+
+      for (const currentModel of modelsToTry) {
         try {
-          const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/${aiModel}:generateContent?key=${fallbackKey}`, {
+          console.log(`[AI Controller] Trying Gemini model ${currentModel} with key...`);
+          const geminiResponse = await axios.post(`${GEMINI_BASE_URL}/${currentModel}:generateContent?key=${key}`, {
             contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
             generationConfig: {
               temperature: 0.7,
@@ -897,13 +897,53 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
             timeout: modelTimeout,
             headers: { 'Content-Type': 'application/json' }
           });
-          text = geminiFallback.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        } catch (fallbackErr) {
-          console.warn(`[AI Controller] Fallback Gemini call failed (Error: ${fallbackErr.message}). Trying Groq...`);
-          if (GROQ_API_KEY) {
+          text = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (text) {
+            lastGeminiErr = null;
+            break; // Success!
+          }
+        } catch (geminiErr) {
+          const isRateLimit = geminiErr.response && geminiErr.response.status === 429;
+          console.warn(`[AI Controller] Gemini model ${currentModel} failed (Error: ${geminiErr.message}).`);
+          lastGeminiErr = geminiErr;
+          if (isRateLimit && currentModel === 'gemini-2.5-pro') {
+            console.log(`[AI Controller] Rate limit (429) hit on Pro. Retrying with Flash model...`);
+            continue; // Retry with gemini-2.5-flash for same key!
+          }
+        }
+      }
+
+      if (text) {
+        break; // Break the keys loop since we have the response!
+      }
+    }
+
+    if (lastGeminiErr) {
+      console.warn(`[AI Controller] All Gemini keys failed. Trying Groq...`);
+      if (GROQ_API_KEY) {
+        try {
+          const groqFallback = await axios.post(GROQ_CHAT_URL, {
+            model: 'llama-3.3-70b-versatile',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: tokenBudget,
+            top_p: 0.9,
+            response_format: { type: "json_object" }
+          }, {
+            headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+            timeout: 60000
+          });
+          text = groqFallback.data?.choices?.[0]?.message?.content || '';
+        } catch (groqErr) {
+          console.error('[AI Controller] Groq fallback failed:', groqErr.message);
+          if (OPENAI_API_KEY) {
             try {
-              const groqFallback = await axios.post(GROQ_CHAT_URL, {
-                model: 'llama-3.3-70b-versatile',
+              console.log('[AI Controller] Trying OpenAI fallback...');
+              const openaiResponse = await axios.post(OPENAI_CHAT_URL, {
+                model: 'gpt-4o-mini',
                 messages: [
                   { role: 'system', content: systemPrompt },
                   { role: 'user', content: userPrompt }
@@ -913,44 +953,42 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
                 top_p: 0.9,
                 response_format: { type: "json_object" }
               }, {
-                headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+                headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
                 timeout: 60000
               });
-              text = groqFallback.data?.choices?.[0]?.message?.content || '';
-            } catch (groqErr) {
-              console.error('[AI Controller] Groq fallback error details:', groqErr.message, groqErr.response?.status, groqErr.response?.data);
-              throw fallbackErr;
+              text = openaiResponse.data?.choices?.[0]?.message?.content || '';
+            } catch (openaiErr) {
+              console.error('[AI Controller] OpenAI fallback failed:', openaiErr.message);
+              throw lastGeminiErr;
             }
           } else {
-            throw fallbackErr;
+            throw lastGeminiErr;
           }
+        }
+      } else if (OPENAI_API_KEY) {
+        try {
+          console.log('[AI Controller] Trying OpenAI fallback...');
+          const openaiResponse = await axios.post(OPENAI_CHAT_URL, {
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: tokenBudget,
+            top_p: 0.9,
+            response_format: { type: "json_object" }
+          }, {
+            headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+            timeout: 60000
+          });
+          text = openaiResponse.data?.choices?.[0]?.message?.content || '';
+        } catch (openaiErr) {
+          console.error('[AI Controller] OpenAI fallback failed:', openaiErr.message);
+          throw lastGeminiErr;
         }
       } else {
-        console.warn(`[AI Controller] No fallback Gemini key set. Trying Groq...`);
-        if (GROQ_API_KEY) {
-          try {
-            const groqFallback = await axios.post(GROQ_CHAT_URL, {
-              model: 'llama-3.3-70b-versatile',
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt }
-              ],
-              temperature: 0.7,
-              max_tokens: tokenBudget,
-              top_p: 0.9,
-              response_format: { type: "json_object" }
-            }, {
-              headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-              timeout: 60000
-            });
-            text = groqFallback.data?.choices?.[0]?.message?.content || '';
-          } catch (groqErr) {
-            console.error('[AI Controller] Groq fallback error details:', groqErr.message, groqErr.response?.status, groqErr.response?.data);
-            throw geminiErr;
-          }
-        } else {
-          throw geminiErr;
-        }
+        throw lastGeminiErr;
       }
     }
   } else if (isGroq) {
@@ -976,7 +1014,7 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
     } catch (groqErr) {
       if (GEMINI_API_KEY) {
         try {
-          const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+          const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/gemini-2.5-pro:generateContent?key=${GEMINI_API_KEY}`, {
             contents: [{ parts: [{ text: systemPrompt + '\n\n' + userPrompt }] }],
             generationConfig: { temperature: 0.7, maxOutputTokens: 8192, topP: 0.9, responseMimeType: "application/json", responseSchema: geminiResponseSchema }
           }, { timeout: 60000, headers: { 'Content-Type': 'application/json' } });
@@ -1261,7 +1299,7 @@ Return ONLY the description prompt in plain text (maximum 45 words, no quotes, n
   let lastErr = null;
   for (const key of keys) {
     try {
-      const response = await axios.post(`${GEMINI_BASE_URL}/gemini-flash-latest:generateContent?key=${key}`, {
+      const response = await axios.post(`${GEMINI_BASE_URL}/gemini-2.5-pro:generateContent?key=${key}`, {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.7,

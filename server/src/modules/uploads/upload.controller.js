@@ -93,8 +93,12 @@ async function generateAiThumbnail(req, res) {
       prompt = getPhotographicFallbackPrompt(title);
     }
 
-    // Force realistic photographic style
-    const styledPrompt = `${prompt}, highly realistic photography style, DSLR camera, professional natural lighting, 4k resolution, stock photo look, no cartoon, no drawings`;
+    const mainPart = title.split(/[:|]/)[0].trim();
+    const words = mainPart.split(/\s+/);
+    const overlayText = words.length > 5 ? words.slice(0, 4).join(' ').toUpperCase() : mainPart.toUpperCase();
+
+    // Force realistic photographic style with bold text overlay
+    const styledPrompt = `${prompt}, highly realistic photography style, DSLR camera, professional natural lighting, 4k resolution, stock photo look, no cartoon, no drawings, with a bold high-contrast text overlay that reads "${overlayText}" clearly visible on the image`;
 
     // Generate image using Pollinations AI
     const seed = Math.floor(Math.random() * 1000000);
