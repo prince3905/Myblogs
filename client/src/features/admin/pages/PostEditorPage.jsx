@@ -729,6 +729,39 @@ export default function PostEditorPage() {
                   >
                     ✨ Magic
                   </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                    onClick={async () => {
+                      if (!form.content?.trim()) {
+                        addToast('Pehle content likhein tabhi images fix hongi!', 'error');
+                        return;
+                      }
+                      addToast('Images SEO fix ho rahi hai... 🔍', 'info');
+                      try {
+                        const res = await request('/api/admin/fix-images-seo', {
+                          method: 'POST',
+                          body: JSON.stringify({ content: form.content, title: form.title })
+                        });
+                        if (res?.success) {
+                          updateField('content', res.content);
+                          if (res.fixedCount > 0) {
+                            addToast(`Success! Total ${res.fixedCount} images ka alt text fix kiya! 🎉`, 'success');
+                          } else {
+                            addToast('Sari images already optimized hain! No changes needed. ✅', 'success');
+                          }
+                        } else {
+                          addToast('Image SEO fix nahi ho paayi', 'error');
+                        }
+                      } catch (err) {
+                        addToast(err?.message || 'Server error', 'error');
+                      }
+                    }}
+                    sx={{ minWidth: 90, height: 28, fontSize: '0.75rem', borderRadius: 2 }}
+                  >
+                    🖼️ Image SEO
+                  </Button>
                 </Box>
                 <ImageUpload value={form.featuredImage} onChange={(val) => updateField('featuredImage', val)} />
               </Box>

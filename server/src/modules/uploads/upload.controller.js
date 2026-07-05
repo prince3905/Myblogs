@@ -80,4 +80,51 @@ async function generateAiThumbnail(req, res) {
   }
 }
 
-module.exports = { uploadImage, generateAiThumbnail };
+const cheerio = require('cheerio');
+
+async function fixImagesSeoRoute(req, res) {
+  try {
+    const { content, title } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ success: false, message: 'Title is required for SEO generation' });
+    }
+
+    if (!content) {
+      return res.json({ success: true, content: '', fixedCount: 0 });
+    }
+
+    // Load without html/body wrappers
+    const $ = cheerio.load(content, null, false);
+    const imgs = $('img');
+    let fixedCount = 0;
+
+    imgs.each((idx, elem) => {
+      const $img = $(elem);
+      let alt = $img.attr('alt');
+
+      // Check if alt is missing, empty, or generic
+      const isGeneric = !alt || !alt.trim() || ['image', 'img', 'photo', 'placeholder', 'pic', 'thumbnail', 'undefined'].includes(alt.toLowerCase().trim());
+
+      if (isGeneric) {
+        const cleanTitle = title.trim().replace(/<\/?[^>]+>/g, '');
+        let optimizedAlt = cleanTitle;
+        if (idx > 0) {
+          optimizedAlt += ` details ${idx + 1}`;
+        }
+        $img.attr('alt', optimizedAlt);
+        fixedCount++;
+      }
+    });
+
+    res.json({
+      success: true,
+      content: $.html(),
+      fixedCount
+    });
+  } catch (error) {
+    console.error('[Image SEO] Fix error:', error.message);
+    res.status(500).json({ success: false, message: error.message || 'Failed to fix image SEO' });
+  }
+}
+
+module.exports = { uploadImage, generateAiThumbnail, fixImagesSeoRoute };
