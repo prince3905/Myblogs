@@ -806,6 +806,27 @@ async function scrapeFeeds() {
   }
 
   console.log(`[LiveAlert Scraper] Completed! Saved/updated ${totalSaved} raw alerts.`);
+
+  // Autopilot Trigger: Find all active alerts and automatically draft blog posts for them in the background
+  try {
+    const activeAlerts = await LiveAlert.find({ status: 'active' });
+    if (activeAlerts.length > 0) {
+      console.log(`[Autopilot] Found ${activeAlerts.length} active alerts to auto-draft!`);
+      const { draftAlertToPostDoc } = require('./liveAlert.controller');
+      
+      for (const alert of activeAlerts) {
+        try {
+          console.log(`[Autopilot] Automatically drafting post for alert: "${alert.title}"`);
+          await draftAlertToPostDoc(alert);
+        } catch (draftErr) {
+          console.error(`[Autopilot] Failed to auto-draft alert "${alert.title}":`, draftErr.message);
+        }
+      }
+    }
+  } catch (autoErr) {
+    console.error(`[Autopilot] Main auto-draft trigger failed:`, autoErr.message);
+  }
+
   return totalSaved;
 }
 

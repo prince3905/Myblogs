@@ -164,4 +164,4 @@ async function fixImagesSeoRoute(req, res) {
   }
 }
 
-module.exports = { uploadImage, generateAiThumbnail, fixImagesSeoRoute };
+module.exports = { uploadImage, generateAiThumbnail, fixImagesSeoRoute, getPhotographicFallbackPrompt };

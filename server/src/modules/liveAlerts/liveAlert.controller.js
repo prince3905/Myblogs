@@ -1,8 +1,15 @@
 const LiveAlert = require('./liveAlert.model');
 const BlogPost = require('../posts/post.model');
-const { scrapeFeeds } = require('../ai/topicDiscoveryService'); // Fallback if cron scraping is loaded elsewhere, but we'll import from cron.js
+const { scrapeFeeds } = require('../ai/topicDiscoveryService');
 const cronScraper = require('./liveAlert.cron');
-const { generateBlogContentCore } = require('../ai/ai.controller');
+const { generateBlogContentCore, generateImagePrompt } = require('../ai/ai.controller');
+const { getPhotographicFallbackPrompt } = require('../uploads/upload.controller');
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  cloud_name: 'drkm1wo9o',
+  api_key: '479412262566892',
+  api_secret: '_J0pP4VbLy-TL5vAVoRpaFjJFxg',
+});
 const axios = require('axios');
 
 // Pexels integration helper to auto-populate featuredImage (Thumbnail)
@@ -119,115 +126,104 @@ function extractLinksFromText(text) {
   return parsedLinks;
 }
 
-// Create a draft post from alert metadata
-async function draftPostFromAlert(req, res) {
-  try {
-    const { id } = req.params;
-    const alert = await LiveAlert.findById(id);
-    if (!alert) {
-      return res.status(404).json({ success: false, message: 'Alert not found' });
-    }
+// Core service to draft a blog post from an alert document
+async function draftAlertToPostDoc(alert) {
+  console.log(`[LiveAlert Sourcing] Drafting blog post from alert: "${alert.title}"`);
 
-    // Note: We allow re-drafting the same alert if the user wants to regenerate or recreate it.
+  // Dynamic professional title for the blog post
+  const cleanTitle = alert.title
+    .replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2') // e.g. "Answer2026" -> "Answer 2026"
+    .replace(/\b\w/g, c => c.toUpperCase());
 
-    console.log(`[LiveAlert Sourcing] Drafting blog post from alert: "${alert.title}"`);
+  // Construct the context/command parameters for Gemini Flash to generate a 1200+ word post
+  const resolvedUrl = alert.officialUrl || '';
+  const resolvedPdf = alert.officialPdfUrl || '';
+  const resolvedApply = alert.officialApplyUrl || '';
+  const detailsTextContext = alert.detailsText || '';
 
-    // Dynamic professional title for the blog post
-    const cleanTitle = alert.title
-      .replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2') // e.g. "Answer2026" -> "Answer 2026"
-      .replace(/\b\w/g, c => c.toUpperCase());
-    const generatedTitle = `${alert.boardName} Recruitment Notification Update`;
+  // Extract all links programmatically from scraped factsheet details
+  const detailsLinks = extractLinksFromText(detailsTextContext);
 
-    // Construct the context/command parameters for Gemini Flash to generate a 1200+ word optimized post
-    const resolvedUrl = alert.officialUrl || '';
-    const resolvedPdf = alert.officialPdfUrl || '';
-    const resolvedApply = alert.officialApplyUrl || '';
-    const detailsTextContext = alert.detailsText || '';
+  // Build unique URL map
+  const allLinksMap = new Map();
 
-    // Extract all links programmatically from scraped factsheet details
-    const detailsLinks = extractLinksFromText(detailsTextContext);
+  // Prioritize explicitly stored URL fields
+  if (resolvedApply) allLinksMap.set('apply online', resolvedApply);
+  if (resolvedPdf) allLinksMap.set('download notification', resolvedPdf);
+  if (resolvedUrl) allLinksMap.set('official website', resolvedUrl);
 
-    // Build unique URL map
-    const allLinksMap = new Map();
-
-    // Prioritize explicitly stored URL fields
-    if (resolvedApply) allLinksMap.set('apply online', resolvedApply);
-    if (resolvedPdf) allLinksMap.set('download notification', resolvedPdf);
-    if (resolvedUrl) allLinksMap.set('official website', resolvedUrl);
-
-    // Merge in any other parsed links from the text details
-    detailsLinks.forEach(link => {
-      const nameLower = link.name.toLowerCase();
-      if (nameLower.includes('apply')) {
-        allLinksMap.set('apply online', link.url);
-      } else if (nameLower.includes('notification') || nameLower.includes('pdf') || nameLower.includes('advertisement') || nameLower.includes('notice')) {
-        // Skip utility tools links so they don't overwrite download notification link
-        if (link.url !== '/tools' && !nameLower.includes('utility tools') && !nameLower.includes('resizer')) {
-          allLinksMap.set('download notification', link.url);
-        } else {
-          allLinksMap.set('student utility tools', '/tools');
-        }
-      } else if (nameLower.includes('website') || nameLower.includes('homepage') || nameLower.includes('official site')) {
-        allLinksMap.set('official website', link.url);
+  // Merge in any other parsed links from the text details
+  detailsLinks.forEach(link => {
+    const nameLower = link.name.toLowerCase();
+    if (nameLower.includes('apply')) {
+      allLinksMap.set('apply online', link.url);
+    } else if (nameLower.includes('notification') || nameLower.includes('pdf') || nameLower.includes('advertisement') || nameLower.includes('notice')) {
+      // Skip utility tools links so they don't overwrite download notification link
+      if (link.url !== '/tools' && !nameLower.includes('utility tools') && !nameLower.includes('resizer')) {
+        allLinksMap.set('download notification', link.url);
       } else {
-        // Any other unique link (e.g. Syllabus, Answer Key, Result, Exam City, etc.)
-        allLinksMap.set(link.name, link.url);
+        allLinksMap.set('student utility tools', '/tools');
       }
-    });
-
-    // Create the final beautiful HTML buttons block
-    const buttonHtmls = [];
-    allLinksMap.forEach((url, name) => {
-      let btnClass = 'btn-apply';
-      let label = name;
-      const lower = name.toLowerCase();
-
-      if (lower.includes('apply')) {
-        btnClass = 'btn-apply';
-        label = `Apply Online (यहाँ क्लिक करें)`;
-      } else if (lower.includes('notification') || lower.includes('pdf') || lower.includes('advertisement') || lower.includes('notice')) {
-        btnClass = 'btn-notification';
-        label = `Download Official Notification (देखें अभी)`;
-      } else if (lower.includes('website') || lower.includes('homepage') || lower.includes('official site')) {
-        btnClass = 'btn-website';
-        label = `Official Website (विजिट करें)`;
-      } else if (lower.includes('syllabus')) {
-        btnClass = 'btn-notification';
-        label = `Download Syllabus (पाठ्यक्रम डाउनलोड करें)`;
-      } else if (lower.includes('tools')) {
-        btnClass = 'btn-website';
-        label = `Photo & Sign Resizer Tools (यहाँ क्लिक करें)`;
-      } else {
-        btnClass = 'btn-website';
-        label = `${name} (यहाँ देखें)`;
-      }
-      buttonHtmls.push(`<a href="${url}" class="btn-link-action ${btnClass}" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">${label}</a>`);
-    });
-
-    // Enforce default fallback search buttons if the main 3 fields were not in details
-    if (!allLinksMap.has('apply online')) {
-      const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' apply online');
-      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Apply Online (यहाँ क्लिक करें)</a>`);
+    } else if (nameLower.includes('website') || nameLower.includes('homepage') || nameLower.includes('official site')) {
+      allLinksMap.set('official website', link.url);
+    } else {
+      allLinksMap.set(link.name, link.url);
     }
-    if (!allLinksMap.has('download notification')) {
-      const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' recruitment notification pdf');
-      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Download Official Notification (देखें अभी)</a>`);
-    }
-    if (!allLinksMap.has('official website')) {
-      const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' official website');
-      buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Official Website (विजिट करें)</a>`);
-    }
+  });
 
-    const buttonHtmlBlock = `<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>`;
+  // Create the final beautiful HTML buttons block
+  const buttonHtmls = [];
+  allLinksMap.forEach((url, name) => {
+    let btnClass = 'btn-apply';
+    let label = name;
+    const lower = name.toLowerCase();
 
-    const aiParams = {
-      title: cleanTitle,
-      model: 'gemini-flash-latest',
-      length: 'long', // Target 1800 - 2500 words
-      tone: 'informative',
-      language: 'hinglish',
-      category: 'Sarkari Jobs & Exams',
-      command: `Below is the official notification details block containing the EXACT facts, vacancy details, fees, dates, age limits, and eligibility criteria for this job post. You MUST use these exact details to build the post. Do NOT hallucinate, change, or omit seat numbers, districts, fees, age limits, or eligibility criteria. All lists and values from the details block below must be printed exactly same-to-same.
+    if (lower.includes('apply')) {
+      btnClass = 'btn-apply';
+      label = `Apply Online (यहाँ क्लिक करें)`;
+    } else if (lower.includes('notification') || lower.includes('pdf') || lower.includes('advertisement') || lower.includes('notice')) {
+      btnClass = 'btn-notification';
+      label = `Download Official Notification (देखें अभी)`;
+    } else if (lower.includes('website') || lower.includes('homepage') || lower.includes('official site')) {
+      btnClass = 'btn-website';
+      label = `Official Website (विजिट करें)`;
+    } else if (lower.includes('syllabus')) {
+      btnClass = 'btn-notification';
+      label = `Download Syllabus (पाठ्यक्रम डाउनलोड करें)`;
+    } else if (lower.includes('tools')) {
+      btnClass = 'btn-website';
+      label = `Photo & Sign Resizer Tools (यहाँ क्लिक करें)`;
+    } else {
+      btnClass = 'btn-website';
+      label = `${name} (यहाँ देखें)`;
+    }
+    buttonHtmls.push(`<a href="${url}" class="btn-link-action ${btnClass}" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">${label}</a>`);
+  });
+
+  // Enforce default fallback search buttons if the main 3 fields were not in details
+  if (!allLinksMap.has('apply online')) {
+    const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' apply online');
+    buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Apply Online (यहाँ क्लिक करें)</a>`);
+  }
+  if (!allLinksMap.has('download notification')) {
+    const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' recruitment notification pdf');
+    buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Download Official Notification (देखें अभी)</a>`);
+  }
+  if (!allLinksMap.has('official website')) {
+    const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' official website');
+    buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Official Website (विजिट करें)</a>`);
+  }
+
+  const buttonHtmlBlock = `<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>`;
+
+  const aiParams = {
+    title: cleanTitle,
+    model: 'gemini-flash-latest',
+    length: 'long',
+    tone: 'informative',
+    language: 'hinglish',
+    category: 'Sarkari Jobs & Exams',
+    command: `Below is the official notification details block containing the EXACT facts, vacancy details, fees, dates, age limits, and eligibility criteria for this job post. You MUST use these exact details to build the post. Do NOT hallucinate, change, or omit seat numbers, districts, fees, age limits, or eligibility criteria. All lists and values from the details block below must be printed exactly same-to-same.
 
 OFFICIAL NOTIFICATION DETAILS:
 """
@@ -256,95 +252,125 @@ ${buttonHtmlBlock}
 - You MUST naturally link to other pages of our portal inside the post content body paragraphs (e.g. using anchor text like "Digital Home Blog", "Government Job Vacancy & Result 2026", "latest government jobs" pointing to root URL "/").
 - The FAQ section heading MUST be exactly "## अक्सर पूछे जाने वाले सवाल (FAQ)" so it is detected correctly.
 - Under the FAQ section, provide exactly 3 questions formatted as H3. Each question must be in Hinglish using Latin query words like "Kaise", "Kab", "Kya", "How", or "What" (e.g., "### Question: UPTGT 2026 Apply Kaise Karein?"). Each answer must be immediately below it and strictly under 45 words.`
-    };
+  };
 
-    // Trigger backend AI post generator
-    const generatedData = await generateBlogContentCore(aiParams);
+  // Trigger backend AI post generator
+  const generatedData = await generateBlogContentCore(aiParams);
 
-    let finalContent = generatedData.content || '';
+  let finalContent = generatedData.content || '';
 
-    // Standardize & inject important links section programmatically
-    const linksHeaderRegex = /<h[23]>(?:महत्वपूर्ण लिंक्स|Important Links)<\/h[23]>/i;
-    const hasLinksSection = linksHeaderRegex.test(finalContent);
-    const standardLinksBlock = `\n<h2>महत्वपूर्ण लिंक्स</h2>\n${buttonHtmlBlock}\n`;
+  // Standardize & inject important links section programmatically
+  const linksHeaderRegex = /<h[23]>(?:महत्वपूर्ण लिंक्स|Important Links)<\/h[23]>/i;
+  const hasLinksSection = linksHeaderRegex.test(finalContent);
+  const standardLinksBlock = `\n<h2>महत्वपूर्ण लिंक्स</h2>\n${buttonHtmlBlock}\n`;
 
-    if (hasLinksSection) {
-      // Replace the existing links section to ensure standard verified buttons are used
-      const match = finalContent.match(linksHeaderRegex);
-      const startIndex = match.index;
-      
-      const nextHeadingRegex = /<h[23]>/gi;
-      nextHeadingRegex.lastIndex = startIndex + match[0].length;
-      const nextHeadingMatch = nextHeadingRegex.exec(finalContent);
-      
-      if (nextHeadingMatch) {
-        finalContent = finalContent.slice(0, startIndex) + standardLinksBlock + finalContent.slice(nextHeadingMatch.index);
-      } else {
-        finalContent = finalContent.slice(0, startIndex) + standardLinksBlock;
-      }
+  if (hasLinksSection) {
+    const match = finalContent.match(linksHeaderRegex);
+    const startIndex = match.index;
+    const nextHeadingRegex = /<h[23]>/gi;
+    nextHeadingRegex.lastIndex = startIndex + match[0].length;
+    const nextHeadingMatch = nextHeadingRegex.exec(finalContent);
+    if (nextHeadingMatch) {
+      finalContent = finalContent.slice(0, startIndex) + standardLinksBlock + finalContent.slice(nextHeadingMatch.index);
     } else {
-      // Inject before FAQ section
-      const faqHeaderRegex = /<h[23]>(?:अक्सर पूछे जाने वाले सवाल \(FAQ\)|Frequently Asked Questions)<\/h[23]>/i;
-      const faqMatch = finalContent.match(faqHeaderRegex);
-      
-      if (faqMatch) {
-        finalContent = finalContent.slice(0, faqMatch.index) + standardLinksBlock + '\n' + finalContent.slice(faqMatch.index);
+      finalContent = finalContent.slice(0, startIndex) + standardLinksBlock;
+    }
+  } else {
+    const faqHeaderRegex = /<h[23]>(?:अक्सर पूछे जाने वाले सवाल \(FAQ\)|Frequently Asked Questions)<\/h[23]>/i;
+    const faqMatch = finalContent.match(faqHeaderRegex);
+    if (faqMatch) {
+      finalContent = finalContent.slice(0, faqMatch.index) + standardLinksBlock + '\n' + finalContent.slice(faqMatch.index);
+    } else {
+      const takeawaysRegex = /<h[23]>(?:Key Takeaways|महत्वपूर्ण निष्कर्ष)<\/h[23]>/i;
+      const takeawaysMatch = finalContent.match(takeawaysRegex);
+      if (takeawaysMatch) {
+        finalContent = finalContent.slice(0, takeawaysMatch.index) + standardLinksBlock + '\n' + finalContent.slice(takeawaysMatch.index);
       } else {
-        // Inject before Key Takeaways
-        const takeawaysRegex = /<h[23]>(?:Key Takeaways|महत्वपूर्ण निष्कर्ष)<\/h[23]>/i;
-        const takeawaysMatch = finalContent.match(takeawaysRegex);
-        if (takeawaysMatch) {
-          finalContent = finalContent.slice(0, takeawaysMatch.index) + standardLinksBlock + '\n' + finalContent.slice(takeawaysMatch.index);
+        const brandIndex = finalContent.indexOf("<div class='brand-authority-block'");
+        if (brandIndex !== -1) {
+          finalContent = finalContent.slice(0, brandIndex) + standardLinksBlock + '\n' + finalContent.slice(brandIndex);
         } else {
-          // Inject before brand block
-          const brandIndex = finalContent.indexOf("<div class='brand-authority-block'");
-          if (brandIndex !== -1) {
-            finalContent = finalContent.slice(0, brandIndex) + standardLinksBlock + '\n' + finalContent.slice(brandIndex);
-          } else {
-            finalContent += '\n' + standardLinksBlock;
-          }
+          finalContent += '\n' + standardLinksBlock;
         }
       }
     }
+  }
 
-    // Auto fetch a relevant featured image based on Gemini's generated tags
-    const featuredImage = await autoFetchFeaturedImage(generatedData.imageTag || generatedData.imagetag || 'career');
+  // Auto-generate dynamic photographic featured image using Pollinations and Cloudinary
+  let featuredImage = '';
+  try {
+    console.log(`[AI Autopilot] Generating dynamic AI thumbnail for: "${generatedData.title}"`);
+    let imgPrompt = '';
+    try {
+      imgPrompt = await generateImagePrompt(generatedData.title);
+    } catch (promptErr) {
+      imgPrompt = getPhotographicFallbackPrompt(generatedData.title);
+    }
+    const styledPrompt = `${imgPrompt}, highly realistic photography style, DSLR camera, professional natural lighting, 4k resolution, stock photo look, no cartoon, no drawings`;
+    const seed = Math.floor(Math.random() * 1000000);
+    const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(styledPrompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
 
-    // Create and save Mongoose BlogPost document
-    const newPost = new BlogPost({
-      title: generatedData.title,
-      slug: generatedData.slug,
-      excerpt: generatedData.summary.slice(0, 320),
-      content: finalContent,
-      featuredImage: featuredImage,
-      category: 'Sarkari Jobs & Exams',
-      tags: generatedData.keywords || [],
-      status: 'draft',
-      seoTitle: generatedData.seoTitle,
-      seoDescription: generatedData.seoDescription,
-      seoKeywords: generatedData.keywords || [],
-      canonicalUrl: generatedData.permalink,
-      author: 'Harry Prince'
+    console.log(`[AI Autopilot] Uploading generated thumbnail to Cloudinary: ${pollinationsUrl}`);
+    const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
+      folder: 'myblogs',
+      transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
     });
+    featuredImage = uploadResult.secure_url;
+    console.log(`[AI Autopilot] Dynamic thumbnail saved successfully: ${featuredImage}`);
+  } catch (imgErr) {
+    console.error('[AI Autopilot] Dynamic thumbnail generation failed, using fallback Pexels image:', imgErr.message);
+    featuredImage = await autoFetchFeaturedImage(generatedData.imageTag || generatedData.imagetag || 'career');
+  }
 
-    // Remove any existing draft with the same slug to prevent unique slug index violations
-    await BlogPost.deleteMany({ slug: generatedData.slug });
+  // Create and save Mongoose BlogPost document
+  const newPost = new BlogPost({
+    title: generatedData.title,
+    slug: generatedData.slug,
+    excerpt: generatedData.summary.slice(0, 320),
+    content: finalContent,
+    featuredImage: featuredImage,
+    category: 'Sarkari Jobs & Exams',
+    tags: generatedData.keywords || [],
+    status: 'draft',
+    seoTitle: generatedData.seoTitle,
+    seoDescription: generatedData.seoDescription,
+    seoKeywords: generatedData.keywords || [],
+    canonicalUrl: generatedData.permalink,
+    author: 'Harry Prince'
+  });
 
-    await newPost.save();
+  // Remove any existing draft with the same slug to prevent unique slug index violations
+  await BlogPost.deleteMany({ slug: generatedData.slug });
+  await newPost.save();
 
-    // Mark the alert as drafted
-    alert.status = 'drafted';
-    await alert.save();
+  // Mark the alert as drafted
+  alert.status = 'drafted';
+  await alert.save();
+
+  console.log(`[LiveAlert Sourcing] Autopilot successfully created blog post: "${generatedData.title}" [ID: ${newPost._id}]`);
+  return newPost._id;
+}
+
+// Create a draft post from alert metadata (Route Handler)
+async function draftPostFromAlert(req, res) {
+  try {
+    const { id } = req.params;
+    const alert = await LiveAlert.findById(id);
+    if (!alert) {
+      return res.status(404).json({ success: false, message: 'Alert not found' });
+    }
+
+    const postId = await draftAlertToPostDoc(alert);
 
     res.json({
       success: true,
       message: 'Draft post successfully created in background!',
-      postId: newPost._id
+      postId
     });
   } catch (err) {
-    console.error('[LiveAlert Sourcing] Drafting failed:', err.message);
+    console.error('[LiveAlert Sourcing] Route drafting failed:', err.message);
     res.status(500).json({ success: false, message: err.message || 'Failed to auto-write post' });
   }
 }
 
-module.exports = { getAlerts, getAlertById, triggerScrape, draftPostFromAlert };
+module.exports = { getAlerts, getAlertById, triggerScrape, draftPostFromAlert, draftAlertToPostDoc };
