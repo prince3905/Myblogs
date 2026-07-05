@@ -44,6 +44,8 @@ export default function PostEditorPage() {
   const [seoDrawerOpen, setSeoDrawerOpen] = useState(false);
   const [kwData, setKwData] = useState(null);
   const [serpData, setSerpData] = useState(null);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [ytLoading, setYtLoading] = useState(false);
 
   const seoAudit = useMemo(() => {
     return calculateSeoScore(form, kwData);
@@ -187,6 +189,57 @@ export default function PostEditorPage() {
       clearInterval(interval);
       setAiLoading(false);
       setAiStep('');
+      setAiProgress(0);
+    }
+  }
+
+  async function handleConvertYoutube() {
+    if (!youtubeUrl.trim()) return;
+    setYtLoading(true);
+    setError('');
+    
+    // Simulate loading progress steps
+    const interval = setInterval(() => {
+      setAiProgress(prev => Math.min(prev + 5, 95));
+    }, 1500);
+
+    try {
+      addToast('YouTube video transcribing starts...', 'info');
+      const data = await request('/api/ai/convert-youtube', {
+        method: 'POST',
+        body: JSON.stringify({ videoUrl: youtubeUrl })
+      });
+      
+      const generatedTitle = data.title || 'YouTube Video Post';
+      const plainText = stripHtml(data.content || '');
+
+      updateField('title', generatedTitle);
+      updateField('content', data.content || '');
+      updateField('slug', data.slug || makeSlug(generatedTitle));
+      updateField('excerpt', data.summary || plainText.slice(0, 250));
+      updateField('seoTitle', data.seoTitle || generatedTitle.slice(0, 70));
+      updateField('seoDescription', data.seoDescription || data.summary || plainText.slice(0, 155));
+      updateField('category', data.category || 'Technology');
+      updateField('videoUrl', data.videoUrl || youtubeUrl);
+      
+      if (data.featuredImage) {
+        updateField('featuredImage', data.featuredImage);
+      }
+
+      if (data.keywords?.length) {
+        const kw = data.keywords.join(', ');
+        updateField('tags', kw);
+        updateField('seoKeywords', kw);
+      }
+      
+      setYoutubeUrl('');
+      addToast('YouTube video converted successfully to Hinglish Blog Post! 🎥🎉', 'success');
+    } catch (err) {
+      setError(err.message || 'YouTube conversion failed');
+      addToast(err.message || 'YouTube conversion failed', 'error');
+    } finally {
+      clearInterval(interval);
+      setYtLoading(false);
       setAiProgress(0);
     }
   }
@@ -492,6 +545,67 @@ export default function PostEditorPage() {
 
       <Box sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 4 } }}>
         {error ? <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setError('')}>{error}</Alert> : null}
+
+        {!isEdit && (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              mb: 4,
+              borderRadius: 3,
+              border: '1px dashed #10B981',
+              bgcolor: '#F0FDF4',
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ color: '#065F46', fontWeight: 700, mb: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+              🎥 Convert YouTube Video to Hinglish Blog Post
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#15803D', mb: 2 }}>
+              Paste a YouTube video URL to automatically fetch its transcripts, generate a complete long-form SEO post, and set the default featured thumbnail.
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                size="small"
+                variant="outlined"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                disabled={ytLoading}
+                sx={{
+                  bgcolor: 'white',
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  }
+                }}
+              />
+              <Button
+                variant="contained"
+                color="success"
+                onClick={handleConvertYoutube}
+                disabled={ytLoading || !youtubeUrl.trim()}
+                sx={{
+                  minWidth: 150,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  boxShadow: 'none',
+                  '&:hover': { boxShadow: 'none' }
+                }}
+              >
+                {ytLoading ? <CircularProgress size={20} color="inherit" /> : 'Convert to Blog'}
+              </Button>
+            </Box>
+            {ytLoading && (
+              <Box sx={{ width: '100%', mt: 2 }}>
+                <LinearProgress variant="determinate" value={aiProgress} color="success" sx={{ height: 6, borderRadius: 3 }} />
+                <Typography variant="caption" sx={{ color: '#047857', mt: 0.5, display: 'block' }}>
+                  Processing transcript & drafting Hinglish content... {aiProgress}%
+                </Typography>
+              </Box>
+            )}
+          </Paper>
+        )}
 
         <form onSubmit={handleSubmit}>
         <Grid container spacing={4}>

@@ -1274,6 +1274,82 @@ async function generateAIContent(req, res) {
   }
 }
 
+async function convertYoutubeToBlog(req, res) {
+  try {
+    const { videoUrl } = req.body;
+    if (!videoUrl || !videoUrl.trim()) {
+      return res.status(400).json({ success: false, message: 'YouTube Video URL is required' });
+    }
+
+    // Extract Video ID
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = videoUrl.match(regExp);
+    const videoId = (match && match[2].length === 11) ? match[2] : null;
+
+    if (!videoId) {
+      return res.status(400).json({ success: false, message: 'Invalid YouTube Video URL format' });
+    }
+
+    console.log(`[YouTube to Blog] Fetching metadata for video ID: ${videoId}...`);
+    let videoTitle = 'YouTube Video';
+    try {
+      const { data: html } = await axios.get(`https://www.youtube.com/watch?v=${videoId}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept-Language': 'en-US,en;q=0.9'
+        }
+      });
+      const metaMatch = html.match(/ytInitialPlayerResponse\s*=\s*({[\s\S]*?});\s*(?:var\s+meta|<\/script>)/i);
+      if (metaMatch) {
+        const playerResponse = JSON.parse(metaMatch[1]);
+        videoTitle = playerResponse?.videoDetails?.title || 'YouTube Video';
+      }
+    } catch (metaErr) {
+      console.warn('[YouTube to Blog] Failed to fetch video title details, falling back to default:', metaErr.message);
+    }
+
+    console.log(`[YouTube to Blog] Fetching transcript for: "${videoTitle}"...`);
+    const { YoutubeTranscript } = require('youtube-transcript');
+    const transcriptArr = await YoutubeTranscript.fetchTranscript(videoId);
+    if (!transcriptArr || transcriptArr.length === 0) {
+      return res.status(400).json({ success: false, message: 'No subtitles/captions found for this video' });
+    }
+
+    const transcriptText = transcriptArr.map(t => t.text).join(' ');
+    console.log(`[YouTube to Blog] Transcript length: ${transcriptText.length} chars. Generating blog post...`);
+
+    const command = `Below is the transcript of a YouTube video titled "${videoTitle}". You must use the details, facts, instructions, or tutorials presented in the transcript to write a complete, high-quality, long-form blog post in natural Hinglish. Ensure all key topics from the video are explained clearly.
+    
+    YOUTUBE TRANSCRIPT:
+    """
+    ${transcriptText}
+    """`;
+
+    const data = await generateBlogContentCore({
+      title: videoTitle,
+      model: 'gemini-2.5-pro',
+      length: 'long',
+      tone: 'informative',
+      language: 'hinglish',
+      category: 'Technology', // Default category
+      command: command
+    });
+
+    res.json({
+      success: true,
+      ...data,
+      featuredImage: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+      videoUrl: `https://www.youtube.com/watch?v=${videoId}`
+    });
+  } catch (error) {
+    console.error('[YouTube to Blog] Failed to convert:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to convert YouTube video to blog post'
+    });
+  }
+}
+
 async function generateImagePrompt(title) {
   const prompt = `Write a highly descriptive, professional prompt for an AI Image generator to generate a featured thumbnail image for a blog post with the title: "${title}".
 The prompt MUST describe a realistic, professional, high-resolution DSLR stock photograph. Focus on real-life environments, professional workers, or candidate exams related to the title.
@@ -1321,4 +1397,4 @@ Return ONLY the description prompt in plain text (maximum 45 words, no quotes, n
   throw lastErr || new Error('All Gemini keys failed');
 }
 
-module.exports = { generateAIContent, generateBlogContentCore, generateImagePrompt };
+module.exports = { generateAIContent, generateBlogContentCore, generateImagePrompt, convertYoutubeToBlog };
