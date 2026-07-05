@@ -540,6 +540,30 @@ function injectStudentToolsPromo(content, category) {
   return content + `\n${promoCard}`;
 }
 
+function prettifyLinksAndContent(content) {
+  if (!content) return content;
+  let c = content;
+
+  // 1. Add inline styles to standard links to prevent sticking and provide spacing
+  c = c.replace(/<a(\s+)(?!class=["']btn-link-action)([^>]+)>(.*?)<\/a>/gi, (match, space, attrs, text) => {
+    if (attrs.includes('style=')) {
+      return match.replace(/style=["']([^"']+)["']/i, 'style="$1; margin: 2px 6px; display: inline-block;"');
+    } else {
+      return `<a ${attrs} style="margin: 2px 6px; display: inline-block;">${text}</a>`;
+    }
+  });
+
+  // 2. Ensure consecutive link tags have spacing/separation
+  c = c.replace(/<\/a>\s*<a/gi, '</a> &nbsp; <a');
+
+  // 3. Prettify tables (borders, padding, zebra striping, widths) so links inside cells fit perfectly
+  c = c.replace(/<td([^>]*)>/gi, '<td$1 style="padding: 12px; border: 1px solid #e2e8f0; vertical-align: middle; line-height: 1.6;">');
+  c = c.replace(/<th([^>]*)>/gi, '<th$1 style="padding: 12px; border: 1px solid #cbd5e1; background-color: #f1f5f9; font-weight: 700; color: #1e293b; text-align: left; vertical-align: middle;">');
+  c = c.replace(/<table([^>]*)>/gi, '<table$1 style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;">');
+
+  return c;
+}
+
 async function processAIOutput(data) {
   const { title, content, keywords, category, length } = data;
 
@@ -674,6 +698,9 @@ async function processAIOutput(data) {
     }
     processedContent = processedContent + brandBlock;
   }
+
+  // Prettify links and layout structure before saving
+  processedContent = prettifyLinksAndContent(processedContent);
 
   const tags = generateTags(title, processedContent, keywords, category);
 
