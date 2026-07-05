@@ -272,12 +272,13 @@ async function createPost(req, res, next) {
       seoTitle: payload.seoTitle,
       seoDescription: payload.seoDescription,
     });
+    payload.title = processed.title;
     payload.content = processed.content;
     payload.tags = processed.tags;
     payload.seoTitle = processed.seoTitle;
     payload.seoDescription = processed.seoDescription;
 
-    const baseSlug = makeSlug(req.body.slug || payload.title);
+    const baseSlug = makeSlug(processed.slug || req.body.slug || payload.title);
     payload.slug = await ensureUniqueSlug(baseSlug);
     payload.publishedAt = payload.status === 'published' ? new Date() : null;
     payload.canonicalUrl = payload.canonicalUrl || postUrl(payload);
@@ -323,12 +324,13 @@ async function updatePost(req, res, next) {
       seoTitle: payload.seoTitle,
       seoDescription: payload.seoDescription,
     });
+    payload.title = processed.title;
     payload.content = processed.content;
     payload.tags = processed.tags;
     payload.seoTitle = processed.seoTitle;
     payload.seoDescription = processed.seoDescription;
 
-    const baseSlug = makeSlug(req.body.slug || payload.title);
+    const baseSlug = makeSlug(processed.slug || req.body.slug || payload.title);
     payload.slug = await ensureUniqueSlug(baseSlug, existing._id);
     payload.publishedAt = payload.status === 'published'
       ? existing.publishedAt || new Date()

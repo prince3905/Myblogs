@@ -573,6 +573,8 @@ async function processAIOutput(data) {
   }
 
   let processedContent = content;
+  let processedTitle = title || '';
+  let processedSlug = data.slug || '';
 
   // Normalize FAQ headings to include "(FAQ)" to satisfy AEO checks
   processedContent = processedContent.replace(/<h2[^>]*>\s*(अक्सर पूछे जाने वाले सवाल|अक्सर पूछे जाने वाले प्रश्न|Frequently Asked Questions)\s*<\/h2>/gi, '<h2>अक्सर पूछे जाने वाले सवाल (FAQ)</h2>');
@@ -614,11 +616,41 @@ async function processAIOutput(data) {
     focusKeyword = focusKeyword.replace(/-/g, ' ');
   }
 
+  // Fix Title, Slug, and Intro paragraph keyword checks dynamically on the backend
+  if (focusKeyword && focusKeyword.length >= 3) {
+    const capKeyword = focusKeyword.replace(/\b\w/g, l => l.toUpperCase());
+
+    // 1. Ensure Title contains focus keyword
+    if (processedTitle && !processedTitle.toLowerCase().includes(focusKeyword)) {
+      processedTitle = `${capKeyword}: ${processedTitle}`;
+    }
+
+    // 2. Ensure URL Slug contains focus keyword
+    const cleanSlugKw = focusKeyword.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    if (processedSlug && !processedSlug.toLowerCase().includes(cleanSlugKw)) {
+      processedSlug = `${cleanSlugKw}-${processedSlug}`;
+    } else if (!processedSlug && processedTitle) {
+      processedSlug = processedTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+
+    // 3. Ensure Introduction (First Paragraph) contains focus keyword
+    const plainText = stripHtml(processedContent).toLowerCase();
+    const firstPIndex = processedContent.indexOf('<p>');
+    const introText = plainText.slice(0, 300);
+    if (!introText.includes(focusKeyword)) {
+      if (firstPIndex !== -1) {
+        processedContent = processedContent.slice(0, firstPIndex + 3) + `In this article, we look at <strong>${capKeyword}</strong> and all crucial details. ` + processedContent.slice(firstPIndex + 3);
+      } else {
+        processedContent = `<p>In this article, we look at <strong>${capKeyword}</strong> and all crucial details.</p>\n` + processedContent;
+      }
+    }
+  }
+
   if (focusKeyword) {
     processedContent = ensureH2Keyword(processedContent, focusKeyword);
   }
-  processedContent = ensureGeoAndAeoCriteria(processedContent, title);
-  processedContent = ensureFaqSection(processedContent, title, focusKeyword);
+  processedContent = ensureGeoAndAeoCriteria(processedContent, processedTitle);
+  processedContent = ensureFaqSection(processedContent, processedTitle, focusKeyword);
 
   // Table Structure Check (SEO)
   if (!processedContent.toLowerCase().includes('<table')) {
@@ -633,7 +665,7 @@ async function processAIOutput(data) {
   <tbody>
     <tr>
       <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">परीक्षा का नाम (Exam Name)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">${title}</td>
+      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">${processedTitle}</td>
     </tr>
     <tr>
       <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">आयोजक बोर्ड (Conducting Board)</td>
@@ -702,11 +734,11 @@ async function processAIOutput(data) {
   // Prettify links and layout structure before saving
   processedContent = prettifyLinksAndContent(processedContent);
 
-  const tags = generateTags(title, processedContent, keywords, category);
+  const tags = generateTags(processedTitle, processedContent, keywords, category);
 
   // Generate SEO-friendly fallbacks for all fields
   const cat = category || 'Technology';
-  const firstWords = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').split(/\s+/).filter(Boolean);
+  const firstWords = processedTitle.toLowerCase().replace(/[^a-z0-9\s-]/g, '').split(/\s+/).filter(Boolean);
   const topTag = tags.length > 0 ? tags[0].toLowerCase().replace(/\s+/g, '-') : (firstWords[0] || 'blog');
 
   const fallbackImageTag = cat.toLowerCase() === 'career' || cat.toLowerCase() === 'education'
@@ -719,19 +751,21 @@ async function processAIOutput(data) {
     ? 'fitness-health'
     : firstWords.slice(0, 2).join('-') || 'blog-post';
 
-  const fallbackImageKeywords = tags.slice(0, 5).join(', ') || (title + ', ' + cat);
+  const fallbackImageKeywords = tags.slice(0, 5).join(', ') || (processedTitle + ', ' + cat);
   const fallbackSummary = stripHtml(processedContent).split(/[.!?\n]/).slice(0, 2).join('. ') + '.';
 
   return {
     ...data,
+    title: processedTitle,
+    slug: processedSlug,
     content: processedContent,
     tags,
     imageTag: data.imageTag || fallbackImageTag,
     imageKeywords: data.imageKeywords || fallbackImageKeywords,
     summary: data.summary || fallbackSummary.slice(0, 300),
-    seoTitle: data.seoTitle || (title.length > 70 ? title.slice(0, 67) + '...' : title),
+    seoTitle: data.seoTitle || (processedTitle.length > 70 ? processedTitle.slice(0, 67) + '...' : processedTitle),
     seoDescription: (() => {
-      const focusLower = (keywords && keywords.length > 0) ? keywords[0].toLowerCase().trim() : title.toLowerCase().trim();
+      const focusLower = (keywords && keywords.length > 0) ? keywords[0].toLowerCase().trim() : processedTitle.toLowerCase().trim();
       const rawDesc = data.seoDescription || '';
       if (rawDesc && rawDesc.length >= 110 && rawDesc.length <= 165 && rawDesc.toLowerCase().includes(focusLower)) {
         return rawDesc;
