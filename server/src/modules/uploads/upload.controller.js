@@ -53,12 +53,15 @@ async function generateAiThumbnail(req, res) {
       console.log(`[AI Thumbnail] Gemini generated prompt: "${prompt}"`);
     } catch (aiErr) {
       console.error('[AI Thumbnail] Gemini prompt generation failed, using fallback prompt:', aiErr.message);
-      prompt = `Professional banner illustration for blog post about ${title}, high-quality digital art`;
+      prompt = `Realistic professional stock photograph for ${title}, DSLR, natural lighting`;
     }
+
+    // Force realistic photographic style
+    const styledPrompt = `${prompt}, highly realistic photography style, DSLR camera, professional natural lighting, 4k resolution, stock photo look, no cartoon, no drawings`;
 
     // Generate image using Pollinations AI
     const seed = Math.floor(Math.random() * 1000000);
-    const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
+    const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(styledPrompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
 
     console.log(`[AI Thumbnail] Uploading Pollinations URL to Cloudinary: ${pollinationsUrl}`);
     const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {

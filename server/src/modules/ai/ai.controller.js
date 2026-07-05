@@ -1237,8 +1237,10 @@ async function generateAIContent(req, res) {
 }
 
 async function generateImagePrompt(title) {
-  const prompt = `Write a highly descriptive, professional prompt for an AI Image generator (like Imagen/DALL-E) to generate a high-quality featured thumbnail image for a blog post with the title: "${title}".
-The prompt should describe a professional graphic banner or high-quality illustration. Do NOT use any copyrighted names or text in the image. Avoid words like "text", "words", "letters" in the description to prevent corrupt text rendering.
+  const prompt = `Write a highly descriptive, professional prompt for an AI Image generator to generate a featured thumbnail image for a blog post with the title: "${title}".
+The prompt MUST describe a realistic, professional, high-resolution DSLR stock photograph. Focus on real-life environments, professional workers, or candidate exams.
+CRITICAL: Do NOT use cartoon, illustration, vector art, 3D render, drawing, or painting style. It must look 100% like a real-life photograph.
+Do NOT include any text, letters, or words in the image description.
 Return ONLY the description prompt in plain text (maximum 40 words, no quotes, no conversational filler).`;
 
   const keys = [
