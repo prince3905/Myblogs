@@ -37,4 +37,44 @@ function uploadImage(req, res, next) {
   });
 }
 
-module.exports = { uploadImage };
+const { generateImagePrompt } = require('../ai/ai.controller');
+
+async function generateAiThumbnail(req, res) {
+  try {
+    const { title } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ success: false, message: 'Title is required' });
+    }
+
+    console.log(`[AI Thumbnail] Generating image prompt for: "${title}"`);
+    let prompt = '';
+    try {
+      prompt = await generateImagePrompt(title);
+      console.log(`[AI Thumbnail] Gemini generated prompt: "${prompt}"`);
+    } catch (aiErr) {
+      console.error('[AI Thumbnail] Gemini prompt generation failed, using fallback prompt:', aiErr.message);
+      prompt = `Professional banner illustration for blog post about ${title}, high-quality digital art`;
+    }
+
+    // Generate image using Pollinations AI
+    const seed = Math.floor(Math.random() * 1000000);
+    const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
+
+    console.log(`[AI Thumbnail] Uploading Pollinations URL to Cloudinary: ${pollinationsUrl}`);
+    const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
+      folder: 'myblogs',
+      transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
+    });
+
+    console.log(`[AI Thumbnail] Successfully uploaded to Cloudinary: ${uploadResult.secure_url}`);
+    res.json({
+      success: true,
+      imageUrl: uploadResult.secure_url,
+    });
+  } catch (error) {
+    console.error('[AI Thumbnail] General error:', error.message);
+    res.status(500).json({ success: false, message: error.message || 'Failed to generate AI thumbnail' });
+  }
+}
+
+module.exports = { uploadImage, generateAiThumbnail };

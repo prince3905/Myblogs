@@ -167,11 +167,11 @@ export default function PostEditorPage() {
         updateField('tags', kw);
         updateField('seoKeywords', kw);
         try {
-          const pexelRes = await request('/api/pexels/search', {
+          const res = await request('/api/uploads/generate-thumbnail', {
             method: 'POST',
-            body: JSON.stringify({ query: data.keywords[0], page: Math.floor(Math.random() * 15) + 1 })
+            body: JSON.stringify({ title: finalTitle })
           });
-          if (pexelRes?.imageUrl) updateField('featuredImage', pexelRes.imageUrl);
+          if (res?.imageUrl) updateField('featuredImage', res.imageUrl);
         } catch {}
       }
       loadKeywordResearch(finalTitle);
@@ -705,16 +705,24 @@ export default function PostEditorPage() {
                     size="small"
                     variant="outlined"
                     onClick={async () => {
-                      const tag = form.tags?.split(',')[0]?.trim() || form.title?.split(' ').slice(0, 2).join(' ') || 'blog';
+                      if (!form.title?.trim()) {
+                        addToast('Pehle Title likho tabhi AI Image banegi!', 'error');
+                        return;
+                      }
+                      addToast('AI Image generate ho rahi hai (Cloudinary par save ho rahi hai)... 🚀', 'info');
                       try {
-                        const pexelRes = await request('/api/pexels/search', {
+                        const res = await request('/api/uploads/generate-thumbnail', {
                           method: 'POST',
-                          body: JSON.stringify({ query: tag, page: Math.floor(Math.random() * 20) + 1 })
+                          body: JSON.stringify({ title: form.title })
                         });
-                        if (pexelRes?.imageUrl) updateField('featuredImage', pexelRes.imageUrl);
-                        else addToast('Image nahi mili, dubara try kar', 'error');
-                      } catch {
-                        addToast('Server se connect nahi ho paaya', 'error');
+                        if (res?.imageUrl) {
+                          updateField('featuredImage', res.imageUrl);
+                          addToast('AI Thumbnail ban gaya aur Cloudinary par save ho gaya! 🎉', 'success');
+                        } else {
+                          addToast('Image generate nahi ho paayi', 'error');
+                        }
+                      } catch (err) {
+                        addToast(err?.message || 'Server error', 'error');
                       }
                     }}
                     sx={{ minWidth: 80, height: 28, fontSize: '0.75rem', borderRadius: 2 }}

@@ -1236,4 +1236,49 @@ async function generateAIContent(req, res) {
   }
 }
 
-module.exports = { generateAIContent, generateBlogContentCore };
+async function generateImagePrompt(title) {
+  const prompt = `Write a highly descriptive, professional prompt for an AI Image generator (like Imagen/DALL-E) to generate a high-quality featured thumbnail image for a blog post with the title: "${title}".
+The prompt should describe a professional graphic banner or high-quality illustration. Do NOT use any copyrighted names or text in the image. Avoid words like "text", "words", "letters" in the description to prevent corrupt text rendering.
+Return ONLY the description prompt in plain text (maximum 40 words, no quotes, no conversational filler).`;
+
+  const keys = [
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_FALLBACK,
+    process.env.GEMINI_API_KEY_3,
+    process.env.GEMINI_API_KEY_4,
+    process.env.GEMINI_API_KEY_5,
+    process.env.GEMINI_API_KEY_6,
+    process.env.GEMINI_API_KEY_7
+  ].filter(Boolean);
+
+  if (keys.length === 0) {
+    throw new Error('API_KEY not set in env');
+  }
+
+  const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+  let lastErr = null;
+  for (const key of keys) {
+    try {
+      const response = await axios.post(`${GEMINI_BASE_URL}/gemini-flash-latest:generateContent?key=${key}`, {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 150,
+        }
+      }, {
+        timeout: 10000,
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text && text.trim()) {
+        return text.trim().replace(/^"(.*)"$/, '$1'); // Strip quotes if any
+      }
+    } catch (err) {
+      lastErr = err;
+      console.warn(`[AI Image Prompt] Gemini key failed: ${err.message}. Trying next...`);
+    }
+  }
+  throw lastErr || new Error('All Gemini keys failed');
+}
+
+module.exports = { generateAIContent, generateBlogContentCore, generateImagePrompt };
