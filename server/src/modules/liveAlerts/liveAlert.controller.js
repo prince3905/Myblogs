@@ -3,6 +3,53 @@ const BlogPost = require('../posts/post.model');
 const { scrapeFeeds } = require('../ai/topicDiscoveryService'); // Fallback if cron scraping is loaded elsewhere, but we'll import from cron.js
 const cronScraper = require('./liveAlert.cron');
 const { generateBlogContentCore } = require('../ai/ai.controller');
+const axios = require('axios');
+
+// Pexels integration helper to auto-populate featuredImage (Thumbnail)
+const HERO_PHOTOS = [
+  'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=700&q=80',
+  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=700&q=80',
+  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=700&q=80',
+  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=700&q=80',
+  'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=700&q=80',
+  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=700&q=80',
+  'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=700&q=80',
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=700&q=80',
+  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=700&q=80',
+  'https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=700&q=80',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80',
+  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=700&q=80',
+  'https://images.unsplash.com/photo-1559526324-593bc073d938?w=700&q=80',
+  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=700&q=80',
+  'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=700&q=80',
+];
+
+function pickFallbackImage(query) {
+  const hash = query ? query.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : 0;
+  return HERO_PHOTOS[Math.abs(hash) % HERO_PHOTOS.length];
+}
+
+async function autoFetchFeaturedImage(query) {
+  const apiKey = process.env.PEXELS_API_KEY;
+  if (!query || !query.trim()) return pickFallbackImage('blog');
+  
+  if (apiKey) {
+    try {
+      const response = await axios.get('https://api.pexels.com/v1/search', {
+        params: { query: query.trim(), per_page: 5, page: 1 },
+        headers: { Authorization: apiKey },
+        timeout: 6000,
+      });
+      const photos = response.data?.photos;
+      if (photos && photos.length > 0) {
+        return (photos[0].src.medium || photos[0].src.large).split('?')[0] + '?w=700&fit=crop&q=80';
+      }
+    } catch (err) {
+      console.error('Failed to auto-fetch featured image from Pexels in background:', err.message);
+    }
+  }
+  return pickFallbackImage(query);
+}
 
 
 
@@ -260,13 +307,16 @@ ${buttonHtmlBlock}
       }
     }
 
+    // Auto fetch a relevant featured image based on Gemini's generated tags
+    const featuredImage = await autoFetchFeaturedImage(generatedData.imageTag || generatedData.imagetag || 'career');
+
     // Create and save Mongoose BlogPost document
     const newPost = new BlogPost({
       title: generatedData.title,
       slug: generatedData.slug,
       excerpt: generatedData.summary.slice(0, 320),
       content: finalContent,
-      featuredImage: '', // Will fetch image or fallback in editor
+      featuredImage: featuredImage,
       category: 'Sarkari Jobs & Exams',
       tags: generatedData.keywords || [],
       status: 'draft',
