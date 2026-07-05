@@ -386,8 +386,8 @@ function markdownToHtml(text) {
   h = h.replace(/`(.+?)`/g, '<code>$1</code>');
   // Convert Markdown links [Text](URL) to HTML <a> tags
   h = h.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-  // Convert raw URLs to HTML <a> tags, avoiding existing href values or URLs already wrapped in <a>
-  h = h.replace(/(?<!href=["']|">)(https?:\/\/[^\s<"'`()]+)(?![^<]*<\/a>)/gi, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  // Convert raw URLs to HTML <a> tags, avoiding existing href/src/srcset values or URLs already wrapped in <a>
+  h = h.replace(/(?<!href=["']|src=["']|srcset=["']|">)(https?:\/\/[^\s<"'`()]+)(?![^<]*<\/a>)/gi, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
   // Strip random brackets with numbers like [1], [2], [3]
   h = h.replace(/\[\d+\]/g, '');
   // Strip stray standalone brackets
@@ -513,7 +513,12 @@ function cleanExtractedContent(raw) {
   // Scan for lines that are metadata labels (slug:, keywords:, summary:, imageTag:, seoTitle:, etc.)
   // or instruction patterns — skip them, start from first heading
   for (let i = 0; i < Math.min(lines.length, 20); i++) {
-    const t = lines[i].trim().replace(/<\/?[^>]+>/g, '');
+    const line = lines[i];
+    if (line.includes('<picture') || line.includes('<img') || line.includes('<source')) {
+      startIdx = i;
+      break;
+    }
+    const t = line.trim().replace(/<\/?[^>]+>/g, '');
     if (!t) continue;
     const lower = t.toLowerCase();
     // Heading found = content starts here
@@ -751,7 +756,7 @@ ${ADSENSE_CONSTRAINTS}
 - IMAGES: NEVER include raw JPEG/PNG in content. All images must use <picture> element with WebP format.
   - First/hero image at top: fetchpriority="high" — NO loading="lazy"
   - All other images: loading="lazy" + width="800" height="450" + style="width:100%; height:auto; object-fit:cover;
-  - Required format: <picture><source srcset="[CLOUDINARY-WEBP-URL]" type="image/webp" /><img src="[CLOUDINARY-JPG-FALLBACK-URL]" alt="[SEO-Alt]" width="800" height="450" loading="lazy" style="width:100%; height:auto; object-fit:cover;" fetchpriority="high" /></picture>
+  - Required format (do NOT output external image URLs like Unsplash to avoid safety filters; strictly use local placeholders and replace [SEO-Alt] with your focus keyword): <picture><source srcset="/assets/images/placeholder.webp" type="image/webp" /><img src="/assets/images/placeholder.jpg" alt="[SEO-Alt]" width="800" height="450" style="width:100%; height:auto; object-fit:cover;" fetchpriority="high" /></picture>
 - ZERO BACKGROUND SCRIPTS: content MUST NOT contain any script tags, iframes, crypto widgets, OKX API calls, useEffect hooks, fetch calls to external APIs, or any JavaScript execution code. Page must be 100% clean static content only.
 - Keep the output clean HTML with no embedded scripts, no external resource calls.
 
