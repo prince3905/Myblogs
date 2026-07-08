@@ -571,6 +571,16 @@ function prettifyLinksAndContent(content) {
 
   // Clean up any button links to have fresh, beautiful styles and colors, and strip accumulated style trash
   c = c.replace(/<a([^>]*class=["'][^"']*btn-link-action[^"']*["'][^>]*)>(.*?)<\/a>/gi, (match, attrs, text) => {
+    // If the matched text contains block-level elements, it means the tag was unclosed. Close it early.
+    if (text.includes('<p>') || text.includes('</p>') || text.includes('<div>') || text.includes('</td>') || text.includes('</tr>') || text.includes('<h2>')) {
+      const firstBlockIndex = text.search(/<(?:p|div|tr|td|li|h[1-6]|\/p|\/div|\/tr|\/td|\/li|\/h[1-6])/i);
+      if (firstBlockIndex !== -1) {
+        const linkText = text.slice(0, firstBlockIndex);
+        const restText = text.slice(firstBlockIndex);
+        return `<a ${attrs}>${linkText}</a>${restText}`;
+      }
+    }
+
     const cleanAttrs = attrs.replace(/\s+style=["'][^"']*["']/gi, '');
     let bgColor = '#2563eb'; // blue for website
     if (cleanAttrs.includes('btn-apply')) bgColor = '#059669'; // green for apply
@@ -585,6 +595,17 @@ function prettifyLinksAndContent(content) {
     if (attrs.includes('btn-link-action')) {
       return match;
     }
+    
+    // If the matched text contains block-level elements, it means the tag was unclosed. Close it early.
+    if (text.includes('<p>') || text.includes('</p>') || text.includes('<div>') || text.includes('</td>') || text.includes('</tr>') || text.includes('<h2>')) {
+      const firstBlockIndex = text.search(/<(?:p|div|tr|td|li|h[1-6]|\/p|\/div|\/tr|\/td|\/li|\/h[1-6])/i);
+      if (firstBlockIndex !== -1) {
+        const linkText = text.slice(0, firstBlockIndex);
+        const restText = text.slice(firstBlockIndex);
+        return `<a ${attrs}>${linkText}</a>${restText}`;
+      }
+    }
+
     if (attrs.includes('style=')) {
       return match.replace(/style=["']([^"']+)["']/i, 'style="$1; margin: 2px 6px; display: inline-block;"');
     } else {
