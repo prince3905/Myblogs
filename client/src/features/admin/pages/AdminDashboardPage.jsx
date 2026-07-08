@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Box, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination, Tooltip, CircularProgress, Switch, FormControlLabel } from '@mui/material';
-import { Article, Mail, Comment, Add, Edit, Delete, Forum, MarkEmailRead, Schedule, Visibility, TrendingUp, OfflineBolt } from '@mui/icons-material';
+import { Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Box, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination, Tooltip, CircularProgress, Switch, FormControlLabel, TextField } from '@mui/material';
+import { ArrowBack, ExpandMore, ExpandLess, ContentCopy, Article, Mail, Comment, Add, Edit, Delete, Forum, MarkEmailRead, Schedule, Visibility, TrendingUp, OfflineBolt } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
 import { request } from '../../../shared/lib/api';
 import { calculateSeoScore } from '../../../shared/utils/seoAuditor';
@@ -20,9 +20,33 @@ export default function AdminDashboardPage() {
   const [page, setPage] = useState(1);
   const [error, setError] = useState('');
   const [autopilotEnabled, setAutopilotEnabled] = useState(false);
+
+  // Search and Calendar Date filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState(''); // YYYY-MM-DD
+
+  // Filter posts in real-time
+  const filteredPosts = useMemo(() => {
+    return posts.filter(post => {
+      // 1. Search Query Filter (Title match)
+      const matchesSearch = searchQuery.trim() === '' || 
+        post.title.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // 2. Date Filter
+      let matchesDate = true;
+      if (selectedDate) {
+        // Match formatted YYYY-MM-DD from post's createdAt timestamp
+        const postDateString = new Date(post.createdAt).toISOString().split('T')[0];
+        matchesDate = postDateString === selectedDate;
+      }
+      
+      return matchesSearch && matchesDate;
+    });
+  }, [posts, searchQuery, selectedDate]);
+
   const perPage = 10;
-  const totalPages = Math.ceil(posts.length / perPage);
-  const pagePosts = posts.slice((page - 1) * perPage, page * perPage);
+  const totalPages = Math.ceil(filteredPosts.length / perPage);
+  const pagePosts = filteredPosts.slice((page - 1) * perPage, page * perPage);
 
   function loadPosts() {
     request('/api/admin/posts').then(data => { setPosts(data); setPage(1); }).catch(err => setError(err.message));
@@ -332,8 +356,53 @@ export default function AdminDashboardPage() {
 
         {/* Posts */}
         <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid #ECECEC', overflow: 'hidden', mb: 4 }}>
-          <Box sx={{ px: 3, py: 2, borderBottom: '1px solid #ECECEC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#111827' }}>Posts ({posts.length})</Typography>
+          <Box sx={{ 
+            px: 3, 
+            py: 2, 
+            borderBottom: '1px solid #ECECEC', 
+            display: 'flex', 
+            flexDirection: { xs: 'column', md: 'row' }, 
+            justifyContent: 'space-between', 
+            alignItems: { xs: 'stretch', md: 'center' },
+            gap: 2 
+          }}>
+            <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#111827' }}>
+              Posts ({filteredPosts.length === posts.length ? posts.length : `${filteredPosts.length}/${posts.length}`})
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+              <TextField
+                placeholder="Search posts..."
+                size="small"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+                sx={{ 
+                  width: { xs: '100%', sm: 220 }, 
+                  '& .MuiOutlinedInput-root': { borderRadius: 2 } 
+                }}
+              />
+              <TextField
+                type="date"
+                size="small"
+                value={selectedDate}
+                onChange={(e) => { setSelectedDate(e.target.value); setPage(1); }}
+                InputLabelProps={{ shrink: true }}
+                sx={{ 
+                  width: { xs: '100%', sm: 160 }, 
+                  '& .MuiOutlinedInput-root': { borderRadius: 2 } 
+                }}
+              />
+              {(searchQuery || selectedDate) && (
+                <Button 
+                  variant="text" 
+                  color="inherit" 
+                  size="small"
+                  onClick={() => { setSearchQuery(''); setSelectedDate(''); setPage(1); }}
+                  sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.8rem' }}
+                >
+                  Clear
+                </Button>
+              )}
+            </Box>
           </Box>
           <TableContainer>
             <Table>
