@@ -250,7 +250,8 @@ export default function PostPage() {
   const generateBrandedPDF = async () => {
     try {
       const { jsPDF } = await import('jspdf');
-      const html2canvas = (await import('html2canvas')).default;
+      const html2canvasModule = await import('html2canvas');
+      const html2canvas = html2canvasModule.default || html2canvasModule;
 
       // 1. Create a temporary container for flat print block elements
       const printContainer = document.createElement('div');
@@ -285,7 +286,13 @@ export default function PostPage() {
       `;
 
       // 3. Append direct children of content (individual paragraphs/tables/lists)
-      const contentClone = document.querySelector('.blog-content').cloneNode(true);
+      const contentEl = document.querySelector('.blog-content');
+      if (!contentEl) {
+        console.error('Blog content container not found!');
+        document.body.removeChild(printContainer);
+        return;
+      }
+      const contentClone = contentEl.cloneNode(true);
       const ads = contentClone.querySelectorAll('.ad-slot, ins, script');
       ads.forEach(ad => ad.remove());
       
@@ -369,8 +376,15 @@ export default function PostPage() {
           backgroundColor: '#ffffff'
         });
 
+        if (canvas.width === 0 || canvas.height === 0) {
+          continue;
+        }
+
         // Convert canvas width/height ratio to printable PDF mm height
         const nodeHeight = (canvas.height * printableWidth) / canvas.width;
+        if (isNaN(nodeHeight) || nodeHeight <= 0) {
+          continue;
+        }
 
         // If block overflows page printable limit, push to next page
         if (currentY + nodeHeight > pageHeight - bottomMargin) {
