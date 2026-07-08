@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider, FormControlLabel, Checkbox, CircularProgress, Chip, Collapse, IconButton, Tooltip, LinearProgress } from '@mui/material';
+import { Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider, FormControlLabel, Checkbox, CircularProgress, Chip, Collapse, IconButton, Tooltip, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { ArrowBack, ExpandMore, ExpandLess, ContentCopy } from '@mui/icons-material';
 import ImageUpload from '../../../components/ImageUpload';
 import RichTextEditor from '../../../components/RichTextEditor';
@@ -47,6 +47,139 @@ export default function PostEditorPage() {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [ytLoading, setYtLoading] = useState(false);
   const [imagePromptText, setImagePromptText] = useState('');
+
+  // Canvas Maker State variables
+  const [showCanvasMaker, setShowCanvasMaker] = useState(false);
+  const [canvasEngTitle, setCanvasEngTitle] = useState('');
+  const [canvasHindiTitle, setCanvasHindiTitle] = useState('');
+  const [canvasTheme, setCanvasTheme] = useState('bank');
+  const [isGeneratingCanvas, setIsGeneratingCanvas] = useState(false);
+
+  const handleOpenCanvasMaker = () => {
+    if (!form.title.trim()) {
+      addToast('Pehle post ka title daalhein!', 'error');
+      return;
+    }
+    const mainTitle = form.title.split(/[:|]/)[0].trim();
+    setCanvasEngTitle(mainTitle);
+    setCanvasHindiTitle('ऑनलाइन आवेदन शुरू - यहाँ से भरें');
+    setCanvasTheme(form.category === 'Sarkari Jobs & Exams' ? 'bank' : 'violet');
+    setShowCanvasMaker(true);
+  };
+
+  const canvasRef = useCallback((node) => {
+    if (node !== null) {
+      const ctx = node.getContext('2d');
+      const width = node.width;
+      const height = node.height;
+      
+      // Clear
+      ctx.clearRect(0, 0, width, height);
+
+      // Gradient
+      const grad = ctx.createLinearGradient(0, 0, width, height);
+      if (canvasTheme === 'bank') {
+        grad.addColorStop(0, '#1e3a8a');
+        grad.addColorStop(1, '#0f172a');
+      } else if (canvasTheme === 'police') {
+        grad.addColorStop(0, '#991b1b');
+        grad.addColorStop(1, '#450a0a');
+      } else if (canvasTheme === 'defense') {
+        grad.addColorStop(0, '#1e1b4b');
+        grad.addColorStop(1, '#090514');
+      } else if (canvasTheme === 'orange') {
+        grad.addColorStop(0, '#c2410c');
+        grad.addColorStop(1, '#1e293b');
+      } else {
+        grad.addColorStop(0, '#581c87');
+        grad.addColorStop(1, '#0f051d');
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      // Accent triangles
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+      ctx.lineTo(width * 0.45, height);
+      ctx.lineTo(0, height * 0.55);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(width, 0, width * 0.75, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Brand Title text
+      ctx.fillStyle = '#10b981';
+      ctx.font = '900 24px sans-serif';
+      ctx.fillText('DIGITAL HOME BLOG', 60, 90);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.font = '500 16px sans-serif';
+      ctx.fillText('Official Job Alert Portal', 60, 120);
+
+      // Text wrapping function helper
+      const wrapText = (context, text, x, y, lineGap, maxW) => {
+        const words = text.split(' ');
+        let line = '';
+        let currentY = y;
+        for (let n = 0; n < words.length; n++) {
+          let testLine = line + words[n] + ' ';
+          let metrics = context.measureText(testLine);
+          if (metrics.width > maxW && n > 0) {
+            context.fillText(line, x, currentY);
+            line = words[n] + ' ';
+            currentY += lineGap;
+          } else {
+            line = testLine;
+          }
+        }
+        context.fillText(line, x, currentY);
+        return currentY;
+      };
+
+      // Draw English Title
+      ctx.fillStyle = '#facc15';
+      ctx.font = '800 48px sans-serif';
+      let textY = 240;
+      textY = wrapText(ctx, canvasEngTitle.toUpperCase(), 60, textY, 60, width - 120);
+
+      // Draw Hindi Subtitle
+      textY += 60;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 36px sans-serif';
+      textY = wrapText(ctx, canvasHindiTitle, 60, textY, 48, width - 120);
+
+      // Draw Badges
+      textY += 90;
+      
+      const drawBadge = (label, x, y, color) => {
+        ctx.font = '800 16px sans-serif';
+        const textWidth = ctx.measureText(label).width;
+        const paddingH = 18;
+        const paddingV = 10;
+        const badgeW = textWidth + paddingH * 2;
+        const badgeH = 16 + paddingV * 2;
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(x, y - 18, badgeW, badgeH, 8);
+        } else {
+          ctx.rect(x, y - 18, badgeW, badgeH);
+        }
+        ctx.fill();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText(label, x + paddingH, y + 8);
+        return badgeW;
+      };
+
+      const w1 = drawBadge('Official Form', 60, textY, '#facc15');
+      drawBadge('Time-Saving', 60 + w1 + 15, textY, '#10b981');
+    }
+  }, [canvasEngTitle, canvasHindiTitle, canvasTheme]);
 
   const seoAudit = useMemo(() => {
     return calculateSeoScore(form, kwData);
@@ -924,6 +1057,16 @@ export default function PostEditorPage() {
                   </Button>
                 </Box>
                 <ImageUpload value={form.featuredImage} onChange={(val) => updateField('featuredImage', val)} />
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                  onClick={handleOpenCanvasMaker}
+                  sx={{ mt: 1.5, mb: 1, textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
+                >
+                  🎨 Design Custom Canvas Banner
+                </Button>
                 {imagePromptText && (
                   <Box sx={{ mt: 2 }}>
                     <TextField
@@ -1398,6 +1541,135 @@ export default function PostEditorPage() {
           </Grid>
         </Grid>
       </form>
+
+      {/* Dynamic HTML Canvas Thumbnail Generator Dialog */}
+      <Dialog 
+        open={showCanvasMaker} 
+        onClose={() => setShowCanvasMaker(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, pb: 1 }}>
+          🎨 Custom HTML Canvas Thumbnail Designer
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={3}>
+            {/* Controls Left */}
+            <Grid item xs={12} md={5}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="English Heading (ALL CAPS)"
+                  value={canvasEngTitle}
+                  onChange={(e) => setCanvasEngTitle(e.target.value)}
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Hindi Subtitle"
+                  value={canvasHindiTitle}
+                  onChange={(e) => setCanvasHindiTitle(e.target.value)}
+                />
+                <FormControl fullWidth size="small">
+                  <InputLabel>Theme Background</InputLabel>
+                  <Select
+                    value={canvasTheme}
+                    label="Theme Background"
+                    onChange={(e) => setCanvasTheme(e.target.value)}
+                  >
+                    <MenuItem value="bank">Bank Blue (Gradient)</MenuItem>
+                    <MenuItem value="police">Police Khaki/Red (Gradient)</MenuItem>
+                    <MenuItem value="defense">Defense Dark Violet (Gradient)</MenuItem>
+                    <MenuItem value="orange">Orange Tech (Gradient)</MenuItem>
+                    <MenuItem value="violet">Modern Purple (Gradient)</MenuItem>
+                  </Select>
+                </FormControl>
+                
+                <Alert severity="info" sx={{ py: 0.5, px: 1.5, fontSize: '0.8rem', borderRadius: 2 }}>
+                  Canvas real-time preview draws local canvas fonts. The text is 100% correct, sharp and clear.
+                </Alert>
+              </Box>
+            </Grid>
+
+            {/* Canvas Preview Right */}
+            <Grid item xs={12} md={7} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Box sx={{ 
+                border: '2px solid #e2e8f0', 
+                borderRadius: 2, 
+                overflow: 'hidden', 
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                width: '100%',
+                maxWidth: 400,
+                aspectRatio: '1/1',
+                bgcolor: '#f8fafc'
+              }}>
+                <canvas 
+                  ref={canvasRef} 
+                  width={800} 
+                  height={800} 
+                  style={{ width: '100%', height: '100%', display: 'block' }}
+                />
+              </Box>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button 
+            onClick={() => setShowCanvasMaker(false)} 
+            color="inherit" 
+            sx={{ fontWeight: 600, textTransform: 'none' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={isGeneratingCanvas}
+            onClick={async () => {
+              // Get canvas element inside DOM and trigger upload
+              const canvasEl = document.querySelector('canvas[width="800"]');
+              if (canvasEl) {
+                // Convert canvas to Base64 image
+                const dataUri = canvasEl.toDataURL('image/jpeg', 0.9);
+                setIsGeneratingCanvas(true);
+                addToast('Saving and uploading custom thumbnail... 🚀', 'info');
+                try {
+                  const responseBlob = await fetch(dataUri);
+                  const blob = await responseBlob.blob();
+                  const file = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
+                  
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  
+                  const res = await request('/api/admin/upload', {
+                    method: 'POST',
+                    body: formData
+                  });
+                  
+                  if (res?.url) {
+                    updateField('featuredImage', res.url);
+                    addToast('Canvas Banner apply aur save ho gaya! 🎉', 'success');
+                    setShowCanvasMaker(false);
+                  } else {
+                    addToast('Banner upload nahi ho paaya.', 'error');
+                  }
+                } catch (uploadErr) {
+                  addToast(uploadErr?.message || 'Upload failed.', 'error');
+                } finally {
+                  setIsGeneratingCanvas(false);
+                }
+              } else {
+                addToast('Preview canvas not found.', 'error');
+              }
+            }}
+            sx={{ fontWeight: 700, textTransform: 'none', px: 3, borderRadius: 2 }}
+          >
+            {isGeneratingCanvas ? <CircularProgress size={20} color="inherit" /> : '💾 Apply & Save Banner'}
+          </Button>
+        </DialogActions>
+      </Dialog>
       </Box>
     </>
   );
