@@ -293,7 +293,7 @@ export default function PostPage() {
         return;
       }
       const contentClone = contentEl.cloneNode(true);
-      const ads = contentClone.querySelectorAll('.ad-slot, ins, script');
+      const ads = contentClone.querySelectorAll('.ad-slot, ins, script, iframe');
       ads.forEach(ad => ad.remove());
       
       const contentChildren = Array.from(contentClone.children);
@@ -368,43 +368,47 @@ export default function PostPage() {
       for (let i = 0; i < children.length; i++) {
         const node = children[i];
         
-        // Render block to canvas
-        const canvas = await html2canvas(node, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
+        try {
+          // Render block to canvas
+          const canvas = await html2canvas(node, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+          });
 
-        if (canvas.width === 0 || canvas.height === 0) {
-          continue;
+          if (canvas.width === 0 || canvas.height === 0) {
+            continue;
+          }
+
+          // Convert canvas width/height ratio to printable PDF mm height
+          const nodeHeight = (canvas.height * printableWidth) / canvas.width;
+          if (isNaN(nodeHeight) || nodeHeight <= 0) {
+            continue;
+          }
+
+          // If block overflows page printable limit, push to next page
+          if (currentY + nodeHeight > pageHeight - bottomMargin) {
+            doc.addPage();
+            
+            // Draw top banner header on secondary pages
+            doc.setFillColor(...primaryColor);
+            doc.rect(0, 0, 210, 15, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.text('DIGITAL HOME BLOG - Job Summary (Continued)', 15, 10);
+
+            currentY = 25; // start below secondary page header banner
+          }
+
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          doc.addImage(imgData, 'JPEG', 12, currentY, printableWidth, nodeHeight);
+
+          currentY += nodeHeight + 4; // Add spacing between sibling blocks
+        } catch (nodeErr) {
+          console.warn('Skipping unrenderable PDF node:', node, nodeErr);
         }
-
-        // Convert canvas width/height ratio to printable PDF mm height
-        const nodeHeight = (canvas.height * printableWidth) / canvas.width;
-        if (isNaN(nodeHeight) || nodeHeight <= 0) {
-          continue;
-        }
-
-        // If block overflows page printable limit, push to next page
-        if (currentY + nodeHeight > pageHeight - bottomMargin) {
-          doc.addPage();
-          
-          // Draw top banner header on secondary pages
-          doc.setFillColor(...primaryColor);
-          doc.rect(0, 0, 210, 15, 'F');
-          doc.setTextColor(255, 255, 255);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(10);
-          doc.text('DIGITAL HOME BLOG - Job Summary (Continued)', 15, 10);
-
-          currentY = 25; // start below secondary page header banner
-        }
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        doc.addImage(imgData, 'JPEG', 12, currentY, printableWidth, nodeHeight);
-
-        currentY += nodeHeight + 4; // Add spacing between sibling blocks
       }
 
       // 7. Cleanup DOM clone container
