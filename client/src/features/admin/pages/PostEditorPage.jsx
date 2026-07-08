@@ -46,6 +46,7 @@ export default function PostEditorPage() {
   const [serpData, setSerpData] = useState(null);
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [ytLoading, setYtLoading] = useState(false);
+  const [imagePromptText, setImagePromptText] = useState('');
 
   const seoAudit = useMemo(() => {
     return calculateSeoScore(form, kwData);
@@ -241,6 +242,22 @@ export default function PostEditorPage() {
       clearInterval(interval);
       setYtLoading(false);
       setAiProgress(0);
+    }
+  }
+
+  async function handleEditorIndexPing() {
+    setYtLoading(true);
+    try {
+      const res = await request(`/api/admin/posts/${id}/index-ping`, { method: 'POST' });
+      if (res.success) {
+        addToast(res.message || 'Google Indexing request sent successfully!', 'success');
+      } else {
+        addToast(res.message || 'Google Indexing request failed.', 'error');
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to ping Google Indexing API', 'error');
+    } finally {
+      setYtLoading(false);
     }
   }
 
@@ -846,6 +863,35 @@ export default function PostEditorPage() {
                   <Button
                     size="small"
                     variant="outlined"
+                    color="primary"
+                    onClick={async () => {
+                      if (!form.title?.trim()) {
+                        addToast('Pehle Title likho tabhi prompt generate hoga!', 'error');
+                        return;
+                      }
+                      addToast('AI Image Prompt generate ho raha hai... 🔍', 'info');
+                      try {
+                        const res = await request('/api/admin/get-image-prompt', {
+                          method: 'POST',
+                          body: JSON.stringify({ title: form.title })
+                        });
+                        if (res?.prompt) {
+                          setImagePromptText(res.prompt);
+                          addToast('AI Image Prompt taiyar hai! Niche se copy karein. 📋', 'success');
+                        } else {
+                          addToast('Prompt generate nahi ho paaya', 'error');
+                        }
+                      } catch (err) {
+                        addToast(err?.message || 'Server error', 'error');
+                      }
+                    }}
+                    sx={{ minWidth: 80, height: 28, fontSize: '0.75rem', borderRadius: 2 }}
+                  >
+                    📋 Prompt
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
                     color="secondary"
                     onClick={async () => {
                       if (!form.content?.trim()) {
@@ -878,6 +924,63 @@ export default function PostEditorPage() {
                   </Button>
                 </Box>
                 <ImageUpload value={form.featuredImage} onChange={(val) => updateField('featuredImage', val)} />
+                {imagePromptText && (
+                  <Box sx={{ mt: 2 }}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      size="small"
+                      label="AI Image Prompt (Write/Edit here)"
+                      value={imagePromptText}
+                      onChange={(e) => setImagePromptText(e.target.value)}
+                      InputProps={{
+                        endAdornment: (
+                          <IconButton
+                            onClick={() => {
+                              navigator.clipboard.writeText(imagePromptText);
+                              addToast('Prompt copied to clipboard! 📋', 'success');
+                            }}
+                            size="small"
+                          >
+                            <ContentCopy fontSize="small" />
+                          </IconButton>
+                        )
+                      }}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      color="secondary"
+                      size="small"
+                      onClick={async () => {
+                        if (!imagePromptText.trim()) {
+                          addToast('Pehle prompt likhein ya generate karein!', 'error');
+                          return;
+                        }
+                        addToast('AI Image generate ho rahi hai custom prompt se... 🎨', 'info');
+                        try {
+                          const res = await request('/api/admin/generate-thumbnail-from-prompt', {
+                            method: 'POST',
+                            body: JSON.stringify({ prompt: imagePromptText })
+                          });
+                          if (res?.imageUrl) {
+                            updateField('featuredImage', res.imageUrl);
+                            addToast('AI Thumbnail custom prompt se ban gaya aur Cloudinary par save ho gaya! 🎉', 'success');
+                          } else {
+                            addToast('Image generate nahi ho paayi', 'error');
+                          }
+                        } catch (err) {
+                          addToast(err?.message || 'Server error', 'error');
+                        }
+                      }}
+                      sx={{ mt: 1, textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
+                    >
+                      🎨 Generate Image From Prompt
+                    </Button>
+                  </Box>
+                )}
               </Box>
 
               <FormControl fullWidth sx={{ mb: 3 }}>
@@ -1253,6 +1356,29 @@ export default function PostEditorPage() {
                   </Box>
                 </Box>
               </Collapse>
+
+              {isEdit && form.status === 'published' && (
+                <Button
+                  variant="outlined"
+                  color="success"
+                  fullWidth
+                  size="large"
+                  onClick={handleEditorIndexPing}
+                  disabled={ytLoading}
+                  sx={{
+                    fontWeight: 700,
+                    py: 1.5,
+                    mb: 2,
+                    fontSize: '1.1rem',
+                    borderRadius: 2,
+                    borderWidth: 2,
+                    textTransform: 'none',
+                    '&:hover': { borderWidth: 2 }
+                  }}
+                >
+                  {ytLoading ? <CircularProgress size={20} color="inherit" /> : '⚡ Request Google Indexing'}
+                </Button>
+              )}
 
               <Button
                 type="submit"

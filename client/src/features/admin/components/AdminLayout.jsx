@@ -6,6 +6,7 @@ import {
   Dashboard as DashboardIcon, Article as ArticleIcon,
   Forum as ForumIcon, MonetizationOn as AdIcon,
   TravelExplore as KeywordIcon, NotificationsActive as AlertsIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 
 const nav = [
@@ -15,6 +16,7 @@ const nav = [
   { label: 'Live Alerts', path: '/admin/live-alerts', icon: <AlertsIcon /> },
   { label: 'Comments', path: '/admin/comments', icon: <ForumIcon /> },
   { label: 'Ads', path: '/admin/ads', icon: <AdIcon /> },
+  { label: 'Settings', path: '/admin/settings', icon: <SettingsIcon /> },
 ];
 
 export default function AdminLayout() {

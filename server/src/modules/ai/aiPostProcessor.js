@@ -152,15 +152,21 @@ function cleanContent(content, category) {
 async function addInternalLinks(content, category) {
   if (!content) return content;
   try {
+    // Strip any existing generated guide links to prevent duplicates
+    let c = content;
+    c = c.replace(/<p>If you found this helpful, also check out our guide on[^]*?for more details.<\/p>\s*/gi, '');
+    c = c.replace(/<p>For more information, read our article on[^]*?\.<\/p>\s*/gi, '');
+    c = c.replace(/If you found this helpful, also check out our guide on[^]*?for more details./gi, '');
+    c = c.replace(/For more information, read our article on[^]*?\./gi, '');
+
     const BlogPost = require('../posts/post.model');
     const relatedPosts = await BlogPost.find({
       category,
       status: 'published',
     }).sort({ publishedAt: -1 }).limit(3);
 
-    if (relatedPosts.length < 2) return content;
+    if (relatedPosts.length < 2) return c;
 
-    let c = content;
     const linkPost1 = relatedPosts[0];
     const linkPost2 = relatedPosts[1] || relatedPosts[0];
 
@@ -494,12 +500,13 @@ function injectStudentToolsPromo(content, category) {
   if (!content) return content;
   if (category !== 'Sarkari Jobs & Exams') return content;
 
-  // Idempotency check to avoid duplicate injections
-  if (content.includes('student-tools-promo')) {
+  // Idempotency check to avoid duplicate injections (Check for text "Free Student Utility Tools" to survive ReactQuill class stripping)
+  if (content.includes('Free Student Utility Tools')) {
     return content;
   }
 
   const promoCard = `
+<div class="ql-table-embed">
 <div class="student-tools-promo" style="margin: 24px 0; padding: 20px; border-radius: 12px; border: 2px dashed #10b981; background: #f0fdf4; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); text-align: left;">
   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
     <span style="font-size: 20px; line-height: 1;">🚀</span>
@@ -514,6 +521,7 @@ function injectStudentToolsPromo(content, category) {
     <a href="/tools" style="flex: 1 1 140px; text-align: center; padding: 10px 12px; background: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; display: inline-block;">📅 Age Calculator</a>
     <a href="/tools" style="flex: 1 1 140px; text-align: center; padding: 10px 12px; background: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; border: none; display: inline-block;">📄 PDF Compressor</a>
   </div>
+</div>
 </div>
 `;
 
@@ -544,8 +552,39 @@ function prettifyLinksAndContent(content) {
   if (!content) return content;
   let c = content;
 
-  // 1. Add inline styles to standard links to prevent sticking and provide spacing
-  c = c.replace(/<a(\s+)(?!class=["']btn-link-action)([^>]+)>(.*?)<\/a>/gi, (match, space, attrs, text) => {
+  // 1. Wrap any loose action buttons under headers in ql-table-embed and action-buttons-group containers
+  const linksSectionRegex = /(<h[23]>(?:महत्वपूर्ण लिंक्स?|Important Links?|Useful Links?|Some Useful Important Links)<\/h[23]>\s*)(<a[^>]*class=["'][^"']*btn-link-action[\s\S]*?<\/a>(?:\s*(?:&nbsp;)?\s*<a[^>]*class=["'][^"']*btn-link-action[\s\S]*?<\/a>)*)/gi;
+  c = c.replace(linksSectionRegex, (match, header, links) => {
+    // Strip &nbsp; from links to avoid formatting gaps in column flex layout
+    const cleanLinks = links.replace(/&nbsp;/g, ' ');
+    return `<h2>महत्वपूर्ण लिंक्स</h2>\n<div class="ql-table-embed">\n<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${cleanLinks}\n</div>\n</div>\n`;
+  });
+
+  // Strip any pre-existing ql-table-embed wrappers surrounding action-buttons-group or tables first to prevent nesting duplication
+  c = c.replace(/<div class=["']ql-table-embed["'][^>]*>\s*(<table[\s\S]*?<\/table>)\s*<\/div>/gi, '$1');
+  c = c.replace(/<div class=["']ql-table-embed["'][^>]*>\s*(<div class=["']action-buttons-group["'][\s\S]*?<\/div>)\s*<\/div>/gi, '$1');
+
+  // Clean any duplicated or existing style parameters from table tags first to prevent piling
+  for (let i = 0; i < 4; i++) {
+    c = c.replace(/(<(?:table|thead|tr|th|td)[^>]*?)\s+style=["'][^"']*?["']/gi, '$1');
+  }
+
+  // Clean up any button links to have fresh, beautiful styles and colors, and strip accumulated style trash
+  c = c.replace(/<a([^>]*class=["'][^"']*btn-link-action[^"']*["'][^>]*)>(.*?)<\/a>/gi, (match, attrs, text) => {
+    const cleanAttrs = attrs.replace(/\s+style=["'][^"']*["']/gi, '');
+    let bgColor = '#2563eb'; // blue for website
+    if (cleanAttrs.includes('btn-apply')) bgColor = '#059669'; // green for apply
+    if (cleanAttrs.includes('btn-notification')) bgColor = '#dc2626'; // red for notification
+    
+    return `<a ${cleanAttrs} style="margin: 5px 0; width: 100%; max-width: 420px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: 700; font-size: 15px; color: #ffffff; background-color: ${bgColor}; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">${text}</a>`;
+  });
+
+  // 2. Add inline styles to standard links to prevent sticking and provide spacing
+  c = c.replace(/<a(\s+)([^>]+)>(.*?)<\/a>/gi, (match, space, attrs, text) => {
+    // Skip formatting for action buttons
+    if (attrs.includes('btn-link-action')) {
+      return match;
+    }
     if (attrs.includes('style=')) {
       return match.replace(/style=["']([^"']+)["']/i, 'style="$1; margin: 2px 6px; display: inline-block;"');
     } else {
@@ -553,13 +592,19 @@ function prettifyLinksAndContent(content) {
     }
   });
 
-  // 2. Ensure consecutive link tags have spacing/separation
-  c = c.replace(/<\/a>\s*<a/gi, '</a> &nbsp; <a');
+  // 3. Ensure consecutive standard link tags have spacing/separation
+  c = c.replace(/(?<!class=["']btn-link-action[^"']*")<\/a>\s*<a(?! class=["']btn-link-action)/gi, '</a> &nbsp; <a');
 
-  // 3. Prettify tables (borders, padding, zebra striping, widths) so links inside cells fit perfectly
+  // 4. Prettify tables (borders, padding, zebra striping, widths) so links inside cells fit perfectly
   c = c.replace(/<td([^>]*)>/gi, '<td$1 style="padding: 12px; border: 1px solid #e2e8f0; vertical-align: middle; line-height: 1.6;">');
   c = c.replace(/<th([^>]*)>/gi, '<th$1 style="padding: 12px; border: 1px solid #cbd5e1; background-color: #f1f5f9; font-weight: 700; color: #1e293b; text-align: left; vertical-align: middle;">');
   c = c.replace(/<table([^>]*)>/gi, '<table$1 style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;">');
+
+  // Wrap all tables in ql-table-embed divs to prevent ReactQuill from stripping them
+  c = c.replace(/(<table[\s\S]*?<\/table>)/gi, '\n<div class="ql-table-embed">\n$1\n</div>\n');
+
+  // Wrap all action button groups in ql-table-embed divs to prevent ReactQuill from stripping them
+  c = c.replace(/(<div class=["']action-buttons-group["'][\s\S]*?<\/div>)/gi, '\n<div class="ql-table-embed">\n$1\n</div>\n');
 
   return c;
 }
@@ -720,13 +765,13 @@ async function processAIOutput(data) {
   }
 
   // Dynamic Category-Based Footer Branding (100% SEO Accuracy)
-  if (!processedContent.includes('brand-authority-block')) {
+  if (!processedContent.includes('brand-authority-block') && !processedContent.includes('Digital Home Blog') && !processedContent.includes('डिजिटल होम ब्लॉग')) {
     const isSarkariCategory = category === 'Sarkari Jobs & Exams';
     let brandBlock = '';
     if (isSarkariCategory) {
-      brandBlock = `\n<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>\n<p>यह महत्वपूर्ण जानकारी <strong><a href="/">Digital Home Blog</a></strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong><a href="/">Government Job Vacancy & Result 2026</a></strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong><a href="/">Home</a></strong> और <strong><a href="/blog">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>\n</div>`;
+      brandBlock = `\n<div class="ql-table-embed">\n<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>\n<p>यह महत्वपूर्ण जानकारी <strong><a href="/">Digital Home Blog</a></strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong><a href="/">Government Job Vacancy & Result 2026</a></strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong><a href="/">Home</a></strong> और <strong><a href="/blog">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>\n</div>\n</div>\n`;
     } else {
-      brandBlock = `\n<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>\n<p>यह लेख <strong><a href="/">Digital Home Blog</a></strong> के एक्सपर्ट्स द्वारा रिसर्च करके तैयार किया गया है। हम अपने पाठकों तक हेल्थ, एजुकेशन, लाइफस्टाइल और टेक की सटीक जानकारियां (All Insights Blog) पहुंचाते हैं। यदि आप छात्र हैं, तो हमारे पोर्टल पर लाइव <strong><a href="/">Government Job Vacancy & Result</a></strong> और न्यू वैकेंसी अलर्ट्स का लाभ उठाने के लिए सीधे हमारे <strong><a href="/category/sarkari-jobs-exams">Job Alerts</a></strong> कैटेगरी पर विजिट कर सकते हैं।</p>\n</div>`;
+      brandBlock = `\n<div class="ql-table-embed">\n<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>\n<p>यह लेख <strong><a href="/">Digital Home Blog</a></strong> के एक्सपर्ट्स द्वारा रिसर्च करके तैयार किया गया है। हम अपने पाठकों तक हेल्थ, एजुकेशन, लाइफस्टाइल और टेक की सटीक जानकारियां (All Insights Blog) पहुंचाते हैं। यदि आप छात्र हैं, तो हमारे पोर्टल पर लाइव <strong><a href="/">Government Job Vacancy & Result</a></strong> और न्यू वैकेंसी अलर्ट्स का लाभ उठाने के लिए सीधे हमारे <strong><a href="/category/sarkari-jobs-exams">Job Alerts</a></strong> कैटेगरी पर विजिट कर सकते हैं।</p>\n</div>\n</div>\n`;
     }
     processedContent = processedContent + brandBlock;
   }
@@ -777,4 +822,4 @@ async function processAIOutput(data) {
   };
 }
 
-module.exports = { processAIOutput, generateTags, cleanContent, addInternalLinks, ensureKeywordFrequency, sanitizeThirdPartyLinks, injectStudentToolsPromo };
+module.exports = { processAIOutput, generateTags, cleanContent, addInternalLinks, ensureKeywordFrequency, sanitizeThirdPartyLinks, injectStudentToolsPromo, prettifyLinksAndContent };

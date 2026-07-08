@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { calculateSeoScore } = require('../../shared/utils/seoAuditor');
+require('../liveAlerts/liveAlert.model');
 
 const blogPostSchema = new mongoose.Schema(
   {
@@ -38,13 +39,170 @@ const blogPostSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-blogPostSchema.pre('save', function (next) {
+blogPostSchema.pre('save', async function (next) {
   try {
     const post = this;
 
-    // Ensure preschool educational games promotion is appended
-    if (post.content && !post.content.includes('games-promo-block')) {
-      const gamesPromo = `\n<div class="games-promo-block" style="margin: 30px 0; padding: 24px; border-radius: 16px; border: 1px solid #e5e7eb; background: linear-gradient(135deg, #fef08a 0%, #fef9c3 100%); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); text-align: left; position: relative; overflow: hidden;">
+    if (post.content) {
+      let content = post.content || '';
+
+      // Find the matched alert for metadata
+      let boardName = 'Official Board';
+      let lastDate = 'Check Details';
+      let totalVacancy = 'विभिन्न पद (Various Posts)';
+
+      try {
+        const LiveAlert = mongoose.model('LiveAlert');
+        const cleanTitle = post.title.split(/[:|]/)[0].trim();
+        let alert = await LiveAlert.findOne({ title: cleanTitle });
+        if (!alert) {
+          alert = await LiveAlert.findOne({
+            title: new RegExp(cleanTitle.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i')
+          });
+        }
+
+        if (alert) {
+          if (alert.boardName) boardName = alert.boardName.trim();
+          if (alert.lastDate) lastDate = alert.lastDate.trim();
+          
+          const vacancyMatch = post.title.match(/(\d+)\s*(?:Post|Vacancy|Vacancy|पद|भर्ती)/i) || 
+                               alert.title.match(/(\d+)\s*(?:Post|Vacancy|Vacancy|पद|भर्ती)/i);
+          if (vacancyMatch) {
+            totalVacancy = vacancyMatch[1] + ' पद';
+          } else {
+            const detailsMatch = alert.detailsText && alert.detailsText.match(/(?:Total Post|Total Vacancy|Total Vacancies|कुल पद)[:\s]*(\d+)/i);
+            if (detailsMatch) {
+              totalVacancy = detailsMatch[1] + ' पद';
+            }
+          }
+        }
+      } catch (alertErr) {
+        console.error('Failed to query LiveAlert for Highlights Box:', alertErr.message);
+      }
+
+      // Highlights Box HTML block
+      const highlightsBoxHtml = `\n<div class="ql-table-embed">
+<div class="quick-highlights-box" style="margin: 25px 0; padding: 20px; border-radius: 12px; border: 2px solid #3b82f6; background-color: #eff6ff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.08); text-align: left;">
+  <h3 style="margin: 0 0 12px 0; color: #1e3a8a; font-size: 1.15rem; font-weight: 800; border: none; padding: 0; display: flex; align-items: center; gap: 8px;">
+    📌 महत्वपूर्ण जानकारी (Quick Highlights)
+  </h3>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+    <div style="background-color: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #dbeafe; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+      <span style="display: block; font-size: 0.725rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">विभाग (Board)</span>
+      <strong style="font-size: 0.925rem; color: #1e40af; display: block; margin-top: 4px; font-weight: 700;">${boardName}</strong>
+    </div>
+    <div style="background-color: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #dbeafe; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+      <span style="display: block; font-size: 0.725rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">कुल पद (Total Vacancies)</span>
+      <strong style="font-size: 0.925rem; color: #059669; display: block; margin-top: 4px; font-weight: 700;">${totalVacancy}</strong>
+    </div>
+    <div style="background-color: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #dbeafe; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+      <span style="display: block; font-size: 0.725rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">अंतिम तिथि (Last Date)</span>
+      <strong style="font-size: 0.925rem; color: #dc2626; display: block; margin-top: 4px; font-weight: 700;">${lastDate}</strong>
+    </div>
+  </div>
+</div>
+</div>\n`;
+
+      // A. Convert markdown heading markers to HTML tags if leaked/unescaped
+      content = content.replace(/<p>\s*##\s+(.*?)<\/p>/gi, '<h2>$1</h2>');
+      content = content.replace(/<p>\s*###\s+(.*?)<\/p>/gi, '<h3>$1</h3>');
+      content = content.replace(/<p>\s*####\s+(.*?)<\/p>/gi, '<h4>$1</h4>');
+      content = content.replace(/^(?:<p>)?##\s+(.*?)(?:<\/p>)?$/gm, '<h2>$1</h2>');
+      content = content.replace(/^(?:<p>)?###\s+(.*?)(?:<\/p>)?$/gm, '<h3>$1</h3>');
+
+      // B. Convert markdown bold/italic tags to HTML strong/em
+      content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      content = content.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      content = content.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+      // C. Remove stray markdown table separators and triple pipes
+      content = content.replace(/\|{2,}/g, '');
+      content = content.replace(/\|-+\|/g, '');
+      content = content.replace(/\|[\s-]*\|/g, '');
+
+      // D. Fix stray list dashes and dots
+      content = content.replace(/<p>\s*[-*•]\s+(.*?)<\/p>/gi, '<li>$1</li>');
+      content = content.replace(/<p>\s*[-*•]\s+/gi, '<p>• ');
+
+      // E. Clean up multiple empty lines, duplicate spacing, and trailing breaks
+      content = content.replace(/(?:<p>&nbsp;<\/p>\s*){2,}/gi, '<p>&nbsp;</p>');
+      content = content.replace(/(?:<p><br\s*\/?>\s*<\/p>\s*){2,}/gi, '<p><br></p>');
+      content = content.replace(/(?:<br\s*\/?>\s*){2,}/gi, '<br>');
+      content = content.replace(/[ \t]{3,}/g, ' '); // Normalize spaces but keep line breaks
+
+      content = content.replace(/(?:<p>If you found this helpful, also check out our guide on.*?for more details.<\/p>\s*){2,}/gi, (match) => {
+        const firstMatch = match.match(/<p>If you found this helpful, also check out our guide on.*?for more details.<\/p>/i);
+        return firstMatch ? firstMatch[0] + '\n' : '';
+      });
+      content = content.replace(/(?:<p>For more information, read our article on.*?\.\s*<\/p>\s*){2,}/gi, (match) => {
+        const firstMatch = match.match(/<p>For more information, read our article on.*?\.\s*<\/p>/i);
+        return firstMatch ? firstMatch[0] + '\n' : '';
+      });
+      // Also clean up unspaced/raw repetitions if any
+      content = content.replace(/(?:If you found this helpful, also check out our guide on.*?for more details\.\s*){2,}/gi, (match) => {
+        const firstMatch = match.match(/If you found this helpful, also check out our guide on.*?for more details\./i);
+        return firstMatch ? firstMatch[0] + '\n' : '';
+      });
+
+      // 0. Remove any old quick highlights or promo blocks
+      content = content.replace(/<div[^>]*class=["'](?:ql-table-embed\s+)?quick-highlights-box["'][^]*?<\/div>\s*<\/div>/gi, '');
+      content = content.replace(/📌 महत्वपूर्ण जानकारी[^]*?<\/div>\s*<\/div>\s*<\/div>/gi, '');
+
+      content = content.replace(/<div[^>]*class=["'](?:ql-table-embed\s+)?games-promo-block["'][^]*?<\/div>\s*<\/div>/gi, '');
+      content = content.replace(/<div[^>]*games-promo-block[^]*?<\/div>/gi, '');
+      content = content.replace(/🎮[^]*?Play Free Brain Booster Games Now 🚀/gi, '');
+      content = content.replace(/<div[^>]*class=["']ql-table-embed["']>\s*<div[^>]*class=["']games-promo-block["'][^]*?<\/div>\s*<\/div>/gi, '');
+
+      content = content.replace(/<div[^>]*class=["']brand-authority-block["'][^]*?<\/div>/gi, '');
+      content = content.replace(/यह महत्वपूर्ण जानकारी[^]*?डिजिटल होम ब्लॉग[^]*?<\/div>/gi, '');
+      content = content.replace(/<div[^>]*brand-authority-block[^]*?<\/div>/gi, '');
+      content = content.replace(/<div[^>]*class=["']ql-table-embed["']>\s*<div[^>]*class=["']brand-authority-block["'][^]*?<\/div>\s*<\/div>/gi, '');
+
+      // 1. Inject the highlights box after the first paragraph
+      const firstPEnd = content.indexOf('</p>');
+      if (firstPEnd !== -1) {
+        content = content.slice(0, firstPEnd + 4) + '\n' + highlightsBoxHtml + '\n' + content.slice(firstPEnd + 4);
+      } else {
+        content = highlightsBoxHtml + '\n' + content;
+      }
+
+      // 2. Prettify and fix the "महत्वपूर्ण लिंक्स" (Important Links) buttons section
+      const linksMatch = content.match(/<h2>महत्वपूर्ण लिंक्स<\/h2>([^]*?)(?=<h[23]>|$)/i);
+      if (linksMatch) {
+        const originalSection = linksMatch[1];
+        const cheerio = require('cheerio');
+        const $ = cheerio.load(originalSection, null, false);
+        const anchors = $('a');
+        if (anchors.length > 0) {
+          const buttonHtmls = [];
+          anchors.each((i, el) => {
+            const href = $(el).attr('href') || '#';
+            const text = $(el).text().trim();
+            let btnClass = 'btn-website';
+            const lowerText = text.toLowerCase();
+            
+            if (lowerText.includes('apply') || lowerText.includes('आवेदन') || lowerText.includes('यहाँ क्लिक')) {
+              btnClass = 'btn-apply';
+            } else if (lowerText.includes('notification') || lowerText.includes('अधिसूचना') || lowerText.includes('pdf')) {
+              btnClass = 'btn-notification';
+            } else if (lowerText.includes('website') || lowerText.includes('वेबसाइट') || lowerText.includes('विजिट')) {
+              btnClass = 'btn-website';
+            } else if (lowerText.includes('syllabus') || lowerText.includes('पाठ्यक्रम')) {
+              btnClass = 'btn-notification';
+            } else if (lowerText.includes('resizer') || lowerText.includes('tool')) {
+              btnClass = 'btn-website';
+            }
+
+            buttonHtmls.push(`<a href="${href}" class="btn-link-action ${btnClass}" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">${text}</a>`);
+          });
+
+          const newButtonsBlock = `\n<div class="ql-table-embed">\n<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>\n</div>\n`;
+          content = content.replace(originalSection, newButtonsBlock);
+        }
+      }
+
+      // 3. Create fresh games promotion block
+      const gamesPromo = `\n<div class="ql-table-embed">\n<div class="games-promo-block" style="margin: 30px 0; padding: 24px; border-radius: 16px; border: 1px solid #e5e7eb; background: linear-gradient(135deg, #fef08a 0%, #fef9c3 100%); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); text-align: left; position: relative; overflow: hidden;">
   <div style="display: flex; align-items: flex-start; gap: 16px;">
     <div style="font-size: 32px; line-height: 1;">🎮</div>
     <div>
@@ -55,15 +213,31 @@ blogPostSchema.pre('save', function (next) {
       <a href="/games" style="display: inline-block; padding: 10px 20px; background: #ca8a04; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.85rem; box-shadow: 0 4px 6px -1px rgba(133, 77, 14, 0.2);">Play Free Brain Booster Games Now 🚀</a>
     </div>
   </div>
-</div>\n`;
+</div>\n</div>\n`;
 
-      // Insert before the brand authority block if it exists
-      const brandIndex = post.content.indexOf("<div class='brand-authority-block'");
-      if (brandIndex !== -1) {
-        post.content = post.content.slice(0, brandIndex) + gamesPromo + '\n' + post.content.slice(brandIndex);
-      } else {
-        post.content += '\n' + gamesPromo;
-      }
+      // 5. Create fresh brand authority block
+      const brandPromo = `\n<div class="ql-table-embed">
+<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; font-family: inherit;'>
+<p>यह महत्वपूर्ण जानकारी <strong><a href="/" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Digital Home Blog</a></strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong><a href="/" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Government Job Vacancy & Result 2026</a></strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong><a href="/" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Home</a></strong> aur <strong><a href="/blog" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>
+</div>\n</div>\n`;
+
+      content += gamesPromo + brandPromo;
+
+      // 6. Format and wrap tables cleanly using Cheerio
+      const cheerio = require('cheerio');
+      const $ = cheerio.load(content, null, false);
+      $('table').each((i, table) => {
+        $(table).addClass('comparison-table');
+        $(table).attr('style', "width: 100%; border-collapse: collapse; margin: 20px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color: #374151; background-color: #ffffff; border: 1px solid #E5E7EB; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden;");
+        $(table).find('th').attr('style', "border: 1px solid #E5E7EB; padding: 12px 16px; text-align: left; font-weight: 600; color: #111827; background-color: #F9FAFB;");
+        $(table).find('td').attr('style', "border: 1px solid #E5E7EB; padding: 12px 16px; color: #374151;");
+        
+        if (!$(table).parent().hasClass('ql-table-embed')) {
+          $(table).wrap('<div class="ql-table-embed"></div>');
+        }
+      });
+
+      post.content = $.html();
     }
 
     // Ensure seoDescription is filled if not provided
@@ -89,6 +263,43 @@ blogPostSchema.pre('save', function (next) {
     console.error('Error calculating seoScore in post pre-save hook:', err.message);
   }
   next();
+});
+
+blogPostSchema.post('save', async function (doc) {
+  if (doc.status === 'published') {
+    // 1. Google Indexing Auto-Notification
+    try {
+      const { notifyUrl } = require('../../shared/utils/google-indexing');
+      const catUrl = (doc.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
+      const postUrl = `https://www.digitalhomeblog.in/blog/${catUrl}/${doc.slug}`;
+      console.log(`[Google Indexing] Auto-pinging index for published post: ${postUrl}`);
+      const result = await notifyUrl(postUrl, 'URL_UPDATED');
+      if (result.success) {
+        console.log(`[Google Indexing] Successfully auto-indexed published post: "${doc.title}"`);
+      } else {
+        console.warn(`[Google Indexing] Auto-indexing failed for "${doc.title}":`, result.error || result.message);
+      }
+    } catch (err) {
+      console.error('[Google Indexing] Failed in post-save index notifier:', err.message);
+    }
+
+    // 2. Two-Way Internal Linking Builder
+    try {
+      require('../settings/settings.model'); // Ensure Settings model schema is loaded
+      const Settings = mongoose.model('Settings');
+      const linkSetting = await Settings.findOne({ key: 'disableTwoWayLinking' });
+      const isLinkDisabled = linkSetting ? linkSetting.value === true : false; // Default to active (false)
+      
+      if (isLinkDisabled) {
+        console.log('[Two-Way Linking] Auto-linking skipped: Two-Way Internal Linking is disabled in settings.');
+      } else {
+        const { addTwoWayInternalLink } = require('../../shared/utils/linkBuilder');
+        await addTwoWayInternalLink(doc);
+      }
+    } catch (linkErr) {
+      console.error('[Two-Way Linking] Failed in post-save linking builder:', linkErr.message);
+    }
+  }
 });
 
 blogPostSchema.index({ title: 'text', content: 'text', excerpt: 'text' });

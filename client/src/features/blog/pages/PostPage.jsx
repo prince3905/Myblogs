@@ -9,7 +9,7 @@ import CommentSection from '../components/CommentSection';
 import SocialShare from '../../../components/SocialShare';
 import TableOfContents from '../../../components/TableOfContents';
 import AdSlot from '../../../components/AdSlot';
-import { MonetizationOn, Info } from '@mui/icons-material';
+import { MonetizationOn, Info, PictureAsPdf } from '@mui/icons-material';
 import { useEffect } from 'react';
 import Prism from 'prismjs';
 import { optimizeImage } from '../../../shared/lib/images';
@@ -66,6 +66,87 @@ function pickHero(title) {
   return HERO_PHOTOS[Math.abs(hash) % HERO_PHOTOS.length];
 }
 
+function parseTableSpecs(htmlContent) {
+  if (!htmlContent) return [];
+  const specs = [];
+
+  const clean = (val) => {
+    return val
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/[\r\n\t]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+
+    // 1. Extract from modern quick-highlights-box
+    const highlightCards = doc.querySelectorAll('.quick-highlights-box div');
+    highlightCards.forEach(el => {
+      // Skip container divs (which contain child divs)
+      if (el.querySelector('div')) return;
+
+      const keySpan = el.querySelector('span');
+      const valStrong = el.querySelector('strong');
+      if (keySpan && valStrong) {
+        let key = clean(keySpan.textContent);
+        let value = clean(valStrong.textContent);
+        if (key.endsWith(':')) key = key.slice(0, -1).trim();
+        if (key && value) {
+          specs.push({ key, value });
+        }
+      }
+    });
+
+    // 2. Extract from any table rows (handles 2-column, 3-column, etc.)
+    const tableRows = doc.querySelectorAll('table tr');
+    tableRows.forEach(row => {
+      // Skip table header rows
+      if (row.querySelector('th')) return;
+
+      const cells = Array.from(row.querySelectorAll('td')).map(cell => clean(cell.textContent));
+      if (cells.length >= 2) {
+        let key = cells[0];
+        // Filter out empty cell indicators like '-'
+        const valueParts = cells.slice(1).filter(c => c && c !== '-' && c !== '—');
+        const value = valueParts.join(' / ');
+
+        if (key.endsWith(':')) key = key.slice(0, -1).trim();
+
+        const lowerKey = key.toLowerCase();
+        const lowerVal = value.toLowerCase();
+
+        // Skip utility rows, link instructions, download buttons
+        if (
+          !key || !value ||
+          lowerKey.includes('click') || lowerVal.includes('click') ||
+          lowerKey.includes('download') || lowerVal.includes('download') ||
+          lowerKey.includes('link') || lowerVal.includes('link') ||
+          lowerKey.includes('official website') || lowerVal.includes('official website') ||
+          lowerKey.includes('apply') || lowerVal.includes('apply') ||
+          lowerKey.includes('महत्वपूर्ण') || lowerKey.includes('लिंक') ||
+          lowerKey === 'category' || lowerKey === 'dates' ||
+          key.length > 60 || value.length > 250
+        ) {
+          return;
+        }
+
+        // Avoid duplicates if already parsed from quick-highlights
+        if (!specs.some(s => s.key.toLowerCase() === key.toLowerCase())) {
+          specs.push({ key, value });
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Error parsing table specs:', err);
+  }
+
+  return specs;
+}
+
 export default function PostPage() {
   const { slug, category } = useParams();
   const { post, loading, error } = usePost(slug);
@@ -91,6 +172,146 @@ export default function PostPage() {
   }
 
   const heroImage = optimizeImage(post.featuredImage || pickHero(post.title), 1000, 600);
+
+  const generateBrandedPDF = async () => {
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const primaryColor = [16, 185, 129];
+      const textColor = [30, 41, 59];
+      const lightBg = [241, 245, 249];
+
+      // Draw header banner
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 210, 35, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.text('DIGITAL HOME BLOG', 15, 18);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text('Fastest Government Jobs & Exam Alerts Portal', 15, 25);
+
+      // Write title
+      doc.setTextColor(...textColor);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      
+      const titleLines = doc.splitTextToSize(post.title, 180);
+      doc.text(titleLines, 15, 48);
+      
+      let currentY = 48 + (titleLines.length * 7);
+
+      // Write category / date info
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Category: ${post.category}  |  Published: ${new Date(post.publishedAt || post.createdAt).toLocaleDateString()}`, 15, currentY);
+      currentY += 8;
+
+      // Divider line
+      doc.setDrawColor(226, 232, 240);
+      doc.line(15, currentY, 195, currentY);
+      currentY += 10;
+
+      // Section title
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(...primaryColor);
+      doc.text('Vacancy Overview & Details (महत्वपूर्ण विवरण)', 15, currentY);
+      currentY += 6;
+
+      const specs = parseTableSpecs(post.content);
+      if (specs.length > 0) {
+        doc.setFontSize(10);
+        specs.forEach((spec, idx) => {
+          // Page overflow check (max printable height is 297mm)
+          if (currentY > 260) {
+            doc.addPage();
+            // Draw secondary page top banner
+            doc.setFillColor(...primaryColor);
+            doc.rect(0, 0, 210, 15, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.text('DIGITAL HOME BLOG - Job Summary (Continued)', 15, 10);
+            currentY = 28;
+          }
+
+          if (idx % 2 === 0) {
+            doc.setFillColor(...lightBg);
+            doc.rect(15, currentY - 4, 180, 8, 'F');
+          }
+
+          doc.setTextColor(...textColor);
+          doc.setFont('helvetica', 'bold');
+          doc.text(spec.key, 18, currentY + 1.5);
+
+          doc.setFont('helvetica', 'normal');
+          const valLines = doc.splitTextToSize(spec.value, 100);
+          doc.text(valLines, 90, currentY + 1.5);
+
+          currentY += Math.max(8, valLines.length * 5);
+        });
+      } else {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(...textColor);
+        const excerptLines = doc.splitTextToSize(post.excerpt || 'Please visit our website link below to read full job vacancy details.', 180);
+        doc.text(excerptLines, 15, currentY);
+        currentY += (excerptLines.length * 5) + 5;
+      }
+
+      currentY += 5;
+
+      // Bottom warning banner check page overflow
+      if (currentY > 240) {
+        doc.addPage();
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 0, 210, 15, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('DIGITAL HOME BLOG - Job Summary (Continued)', 15, 10);
+        currentY = 28;
+      }
+
+      doc.setFillColor(254, 242, 242);
+      doc.setDrawColor(239, 68, 68);
+      doc.rect(15, currentY, 180, 22, 'FD');
+
+      doc.setTextColor(185, 28, 28);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('👉 Click the Link Below to Apply & View Details Online:', 20, currentY + 7);
+
+      const canonicalUrl = `${window.location.origin}${postUrl(post)}`;
+      doc.setTextColor(37, 99, 235);
+      doc.setFontSize(10);
+      doc.text(canonicalUrl, 20, currentY + 15);
+      
+      doc.link(20, currentY + 11, 170, 6, { url: canonicalUrl });
+
+      // Clean footer signature lines on the final page
+      doc.setTextColor(148, 163, 184);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text('This job alert document is downloaded from Digital Home Blog.', 15, 285);
+      doc.text('Stay tuned for fast recruitment updates!', 195, 285, { align: 'right' });
+
+      const fileName = `${post.slug}-summary.pdf`;
+      doc.save(fileName);
+    } catch (err) {
+      console.error('PDF Generation failed:', err);
+    }
+  };
 
   return (
     <Layout>
@@ -120,6 +341,60 @@ export default function PostPage() {
             };
 
             const schemas = [blogPostingSchema];
+
+            // Injects dynamic JobPosting Schema to get structural tables on Google listings
+            if (post.category === 'Sarkari Jobs & Exams') {
+              const specs = parseTableSpecs(post.content);
+              const specMap = new Map(specs.map(s => [s.key.toLowerCase(), s.value]));
+
+              let orgName = 'Sarkari Board';
+              for (const [k, v] of specMap.entries()) {
+                if (k.includes('board') || k.includes('organizer') || k.includes('विभाग') || k.includes('आयोजक')) {
+                  orgName = v;
+                  break;
+                }
+              }
+
+              let validThrough = '';
+              for (const [k, v] of specMap.entries()) {
+                if (k.includes('last date') || k.includes('अंतिम तिथि') || k.includes('deadline')) {
+                  const match = v.match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
+                  if (match) {
+                    validThrough = `${match[3]}-${match[2]}-${match[1]}T23:59:59`;
+                  } else {
+                    const matchISO = v.match(/(\d{4})[\/\-\.](\d{2})[\/\-\.](\d{2})/);
+                    if (matchISO) {
+                      validThrough = `${matchISO[1]}-${matchISO[2]}-${matchISO[3]}T23:59:59`;
+                    }
+                  }
+                  break;
+                }
+              }
+
+              const jobPostingSchema = {
+                '@context': 'https://schema.org',
+                '@type': 'JobPosting',
+                title: post.title,
+                description: post.seoDescription || post.excerpt,
+                datePosted: post.publishedAt || post.createdAt,
+                validThrough: validThrough || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                hiringOrganization: {
+                  '@type': 'Organization',
+                  name: orgName,
+                  sameAs: window.location.origin
+                },
+                jobLocation: {
+                  '@type': 'Place',
+                  address: {
+                    '@type': 'PostalAddress',
+                    addressCountry: 'IN',
+                    addressRegion: 'India'
+                  }
+                }
+              };
+              schemas.push(jobPostingSchema);
+            }
+
             const parsedFaqs = extractFaqs(post.content);
             if (parsedFaqs.length > 0) {
               schemas.push({
@@ -132,8 +407,7 @@ export default function PostPage() {
           })()}
         />
       
-       {/* Hero Image Section */}
-        <Box sx={{ 
+       <Box sx={{ 
           width: '100%', 
           height: { xs: '40vh', md: '60vh' },
           minHeight: { xs: 280, md: 400 },
@@ -183,9 +457,7 @@ export default function PostPage() {
            </Container>
         </Box>
 
-       {/* Content Section */}
        <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
-         {/* Back button */}
          <Button 
            component={Link} 
            to="/blog" 
@@ -195,19 +467,38 @@ export default function PostPage() {
            ← Back to blog
          </Button>
 
-
-
-         {/* Excerpt */}
          <Typography variant="h6" color="text.secondary" sx={{ mb: 4, fontStyle: 'italic', lineHeight: 1.7, color: 'text.primary' }}>
            {post.excerpt}
          </Typography>
 
-          {/* Table of Contents */}
+          {post.category === 'Sarkari Jobs & Exams' && !post.disablePdfDownload && (
+            <Button
+              variant="contained"
+              color="error"
+              onClick={generateBrandedPDF}
+              startIcon={<PictureAsPdf />}
+              sx={{
+                mb: 4,
+                py: 1.2,
+                px: 3,
+                fontWeight: 700,
+                textTransform: 'none',
+                borderRadius: 2,
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+                '&:hover': {
+                  bgcolor: '#dc2626',
+                  boxShadow: '0 6px 16px rgba(239, 68, 68, 0.3)'
+                }
+              }}
+            >
+              Download Job Summary (PDF डाउनलोड करें)
+            </Button>
+          )}
+
           {post.content && post.content.includes('<h') && (
             <TableOfContents content={post.content} />
           )}
 
-          {/* Rating */}
           {post.rating && (
             <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="body1" sx={{ fontWeight: 600 }}>Rating:</Typography>

@@ -809,17 +809,42 @@ async function scrapeFeeds() {
 
   // Autopilot Trigger: Find all active alerts and automatically draft blog posts for them in the background
   try {
-    const activeAlerts = await LiveAlert.find({ status: 'active' });
+    const Settings = require('../settings/settings.model');
+    const disableSetting = await Settings.findOne({ key: 'disableAutopilot' });
+    const isAutopilotDisabled = disableSetting ? disableSetting.value === true : process.env.DISABLE_AUTOPILOT === 'true';
+
+    if (isAutopilotDisabled) {
+      console.log('[Autopilot] Automatic drafting is disabled via settings toggle.');
+      return totalSaved;
+    }
+  } catch (dbErr) {
+    console.error('[Autopilot] Settings database check failed:', dbErr.message);
+  }
+
+  try {
+    const activeAlerts = await LiveAlert.find({ status: 'active' }).limit(3);
     if (activeAlerts.length > 0) {
-      console.log(`[Autopilot] Found ${activeAlerts.length} active alerts to auto-draft!`);
+      console.log(`[Autopilot] Found active alerts. Processing a limited batch of ${activeAlerts.length} alerts to prevent API overload...`);
       const { draftAlertToPostDoc } = require('./liveAlert.controller');
       
       for (const alert of activeAlerts) {
         try {
           console.log(`[Autopilot] Automatically drafting post for alert: "${alert.title}"`);
           await draftAlertToPostDoc(alert);
+          
+          // Introduce a 20-second delay between alerts to respect API rate limits
+          console.log(`[Autopilot] Waiting 20 seconds before next auto-draft to respect API rate limits...`);
+          await new Promise(resolve => setTimeout(resolve, 20000));
         } catch (draftErr) {
           console.error(`[Autopilot] Failed to auto-draft alert "${alert.title}":`, draftErr.message);
+          
+          if (draftErr.message && (draftErr.message.includes('429') || draftErr.message.includes('Rate limit'))) {
+            console.warn(`[Autopilot] Rate limit (429) detected! Aborting the remaining batch to let the API cooldown.`);
+            break; // Abort this scraper run's loop
+          }
+          
+          // 10 second cooldown on other failures
+          await new Promise(resolve => setTimeout(resolve, 10000));
         }
       }
     }
@@ -830,10 +855,48 @@ async function scrapeFeeds() {
   return totalSaved;
 }
 
+async function publishNextQueuedPost() {
+  try {
+    const Settings = require('../settings/settings.model');
+    const disableSetting = await Settings.findOne({ key: 'disableQueuePublisher' });
+    // Default to true (disabled/OFF) to verify manual review stays active by default
+    const isPublisherDisabled = disableSetting ? disableSetting.value === true : true;
+
+    if (isPublisherDisabled) {
+      console.log('[Queue Publisher] Auto-publishing skipped: Queue Publisher is disabled in settings.');
+      return;
+    }
+
+    const BlogPost = require('../posts/post.model');
+    // Find the oldest draft post (FIFO queue)
+    const oldestDraft = await BlogPost.findOne({ status: 'draft' }).sort({ createdAt: 1 });
+    if (!oldestDraft) {
+      console.log('[Queue Publisher] No draft posts in queue to publish.');
+      return;
+    }
+
+    console.log(`[Queue Publisher] Automatically publishing oldest queued draft: "${oldestDraft.title}"`);
+    oldestDraft.status = 'published';
+    oldestDraft.publishedAt = new Date();
+    await oldestDraft.save(); // Automatically triggers Google Indexing & Two-Way linking hooks!
+
+    // Auto share to Telegram
+    try {
+      const { sendTelegramMessage } = require('../services/telegramService');
+      await sendTelegramMessage(oldestDraft);
+      console.log(`[Queue Publisher] Successfully shared auto-published post to Telegram: "${oldestDraft.title}"`);
+    } catch (tgErr) {
+      console.error('[Queue Publisher] Failed to send Telegram message for auto-published post:', tgErr.message);
+    }
+  } catch (err) {
+    console.error('[Queue Publisher] Error during scheduled auto-publish:', err.message);
+  }
+}
+
 function initScheduler() {
   const cron = require('node-cron');
   
-  // Run every 15 minutes
+  // Scraper Run: Every 15 minutes
   cron.schedule('*/15 * * * *', async () => {
     try {
       await scrapeFeeds();
@@ -842,9 +905,48 @@ function initScheduler() {
     }
   });
 
-  console.log('[LiveAlert Scheduler] Node-cron initialized to fetch alerts every 15 minutes.');
+  // Queue Publisher: Daily at 9:00 AM and 6:00 PM (IST / Server Time)
+  cron.schedule('0 9,18 * * *', async () => {
+    try {
+      const Settings = require('../settings/settings.model');
+      const disableSetting = await Settings.findOne({ key: 'disableQueuePublisher' });
+      const isPublisherDisabled = disableSetting ? disableSetting.value === true : true;
 
-  // Run an initial scrape immediately on startup (asynchronously in the background)
+      if (isPublisherDisabled) {
+        console.log('[LiveAlert Scheduler] Queue publisher skipped: Queue Publisher is disabled in settings.');
+        return;
+      }
+
+      console.log('[LiveAlert Scheduler] Executing scheduled peak-hour queue publisher...');
+      await publishNextQueuedPost();
+    } catch (err) {
+      console.error('[LiveAlert Scheduler] Queue publisher error:', err.message);
+    }
+  });
+
+  // Expiry Daemon: Daily at midnight (00:00 AM Server Time)
+  cron.schedule('0 0 * * *', async () => {
+    try {
+      const Settings = require('../settings/settings.model');
+      const expirySetting = await Settings.findOne({ key: 'disableExpiryDaemon' });
+      const isExpiryDisabled = expirySetting ? expirySetting.value === true : false; // Default to active (false)
+      
+      if (isExpiryDisabled) {
+        console.log('[LiveAlert Scheduler] Daily post expiry check skipped: Expiry Daemon is disabled in settings.');
+        return;
+      }
+
+      console.log('[LiveAlert Scheduler] Running daily post expiry check...');
+      const { checkAndFlagExpiredPosts } = require('../../shared/utils/expiryDaemon');
+      await checkAndFlagExpiredPosts();
+    } catch (err) {
+      console.error('[LiveAlert Scheduler] Expiry Daemon error:', err.message);
+    }
+  });
+
+  console.log('[LiveAlert Scheduler] Node-cron initialized: Scraper (15m), Queue (9AM, 6PM) & Expiry (00:00).');
+
+  // Run initial startup tasks immediately (asynchronously in the background)
   Promise.resolve().then(async () => {
     console.log('[LiveAlert Scheduler] Running initial startup scrape...');
     try {
@@ -853,7 +955,24 @@ function initScheduler() {
     } catch (err) {
       console.error('[LiveAlert Scheduler] Initial startup scrape failed:', err.message);
     }
+
+    console.log('[LiveAlert Scheduler] Running initial startup post expiry check...');
+    try {
+      const Settings = require('../settings/settings.model');
+      const expirySetting = await Settings.findOne({ key: 'disableExpiryDaemon' });
+      const isExpiryDisabled = expirySetting ? expirySetting.value === true : false;
+      
+      if (isExpiryDisabled) {
+        console.log('[LiveAlert Scheduler] Startup post expiry check skipped: Expiry Daemon is disabled in settings.');
+      } else {
+        const { checkAndFlagExpiredPosts } = require('../../shared/utils/expiryDaemon');
+        await checkAndFlagExpiredPosts();
+        console.log('[LiveAlert Scheduler] Initial startup post expiry check completed.');
+      }
+    } catch (err) {
+      console.error('[LiveAlert Scheduler] Initial startup post expiry check failed:', err.message);
+    }
   });
 }
 
-module.exports = { scrapeFeeds, initScheduler };
+module.exports = { scrapeFeeds, initScheduler, publishNextQueuedPost };

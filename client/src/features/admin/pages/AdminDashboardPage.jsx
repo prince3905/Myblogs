@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Box, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination, Tooltip } from '@mui/material';
-import { Article, Mail, Comment, Add, Edit, Delete, Forum, MarkEmailRead, Schedule, Visibility, TrendingUp } from '@mui/icons-material';
+import { Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Box, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination, Tooltip, CircularProgress, Switch, FormControlLabel } from '@mui/material';
+import { Article, Mail, Comment, Add, Edit, Delete, Forum, MarkEmailRead, Schedule, Visibility, TrendingUp, OfflineBolt } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
 import { request } from '../../../shared/lib/api';
 import { calculateSeoScore } from '../../../shared/utils/seoAuditor';
+import { useToast } from '../../../components/Toast';
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [posts, setPosts] = useState([]);
@@ -17,6 +19,7 @@ export default function AdminDashboardPage() {
   const [deleteId, setDeleteId] = useState(null);
   const [page, setPage] = useState(1);
   const [error, setError] = useState('');
+  const [autopilotEnabled, setAutopilotEnabled] = useState(false);
   const perPage = 10;
   const totalPages = Math.ceil(posts.length / perPage);
   const pagePosts = posts.slice((page - 1) * perPage, page * perPage);
@@ -41,12 +44,86 @@ export default function AdminDashboardPage() {
       .catch(() => {});
   }
 
-  useEffect(() => { loadPosts(); loadSubscribers(); loadActivity(); loadAnalytics(); }, [location.pathname]);
+  function loadSettings() {
+    request('/api/admin/settings')
+      .then(data => {
+        if (data?.settings) {
+          setAutopilotEnabled(!data.settings.disableAutopilot);
+        }
+      })
+      .catch(() => {});
+  }
+
+  useEffect(() => { loadPosts(); loadSubscribers(); loadActivity(); loadAnalytics(); loadSettings(); }, [location.pathname]);
+
+  async function handleAutopilotToggle(e) {
+    const val = e.target.checked;
+    setAutopilotEnabled(val);
+    setError('');
+    setSuccessMsg('');
+    try {
+      await request('/api/admin/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ key: 'disableAutopilot', value: !val })
+      });
+      setSuccessMsg(val ? 'Autopilot (Auto-Drafting) Chalu kar diya gaya hai! 🤖🚀' : 'Autopilot (Auto-Drafting) Band kar diya gaya hai! ⏸️');
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err) {
+      setError('Autopilot toggle setting fail ho gayi: ' + err.message);
+      setAutopilotEnabled(!val);
+    }
+  }
 
   async function handleDelete() {
     await request(`/api/admin/posts/${deleteId}`, { method: 'DELETE' });
     setDeleteId(null);
     loadPosts();
+  }
+
+  const [successMsg, setSuccessMsg] = useState('');
+  const [indexLoadingId, setIndexLoadingId] = useState(null);
+  const [tgLoadingId, setTgLoadingId] = useState(null);
+
+  async function handleIndexPing(postId) {
+    setIndexLoadingId(postId);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const res = await request(`/api/admin/posts/${postId}/index-ping`, { method: 'POST' });
+      if (res.success) {
+        addToast(res.message || 'Google Indexing request sent successfully!', 'success');
+        setSuccessMsg(res.message || 'Google Indexing request sent successfully!');
+      } else {
+        addToast(res.message || 'Google Indexing request failed.', 'error');
+        setError(res.message || 'Google Indexing request failed.');
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to ping Google Indexing API', 'error');
+      setError(err.message || 'Failed to ping Google Indexing API');
+    } finally {
+      setIndexLoadingId(null);
+    }
+  }
+
+  async function handleTelegramShare(postId) {
+    setTgLoadingId(postId);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const res = await request(`/api/admin/posts/${postId}/telegram-share`, { method: 'POST' });
+      if (res.success) {
+        addToast(res.message || 'Successfully shared post to Telegram!', 'success');
+        setSuccessMsg(res.message || 'Successfully shared post to Telegram!');
+      } else {
+        addToast(res.message || 'Telegram sharing failed.', 'error');
+        setError(res.message || 'Telegram sharing failed.');
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to share post to Telegram', 'error');
+      setError(err.message || 'Failed to share post to Telegram');
+    } finally {
+      setTgLoadingId(null);
+    }
   }
 
   return (
@@ -63,20 +140,46 @@ export default function AdminDashboardPage() {
             <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.3 }}>Welcome back, {user?.name || 'Admin'}</Typography>
           </Box>
         </Box>
-        <Button
-          component={Link}
-          to="/admin/posts/new"
-          variant="contained"
-          startIcon={<Add />}
-          sx={{ fontWeight: 600, borderRadius: 2, px: { xs: 2, md: 3 }, fontSize: { xs: '0.8rem', md: '0.875rem' } }}
-        >
-          New Post
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={autopilotEnabled}
+                onChange={handleAutopilotToggle}
+                color="primary"
+                size="small"
+              />
+            }
+            label={
+              <Typography sx={{ fontSize: '0.825rem', fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                🤖 Autopilot
+              </Typography>
+            }
+            sx={{
+              border: '1px solid #ECECEC',
+              borderRadius: 3,
+              px: 2,
+              py: 0.4,
+              mr: 0,
+              bgcolor: '#F9FAFB'
+            }}
+          />
+          <Button
+            component={Link}
+            to="/admin/posts/new"
+            variant="contained"
+            startIcon={<Add />}
+            sx={{ fontWeight: 600, borderRadius: 2, px: { xs: 2, md: 3 }, fontSize: { xs: '0.8rem', md: '0.875rem' } }}
+          >
+            New Post
+          </Button>
+        </Box>
       </Box>
 
       {/* Content */}
       <Box sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 4 } }}>
         {error ? <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setError('')}>{error}</Alert> : null}
+        {successMsg ? <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setSuccessMsg('')}>{successMsg}</Alert> : null}
 
         {/* Stats */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2,1fr)', md: 'repeat(5,1fr)' }, gap: 3, mb: 4 }}>
@@ -236,11 +339,12 @@ export default function AdminDashboardPage() {
             <Table>
               <TableHead>
                 <TableRow sx={{ '& th': { color: '#6B7280', fontWeight: 600, fontSize: '0.75rem', py: 1.5, px: 3, borderBottom: '1px solid #ECECEC' } }}>
-                  <TableCell sx={{ width: '35%' }}>Title</TableCell>
-                  <TableCell sx={{ width: '10%' }}>Status</TableCell>
-                  <TableCell sx={{ width: '15%' }}>Category</TableCell>
-                  <TableCell sx={{ width: '15%' }}>SEO & Rank</TableCell>
-                  <TableCell sx={{ width: '10%' }}>Updated</TableCell>
+                  <TableCell sx={{ width: '30%' }}>Title</TableCell>
+                  <TableCell sx={{ width: '8%' }}>Status</TableCell>
+                  <TableCell sx={{ width: '12%' }}>Category</TableCell>
+                  <TableCell sx={{ width: '12%' }}>SEO & Rank</TableCell>
+                  <TableCell sx={{ width: '11%' }}>Created</TableCell>
+                  <TableCell sx={{ width: '12%' }}>Updated</TableCell>
                   <TableCell sx={{ width: '15%' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -290,10 +394,61 @@ export default function AdminDashboardPage() {
                         </Tooltip>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: '0.8rem', color: '#6B7280' }}>{new Date(post.updatedAt).toLocaleDateString()}</Typography>
+                        <Typography sx={{ fontSize: '0.8rem', color: '#6B7280', fontWeight: 500 }}>
+                          {new Date(post.createdAt || post.updatedAt).toLocaleDateString()}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.7rem', color: '#9CA3AF' }}>
+                          {new Date(post.createdAt || post.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography sx={{ fontSize: '0.8rem', color: '#6B7280', fontWeight: 500 }}>
+                          {new Date(post.updatedAt).toLocaleDateString()}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.7rem', color: '#9CA3AF' }}>
+                          {new Date(post.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          {post.status === 'published' && (
+                            <Button
+                              size="small"
+                              disabled={indexLoadingId === post._id}
+                              onClick={() => handleIndexPing(post._id)}
+                              sx={{
+                                minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600,
+                                color: '#10B981', borderRadius: 1.5,
+                                '&:hover': { bgcolor: '#ECFDF5' }
+                              }}
+                            >
+                              {indexLoadingId === post._id ? (
+                                <CircularProgress size={12} color="inherit" sx={{ mr: 0.3 }} />
+                              ) : (
+                                <OfflineBolt sx={{ fontSize: '0.9rem', mr: 0.3 }} />
+                              )}
+                              Index
+                            </Button>
+                          )}
+                          {post.status === 'published' && (
+                            <Button
+                              size="small"
+                              disabled={tgLoadingId === post._id}
+                              onClick={() => handleTelegramShare(post._id)}
+                              sx={{
+                                minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600,
+                                color: '#2563eb', borderRadius: 1.5,
+                                '&:hover': { bgcolor: '#EFF6FF' }
+                              }}
+                            >
+                              {tgLoadingId === post._id ? (
+                                <CircularProgress size={12} color="inherit" sx={{ mr: 0.3 }} />
+                              ) : (
+                                <Forum sx={{ fontSize: '0.9rem', mr: 0.3 }} />
+                              )}
+                              Share
+                            </Button>
+                          )}
                           <Button component={Link} to={`/admin/posts/${post._id}/edit`} size="small"
                             sx={{ minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600, color: '#4F46E5', borderRadius: 1.5, '&:hover': { bgcolor: '#EEF2FF' } }}
                           >

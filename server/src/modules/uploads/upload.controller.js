@@ -97,8 +97,8 @@ async function generateAiThumbnail(req, res) {
     const words = mainPart.split(/\s+/);
     const overlayText = words.length > 5 ? words.slice(0, 4).join(' ').toUpperCase() : mainPart.toUpperCase();
 
-    // Force realistic photographic style with bold text overlay
-    const styledPrompt = `${prompt}, highly realistic photography style, DSLR camera, professional natural lighting, 4k resolution, stock photo look, no cartoon, no drawings, with a bold high-contrast text overlay that reads "${overlayText}" clearly visible on the image`;
+    // Force CTR optimized infographic/poster style with bold text overlay
+    const styledPrompt = `${prompt}, high-CTR blog post thumbnail design, vibrant yellow and deep navy blue contrasting color theme, clean layout, professional graphic design style`;
 
     // Generate image using Pollinations AI
     const seed = Math.floor(Math.random() * 1000000);
@@ -168,4 +168,66 @@ async function fixImagesSeoRoute(req, res) {
   }
 }
 
-module.exports = { uploadImage, generateAiThumbnail, fixImagesSeoRoute, getPhotographicFallbackPrompt };
+async function getImagePromptRoute(req, res) {
+  try {
+    const { title } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ success: false, message: 'Title is required' });
+    }
+
+    console.log(`[AI Image Prompt Route] Generating prompt for: "${title}"`);
+    let prompt = '';
+    try {
+      prompt = await generateImagePrompt(title);
+    } catch (aiErr) {
+      console.error('[AI Image Prompt Route] Prompt generation failed, using fallback:', aiErr.message);
+      prompt = getPhotographicFallbackPrompt(title);
+    }
+
+    const mainPart = title.split(/[:|]/)[0].trim();
+    const words = mainPart.split(/\s+/);
+    const overlayText = words.length > 5 ? words.slice(0, 4).join(' ').toUpperCase() : mainPart.toUpperCase();
+
+    const styledPrompt = `${prompt}, natural realistic photograph style, authentic look, clear natural lighting, clean composition, high quality, no cartoon, no drawings, with a bold high-contrast text overlay that reads "${overlayText}" clearly visible on the image`;
+
+    res.json({
+      success: true,
+      prompt: styledPrompt
+    });
+  } catch (error) {
+    console.error('[AI Image Prompt Route] General error:', error.message);
+    res.status(500).json({ success: false, message: error.message || 'Failed to generate prompt' });
+  }
+}
+
+async function generateAiThumbnailFromPrompt(req, res) {
+  try {
+    const { prompt } = req.body;
+    if (!prompt || !prompt.trim()) {
+      return res.status(400).json({ success: false, message: 'Prompt is required' });
+    }
+
+    console.log(`[AI Thumbnail Custom] Generating image for custom prompt: "${prompt}"`);
+
+    // Generate image using Pollinations AI
+    const seed = Math.floor(Math.random() * 1000000);
+    const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
+
+    console.log(`[AI Thumbnail Custom] Uploading Pollinations URL to Cloudinary: ${pollinationsUrl}`);
+    const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
+      folder: 'myblogs',
+      transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
+    });
+
+    console.log(`[AI Thumbnail Custom] Successfully uploaded to Cloudinary: ${uploadResult.secure_url}`);
+    res.json({
+      success: true,
+      imageUrl: uploadResult.secure_url,
+    });
+  } catch (error) {
+    console.error('[AI Thumbnail Custom] General error:', error.message);
+    res.status(500).json({ success: false, message: error.message || 'Failed to generate AI thumbnail' });
+  }
+}
+
+module.exports = { uploadImage, generateAiThumbnail, fixImagesSeoRoute, getPhotographicFallbackPrompt, getImagePromptRoute, generateAiThumbnailFromPrompt };

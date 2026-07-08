@@ -28,13 +28,19 @@ function calculateSeoScore(post, keywordResearch = null) {
   }
 
   if (!focusKeyword && post.tags) {
-    const firstTag = typeof post.tags === 'string' ? post.tags.split(',')[0] : Array.isArray(post.tags) ? post.tags[0] : '';
-    focusKeyword = firstTag ? firstTag.trim() : '';
+    const tagsArr = typeof post.tags === 'string' ? post.tags.split(',') : Array.isArray(post.tags) ? post.tags : [];
+    const cleanTags = tagsArr.map(t => t.trim()).filter(Boolean);
+    const suitableTag = cleanTags.find(t => {
+      const wordsLen = t.split(/\s+/).length;
+      return wordsLen >= 2 && wordsLen <= 4 && t.toLowerCase() !== title.toLowerCase();
+    });
+    focusKeyword = suitableTag || cleanTags[0] || '';
   }
 
-  if (!focusKeyword) {
-    // Fallback: use first 3 words of title
-    focusKeyword = title.split(/\s+/).slice(0, 3).join(' ');
+  // If focus keyword is still empty, too long, or equal to title, clean it
+  if (!focusKeyword || focusKeyword.split(/\s+/).length > 5 || focusKeyword.toLowerCase() === title.toLowerCase()) {
+    const titleWords = title.split(/\s+/).filter(Boolean);
+    focusKeyword = titleWords.slice(0, Math.min(4, titleWords.length)).join(' ');
   }
 
   focusKeyword = (focusKeyword || '').toLowerCase().trim();

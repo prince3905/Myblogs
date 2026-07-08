@@ -214,7 +214,7 @@ async function draftAlertToPostDoc(alert) {
     buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Official Website (विजिट करें)</a>`);
   }
 
-  const buttonHtmlBlock = `<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>`;
+  const buttonHtmlBlock = `<div class="ql-table-embed">\n<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>\n</div>`;
 
   const aiParams = {
     title: cleanTitle,
@@ -257,10 +257,23 @@ ${buttonHtmlBlock}
   // Trigger backend AI post generator
   const generatedData = await generateBlogContentCore(aiParams);
 
-  let finalContent = generatedData.content || '';
+  // Prettify and post-process AI output using standard processAIOutput helper
+  const { processAIOutput } = require('../ai/aiPostProcessor');
+  const processed = await processAIOutput({
+    title: generatedData.title,
+    content: generatedData.content || '',
+    keywords: generatedData.keywords || [],
+    category: 'Sarkari Jobs & Exams',
+    length: 'long',
+    slug: generatedData.slug,
+    seoTitle: generatedData.seoTitle,
+    seoDescription: generatedData.seoDescription
+  });
+
+  let finalContent = processed.content || '';
 
   // Standardize & inject important links section programmatically
-  const linksHeaderRegex = /<h[23]>(?:महत्वपूर्ण लिंक्स|Important Links)<\/h[23]>/i;
+  const linksHeaderRegex = /<h[23]>(?:महत्वपूर्ण लिंक्स?|Important Links?|Useful Links?|Some Useful Important Links)<\/h[23]>/i;
   const hasLinksSection = linksHeaderRegex.test(finalContent);
   const standardLinksBlock = `\n<h2>महत्वपूर्ण लिंक्स</h2>\n${buttonHtmlBlock}\n`;
 
@@ -296,6 +309,10 @@ ${buttonHtmlBlock}
     }
   }
 
+  // Run final prettifier to ensure all tables, spacing, and anchor tag margins match
+  const { prettifyLinksAndContent } = require('../ai/aiPostProcessor');
+  finalContent = prettifyLinksAndContent(finalContent);
+
   // Auto-generate dynamic photographic featured image using Pollinations and Cloudinary
   let featuredImage = '';
   try {
@@ -328,23 +345,23 @@ ${buttonHtmlBlock}
 
   // Create and save Mongoose BlogPost document
   const newPost = new BlogPost({
-    title: generatedData.title,
-    slug: generatedData.slug,
-    excerpt: generatedData.summary.slice(0, 320),
+    title: processed.title,
+    slug: processed.slug,
+    excerpt: processed.seoDescription || generatedData.summary.slice(0, 320),
     content: finalContent,
     featuredImage: featuredImage,
     category: 'Sarkari Jobs & Exams',
-    tags: generatedData.keywords || [],
+    tags: processed.tags || [],
     status: 'draft',
-    seoTitle: generatedData.seoTitle,
-    seoDescription: generatedData.seoDescription,
-    seoKeywords: generatedData.keywords || [],
+    seoTitle: processed.seoTitle,
+    seoDescription: processed.seoDescription,
+    seoKeywords: processed.tags || [],
     canonicalUrl: generatedData.permalink,
     author: 'Harry Prince'
   });
 
   // Remove any existing draft with the same slug to prevent unique slug index violations
-  await BlogPost.deleteMany({ slug: generatedData.slug });
+  await BlogPost.deleteMany({ slug: processed.slug });
   await newPost.save();
 
   // Mark the alert as drafted

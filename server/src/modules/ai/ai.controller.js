@@ -359,11 +359,13 @@ function buildHtmlTable(rows) {
 // Convert markdown-like blog content to HTML
 function markdownToHtml(text) {
   if (!text) return '';
-  // If it already looks like HTML, skip markdown conversion
-  if (/^\s*</.test(text)) return cleanHtml(text);
   
   let h = text;
+  // Always convert markdown tables to HTML tables first, even if the rest of the text is HTML
   h = convertMarkdownTablesToHtml(h);
+  
+  // If it already looks like HTML, skip subsequent markdown conversions
+  if (/^\s*</.test(text)) return cleanHtml(h);
   
   // Strip leading + prefix only (AI artifact for headings)
   h = h.replace(/^\+[ \t]*/gm, '');
@@ -656,6 +658,8 @@ function robustJsonParse(text) {
 }
 
 async function generateBlogContentCore({ title, model, length, tone, language, command, category }) {
+  const aiModel = model || 'gemini-2.5-pro';
+  const isGroq = GROQ_MODELS.includes(aiModel);
   const toneMap = {
     informative: 'Informative and educational. Explain concepts with examples.',
     funny:       'Fun, light-hearted, and humorous. Keep it entertaining.',
@@ -682,7 +686,7 @@ async function generateBlogContentCore({ title, model, length, tone, language, c
   const framework = CATEGORY_FRAMEWORKS[detectedCategory] || CATEGORY_FRAMEWORKS['Tech & Tutorials'];
   const categoryFrameworkInstr = framework.prompt;
 
-  const systemPrompt = `You are a Lead Software Architect & Prompt Engineer designing high-ranking articles for Digital Home, an Indian multi-niche platform. Current year: 2026.
+  let systemPrompt = `You are a Lead Software Architect & Prompt Engineer designing high-ranking articles for Digital Home, an Indian multi-niche platform. Current year: 2026.
 
 **PERMANENT RULES — FOLLOW FOR EVERY POST, ALL MODELS.**
 
@@ -792,12 +796,18 @@ ${ADSENSE_CONSTRAINTS}
   const sectionInstr = sectionMap[targetLength];
   const customInstr = command ? `\n\nAuthor's extra instruction: ${command}` : '';
 
-  const tokenBudget = targetLength === 'short' ? 4096 : targetLength === 'long' ? 8192 : 6144;
+  let tokenBudget = targetLength === 'short' ? 4096 : targetLength === 'long' ? 8192 : 6144;
+  if (isGroq) {
+    tokenBudget = Math.min(tokenBudget, 2000);
+  }
 
   let keywordInject = '';
   let kwResearchId = null;
   let resolvedFocusKeyword = '';
   try {
+    if (process.env.SKIP_SEO_RESEARCH === 'true') {
+      throw new Error('SEO Keyword Research bypassed via environment configuration');
+    }
     const kwData = await aggregateKeywordData(title);
     if (kwData && kwData.filtered.length > 0) {
       const allKws = kwData.filtered;
@@ -819,8 +829,21 @@ ${ADSENSE_CONSTRAINTS}
   } catch (kwErr) {
     console.warn('Keyword research step failed (non-fatal):', kwErr.message);
   }
-
   const newsContext = await fetchNewsContext(title);
+
+  if (isGroq) {
+    systemPrompt = `You are an expert SEO copywriter and blogger writing high-ranking articles for Digital Home, an Indian MERN platform. Write in natural Hinglish.
+MANDATORY RULES:
+1. First paragraph must start directly with an intro (no H2 yet) and contain the title/focus keyword phrase.
+2. Group all critical action links (Official Website, Apply Online) under a 'महत्वपूर्ण लिंक्स' H2 heading. Group buttons in <div class="ql-table-embed">.
+3. Content must conclude with 'Frequently Asked Questions (FAQ)' H2 heading with exactly 3 questions formatted as H3 (e.g. "### Question: ...?").
+4. Append this HTML Brand Block at the absolute end of the 'content' field if category is 'Sarkari Jobs & Exams':
+   <div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>
+   <p>यह महत्वपूर्ण जानकारी <strong><a href="/">Digital Home Blog</a></strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong><a href="/">Government Job Vacancy & Result 2026</a></strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong><a href="/">Home</a></strong> और <strong><a href="/blog">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>
+   </div>
+5. Include 1 HTML data table comparing spec details.
+6. JSON schema output MUST contain: title, category, content, slug, keywords (array), summary, imageTag, imagetag, seoTitle, seoDescription. Keep JSON strictly valid.`;
+  }
 
   const userPrompt = `Write a ${toneInstr.toLowerCase()} blog post for 2026 about: "${title}" for category: ${detectedCategory}
 
@@ -830,10 +853,8 @@ Structure: ${sectionInstr}. Include 1 data table in body, and FAQ with 3 questio
 
 Return ONLY valid JSON with fields: title (the creative, professional copywriting-optimized title), category, permalink (digitalhomeblog.in/{category-url-slug}/{slug}), content (string with ## headings on separate lines, NEVER inside lists/tables), slug (no stop words), keywords (array), summary (140-160 chars Hinglish with CTA), imageTag, imagetag, seoTitle, seoDescription. content MUST be a STRING. Natural Hinglish. Dense 3-4 line paragraphs.`;
 
-  const aiModel = model || 'gemini-2.5-pro';
   const isOpenAI = aiModel.startsWith('gpt-');
   const isGemini = aiModel.startsWith('gemini-');
-  const isGroq = GROQ_MODELS.includes(aiModel);
   const modelTimeout = isGroq ? 60000 : (isGemini ? 60000 : 30000);
 
   let text = '';
@@ -1004,14 +1025,14 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
         ],
         temperature: 0.7,
         max_tokens: tokenBudget,
-        top_p: 0.9,
-        response_format: { type: "json_object" }
+        top_p: 0.9
       }, {
         headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
         timeout: modelTimeout
       });
       text = groqResponse.data?.choices?.[0]?.message?.content || '';
     } catch (groqErr) {
+      console.error('[AI Controller] Groq call failed detailed error:', JSON.stringify(groqErr.response?.data || groqErr.message, null, 2));
       if (GEMINI_API_KEY) {
         try {
           const geminiFallback = await axios.post(`${GEMINI_BASE_URL}/gemini-2.5-pro:generateContent?key=${GEMINI_API_KEY}`, {
@@ -1087,14 +1108,14 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
       raw = String(raw);
     }
     if (raw.trim()) {
-      content = (/^\s*</.test(raw)) ? cleanHtml(raw) : markdownToHtml(raw);
+      content = markdownToHtml(raw);
     }
   }
 
   if (!content) {
     const extracted = extractContentField(text);
     if (extracted.trim()) {
-      content = (/^\s*</.test(extracted)) ? cleanHtml(extracted) : markdownToHtml(extracted);
+      content = markdownToHtml(extracted);
     }
   }
   if (!content) {
@@ -1351,11 +1372,20 @@ async function convertYoutubeToBlog(req, res) {
 }
 
 async function generateImagePrompt(title) {
-  const prompt = `Write a highly descriptive, professional prompt for an AI Image generator to generate a featured thumbnail image for a blog post with the title: "${title}".
-The prompt MUST describe a realistic, professional, high-resolution DSLR stock photograph. Focus on real-life environments, professional workers, or candidate exams related to the title.
-Include in the description a prominent text overlay to be rendered on the image. The text overlay should read a short, catchy, high-impact English title derived from the post (e.g., "RAILWAY JOBS 2026", "GOVT JOB 2026", "EXAM RESULT", "ADMIT CARD"). Specify that this text is written in bold, clean, modern, high-contrast typography.
-CRITICAL: Do NOT use cartoon, illustration, vector art, 3D render, drawing, or painting style. The scene must look 100% like a real-life photograph.
-Return ONLY the description prompt in plain text (maximum 45 words, no quotes, no conversational filler).`;
+  const prompt = `Write a detailed, high-CTR AI image generator prompt for a blog post thumbnail based on the title: "${title}".
+You must describe a premium, professional infographic-style post thumbnail layout that follows these strict design rules:
+1. COLOR PALETTE: Deep dark blue (navy/indigo) and vibrant yellow contrast theme. High visual impact.
+2. CENTRAL VISUAL: A clean, realistic, central visual photograph representing the topic:
+   - Space/Science (ISRO): Indian space rocket or launchpad.
+   - Transport/Conductor (UPSRTC): Indian local transit bus or station.
+   - Navy/Defense (Navy SSC): Indian Navy warship or officers in uniform.
+   - Teaching/ECCE (KGVB, Anganwadi): Indian classroom board or school desks.
+   - Technology/Business/Money: modern gadgets, computers, or Indian Rupee notes.
+   - Engineering/Technical (Junior Engineer): blueprints, building construction site, or drafting tools.
+3. DUAL-LANGUAGE TEXT OVERLAY: Specify a bold, high-contrast text overlay containing a short English title (e.g. "UPRTOU YOGA 2026") and its Hindi translation in Devanagari script (e.g. "यूपीआरटू योग प्रवेश 2026") printed clearly on the thumbnail in clean modern typography.
+4. KEY FEATURE BADGES: Include two professional gold and navy blue shield-shaped circular badges on the sides with clean icons and small text overlay: "Time-Saving" on one badge, and a relevant trust badge like "Official Alert" or "Authorized University" on the other.
+5. MINIMAL CLUTTER: Clean composition, balanced layout, no messy design details.
+6. Return ONLY the description prompt in plain English (maximum 55 words, no conversational filler, no introductory verbs like "Create a image").`;
 
   const keys = [
     process.env.GEMINI_API_KEY,
@@ -1394,7 +1424,35 @@ Return ONLY the description prompt in plain text (maximum 45 words, no quotes, n
       console.warn(`[AI Image Prompt] Gemini key failed: ${err.message}. Trying next...`);
     }
   }
-  throw lastErr || new Error('All Gemini keys failed');
+  
+  if (lastErr) {
+    console.log('[AI Image Prompt] All Gemini keys failed. Trying Groq Llama 3.1 8B...');
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+    if (GROQ_API_KEY) {
+      try {
+        const groqResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+          model: 'llama-3.1-8b-instant',
+          messages: [
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 150
+        }, {
+          headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+          timeout: 25000
+        });
+        const text = groqResponse.data?.choices?.[0]?.message?.content;
+        if (text && text.trim()) {
+          console.log('[AI Image Prompt] Groq Llama successfully generated image prompt.');
+          return text.trim().replace(/^"(.*)"$/, '$1');
+        }
+      } catch (groqErr) {
+        console.error('[AI Image Prompt] Groq image prompt generation failed:', groqErr.message);
+      }
+    }
+  }
+
+  throw lastErr || new Error('All image prompt generators failed');
 }
 
-module.exports = { generateAIContent, generateBlogContentCore, generateImagePrompt, convertYoutubeToBlog };
+module.exports = { generateAIContent, generateBlogContentCore, generateImagePrompt, convertYoutubeToBlog, markdownToHtml };

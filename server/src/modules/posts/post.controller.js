@@ -213,6 +213,16 @@ async function getPostBySlug(req, res) {
     return res.status(404).json({ message: 'Post not found' });
   }
 
+  // Expose disablePdfDownload toggle to public post page
+  try {
+    const Settings = require('../settings/settings.model');
+    const pdfSetting = await Settings.findOne({ key: 'disablePdfDownload' });
+    post.disablePdfDownload = pdfSetting ? pdfSetting.value === true : false;
+  } catch (err) {
+    console.error('Failed to get disablePdfDownload setting:', err.message);
+    post.disablePdfDownload = false;
+  }
+
   // Increment views (fire-and-forget, no await needed for response)
   BlogPost.updateOne({ _id: post._id }, { $inc: { views: 1 } }).catch(() => {});
 
@@ -289,6 +299,9 @@ async function createPost(req, res, next) {
     if (post.status === 'published') {
       const { notifyUrl } = require('../../shared/utils/google-indexing');
       notifyUrl(postUrl(post), 'URL_UPDATED').catch(() => {});
+
+      const { sendTelegramMessage } = require('../../shared/services/telegramService');
+      sendTelegramMessage(post).catch(() => {});
     }
 
     return res.status(201).json(post);
@@ -350,6 +363,12 @@ async function updatePost(req, res, next) {
 
       if (oldStatus === 'published' && oldUrl !== postUrl(existing)) {
         notifyUrl(oldUrl, 'URL_DELETED').catch(() => {});
+      }
+
+      // Share to Telegram if the status just changed to published
+      if (oldStatus !== 'published') {
+        const { sendTelegramMessage } = require('../../shared/services/telegramService');
+        sendTelegramMessage(existing).catch(() => {});
       }
     } else if (oldStatus === 'published' && existing.status !== 'published') {
       const { notifyUrl } = require('../../shared/utils/google-indexing');
@@ -534,6 +553,54 @@ async function getHomepageData() {
   }
 }
 
+async function pingPostIndexing(req, res) {
+  try {
+    const post = await BlogPost.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    if (post.status !== 'published') {
+      return res.status(400).json({ success: false, message: 'Post must be published to notify Google Indexing API.' });
+    }
+
+    const { notifyUrl } = require('../../shared/utils/google-indexing');
+    const result = await notifyUrl(postUrl(post), 'URL_UPDATED');
+
+    if (result && result.success) {
+      return res.json({ success: true, message: 'Google Indexing request sent successfully!', data: result.data });
+    } else {
+      return res.status(500).json({ success: false, message: result?.message || 'Google Indexing ping failed.', error: result?.error });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+async function sharePostToTelegram(req, res) {
+  try {
+    const post = await BlogPost.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    if (post.status !== 'published') {
+      return res.status(400).json({ success: false, message: 'Post must be published to share to Telegram.' });
+    }
+
+    const { sendTelegramMessage } = require('../../shared/services/telegramService');
+    const result = await sendTelegramMessage(post);
+
+    if (result && result.success) {
+      return res.json({ success: true, message: 'Successfully shared post to Telegram!', data: result.data });
+    } else {
+      return res.status(500).json({ success: false, message: result?.message || 'Telegram sharing failed.', error: result?.error });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
 module.exports = {
   listPublishedPosts,
   listAdminPosts,
@@ -549,6 +616,8 @@ module.exports = {
   rssFeed,
   searchPosts,
   likePost,
-  getHomepageData
+  getHomepageData,
+  pingPostIndexing,
+  sharePostToTelegram
 };
 

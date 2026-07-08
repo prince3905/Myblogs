@@ -20,6 +20,7 @@ const pexelsRoutes = require('./modules/pexels/pexels.routes');
 const adRoutes = require('./modules/ads/ad.routes');
 const keywordRoutes = require('./modules/keywords/keyword.routes');
 const liveAlertRoutes = require('./modules/liveAlerts/liveAlert.routes');
+const settingsRoutes = require('./modules/settings/settings.routes');
 const { geoTranslateMiddleware } = require('./shared/middleware/geoTranslate');
 const { sitemap, robots, rssFeed, getHomepageData } = require('./modules/posts/post.controller');
 
@@ -73,6 +74,7 @@ app.use('/api', adRoutes.public);
 app.use('/api/admin', adRoutes.admin);
 app.use('/api', keywordRoutes);
 app.use('/api/admin', liveAlertRoutes);
+app.use('/api/admin', settingsRoutes);
 
 // SEO routes - before static files
 app.get('/sitemap.xml', sitemap);

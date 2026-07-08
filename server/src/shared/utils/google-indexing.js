@@ -33,6 +33,35 @@ function signJwt(payload, privateKey) {
   return `${signatureInput}.${signature}`;
 }
 
+function getCredentials() {
+  const envCreds = process.env.GOOGLE_INDEXING_CREDENTIALS;
+  if (envCreds) {
+    try {
+      if (envCreds.trim().startsWith('{')) {
+        return JSON.parse(envCreds);
+      } else {
+        const resolvedPath = path.resolve(envCreds);
+        if (fs.existsSync(resolvedPath)) {
+          return JSON.parse(fs.readFileSync(resolvedPath, 'utf8'));
+        }
+      }
+    } catch (err) {
+      console.error('[Google Indexing] Failed to parse env credentials:', err.message);
+    }
+  }
+
+  // Fallback to local JSON file
+  if (fs.existsSync(CREDENTIALS_PATH)) {
+    try {
+      return JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
+    } catch (err) {
+      console.error('[Google Indexing] Failed to parse credentials file:', err.message);
+    }
+  }
+
+  return null;
+}
+
 async function getAccessToken(credentials) {
   const now = Math.floor(Date.now() / 1000);
   const payload = {
@@ -68,17 +97,17 @@ async function getAccessToken(credentials) {
  * @param {'URL_UPDATED'|'URL_DELETED'} type - Notification type
  */
 async function notifyUrl(url, type = 'URL_UPDATED') {
-  if (!fs.existsSync(CREDENTIALS_PATH)) {
-    console.warn(`[Google Indexing] Warning: Service account file not found at: ${CREDENTIALS_PATH}. Instant indexing will be skipped.`);
-    return null;
+  const credentials = getCredentials();
+  if (!credentials) {
+    console.warn(`[Google Indexing] Warning: Google Indexing credentials not configured in environment or JSON file. Indexing notice skipped.`);
+    return { success: false, message: 'Google Indexing credentials not configured.' };
   }
 
   try {
-    const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
     const token = await getAccessToken(credentials);
 
     const response = await axios.post(
-      'https://indexing.googleapis.com/v1/urlNotifications:publish',
+      'https://indexing.googleapis.com/v3/urlNotifications:publish',
       {
         url,
         type
@@ -93,13 +122,13 @@ async function notifyUrl(url, type = 'URL_UPDATED') {
     );
 
     console.log(`[Google Indexing] Successfully sent API notice: ${url} -> ${type}`);
-    return response.data;
+    return { success: true, data: response.data };
   } catch (error) {
     console.error(
       `[Google Indexing] API error notification failed for ${url}:`,
       error.response?.data || error.message
     );
-    return null;
+    return { success: false, error: error.response?.data || error.message };
   }
 }
 
