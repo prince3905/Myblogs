@@ -4,6 +4,7 @@ const { scrapeFeeds } = require('../ai/topicDiscoveryService');
 const cronScraper = require('./liveAlert.cron');
 const { generateBlogContentCore, generateImagePrompt } = require('../ai/ai.controller');
 const { getPhotographicFallbackPrompt } = require('../uploads/upload.controller');
+const { callGeminiImagen } = require('../../shared/utils/geminiImagen');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
   cloud_name: 'drkm1wo9o',
@@ -313,7 +314,7 @@ ${buttonHtmlBlock}
   const { prettifyLinksAndContent } = require('../ai/aiPostProcessor');
   finalContent = prettifyLinksAndContent(finalContent);
 
-  // Auto-generate dynamic photographic featured image using Pollinations and Cloudinary
+  // Auto-generate dynamic featured image using Google Gemini Imagen 3 and Cloudinary
   let featuredImage = '';
   try {
     console.log(`[AI Autopilot] Generating dynamic AI thumbnail for: "${generatedData.title}"`);
@@ -323,16 +324,14 @@ ${buttonHtmlBlock}
     } catch (promptErr) {
       imgPrompt = getPhotographicFallbackPrompt(generatedData.title);
     }
-    const mainPart = generatedData.title.split(/[:|]/)[0].trim();
-    const words = mainPart.split(/\s+/);
-    const overlayText = words.length > 5 ? words.slice(0, 4).join(' ').toUpperCase() : mainPart.toUpperCase();
 
-    const styledPrompt = `${imgPrompt}, highly realistic photography style, DSLR camera, professional natural lighting, 4k resolution, stock photo look, no cartoon, no drawings, with a bold high-contrast text overlay that reads "${overlayText}" clearly visible on the image`;
-    const seed = Math.floor(Math.random() * 1000000);
-    const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(styledPrompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
+    const styledPrompt = `${imgPrompt}, high-CTR blog post thumbnail design, vibrant yellow and deep navy blue contrasting color theme, clean layout, professional graphic design style`;
 
-    console.log(`[AI Autopilot] Uploading generated thumbnail to Cloudinary: ${pollinationsUrl}`);
-    const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
+    console.log(`[AI Autopilot] Requesting Google Gemini Imagen API...`);
+    const imageUri = await callGeminiImagen(styledPrompt);
+
+    console.log(`[AI Autopilot] Uploading Imagen 3 base64 to Cloudinary...`);
+    const uploadResult = await cloudinary.uploader.upload(imageUri, {
       folder: 'myblogs',
       transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
     });

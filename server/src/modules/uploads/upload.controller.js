@@ -38,6 +38,7 @@ function uploadImage(req, res, next) {
 }
 
 const { generateImagePrompt } = require('../ai/ai.controller');
+const { callGeminiImagen } = require('../../shared/utils/geminiImagen');
 
 function getPhotographicFallbackPrompt(title) {
   const lower = title.toLowerCase();
@@ -93,19 +94,26 @@ async function generateAiThumbnail(req, res) {
       prompt = getPhotographicFallbackPrompt(title);
     }
 
-    const mainPart = title.split(/[:|]/)[0].trim();
-    const words = mainPart.split(/\s+/);
-    const overlayText = words.length > 5 ? words.slice(0, 4).join(' ').toUpperCase() : mainPart.toUpperCase();
-
     // Force CTR optimized infographic/poster style with bold text overlay
     const styledPrompt = `${prompt}, high-CTR blog post thumbnail design, vibrant yellow and deep navy blue contrasting color theme, clean layout, professional graphic design style`;
 
-    // Generate image using Pollinations AI
-    const seed = Math.floor(Math.random() * 1000000);
-    const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(styledPrompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
+    let imageUri = '';
+    try {
+      console.log(`[AI Thumbnail] Requesting Google Gemini Imagen API...`);
+      imageUri = await callGeminiImagen(styledPrompt);
+    } catch (err) {
+      if (err.message === 'PAID_PLAN_REQUIRED') {
+        console.log('[AI Thumbnail] Google AI Studio free tier detected (Imagen requires paid plan). Falling back to Pollinations AI...');
+      } else {
+        console.error('[AI Thumbnail] Gemini Imagen failed:', err.message, '. Falling back to Pollinations AI...');
+      }
+      // Generate fallback image using Pollinations AI
+      const seed = Math.floor(Math.random() * 1000000);
+      imageUri = `https://image.pollinations.ai/p/${encodeURIComponent(styledPrompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
+    }
 
-    console.log(`[AI Thumbnail] Uploading Pollinations URL to Cloudinary: ${pollinationsUrl}`);
-    const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
+    console.log(`[AI Thumbnail] Uploading image to Cloudinary...`);
+    const uploadResult = await cloudinary.uploader.upload(imageUri, {
       folder: 'myblogs',
       transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
     });
@@ -209,12 +217,23 @@ async function generateAiThumbnailFromPrompt(req, res) {
 
     console.log(`[AI Thumbnail Custom] Generating image for custom prompt: "${prompt}"`);
 
-    // Generate image using Pollinations AI
-    const seed = Math.floor(Math.random() * 1000000);
-    const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
+    let imageUri = '';
+    try {
+      console.log(`[AI Thumbnail Custom] Requesting Google Gemini Imagen API...`);
+      imageUri = await callGeminiImagen(prompt);
+    } catch (err) {
+      if (err.message === 'PAID_PLAN_REQUIRED') {
+        console.log('[AI Thumbnail Custom] Google AI Studio free tier detected (Imagen requires paid plan). Falling back to Pollinations AI...');
+      } else {
+        console.error('[AI Thumbnail Custom] Gemini Imagen failed:', err.message, '. Falling back to Pollinations AI...');
+      }
+      // Generate fallback image using Pollinations AI
+      const seed = Math.floor(Math.random() * 1000000);
+      imageUri = `https://image.pollinations.ai/p/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
+    }
 
-    console.log(`[AI Thumbnail Custom] Uploading Pollinations URL to Cloudinary: ${pollinationsUrl}`);
-    const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
+    console.log(`[AI Thumbnail Custom] Uploading image to Cloudinary...`);
+    const uploadResult = await cloudinary.uploader.upload(imageUri, {
       folder: 'myblogs',
       transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
     });
