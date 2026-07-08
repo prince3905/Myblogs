@@ -376,7 +376,8 @@ export default function PostPage() {
       doc.setFontSize(11);
       doc.text('👉 Click the Link Below to Apply & View Details Online:', 20, currentY + 7);
 
-      const canonicalUrl = `${window.location.origin}${postUrl(post)}`;
+      const productionOrigin = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'https://www.digitalhomeblog.in' : window.location.origin;
+      const canonicalUrl = `${productionOrigin}${postUrl(post)}`;
       doc.setTextColor(37, 99, 235);
       doc.setFontSize(10);
       doc.text(canonicalUrl, 20, currentY + 15);
