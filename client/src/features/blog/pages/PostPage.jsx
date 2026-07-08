@@ -66,6 +66,80 @@ function pickHero(title) {
   return HERO_PHOTOS[Math.abs(hash) % HERO_PHOTOS.length];
 }
 
+function cleanDevanagari(text) {
+  if (!text) return '';
+  
+  // 1. Map of common Hindi terms to English equivalents
+  const translationMap = {
+    'विभाग': 'Board / Department',
+    'कुल पद': 'Total Vacancies',
+    'अंतिम तिथि': 'Last Date to Apply',
+    'ऑनलाइन आवेदन शुरू': 'Application Start Date',
+    'आवेदन शुरू': 'Application Start Date',
+    'आवेदन शुल्क': 'Application Fee',
+    'सामान्य': 'General',
+    'ओबीसी': 'OBC',
+    'ईडब्ल्यूएस': 'EWS',
+    'एसटी': 'ST',
+    'एससी': 'SC',
+    'आयु सीमा': 'Age Limit',
+    'न्यूनतम आयु': 'Minimum Age',
+    'अधिकतम आयु': 'Maximum Age',
+    'पात्रता': 'Eligibility',
+    'योग्यता': 'Eligibility',
+    'परीक्षा तिथि': 'Exam Date',
+    'प्रवेश पत्र': 'Admit Card',
+    'परिणाम': 'Result',
+    'वेतनमान': 'Salary',
+    'चयन प्रक्रिया': 'Selection Process',
+    'इवेंट नाम': 'Event Name',
+    'शुरू/अंतिम तिथि': 'Date Range',
+    'तिथि': 'Date',
+    'महत्वपूर्ण तिथियां': 'Important Dates',
+    'महत्वपूर्ण लिंक': 'Important Links',
+    'ऑपरेटर': 'Operator',
+    'जूनियर असिस्टेंट': 'Junior Assistant',
+    'विभिन्न पद': 'Various Posts',
+    'सरकारी नौकरी का सुनहरा मौका, तुरंत करें आवेदन': 'Apply Online',
+    'रुपये': 'INR',
+    'शुल्क': 'Fee'
+  };
+
+  let cleanText = text;
+  Object.keys(translationMap).forEach(key => {
+    const regex = new RegExp(key, 'gi');
+    cleanText = cleanText.replace(regex, translationMap[key]);
+  });
+
+  // 2. Map Hindi months to English
+  const monthsMap = {
+    'जनवरी': 'January', 'फरवरी': 'February', 'मार्च': 'March', 'अप्रैल': 'April',
+    'मई': 'May', 'जून': 'June', 'जुलाई': 'July', 'अगस्त': 'August',
+    'सितंबर': 'September', 'अक्टूबर': 'October', 'नवंबर': 'November', 'दिसंबर': 'December'
+  };
+  Object.keys(monthsMap).forEach(m => {
+    cleanText = cleanText.replace(new RegExp(m, 'gi'), monthsMap[m]);
+  });
+
+  // 3. Remove nested parentheses repetitions caused by bilingual inputs
+  cleanText = cleanText
+    .replace(/Board \/ Department \(Board\)/gi, 'Board')
+    .replace(/Total Vacancies \(Total Vacancies\)/gi, 'Total Vacancies')
+    .replace(/Last Date to Apply \(Last Date\)/gi, 'Last Date');
+
+  // 4. Strip any remaining Devanagari (Hindi) unicode characters
+  cleanText = cleanText.replace(/[\u0900-\u097F]+/g, '');
+
+  // 5. Cleanup spacing & trailing punctuation
+  cleanText = cleanText
+    .replace(/\s*\(\s*\)/g, '')
+    .replace(/:\s*$/, '')
+    .replace(/[ \t]+/g, ' ')
+    .trim();
+
+  return cleanText;
+}
+
 function parseTableSpecs(htmlContent) {
   if (!htmlContent) return [];
   const specs = [];
@@ -204,7 +278,8 @@ export default function PostPage() {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(14);
       
-      const titleLines = doc.splitTextToSize(post.title, 180);
+      const cleanTitleText = cleanDevanagari(post.title);
+      const titleLines = doc.splitTextToSize(cleanTitleText, 180);
       doc.text(titleLines, 15, 48);
       
       let currentY = 48 + (titleLines.length * 7);
@@ -213,7 +288,8 @@ export default function PostPage() {
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(9);
       doc.setTextColor(100, 116, 139);
-      doc.text(`Category: ${post.category}  |  Published: ${new Date(post.publishedAt || post.createdAt).toLocaleDateString()}`, 15, currentY);
+      const cleanCategoryText = cleanDevanagari(post.category);
+      doc.text(`Category: ${cleanCategoryText}  |  Published: ${new Date(post.publishedAt || post.createdAt).toLocaleDateString()}`, 15, currentY);
       currentY += 8;
 
       // Divider line
@@ -225,13 +301,20 @@ export default function PostPage() {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
       doc.setTextColor(...primaryColor);
-      doc.text('Vacancy Overview & Details (महत्वपूर्ण विवरण)', 15, currentY);
+      doc.text('Vacancy Overview & Details', 15, currentY);
       currentY += 6;
 
       const specs = parseTableSpecs(post.content);
       if (specs.length > 0) {
         doc.setFontSize(10);
-        specs.forEach((spec, idx) => {
+        let renderedIndex = 0;
+        specs.forEach((spec) => {
+          const cleanKey = cleanDevanagari(spec.key);
+          const cleanValue = cleanDevanagari(spec.value);
+
+          // If the item has no English representation left, skip it
+          if (!cleanKey || !cleanValue) return;
+
           // Page overflow check (max printable height is 297mm)
           if (currentY > 260) {
             doc.addPage();
@@ -245,20 +328,21 @@ export default function PostPage() {
             currentY = 28;
           }
 
-          if (idx % 2 === 0) {
+          if (renderedIndex % 2 === 0) {
             doc.setFillColor(...lightBg);
             doc.rect(15, currentY - 4, 180, 8, 'F');
           }
 
           doc.setTextColor(...textColor);
           doc.setFont('helvetica', 'bold');
-          doc.text(spec.key, 18, currentY + 1.5);
+          doc.text(cleanKey, 18, currentY + 1.5);
 
           doc.setFont('helvetica', 'normal');
-          const valLines = doc.splitTextToSize(spec.value, 100);
+          const valLines = doc.splitTextToSize(cleanValue, 100);
           doc.text(valLines, 90, currentY + 1.5);
 
           currentY += Math.max(8, valLines.length * 5);
+          renderedIndex++;
         });
       } else {
         doc.setFont('helvetica', 'normal');
