@@ -262,7 +262,7 @@ export default function HomePage() {
                     sx={{
                       width: '100%',
                       height: '100%',
-                      objectFit: 'contain',
+                      objectFit: 'cover',
                       display: 'block',
                       transition: 'transform 0.4s ease',
                       '&:hover': { transform: 'scale(1.02)' },

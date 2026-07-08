@@ -58,7 +58,7 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
             sx={{
               width: '100%',
               height: '100%',
-              objectFit: 'contain',
+              objectFit: 'cover',
               transition: 'transform 0.5s ease',
               '&:hover': {
                 transform: 'scale(1.05)',
