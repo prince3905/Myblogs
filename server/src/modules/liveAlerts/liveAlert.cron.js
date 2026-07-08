@@ -834,9 +834,20 @@ async function scrapeFeeds() {
     }).limit(3);
     if (activeAlerts.length > 0) {
       console.log(`[Autopilot] Found active alerts. Processing a limited batch of ${activeAlerts.length} alerts to prevent API overload...`);
+      const Settings = require('../settings/settings.model');
       const { draftAlertToPostDoc } = require('./liveAlert.controller');
-      
       for (const alert of activeAlerts) {
+        try {
+          const disableSetting = await Settings.findOne({ key: 'disableAutopilot' });
+          const isAutopilotDisabled = disableSetting ? disableSetting.value === true : process.env.DISABLE_AUTOPILOT === 'true';
+          if (isAutopilotDisabled) {
+            console.log('[Autopilot] Mid-run cancellation detected: Autopilot was turned OFF. Aborting remaining batch.');
+            break;
+          }
+        } catch (checkErr) {
+          console.warn('[Autopilot] Failed to check status mid-run:', checkErr.message);
+        }
+
         try {
           console.log(`[Autopilot] Automatically drafting post for alert: "${alert.title}"`);
           await draftAlertToPostDoc(alert);
