@@ -241,13 +241,13 @@ export default function HomePage() {
                 boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
                 height: { xs: 240, md: 380 },
                 width: '100%',
-                bgcolor: '#ECECEC'
+                bgcolor: '#0f172a'
               }}>
                 {loading ? (
                   <Box sx={{
                     width: '100%',
                     height: '100%',
-                    bgcolor: '#ECECEC',
+                    bgcolor: '#0f172a',
                     animation: 'pulse 1.5s infinite ease-in-out'
                   }} />
                 ) : featuredPost?.featuredImage ? (
@@ -262,7 +262,7 @@ export default function HomePage() {
                     sx={{
                       width: '100%',
                       height: '100%',
-                      objectFit: 'cover',
+                      objectFit: 'contain',
                       display: 'block',
                       transition: 'transform 0.4s ease',
                       '&:hover': { transform: 'scale(1.02)' },
