@@ -260,7 +260,38 @@ export default function PostPage() {
       const textColor = [30, 41, 59];
       const lightBg = [241, 245, 249];
 
-      // Draw header banner
+      let currentY = 25;
+
+      // Helper to check page limits and add new page dynamically
+      const checkPageOverflow = (neededHeight) => {
+        if (currentY + neededHeight > 270) {
+          doc.addPage();
+          
+          // Draw header banner on secondary pages
+          doc.setFillColor(...primaryColor);
+          doc.rect(0, 0, 210, 15, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10);
+          doc.text('DIGITAL HOME BLOG - Job Summary (Continued)', 15, 10);
+          
+          // Faint watermark in center background
+          doc.setTextColor(245, 247, 250);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(36);
+          doc.text('DIGITAL HOME BLOG', 105, 148, { align: 'center', angle: 45 });
+          
+          currentY = 25;
+        }
+      };
+
+      // Faint watermark for the first page
+      doc.setTextColor(245, 247, 250);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(36);
+      doc.text('DIGITAL HOME BLOG', 105, 148, { align: 'center', angle: 45 });
+
+      // Draw primary header banner
       doc.setFillColor(...primaryColor);
       doc.rect(0, 0, 210, 35, 'F');
 
@@ -273,7 +304,7 @@ export default function PostPage() {
       doc.setFontSize(10);
       doc.text('Fastest Government Jobs & Exam Alerts Portal', 15, 25);
 
-      // Write title
+      // Title
       doc.setTextColor(...textColor);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(14);
@@ -282,9 +313,9 @@ export default function PostPage() {
       const titleLines = doc.splitTextToSize(cleanTitleText, 180);
       doc.text(titleLines, 15, 48);
       
-      let currentY = 48 + (titleLines.length * 7);
+      currentY = 48 + (titleLines.length * 7);
 
-      // Write category / date info
+      // Category and Date info
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(9);
       doc.setTextColor(100, 116, 139);
@@ -297,36 +328,24 @@ export default function PostPage() {
       doc.line(15, currentY, 195, currentY);
       currentY += 10;
 
-      // Section title
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.setTextColor(...primaryColor);
-      doc.text('Vacancy Overview & Details', 15, currentY);
-      currentY += 6;
-
+      // Table specs section
       const specs = parseTableSpecs(post.content);
       if (specs.length > 0) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(...primaryColor);
+        doc.text('Vacancy Overview & Details', 15, currentY);
+        currentY += 6;
+
         doc.setFontSize(10);
         let renderedIndex = 0;
         specs.forEach((spec) => {
           const cleanKey = cleanDevanagari(spec.key);
           const cleanValue = cleanDevanagari(spec.value);
 
-          // If the item has no English representation left, skip it
           if (!cleanKey || !cleanValue) return;
 
-          // Page overflow check (max printable height is 297mm)
-          if (currentY > 260) {
-            doc.addPage();
-            // Draw secondary page top banner
-            doc.setFillColor(...primaryColor);
-            doc.rect(0, 0, 210, 15, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(10);
-            doc.text('DIGITAL HOME BLOG - Job Summary (Continued)', 15, 10);
-            currentY = 28;
-          }
+          checkPageOverflow(8);
 
           if (renderedIndex % 2 === 0) {
             doc.setFillColor(...lightBg);
@@ -344,28 +363,146 @@ export default function PostPage() {
           currentY += Math.max(8, valLines.length * 5);
           renderedIndex++;
         });
-      } else {
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
+      }
+
+      // Description text helper
+      const extractPostDescription = (htmlContent) => {
+        const parser = new DOMParser();
+        const docObj = parser.parseFromString(htmlContent, 'text/html');
+        
+        const tables = docObj.querySelectorAll('table');
+        tables.forEach(t => t.remove());
+        const highlights = docObj.querySelectorAll('.quick-highlights-box');
+        highlights.forEach(h => h.remove());
+        const buttons = docObj.querySelectorAll('.action-buttons-group');
+        buttons.forEach(b => b.remove());
+        const buttonsClass = docObj.querySelectorAll('.btn-link-action');
+        buttonsClass.forEach(b => b.remove());
+        
+        const elements = docObj.querySelectorAll('p, li, h2, h3');
+        const list = [];
+        elements.forEach(el => {
+          const text = el.textContent.trim();
+          if (!text) return;
+          const tagName = el.tagName.toLowerCase();
+          list.push({ type: tagName, text });
+        });
+        return list;
+      };
+
+      // Print full descriptive blog content
+      const paragraphs = extractPostDescription(post.content);
+      if (paragraphs.length > 0) {
+        checkPageOverflow(20);
+        currentY += 5;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(...primaryColor);
+        doc.text('Post Description & Important Guidelines', 15, currentY);
+        currentY += 8;
+
         doc.setTextColor(...textColor);
-        const excerptLines = doc.splitTextToSize(post.excerpt || 'Please visit our website link below to read full job vacancy details.', 180);
-        doc.text(excerptLines, 15, currentY);
-        currentY += (excerptLines.length * 5) + 5;
+        paragraphs.forEach(p => {
+          const cleanText = cleanDevanagari(p.text);
+          if (!cleanText || cleanText.length < 5) return;
+
+          let size = 9.5;
+          let fontType = 'normal';
+          let lineGap = 5.5;
+          let prefix = '';
+          
+          if (p.type.startsWith('h')) {
+            size = 11;
+            fontType = 'bold';
+            lineGap = 7;
+            currentY += 3;
+          } else if (p.type === 'li') {
+            prefix = '• ';
+          }
+
+          doc.setFont('helvetica', fontType);
+          doc.setFontSize(size);
+          
+          const maxTextW = 180;
+          const textLines = doc.splitTextToSize(prefix + cleanText, maxTextW);
+          const neededH = textLines.length * lineGap + 3;
+          
+          checkPageOverflow(neededH);
+          
+          doc.text(textLines, 15, currentY);
+          currentY += (textLines.length * lineGap) + 2;
+        });
       }
 
       currentY += 5;
 
-      // Bottom warning banner check page overflow
-      if (currentY > 240) {
-        doc.addPage();
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, 0, 210, 15, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.text('DIGITAL HOME BLOG - Job Summary (Continued)', 15, 10);
-        currentY = 28;
-      }
+      // 4-Column Viral Services Promotion Card
+      checkPageOverflow(65);
+      const promoY = currentY;
+      const productionOrigin = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'https://www.digitalhomeblog.in' : window.location.origin;
+
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(16, 185, 129);
+      doc.rect(15, promoY, 180, 58, 'FD');
+
+      doc.setTextColor(16, 185, 129);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('🚀 Free Student Utility Services (100% Free & No Ads):', 20, promoY + 7);
+
+      doc.setFontSize(9.5);
+      
+      // Link 1: Job Alerts
+      doc.setTextColor(16, 185, 129);
+      doc.setFont('helvetica', 'bold');
+      doc.text('⭐ 1. Live Job Alerts Portal:', 22, promoY + 16);
+      doc.setTextColor(37, 99, 235);
+      doc.setFont('helvetica', 'normal');
+      const alertsUrl = `${productionOrigin}/job-alerts`;
+      doc.text('digitalhomeblog.in/job-alerts', 22, promoY + 21);
+      doc.link(22, promoY + 18, 80, 4, { url: alertsUrl });
+
+      // Link 2: Student Tools
+      doc.setTextColor(16, 185, 129);
+      doc.setFont('helvetica', 'bold');
+      doc.text('📷 2. Free Resizer & PDF Tools:', 110, promoY + 16);
+      doc.setTextColor(37, 99, 235);
+      doc.setFont('helvetica', 'normal');
+      const toolsUrl = `${productionOrigin}/tools`;
+      doc.text('digitalhomeblog.in/tools', 110, promoY + 21);
+      doc.link(110, promoY + 18, 80, 4, { url: toolsUrl });
+
+      // Link 3: Games Page
+      doc.setTextColor(16, 185, 129);
+      doc.setFont('helvetica', 'bold');
+      doc.text('🎮 3. Brain Booster Kids Games:', 22, promoY + 32);
+      doc.setTextColor(37, 99, 235);
+      doc.setFont('helvetica', 'normal');
+      const gamesUrl = `${productionOrigin}/games`;
+      doc.text('digitalhomeblog.in/games', 22, promoY + 37);
+      doc.link(22, promoY + 34, 80, 4, { url: gamesUrl });
+
+      // Link 4: Blog Section
+      doc.setTextColor(16, 185, 129);
+      doc.setFont('helvetica', 'bold');
+      doc.text('📰 4. Tech, Health & AI Blog:', 110, promoY + 32);
+      doc.setTextColor(37, 99, 235);
+      doc.setFont('helvetica', 'normal');
+      const blogUrl = `${productionOrigin}/blog`;
+      doc.text('digitalhomeblog.in/blog', 110, promoY + 37);
+      doc.link(110, promoY + 34, 80, 4, { url: blogUrl });
+
+      // Promotional footer note
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Save this PDF & share it in your WhatsApp/Telegram groups to help other students!', 20, promoY + 50);
+
+      currentY = promoY + 62;
+
+      // Bottom Primary post direct link CTA block
+      checkPageOverflow(26);
+      const canonicalUrl = `${productionOrigin}${postUrl(post)}`;
 
       doc.setFillColor(254, 242, 242);
       doc.setDrawColor(239, 68, 68);
@@ -376,15 +513,12 @@ export default function PostPage() {
       doc.setFontSize(11);
       doc.text('👉 Click the Link Below to Apply & View Details Online:', 20, currentY + 7);
 
-      const productionOrigin = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'https://www.digitalhomeblog.in' : window.location.origin;
-      const canonicalUrl = `${productionOrigin}${postUrl(post)}`;
       doc.setTextColor(37, 99, 235);
       doc.setFontSize(10);
       doc.text(canonicalUrl, 20, currentY + 15);
-      
       doc.link(20, currentY + 11, 170, 6, { url: canonicalUrl });
 
-      // Clean footer signature lines on the final page
+      // Signature page footer info
       doc.setTextColor(148, 163, 184);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
