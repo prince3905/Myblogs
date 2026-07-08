@@ -107,9 +107,9 @@ async function generateAiThumbnail(req, res) {
       } else {
         console.error('[AI Thumbnail] Gemini Imagen failed:', err.message, '. Falling back to Pollinations AI...');
       }
-      // Generate fallback image using Pollinations AI
+      // Generate fallback image using Pollinations AI forced with the state-of-the-art FLUX model
       const seed = Math.floor(Math.random() * 1000000);
-      imageUri = `https://image.pollinations.ai/p/${encodeURIComponent(styledPrompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
+      imageUri = `https://image.pollinations.ai/p/${encodeURIComponent(styledPrompt)}?width=1200&height=675&nologo=true&seed=${seed}&model=flux`;
     }
 
     console.log(`[AI Thumbnail] Uploading image to Cloudinary...`);
@@ -227,9 +227,9 @@ async function generateAiThumbnailFromPrompt(req, res) {
       } else {
         console.error('[AI Thumbnail Custom] Gemini Imagen failed:', err.message, '. Falling back to Pollinations AI...');
       }
-      // Generate fallback image using Pollinations AI
+      // Generate fallback image using Pollinations AI forced with the state-of-the-art FLUX model
       const seed = Math.floor(Math.random() * 1000000);
-      imageUri = `https://image.pollinations.ai/p/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&seed=${seed}`;
+      imageUri = `https://image.pollinations.ai/p/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&seed=${seed}&model=flux`;
     }
 
     console.log(`[AI Thumbnail Custom] Uploading image to Cloudinary...`);
