@@ -314,45 +314,9 @@ ${buttonHtmlBlock}
   const { prettifyLinksAndContent } = require('../ai/aiPostProcessor');
   finalContent = prettifyLinksAndContent(finalContent);
 
-  // Auto-generate dynamic featured image using Google Gemini Imagen 3 and Cloudinary
+  // Autopilot background auto-thumbnail generation is disabled to prevent Cloudinary space waste.
+  // The admin can manually design a perfect, zero-typo banner using the HTML Canvas tool in the editor.
   let featuredImage = '';
-  try {
-    console.log(`[AI Autopilot] Generating dynamic AI thumbnail for: "${generatedData.title}"`);
-    let imgPrompt = '';
-    try {
-      imgPrompt = await generateImagePrompt(generatedData.title);
-    } catch (promptErr) {
-      imgPrompt = getPhotographicFallbackPrompt(generatedData.title);
-    }
-
-    const styledPrompt = `${imgPrompt}, high-CTR blog post thumbnail design, vibrant yellow and deep navy blue contrasting color theme, clean layout, professional graphic design style`;
-
-    let imageUri = '';
-    try {
-      console.log(`[AI Autopilot] Requesting Google Gemini Imagen API...`);
-      imageUri = await callGeminiImagen(styledPrompt);
-    } catch (err) {
-      if (err.message === 'PAID_PLAN_REQUIRED') {
-        console.log('[AI Autopilot] Google AI Studio free tier detected (Imagen requires paid plan). Falling back to Pollinations AI (FLUX)...');
-      } else {
-        console.error('[AI Autopilot] Gemini Imagen failed:', err.message, '. Falling back to Pollinations AI (FLUX)...');
-      }
-      // Generate fallback image using Pollinations AI forced with the state-of-the-art FLUX model
-      const seed = Math.floor(Math.random() * 1000000);
-      imageUri = `https://image.pollinations.ai/p/${encodeURIComponent(styledPrompt)}?width=1200&height=675&nologo=true&seed=${seed}&model=flux`;
-    }
-
-    console.log(`[AI Autopilot] Uploading image to Cloudinary...`);
-    const uploadResult = await cloudinary.uploader.upload(imageUri, {
-      folder: 'myblogs',
-      transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
-    });
-    featuredImage = uploadResult.secure_url;
-    console.log(`[AI Autopilot] Dynamic thumbnail saved successfully: ${featuredImage}`);
-  } catch (imgErr) {
-    console.error('[AI Autopilot] Dynamic thumbnail generation failed completely, using fallback Pexels image:', imgErr.message);
-    featuredImage = await autoFetchFeaturedImage(generatedData.imageTag || generatedData.imagetag || 'career');
-  }
 
   // Create and save Mongoose BlogPost document
   const newPost = new BlogPost({
