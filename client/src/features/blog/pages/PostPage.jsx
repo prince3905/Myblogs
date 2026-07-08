@@ -252,44 +252,55 @@ export default function PostPage() {
       const { jsPDF } = await import('jspdf');
       const html2canvas = (await import('html2canvas')).default;
 
-      // 1. Create a hidden container for print layout styling
+      // 1. Create a temporary container for flat print block elements
       const printContainer = document.createElement('div');
       printContainer.style.position = 'fixed';
       printContainer.style.left = '-9999px';
       printContainer.style.top = '0';
-      printContainer.style.width = '760px'; // Standard width for clean A4 printing proportions
+      printContainer.style.width = '700px'; // Set to 700px width for clean A4 printing proportions
       printContainer.style.backgroundColor = '#ffffff';
-      printContainer.style.padding = '35px';
+      printContainer.style.padding = '25px';
       printContainer.style.boxSizing = 'border-box';
       printContainer.style.fontFamily = 'sans-serif';
+      document.body.appendChild(printContainer);
       
       const productionOrigin = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'https://www.digitalhomeblog.in' : window.location.origin;
       const canonicalUrl = `${productionOrigin}${postUrl(post)}`;
 
-      // 2. Add header branding to PDF clone
-      const headerHtml = `
-        <div style="background-color: #10b981; padding: 22px; border-radius: 12px; margin-bottom: 25px; color: #ffffff; font-family: sans-serif;">
+      // 2. Add header blocks
+      printContainer.innerHTML = `
+        <div style="background-color: #10b981; padding: 22px; border-radius: 12px; margin-bottom: 20px; color: #ffffff; font-family: sans-serif;">
           <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 0.5px;">DIGITAL HOME BLOG</h1>
           <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.9;">Fastest Government Jobs & Exam Alerts Portal</p>
         </div>
-        <h2 style="font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 10px; line-height: 1.4; font-family: sans-serif;">${post.title}</h2>
-        <p style="font-size: 13px; color: #64748b; margin-bottom: 20px; font-family: sans-serif;">
-          Category: <strong style="color: #10b981;">${post.category}</strong> &nbsp;|&nbsp; Published: ${new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
-        </p>
-        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 25px;" />
+        <div style="margin-bottom: 15px; font-family: sans-serif;">
+          <h2 style="font-size: 20px; font-weight: 800; color: #1e293b; margin: 0 0 10px 0; line-height: 1.4;">${post.title}</h2>
+          <p style="font-size: 13px; color: #64748b; margin: 0;">
+            Category: <strong style="color: #10b981;">${post.category}</strong> &nbsp;|&nbsp; Published: ${new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+        <div style="margin-bottom: 25px;">
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 0;" />
+        </div>
       `;
-      printContainer.innerHTML = headerHtml;
 
-      // 3. Clone and clean the post content (excluding back button and ads)
+      // 3. Append direct children of content (individual paragraphs/tables/lists)
       const contentClone = document.querySelector('.blog-content').cloneNode(true);
       const ads = contentClone.querySelectorAll('.ad-slot, ins, script');
       ads.forEach(ad => ad.remove());
-      printContainer.appendChild(contentClone);
+      
+      const contentChildren = Array.from(contentClone.children);
+      contentChildren.forEach(child => {
+        child.style.marginBottom = '15px';
+        child.style.fontFamily = 'sans-serif';
+        printContainer.appendChild(child);
+      });
 
-      // 4. Add the promotional block at the end of content
+      // 4. Append promotional and CTA blocks
       const promoDiv = document.createElement('div');
+      promoDiv.style.marginBottom = '20px';
       promoDiv.innerHTML = `
-        <div style="margin-top: 35px; padding: 22px; border: 2px solid #10b981; border-radius: 12px; background-color: #f8fafc; font-family: sans-serif;">
+        <div style="padding: 22px; border: 2px solid #10b981; border-radius: 12px; background-color: #f8fafc; font-family: sans-serif;">
           <h3 style="margin-top: 0; color: #10b981; font-weight: 800; font-size: 16px; margin-bottom: 12px;">🚀 Free Student Utility Services (100% Free & No Ads):</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
             <div>
@@ -313,55 +324,77 @@ export default function PostPage() {
             Save this PDF & share it in your WhatsApp/Telegram groups to help other students!
           </p>
         </div>
-        
-        <div style="margin-top: 25px; padding: 15px; border: 1px solid #ef4444; border-radius: 8px; background-color: #fef2f2; text-align: center; font-family: sans-serif;">
+      `;
+      printContainer.appendChild(promoDiv);
+
+      const applyDiv = document.createElement('div');
+      applyDiv.style.marginBottom = '20px';
+      applyDiv.innerHTML = `
+        <div style="padding: 15px; border: 1px solid #ef4444; border-radius: 8px; background-color: #fef2f2; text-align: center; font-family: sans-serif;">
           <strong style="color: #b91c1c; font-size: 13px; display: block; margin-bottom: 4px;">👉 Click the Link Below to Apply & View Details Online:</strong>
           <a href="${canonicalUrl}" style="color: #2563eb; text-decoration: underline; font-size: 13px; word-break: break-all; font-weight: 600;">${canonicalUrl}</a>
         </div>
-        
-        <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; font-family: sans-serif;">
+      `;
+      printContainer.appendChild(applyDiv);
+
+      const footerDiv = document.createElement('div');
+      footerDiv.style.marginTop = '25px';
+      footerDiv.innerHTML = `
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; font-family: sans-serif;">
           <span>This job alert document is downloaded from Digital Home Blog.</span>
           <span>Stay tuned for fast recruitment updates!</span>
         </div>
       `;
-      printContainer.appendChild(promoDiv);
+      printContainer.appendChild(footerDiv);
 
-      document.body.appendChild(printContainer);
-
-      // 5. Render container to canvas
-      const canvas = await html2canvas(printContainer, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-
-      document.body.removeChild(printContainer);
-
-      // 6. Convert canvas image to multipage A4 jsPDF
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295; // A4 height in mm (slight margin)
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      // 5. Initialize PDF and pagination parameters
       const doc = new jsPDF('p', 'mm', 'a4');
-      
-      let heightLeft = imgHeight;
-      let position = 0;
+      const primaryColor = [16, 185, 129];
+      const pageHeight = 297; // mm
+      const bottomMargin = 20; // mm
+      const printableWidth = 185; // mm
+      let currentY = 15; // mm
 
-      // Page 1
-      doc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      const children = Array.from(printContainer.children);
 
-      // Loop for multi-page sliding window offsets
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        doc.addPage();
-        doc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      // 6. Draw each block element sequentially
+      for (let i = 0; i < children.length; i++) {
+        const node = children[i];
+        
+        // Render block to canvas
+        const canvas = await html2canvas(node, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        // Convert canvas width/height ratio to printable PDF mm height
+        const nodeHeight = (canvas.height * printableWidth) / canvas.width;
+
+        // If block overflows page printable limit, push to next page
+        if (currentY + nodeHeight > pageHeight - bottomMargin) {
+          doc.addPage();
+          
+          // Draw top banner header on secondary pages
+          doc.setFillColor(...primaryColor);
+          doc.rect(0, 0, 210, 15, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10);
+          doc.text('DIGITAL HOME BLOG - Job Summary (Continued)', 15, 10);
+
+          currentY = 25; // start below secondary page header banner
+        }
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        doc.addImage(imgData, 'JPEG', 12, currentY, printableWidth, nodeHeight);
+
+        currentY += nodeHeight + 4; // Add spacing between sibling blocks
       }
+
+      // 7. Cleanup DOM clone container
+      document.body.removeChild(printContainer);
 
       const fileName = `${post.slug}-summary.pdf`;
       doc.save(fileName);
