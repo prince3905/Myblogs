@@ -822,7 +822,16 @@ async function scrapeFeeds() {
   }
 
   try {
-    const activeAlerts = await LiveAlert.find({ status: 'active' }).limit(3);
+    // Only process alerts created today (IST calendar day)
+    const startOfToday = new Date();
+    startOfToday.setUTCHours(0, 0, 0, 0);
+    startOfToday.setMinutes(startOfToday.getMinutes() - 330); // shift back 5.5 hours to align with IST 00:00
+
+    console.log(`[Autopilot] Scanning for same-day active alerts (created after: ${startOfToday.toISOString()})...`);
+    const activeAlerts = await LiveAlert.find({ 
+      status: 'active',
+      createdAt: { $gte: startOfToday }
+    }).limit(3);
     if (activeAlerts.length > 0) {
       console.log(`[Autopilot] Found active alerts. Processing a limited batch of ${activeAlerts.length} alerts to prevent API overload...`);
       const { draftAlertToPostDoc } = require('./liveAlert.controller');
