@@ -250,280 +250,118 @@ export default function PostPage() {
   const generateBrandedPDF = async () => {
     try {
       const { jsPDF } = await import('jspdf');
-      const doc = new jsPDF({
-        orientation: 'p',
-        unit: 'mm',
-        format: 'a4'
-      });
+      const html2canvas = (await import('html2canvas')).default;
 
-      const primaryColor = [16, 185, 129];
-      const textColor = [30, 41, 59];
-      const lightBg = [241, 245, 249];
-
-      let currentY = 25;
-
-      // Helper to check page limits and add new page dynamically
-      const checkPageOverflow = (neededHeight) => {
-        if (currentY + neededHeight > 270) {
-          doc.addPage();
-          
-          // Draw header banner on secondary pages
-          doc.setFillColor(...primaryColor);
-          doc.rect(0, 0, 210, 15, 'F');
-          doc.setTextColor(255, 255, 255);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(10);
-          doc.text('DIGITAL HOME BLOG - Job Summary (Continued)', 15, 10);
-          
-          // Faint watermark in center background
-          doc.setTextColor(245, 247, 250);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(36);
-          doc.text('DIGITAL HOME BLOG', 105, 148, { align: 'center', angle: 45 });
-          
-          currentY = 25;
-        }
-      };
-
-      // Faint watermark for the first page
-      doc.setTextColor(245, 247, 250);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(36);
-      doc.text('DIGITAL HOME BLOG', 105, 148, { align: 'center', angle: 45 });
-
-      // Draw primary header banner
-      doc.setFillColor(...primaryColor);
-      doc.rect(0, 0, 210, 35, 'F');
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(22);
-      doc.text('DIGITAL HOME BLOG', 15, 18);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.text('Fastest Government Jobs & Exam Alerts Portal', 15, 25);
-
-      // Title
-      doc.setTextColor(...textColor);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
+      // 1. Create a hidden container for print layout styling
+      const printContainer = document.createElement('div');
+      printContainer.style.position = 'fixed';
+      printContainer.style.left = '-9999px';
+      printContainer.style.top = '0';
+      printContainer.style.width = '760px'; // Standard width for clean A4 printing proportions
+      printContainer.style.backgroundColor = '#ffffff';
+      printContainer.style.padding = '35px';
+      printContainer.style.boxSizing = 'border-box';
+      printContainer.style.fontFamily = 'sans-serif';
       
-      const cleanTitleText = cleanDevanagari(post.title);
-      const titleLines = doc.splitTextToSize(cleanTitleText, 180);
-      doc.text(titleLines, 15, 48);
-      
-      currentY = 48 + (titleLines.length * 7);
-
-      // Category and Date info
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(9);
-      doc.setTextColor(100, 116, 139);
-      const cleanCategoryText = cleanDevanagari(post.category);
-      doc.text(`Category: ${cleanCategoryText}  |  Published: ${new Date(post.publishedAt || post.createdAt).toLocaleDateString()}`, 15, currentY);
-      currentY += 8;
-
-      // Divider line
-      doc.setDrawColor(226, 232, 240);
-      doc.line(15, currentY, 195, currentY);
-      currentY += 10;
-
-      // Table specs section
-      const specs = parseTableSpecs(post.content);
-      if (specs.length > 0) {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.setTextColor(...primaryColor);
-        doc.text('Vacancy Overview & Details', 15, currentY);
-        currentY += 6;
-
-        doc.setFontSize(10);
-        let renderedIndex = 0;
-        specs.forEach((spec) => {
-          const cleanKey = cleanDevanagari(spec.key);
-          const cleanValue = cleanDevanagari(spec.value);
-
-          if (!cleanKey || !cleanValue) return;
-
-          checkPageOverflow(8);
-
-          if (renderedIndex % 2 === 0) {
-            doc.setFillColor(...lightBg);
-            doc.rect(15, currentY - 4, 180, 8, 'F');
-          }
-
-          doc.setTextColor(...textColor);
-          doc.setFont('helvetica', 'bold');
-          doc.text(cleanKey, 18, currentY + 1.5);
-
-          doc.setFont('helvetica', 'normal');
-          const valLines = doc.splitTextToSize(cleanValue, 100);
-          doc.text(valLines, 90, currentY + 1.5);
-
-          currentY += Math.max(8, valLines.length * 5);
-          renderedIndex++;
-        });
-      }
-
-      // Description text helper
-      const extractPostDescription = (htmlContent) => {
-        const parser = new DOMParser();
-        const docObj = parser.parseFromString(htmlContent, 'text/html');
-        
-        const tables = docObj.querySelectorAll('table');
-        tables.forEach(t => t.remove());
-        const highlights = docObj.querySelectorAll('.quick-highlights-box');
-        highlights.forEach(h => h.remove());
-        const buttons = docObj.querySelectorAll('.action-buttons-group');
-        buttons.forEach(b => b.remove());
-        const buttonsClass = docObj.querySelectorAll('.btn-link-action');
-        buttonsClass.forEach(b => b.remove());
-        
-        const elements = docObj.querySelectorAll('p, li, h2, h3');
-        const list = [];
-        elements.forEach(el => {
-          const text = el.textContent.trim();
-          if (!text) return;
-          const tagName = el.tagName.toLowerCase();
-          list.push({ type: tagName, text });
-        });
-        return list;
-      };
-
-      // Print full descriptive blog content
-      const paragraphs = extractPostDescription(post.content);
-      if (paragraphs.length > 0) {
-        checkPageOverflow(20);
-        currentY += 5;
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.setTextColor(...primaryColor);
-        doc.text('Post Description & Important Guidelines', 15, currentY);
-        currentY += 8;
-
-        doc.setTextColor(...textColor);
-        paragraphs.forEach(p => {
-          const cleanText = cleanDevanagari(p.text);
-          if (!cleanText || cleanText.length < 5) return;
-
-          let size = 9.5;
-          let fontType = 'normal';
-          let lineGap = 5.5;
-          let prefix = '';
-          
-          if (p.type.startsWith('h')) {
-            size = 11;
-            fontType = 'bold';
-            lineGap = 7;
-            currentY += 3;
-          } else if (p.type === 'li') {
-            prefix = '• ';
-          }
-
-          doc.setFont('helvetica', fontType);
-          doc.setFontSize(size);
-          
-          const maxTextW = 180;
-          const textLines = doc.splitTextToSize(prefix + cleanText, maxTextW);
-          const neededH = textLines.length * lineGap + 3;
-          
-          checkPageOverflow(neededH);
-          
-          doc.text(textLines, 15, currentY);
-          currentY += (textLines.length * lineGap) + 2;
-        });
-      }
-
-      currentY += 5;
-
-      // 4-Column Viral Services Promotion Card
-      checkPageOverflow(65);
-      const promoY = currentY;
       const productionOrigin = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'https://www.digitalhomeblog.in' : window.location.origin;
-
-      doc.setFillColor(248, 250, 252);
-      doc.setDrawColor(16, 185, 129);
-      doc.rect(15, promoY, 180, 58, 'FD');
-
-      doc.setTextColor(16, 185, 129);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.text('🚀 Free Student Utility Services (100% Free & No Ads):', 20, promoY + 7);
-
-      doc.setFontSize(9.5);
-      
-      // Link 1: Job Alerts
-      doc.setTextColor(16, 185, 129);
-      doc.setFont('helvetica', 'bold');
-      doc.text('⭐ 1. Live Job Alerts Portal:', 22, promoY + 16);
-      doc.setTextColor(37, 99, 235);
-      doc.setFont('helvetica', 'normal');
-      const alertsUrl = `${productionOrigin}/job-alerts`;
-      doc.text('digitalhomeblog.in/job-alerts', 22, promoY + 21);
-      doc.link(22, promoY + 18, 80, 4, { url: alertsUrl });
-
-      // Link 2: Student Tools
-      doc.setTextColor(16, 185, 129);
-      doc.setFont('helvetica', 'bold');
-      doc.text('📷 2. Free Resizer & PDF Tools:', 110, promoY + 16);
-      doc.setTextColor(37, 99, 235);
-      doc.setFont('helvetica', 'normal');
-      const toolsUrl = `${productionOrigin}/tools`;
-      doc.text('digitalhomeblog.in/tools', 110, promoY + 21);
-      doc.link(110, promoY + 18, 80, 4, { url: toolsUrl });
-
-      // Link 3: Games Page
-      doc.setTextColor(16, 185, 129);
-      doc.setFont('helvetica', 'bold');
-      doc.text('🎮 3. Brain Booster Kids Games:', 22, promoY + 32);
-      doc.setTextColor(37, 99, 235);
-      doc.setFont('helvetica', 'normal');
-      const gamesUrl = `${productionOrigin}/games`;
-      doc.text('digitalhomeblog.in/games', 22, promoY + 37);
-      doc.link(22, promoY + 34, 80, 4, { url: gamesUrl });
-
-      // Link 4: Blog Section
-      doc.setTextColor(16, 185, 129);
-      doc.setFont('helvetica', 'bold');
-      doc.text('📰 4. Tech, Health & AI Blog:', 110, promoY + 32);
-      doc.setTextColor(37, 99, 235);
-      doc.setFont('helvetica', 'normal');
-      const blogUrl = `${productionOrigin}/blog`;
-      doc.text('digitalhomeblog.in/blog', 110, promoY + 37);
-      doc.link(110, promoY + 34, 80, 4, { url: blogUrl });
-
-      // Promotional footer note
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(8.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text('Save this PDF & share it in your WhatsApp/Telegram groups to help other students!', 20, promoY + 50);
-
-      currentY = promoY + 62;
-
-      // Bottom Primary post direct link CTA block
-      checkPageOverflow(26);
       const canonicalUrl = `${productionOrigin}${postUrl(post)}`;
 
-      doc.setFillColor(254, 242, 242);
-      doc.setDrawColor(239, 68, 68);
-      doc.rect(15, currentY, 180, 22, 'FD');
+      // 2. Add header branding to PDF clone
+      const headerHtml = `
+        <div style="background-color: #10b981; padding: 22px; border-radius: 12px; margin-bottom: 25px; color: #ffffff; font-family: sans-serif;">
+          <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 0.5px;">DIGITAL HOME BLOG</h1>
+          <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.9;">Fastest Government Jobs & Exam Alerts Portal</p>
+        </div>
+        <h2 style="font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 10px; line-height: 1.4; font-family: sans-serif;">${post.title}</h2>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 20px; font-family: sans-serif;">
+          Category: <strong style="color: #10b981;">${post.category}</strong> &nbsp;|&nbsp; Published: ${new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+        </p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 25px;" />
+      `;
+      printContainer.innerHTML = headerHtml;
 
-      doc.setTextColor(185, 28, 28);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.text('👉 Click the Link Below to Apply & View Details Online:', 20, currentY + 7);
+      // 3. Clone and clean the post content (excluding back button and ads)
+      const contentClone = document.querySelector('.blog-content').cloneNode(true);
+      const ads = contentClone.querySelectorAll('.ad-slot, ins, script');
+      ads.forEach(ad => ad.remove());
+      printContainer.appendChild(contentClone);
 
-      doc.setTextColor(37, 99, 235);
-      doc.setFontSize(10);
-      doc.text(canonicalUrl, 20, currentY + 15);
-      doc.link(20, currentY + 11, 170, 6, { url: canonicalUrl });
+      // 4. Add the promotional block at the end of content
+      const promoDiv = document.createElement('div');
+      promoDiv.innerHTML = `
+        <div style="margin-top: 35px; padding: 22px; border: 2px solid #10b981; border-radius: 12px; background-color: #f8fafc; font-family: sans-serif;">
+          <h3 style="margin-top: 0; color: #10b981; font-weight: 800; font-size: 16px; margin-bottom: 12px;">🚀 Free Student Utility Services (100% Free & No Ads):</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+              <strong style="color: #0f172a; font-size: 13px;">⭐ 1. Live Job Alerts Portal:</strong><br/>
+              <a href="${productionOrigin}/job-alerts" style="color: #2563eb; text-decoration: none; font-size: 13px; font-weight: 600;">digitalhomeblog.in/job-alerts</a>
+            </div>
+            <div>
+              <strong style="color: #0f172a; font-size: 13px;">📷 2. Free Resizer & PDF Tools:</strong><br/>
+              <a href="${productionOrigin}/tools" style="color: #2563eb; text-decoration: none; font-size: 13px; font-weight: 600;">digitalhomeblog.in/tools</a>
+            </div>
+            <div>
+              <strong style="color: #0f172a; font-size: 13px;">🎮 3. Brain Booster Kids Games:</strong><br/>
+              <a href="${productionOrigin}/games" style="color: #2563eb; text-decoration: none; font-size: 13px; font-weight: 600;">digitalhomeblog.in/games</a>
+            </div>
+            <div>
+              <strong style="color: #0f172a; font-size: 13px;">📰 4. Tech, Health & AI Blog:</strong><br/>
+              <a href="${productionOrigin}/blog" style="color: #2563eb; text-decoration: none; font-size: 13px; font-weight: 600;">digitalhomeblog.in/blog</a>
+            </div>
+          </div>
+          <p style="margin-bottom: 0; margin-top: 15px; font-style: italic; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+            Save this PDF & share it in your WhatsApp/Telegram groups to help other students!
+          </p>
+        </div>
+        
+        <div style="margin-top: 25px; padding: 15px; border: 1px solid #ef4444; border-radius: 8px; background-color: #fef2f2; text-align: center; font-family: sans-serif;">
+          <strong style="color: #b91c1c; font-size: 13px; display: block; margin-bottom: 4px;">👉 Click the Link Below to Apply & View Details Online:</strong>
+          <a href="${canonicalUrl}" style="color: #2563eb; text-decoration: underline; font-size: 13px; word-break: break-all; font-weight: 600;">${canonicalUrl}</a>
+        </div>
+        
+        <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; font-family: sans-serif;">
+          <span>This job alert document is downloaded from Digital Home Blog.</span>
+          <span>Stay tuned for fast recruitment updates!</span>
+        </div>
+      `;
+      printContainer.appendChild(promoDiv);
 
-      // Signature page footer info
-      doc.setTextColor(148, 163, 184);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.text('This job alert document is downloaded from Digital Home Blog.', 15, 285);
-      doc.text('Stay tuned for fast recruitment updates!', 195, 285, { align: 'right' });
+      document.body.appendChild(printContainer);
+
+      // 5. Render container to canvas
+      const canvas = await html2canvas(printContainer, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      document.body.removeChild(printContainer);
+
+      // 6. Convert canvas image to multipage A4 jsPDF
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 295; // A4 height in mm (slight margin)
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Page 1
+      doc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Loop for multi-page sliding window offsets
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        doc.addPage();
+        doc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
 
       const fileName = `${post.slug}-summary.pdf`;
       doc.save(fileName);
