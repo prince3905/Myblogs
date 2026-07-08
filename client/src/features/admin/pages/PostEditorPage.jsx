@@ -76,48 +76,45 @@ export default function PostEditorPage() {
       // Clear
       ctx.clearRect(0, 0, width, height);
 
-      // Gradient
+      // Gradient background
       const grad = ctx.createLinearGradient(0, 0, width, height);
       if (canvasTheme === 'bank') {
-        grad.addColorStop(0, '#1e3a8a');
-        grad.addColorStop(1, '#0f172a');
+        grad.addColorStop(0, '#0f172a');
+        grad.addColorStop(1, '#1e3a8a');
       } else if (canvasTheme === 'police') {
-        grad.addColorStop(0, '#991b1b');
-        grad.addColorStop(1, '#450a0a');
+        grad.addColorStop(0, '#450a0a');
+        grad.addColorStop(1, '#991b1b');
       } else if (canvasTheme === 'defense') {
-        grad.addColorStop(0, '#1e1b4b');
-        grad.addColorStop(1, '#090514');
+        grad.addColorStop(0, '#090514');
+        grad.addColorStop(1, '#1e1b4b');
       } else if (canvasTheme === 'orange') {
-        grad.addColorStop(0, '#c2410c');
-        grad.addColorStop(1, '#1e293b');
+        grad.addColorStop(0, '#1e293b');
+        grad.addColorStop(1, '#c2410c');
       } else {
-        grad.addColorStop(0, '#581c87');
-        grad.addColorStop(1, '#0f051d');
+        grad.addColorStop(0, '#0f051d');
+        grad.addColorStop(1, '#581c87');
       }
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, width, height);
 
-      // Accent triangles
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+      // Accent diagonal split/shape to make it look premium
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
       ctx.beginPath();
-      ctx.moveTo(0, height);
-      ctx.lineTo(width * 0.45, height);
-      ctx.lineTo(0, height * 0.55);
+      ctx.moveTo(width * 0.55, 0);
+      ctx.lineTo(width, 0);
+      ctx.lineTo(width, height);
+      ctx.lineTo(width * 0.4, height);
       ctx.closePath();
       ctx.fill();
 
-      ctx.beginPath();
-      ctx.arc(width, 0, width * 0.75, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Brand Title text
+      // Brand Title text (Top Left)
       ctx.fillStyle = '#10b981';
-      ctx.font = '900 24px sans-serif';
-      ctx.fillText('DIGITAL HOME BLOG', 60, 90);
+      ctx.font = '900 28px sans-serif';
+      ctx.fillText('DIGITAL HOME BLOG', 80, 80);
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-      ctx.font = '500 16px sans-serif';
-      ctx.fillText('Official Job Alert Portal', 60, 120);
+      ctx.font = '500 18px sans-serif';
+      ctx.fillText('Official Job Alert Portal', 80, 115);
 
       // Text wrapping function helper
       const wrapText = (context, text, x, y, lineGap, maxW) => {
@@ -139,35 +136,35 @@ export default function PostEditorPage() {
         return currentY;
       };
 
-      // Draw English Title
+      // Draw English Title (Main)
       ctx.fillStyle = '#facc15';
-      ctx.font = '800 48px sans-serif';
-      let textY = 240;
-      textY = wrapText(ctx, canvasEngTitle.toUpperCase(), 60, textY, 60, width - 120);
+      ctx.font = '800 52px sans-serif';
+      let textY = 230;
+      textY = wrapText(ctx, canvasEngTitle.toUpperCase(), 80, textY, 65, 1040);
 
       // Draw Hindi Subtitle
-      textY += 60;
+      textY += 65;
       ctx.fillStyle = '#ffffff';
-      ctx.font = '800 36px sans-serif';
-      textY = wrapText(ctx, canvasHindiTitle, 60, textY, 48, width - 120);
+      ctx.font = '800 38px sans-serif';
+      textY = wrapText(ctx, canvasHindiTitle, 80, textY, 52, 1040);
 
       // Draw Badges
-      textY += 90;
+      textY += 80;
       
       const drawBadge = (label, x, y, color) => {
-        ctx.font = '800 16px sans-serif';
+        ctx.font = '800 18px sans-serif';
         const textWidth = ctx.measureText(label).width;
-        const paddingH = 18;
-        const paddingV = 10;
+        const paddingH = 20;
+        const paddingV = 12;
         const badgeW = textWidth + paddingH * 2;
-        const badgeH = 16 + paddingV * 2;
+        const badgeH = 18 + paddingV * 2;
 
         ctx.fillStyle = color;
         ctx.beginPath();
         if (ctx.roundRect) {
-          ctx.roundRect(x, y - 18, badgeW, badgeH, 8);
+          ctx.roundRect(x, y - 20, badgeW, badgeH, 10);
         } else {
-          ctx.rect(x, y - 18, badgeW, badgeH);
+          ctx.rect(x, y - 20, badgeW, badgeH);
         }
         ctx.fill();
 
@@ -176,8 +173,8 @@ export default function PostEditorPage() {
         return badgeW;
       };
 
-      const w1 = drawBadge('Official Form', 60, textY, '#facc15');
-      drawBadge('Time-Saving', 60 + w1 + 15, textY, '#10b981');
+      const w1 = drawBadge('Official Form', 80, textY, '#facc15');
+      drawBadge('Time-Saving', 80 + w1 + 20, textY, '#10b981');
     }
   }, [canvasEngTitle, canvasHindiTitle, canvasTheme]);
 
@@ -1593,7 +1590,6 @@ export default function PostEditorPage() {
               </Box>
             </Grid>
 
-            {/* Canvas Preview Right */}
             <Grid item xs={12} md={7} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <Box sx={{ 
                 border: '2px solid #e2e8f0', 
@@ -1601,14 +1597,14 @@ export default function PostEditorPage() {
                 overflow: 'hidden', 
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 width: '100%',
-                maxWidth: 400,
-                aspectRatio: '1/1',
+                maxWidth: 500,
+                aspectRatio: '16/9',
                 bgcolor: '#f8fafc'
               }}>
                 <canvas 
                   ref={canvasRef} 
-                  width={800} 
-                  height={800} 
+                  width={1200} 
+                  height={675} 
                   style={{ width: '100%', height: '100%', display: 'block' }}
                 />
               </Box>
@@ -1629,7 +1625,7 @@ export default function PostEditorPage() {
             disabled={isGeneratingCanvas}
             onClick={async () => {
               // Get canvas element inside DOM and trigger upload
-              const canvasEl = document.querySelector('canvas[width="800"]');
+              const canvasEl = document.querySelector('canvas[width="1200"]');
               if (canvasEl) {
                 // Convert canvas to Base64 image
                 const dataUri = canvasEl.toDataURL('image/jpeg', 0.9);
