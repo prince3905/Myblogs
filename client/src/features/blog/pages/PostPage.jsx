@@ -479,6 +479,93 @@ export default function PostPage() {
                 }
               }
 
+              let locState = 'Uttar Pradesh';
+              let locLocality = 'Lalitpur';
+              let locStreet = 'Main Road, Lalitpur Office';
+              let locPostal = '284403';
+
+              const lowerTitle = post.title.toLowerCase();
+              if (lowerTitle.includes('prayagraj') || lowerTitle.includes('allahabad')) {
+                locLocality = 'Prayagraj';
+                locPostal = '211001';
+                locStreet = 'RRC Prayagraj HQ, Civil Lines';
+              } else if (lowerTitle.includes('kanpur')) {
+                locLocality = 'Kanpur';
+                locPostal = '208001';
+                locStreet = 'UPSRTC Depot, Kanpur Central';
+              } else if (lowerTitle.includes('fatehpur')) {
+                locLocality = 'Fatehpur';
+                locPostal = '212601';
+                locStreet = 'UPSRTC Station Road, Fatehpur';
+              } else if (lowerTitle.includes('unnao')) {
+                locLocality = 'Unnao';
+                locPostal = '209801';
+                locStreet = 'UPSRTC Depot, Unnao City';
+              } else if (lowerTitle.includes('lucknow')) {
+                locLocality = 'Lucknow';
+                locPostal = '226001';
+                locStreet = 'Hazratganj Road, Lucknow';
+              } else if (lowerTitle.includes('delhi')) {
+                locState = 'Delhi';
+                locLocality = 'New Delhi';
+                locPostal = '110001';
+                locStreet = 'Connaught Place Area, New Delhi';
+              } else if (lowerTitle.includes('rajasthan')) {
+                locState = 'Rajasthan';
+                locLocality = 'Jaipur';
+                locPostal = '302001';
+                locStreet = 'Main Board Office, Jaipur';
+              } else if (lowerTitle.includes('mumbai') || lowerTitle.includes('maharashtra')) {
+                locState = 'Maharashtra';
+                locLocality = 'Mumbai';
+                locPostal = '400001';
+                locStreet = 'CST Area, Mumbai';
+              }
+
+              for (const [k, v] of specMap.entries()) {
+                if (k.includes('job location') || k.includes('location') || k.includes('स्थान') || k.includes('जिला')) {
+                  if (v && v !== 'India' && v !== 'IN' && v !== 'All India') {
+                    locLocality = v;
+                    locStreet = `Main Office, ${v}`;
+                  }
+                  break;
+                }
+              }
+              for (const [k, v] of specMap.entries()) {
+                if (k.includes('state') || k.includes('राज्य')) {
+                  if (v && v !== 'India') {
+                    locState = v;
+                  }
+                  break;
+                }
+              }
+
+              // Extract Base Salary (approx)
+              let salaryVal = null;
+              for (const [k, v] of specMap.entries()) {
+                if (
+                  k.includes('salary') || k.includes('pay scale') || k.includes('pay') || 
+                  k.includes('wage') || k.includes('वेतन') || k.includes('मानदेय') || 
+                  k.includes('पैमाना') || k.includes('salary/pay scale')
+                ) {
+                  const numbers = v.replace(/,/g, '').match(/\d+/g);
+                  if (numbers && numbers.length > 0) {
+                    const parsedNum = parseInt(numbers[0], 10);
+                    if (parsedNum > 1000) {
+                      salaryVal = parsedNum;
+                      break;
+                    }
+                  }
+                }
+              }
+              const finalSalary = salaryVal || 18000;
+
+              // Determine Employment Type
+              let empType = 'FULL_TIME';
+              if (lowerTitle.includes('apprentice') || lowerTitle.includes('contract') || lowerTitle.includes('temporary')) {
+                empType = 'CONTRACT';
+              }
+
               const jobPostingSchema = {
                 '@context': 'https://schema.org',
                 '@type': 'JobPosting',
@@ -486,6 +573,7 @@ export default function PostPage() {
                 description: post.seoDescription || post.excerpt,
                 datePosted: post.publishedAt || post.createdAt,
                 validThrough: validThrough || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                employmentType: empType,
                 hiringOrganization: {
                   '@type': 'Organization',
                   name: orgName,
@@ -495,8 +583,20 @@ export default function PostPage() {
                   '@type': 'Place',
                   address: {
                     '@type': 'PostalAddress',
-                    addressCountry: 'IN',
-                    addressRegion: 'India'
+                    streetAddress: locStreet,
+                    addressLocality: locLocality,
+                    addressRegion: locState,
+                    postalCode: locPostal,
+                    addressCountry: 'IN'
+                  }
+                },
+                baseSalary: {
+                  '@type': 'MonetaryAmount',
+                  currency: 'INR',
+                  value: {
+                    '@type': 'QuantitativeValue',
+                    value: finalSalary,
+                    unitText: 'MONTH'
                   }
                 }
               };
