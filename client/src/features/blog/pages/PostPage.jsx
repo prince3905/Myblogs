@@ -523,18 +523,20 @@ export default function PostPage() {
               }
 
               for (const [k, v] of specMap.entries()) {
+                const cleanVal = v ? v.trim() : '';
                 if (k.includes('job location') || k.includes('location') || k.includes('स्थान') || k.includes('जिला')) {
-                  if (v && v !== 'India' && v !== 'IN' && v !== 'All India') {
-                    locLocality = v;
-                    locStreet = `Main Office, ${v}`;
+                  if (cleanVal && cleanVal !== 'India' && cleanVal !== 'IN' && cleanVal !== 'All India' && cleanVal !== '-' && cleanVal !== '—') {
+                    locLocality = cleanVal;
+                    locStreet = `Main Office, ${cleanVal}`;
                   }
                   break;
                 }
               }
               for (const [k, v] of specMap.entries()) {
+                const cleanVal = v ? v.trim() : '';
                 if (k.includes('state') || k.includes('राज्य')) {
-                  if (v && v !== 'India') {
-                    locState = v;
+                  if (cleanVal && cleanVal !== 'India' && cleanVal !== '-' && cleanVal !== '—') {
+                    locState = cleanVal;
                   }
                   break;
                 }
