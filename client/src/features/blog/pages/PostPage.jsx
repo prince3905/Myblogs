@@ -308,6 +308,11 @@ export default function PostPage() {
       promoDiv.style.marginBottom = '20px';
       promoDiv.innerHTML = `
         <div style="padding: 22px; border: 2px solid #10b981; border-radius: 12px; background-color: #f8fafc; font-family: sans-serif;">
+          <div style="margin-bottom: 15px; padding: 10px 15px; background-color: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 4px; font-size: 13px; color: #0369a1; display: flex; align-items: center; gap: 8px;">
+            <span>📢</span>
+            <strong>Join Our Telegram Channel for Live Updates: </strong>
+            <a href="https://t.me/DigitalHomeJobsAlerts" style="color: #2563eb; font-weight: 700; text-decoration: underline;">t.me/DigitalHomeJobsAlerts</a>
+          </div>
           <h3 style="margin-top: 0; color: #10b981; font-weight: 800; font-size: 16px; margin-bottom: 12px;">🚀 Free Student Utility Services (100% Free & No Ads):</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
             <div>
@@ -676,6 +681,58 @@ export default function PostPage() {
          >
            ← Back to blog
          </Button>
+
+         {post.category === 'Sarkari Jobs & Exams' && (
+             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4, width: '100%' }}>
+               {!post.disablePdfDownload && (
+                 <Button
+                   variant="contained"
+                   color="error"
+                   onClick={generateBrandedPDF}
+                   startIcon={<PictureAsPdf />}
+                   sx={{
+                     py: 1.2,
+                     px: 3,
+                     fontWeight: 700,
+                     textTransform: 'none',
+                     borderRadius: 2,
+                     boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+                     '&:hover': {
+                       bgcolor: '#dc2626',
+                       boxShadow: '0 6px 16px rgba(239, 68, 68, 0.3)'
+                     }
+                   }}
+                 >
+                   Download Job Summary (PDF डाउनलोड करें)
+                 </Button>
+               )}
+               
+               <Button
+                 variant="contained"
+                 href="https://t.me/DigitalHomeJobsAlerts"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 sx={{
+                   py: 1.2,
+                   px: 3,
+                   fontWeight: 700,
+                   textTransform: 'none',
+                   borderRadius: 2,
+                   bgcolor: '#0088cc',
+                   boxShadow: '0 4px 12px rgba(0, 136, 204, 0.2)',
+                   '&:hover': {
+                     bgcolor: '#007bbb',
+                     boxShadow: '0 6px 16px rgba(0, 136, 204, 0.3)'
+                   }
+                 }}
+               >
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
+                   <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.84 9.1L15.22 16.74C15.1 17.29 14.77 17.42 14.31 17.16L11.84 15.34L10.65 16.49C10.52 16.62 10.41 16.73 10.16 16.73L10.34 14.18L14.98 9.98C15.18 9.8 14.94 9.7 14.67 9.88L8.94 13.49L6.47 12.71C5.93 12.54 5.92 12.17 6.58 11.91L16.23 8.19C16.68 8.02 17.07 8.29 16.84 9.1Z" fill="currentColor"/>
+                 </svg>
+                 Join Telegram (टेलीग्राम ग्रुप ज्वाइन करें)
+               </Button>
+             </Box>
+           )}
 
          <Typography variant="h6" color="text.secondary" sx={{ mb: 4, fontStyle: 'italic', lineHeight: 1.7, color: 'text.primary' }}>
            {post.excerpt}
