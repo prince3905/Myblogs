@@ -674,92 +674,68 @@ export default function PostPage() {
 
        <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
          <Button 
-           component={Link} 
-           to="/blog" 
-           color="primary" 
-           sx={{ mb: 3, fontWeight: 600 }}
-         >
-           ← Back to blog
-         </Button>
+            component={Link} 
+            to="/blog" 
+            color="primary" 
+            sx={{ mb: 3, fontWeight: 600 }}
+          >
+            ← Back to blog
+          </Button>
 
-         {post.category === 'Sarkari Jobs & Exams' && (
-             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4, width: '100%' }}>
-               {!post.disablePdfDownload && (
-                 <Button
-                   variant="contained"
-                   color="error"
-                   onClick={generateBrandedPDF}
-                   startIcon={<PictureAsPdf />}
-                   sx={{
-                     py: 1.2,
-                     px: 3,
-                     fontWeight: 700,
-                     textTransform: 'none',
-                     borderRadius: 2,
-                     boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
-                     '&:hover': {
-                       bgcolor: '#dc2626',
-                       boxShadow: '0 6px 16px rgba(239, 68, 68, 0.3)'
-                     }
-                   }}
-                 >
-                   Download Job Summary (PDF डाउनलोड करें)
-                 </Button>
-               )}
-               
-               <Button
-                 variant="contained"
-                 href="https://t.me/DigitalHomeJobsAlerts"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 sx={{
-                   py: 1.2,
-                   px: 3,
-                   fontWeight: 700,
-                   textTransform: 'none',
-                   borderRadius: 2,
-                   bgcolor: '#0088cc',
-                   boxShadow: '0 4px 12px rgba(0, 136, 204, 0.2)',
-                   '&:hover': {
-                     bgcolor: '#007bbb',
-                     boxShadow: '0 6px 16px rgba(0, 136, 204, 0.3)'
-                   }
-                 }}
-               >
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
-                   <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.84 9.1L15.22 16.74C15.1 17.29 14.77 17.42 14.31 17.16L11.84 15.34L10.65 16.49C10.52 16.62 10.41 16.73 10.16 16.73L10.34 14.18L14.98 9.98C15.18 9.8 14.94 9.7 14.67 9.88L8.94 13.49L6.47 12.71C5.93 12.54 5.92 12.17 6.58 11.91L16.23 8.19C16.68 8.02 17.07 8.29 16.84 9.1Z" fill="currentColor"/>
-                 </svg>
-                 Join Telegram (टेलीग्राम ग्रुप ज्वाइन करें)
-               </Button>
-             </Box>
-           )}
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 4, fontStyle: 'italic', lineHeight: 1.7, color: 'text.primary' }}>
+            {post.excerpt}
+          </Typography>
 
-         <Typography variant="h6" color="text.secondary" sx={{ mb: 4, fontStyle: 'italic', lineHeight: 1.7, color: 'text.primary' }}>
-           {post.excerpt}
-         </Typography>
-
-          {post.category === 'Sarkari Jobs & Exams' && !post.disablePdfDownload && (
-            <Button
-              variant="contained"
-              color="error"
-              onClick={generateBrandedPDF}
-              startIcon={<PictureAsPdf />}
-              sx={{
-                mb: 4,
-                py: 1.2,
-                px: 3,
-                fontWeight: 700,
-                textTransform: 'none',
-                borderRadius: 2,
-                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
-                '&:hover': {
-                  bgcolor: '#dc2626',
-                  boxShadow: '0 6px 16px rgba(239, 68, 68, 0.3)'
-                }
-              }}
-            >
-              Download Job Summary (PDF डाउनलोड करें)
-            </Button>
+          {post.category === 'Sarkari Jobs & Exams' && (
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4, width: '100%' }}>
+              {!post.disablePdfDownload && (
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={generateBrandedPDF}
+                  startIcon={<PictureAsPdf />}
+                  sx={{
+                    py: 1.2,
+                    px: 3,
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+                    '&:hover': {
+                      bgcolor: '#dc2626',
+                      boxShadow: '0 6px 16px rgba(239, 68, 68, 0.3)'
+                    }
+                  }}
+                >
+                  Download Job Summary (PDF डाउनलोड करें)
+                </Button>
+              )}
+              
+              <Button
+                variant="contained"
+                href="https://t.me/DigitalHomeJobsAlerts"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  py: 1.2,
+                  px: 3,
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  bgcolor: '#0088cc',
+                  boxShadow: '0 4px 12px rgba(0, 136, 204, 0.2)',
+                  '&:hover': {
+                    bgcolor: '#007bbb',
+                    boxShadow: '0 6px 16px rgba(0, 136, 204, 0.3)'
+                  }
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
+                  <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.84 9.1L15.22 16.74C15.1 17.29 14.77 17.42 14.31 17.16L11.84 15.34L10.65 16.49C10.52 16.62 10.41 16.73 10.16 16.73L10.34 14.18L14.98 9.98C15.18 9.8 14.94 9.7 14.67 9.88L8.94 13.49L6.47 12.71C5.93 12.54 5.92 12.17 6.58 11.91L16.23 8.19C16.68 8.02 17.07 8.29 16.84 9.1Z" fill="currentColor"/>
+                </svg>
+                Join Telegram (टेलीग्राम ग्रुप ज्वाइन करें)
+              </Button>
+            </Box>
           )}
 
           {post.content && post.content.includes('<h') && (
