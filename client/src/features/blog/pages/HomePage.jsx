@@ -239,15 +239,15 @@ export default function HomePage() {
                 borderRadius: '24px', 
                 overflow: 'hidden', 
                 boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
-                height: { xs: 240, md: 380 },
+                aspectRatio: '16/9',
                 width: '100%',
-                bgcolor: '#0f172a'
+                bgcolor: '#f1f5f9'
               }}>
                 {loading ? (
                   <Box sx={{
                     width: '100%',
                     height: '100%',
-                    bgcolor: '#0f172a',
+                    bgcolor: '#e2e8f0',
                     animation: 'pulse 1.5s infinite ease-in-out'
                   }} />
                 ) : featuredPost?.featuredImage ? (
@@ -288,7 +288,7 @@ export default function HomePage() {
                 )}
               </Box>
             </Box>
-
+ 
             {/* Content (right side) */}
             <Box 
               sx={{ 
@@ -296,9 +296,7 @@ export default function HomePage() {
                 display: 'flex', 
                 flexDirection: 'column', 
                 justifyContent: 'center',
-                height: { xs: 240, md: 240 },
-                width: '100%',
-                overflow: 'hidden'
+                width: '100%'
               }}
             >
               {loading ? (
@@ -323,8 +321,8 @@ export default function HomePage() {
                       sx={{
                         fontWeight: 800,
                         mb: 1.5,
-                        fontSize: { xs: '1.6rem', sm: '2rem', md: '2.5rem' },
-                        lineHeight: 1.2,
+                        fontSize: { xs: '1.35rem', sm: '1.7rem', md: '2.1rem' },
+                        lineHeight: 1.3,
                         color: '#111827',
                         letterSpacing: '-0.03em',
                         '&:hover': { opacity: 0.85 }
@@ -338,10 +336,10 @@ export default function HomePage() {
                     sx={{
                       mb: 2.5,
                       color: '#4B5563',
-                      fontSize: { xs: '0.9rem', md: '1.05rem' },
-                      lineHeight: 1.7,
+                      fontSize: { xs: '0.85rem', md: '0.95rem' },
+                      lineHeight: 1.6,
                       display: '-webkit-box',
-                      WebkitLineClamp: 3,
+                      WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
                       overflow: 'hidden',
                     }}
