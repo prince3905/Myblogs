@@ -15,22 +15,91 @@ async function sendTelegramMessage(post, actionType = 'URL_UPDATED') {
   const url = post.canonicalUrl || `${process.env.SITE_URL || 'https://digitalhomeblog.com'}/blog/${post.slug}`;
   const excerpt = post.excerpt || '';
 
-  // Parse details out of post content using regex (like last date, posts count, qualification)
-  const cleanContent = (post.content || '').replace(/<[^>]*>/g, ' ');
-  
-  let lastDate = 'Check Notification';
-  let qualification = '10th, 12th, Graduate';
-  let totalPosts = 'Various';
+  const content = post.content || '';
+  const cleanContent = content.replace(/<[^>]*>/g, ' ');
 
-  // Quick regex extracts for specs
-  const dateMatch = cleanContent.match(/(?:अंतिम तिथि|Last Date|last date for apply|Last Date for Apply|आवेदन की अंतिम तिथि)\s*:?\s*([0-9a-zA-Z\/\-\s,]+)/i);
-  if (dateMatch) lastDate = dateMatch[1].trim().slice(0, 30);
+  let lastDate = '';
+  let qualification = '';
+  let totalPosts = '';
 
-  const postsMatch = cleanContent.match(/(?:कुल पद|Total Posts|Total Vacancy|No. of Posts|Total Vacancies)\s*:?\s*([0-9,\+]+)/i);
-  if (postsMatch) totalPosts = postsMatch[1].trim().slice(0, 15);
+  // 1. Try to parse standard 3-column qualification table rows (Post Name, Total Post, Qualification)
+  try {
+    const rowRegex = /<tr[^>]*>\s*<td[^>]*>([\s\S]*?)<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>\s*<\/tr>/gi;
+    let match;
+    let candidates = [];
+    while ((match = rowRegex.exec(content)) !== null) {
+      const postName = match[1].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      const vacancy = match[2].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      const qual = match[3].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      
+      // Filter out table headers if they matched td by mistake
+      if (postName && vacancy && qual && 
+          !postName.includes('पोस्ट का नाम') && !postName.includes('Post Name') && 
+          !postName.includes('इवेंट') && !postName.includes('Event')) {
+        candidates.push({ postName, vacancy, qual });
+      }
+    }
 
-  const qualMatch = cleanContent.match(/(?:योग्यता|Eligibility|Qualification|Educational Qualification)\s*:?\s*([0-9a-zA-Z\/\-\s,\+]+)/i);
-  if (qualMatch) qualification = qualMatch[1].trim().slice(0, 50);
+    if (candidates.length > 0) {
+      if (candidates.length === 1) {
+        totalPosts = candidates[0].vacancy;
+        qualification = candidates[0].qual;
+      } else {
+        totalPosts = candidates.map(c => `${c.postName}: ${c.vacancy}`).join(', ');
+        qualification = candidates.map(c => `${c.postName} -> ${c.qual}`).join(' | ');
+      }
+    }
+  } catch (err) {
+    console.error('[Telegram Auto-Share] Table parsing failed:', err.message);
+  }
+
+  // 2. Try to parse 2-column event date table (Event Name, Date) for Last Date
+  try {
+    const row2Regex = /<tr[^>]*>\s*<td[^>]*>([\s\S]*?)<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>\s*<\/tr>/gi;
+    let match2;
+    while ((match2 = row2Regex.exec(content)) !== null) {
+      const col1 = match2[1].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      const col2 = match2[2].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (col1 && col2 && (col1.includes('अंतिम तिथि') || col1.toLowerCase().includes('last date') || col1.includes('आवेदन की अंतिम तिथि'))) {
+        lastDate = col2;
+      }
+    }
+  } catch (err) {
+    console.error('[Telegram Auto-Share] Date table parsing failed:', err.message);
+  }
+
+  // 3. Fallbacks using highlights box HTML matches
+  if (!totalPosts) {
+    const totalVacancyHtmlMatch = content.match(/कुल पद \(Total Vacancies\)<\/span>\s*<strong[^>]*>([^<]+)<\/strong>/i);
+    if (totalVacancyHtmlMatch) totalPosts = totalVacancyHtmlMatch[1].trim();
+  }
+
+  if (!lastDate) {
+    const lastDateHtmlMatch = content.match(/अंतिम तिथि \(Last Date\)<\/span>\s*<strong[^>]*>([^<]+)<\/strong>/i);
+    if (lastDateHtmlMatch) lastDate = lastDateHtmlMatch[1].trim();
+  }
+
+  // 4. Final text-based regex fallbacks (Unicode-safe for Hindi/Devanagari characters)
+  if (!totalPosts) {
+    const postsMatch = cleanContent.match(/(?:कुल पद|Total Posts|Total Vacancy|No. of Posts|Total Vacancies)\s*:?\s*([^\n|•:<>]+)/i);
+    totalPosts = postsMatch ? postsMatch[1].trim() : 'Various';
+  }
+
+  if (!lastDate) {
+    const dateMatch = cleanContent.match(/(?:अंतिम तिथि|Last Date|last date for apply|Last Date for Apply|आवेदन की अंतिम तिथि)\s*:?\s*([^\n|•:<>]+)/i);
+    lastDate = dateMatch ? dateMatch[1].trim() : 'Check Notification';
+  }
+
+  if (!qualification) {
+    const qualMatch = cleanContent.match(/(?:योग्यता|Eligibility|Qualification|Educational Qualification)\s*:?\s*([^\n|•:<>]+)/i);
+    qualification = qualMatch ? qualMatch[1].trim() : '10th, 12th, Graduate / Check Notification';
+  }
+
+  // Sanitize and trim lengths for Telegram compatibility
+  lastDate = lastDate.slice(0, 40);
+  totalPosts = totalPosts.slice(0, 50);
+  qualification = qualification.slice(0, 150);
+
 
   // Dynamic Hindi/Hinglish template for maximum CTR
   let message = '';
