@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Typography, Button, Box, Chip, Avatar, IconButton } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
@@ -131,6 +131,7 @@ export default function HomePage() {
   const [alerts, setAlerts] = useState([]);
   const [loadingAlerts, setLoadingAlerts] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const mobileScrollRef = useRef(null);
 
   const handleNext = () => {
     const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
@@ -171,10 +172,34 @@ export default function HomePage() {
     if (loadingAlerts || alerts.length === 0) return;
     
     const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
-    if (maxSlide <= 0) return;
 
     const timer = setInterval(() => {
-      setCurrentSlide(prev => (prev < maxSlide ? prev + 1 : 0));
+      // 1. Desktop Slider Autoplay
+      if (maxSlide > 0) {
+        setCurrentSlide(prev => (prev < maxSlide ? prev + 1 : 0));
+      }
+
+      // 2. Mobile Slider Autoplay
+      if (mobileScrollRef.current) {
+        const container = mobileScrollRef.current;
+        const scrollWidth = container.scrollWidth;
+        const clientWidth = container.clientWidth;
+        const currentScrollLeft = container.scrollLeft;
+
+        // Card column width on mobile is 250px, gap is 16px (2rem), so total width per step is 266px.
+        const cardStepWidth = 266;
+        let nextScrollLeft = currentScrollLeft + cardStepWidth;
+
+        // If we have reached near the end of scrollable content, wrap back to 0
+        if (nextScrollLeft + clientWidth >= scrollWidth - 10) {
+          nextScrollLeft = 0;
+        }
+
+        container.scrollTo({
+          left: nextScrollLeft,
+          behavior: 'smooth'
+        });
+      }
     }, 5000);
 
     return () => clearInterval(timer);
@@ -308,7 +333,9 @@ export default function HomePage() {
               </Box>
 
               {/* Mobile Swipeable View (xs, finger scroll, no arrows, 2 rows of cards) */}
-              <Box sx={{
+              <Box 
+                ref={mobileScrollRef}
+                sx={{
                 display: { xs: 'flex', sm: 'none' },
                 overflowX: 'auto',
                 gap: 2,
