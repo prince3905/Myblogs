@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Typography, Button, Box, Chip, Avatar } from '@mui/material';
+import { Container, Typography, Button, Box, Chip, Avatar, IconButton } from '@mui/material';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -9,6 +10,119 @@ import { postUrl } from '../../../shared/lib/category';
 import { optimizeImage } from '../../../shared/lib/images';
 import { request } from '../../../shared/lib/api';
 
+const AlertCard = ({ alert, idx }) => {
+  const isEven = idx % 2 === 0;
+  const cardBorder = isEven ? '#F87171' : '#60A5FA';
+  const cardBg = isEven ? 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)' : 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)';
+  const shadowColor = isEven ? 'rgba(239, 68, 68, 0.06)' : 'rgba(59, 130, 246, 0.06)';
+  const hoverBorder = isEven ? '#EF4444' : '#3B82F6';
+  const textCol = isEven ? '#991B1B' : '#1E40AF';
+  const isNew = new Date() - new Date(alert.createdAt) < 3 * 24 * 60 * 60 * 1000;
+
+  return (
+    <Link to="/job-alerts" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+      <Box
+        sx={{
+          p: { xs: 1.2, sm: 1.5 },
+          flexGrow: 1,
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          background: cardBg,
+          border: isNew ? `1.5px solid ${isEven ? '#EF4444' : '#3B82F6'}` : `1px solid ${cardBorder}`,
+          borderRadius: '12px',
+          position: 'relative',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: isNew 
+            ? `0 2px 8px ${isEven ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)'}`
+            : `0 2px 4px -1px ${shadowColor}`,
+          '&:hover': {
+            transform: 'translateY(-3px)',
+            boxShadow: `0 8px 16px -3px ${shadowColor}`,
+            borderColor: hoverBorder,
+            '& .alert-board-title': { color: hoverBorder },
+            '& .alert-card-title': { color: '#111827' }
+          }
+        }}
+      >
+        {isNew && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 6,
+              right: 6,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.3,
+              bgcolor: isEven ? '#EF4444' : '#3B82F6',
+              color: 'white',
+              px: 0.5,
+              py: 0.1,
+              borderRadius: '3px',
+              fontSize: '0.5rem',
+              fontWeight: 900,
+              boxShadow: isEven ? '0 1px 4px rgba(239, 68, 68, 0.3)' : '0 1px 4px rgba(59, 130, 246, 0.3)',
+              animation: 'pulse 1.5s infinite ease-in-out',
+              '@keyframes pulse': {
+                '0%': { transform: 'scale(1)', opacity: 0.9 },
+                '50%': { transform: 'scale(1.05)', opacity: 1 },
+                '100%': { transform: 'scale(1)', opacity: 0.9 }
+              }
+            }}
+          >
+            <Box sx={{ width: 3, height: 3, bgcolor: 'white', borderRadius: '50%' }} />
+            NEW 🔥
+          </Box>
+        )}
+        <Typography 
+          className="alert-board-title"
+          variant="caption" 
+          sx={{ 
+            fontWeight: 850, 
+            color: textCol, 
+            textTransform: 'uppercase', 
+            fontSize: '0.58rem',
+            letterSpacing: 0.3,
+            mb: 0.3,
+            pr: isNew ? 4 : 0,
+            transition: 'color 0.2s ease'
+          }}
+        >
+          {alert.boardName || 'Official Board'}
+        </Typography>
+        <Typography 
+          className="alert-card-title"
+          variant="body2" 
+          sx={{ 
+            fontWeight: 750, 
+            color: '#374151', 
+            lineHeight: 1.3,
+            fontSize: '0.76rem',
+            display: '-webkit-box',
+            WebkitLineClamp: 1,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            mb: 0.4,
+            transition: 'color 0.2s ease'
+          }}
+        >
+          {alert.title}
+        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
+          <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.58rem' }}>
+            {new Date(alert.createdAt).toLocaleDateString()}
+          </Typography>
+          <Typography variant="caption" sx={{ color: textCol, fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
+            Apply ↗
+          </Typography>
+        </Box>
+      </Box>
+    </Link>
+  );
+};
+
 export default function HomePage() {
   const { posts, loading, error } = usePosts({ limit: 17 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
@@ -16,9 +130,33 @@ export default function HomePage() {
 
   const [alerts, setAlerts] = useState([]);
   const [loadingAlerts, setLoadingAlerts] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const handleNext = () => {
+    const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
+    if (currentSlide < maxSlide) {
+      setCurrentSlide(prev => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(prev => prev - 1);
+    }
+  };
+
+  const desktopPages = [];
+  for (let i = 0; i < alerts.length; i += 8) {
+    desktopPages.push(alerts.slice(i, i + 8));
+  }
+
+  const mobilePairs = [];
+  for (let i = 0; i < alerts.length; i += 2) {
+    mobilePairs.push(alerts.slice(i, i + 2));
+  }
 
   useEffect(() => {
-    request('/api/public/live-alerts?status=active&limit=8')
+    request('/api/public/live-alerts?status=active&limit=24')
       .then(res => {
         if (res.success) {
           setAlerts(res.data || []);
@@ -87,128 +225,95 @@ export default function HomePage() {
           ) : alerts.length === 0 ? (
             <Typography variant="body2" sx={{ color: 'text.secondary', py: 2, fontStyle: 'italic' }}>No active updates at the moment.</Typography>
           ) : (
-            <Box sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: 'repeat(2, 1fr)',
-                sm: 'repeat(3, 1fr)',
-                md: 'repeat(4, 1fr)'
-              },
-              gap: 2,
-            }}>
-              {alerts.map((alert, idx) => {
-                const isEven = idx % 2 === 0;
-                const cardBorder = isEven ? '#F87171' : '#60A5FA';
-                const cardBg = isEven ? 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)' : 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)';
-                const shadowColor = isEven ? 'rgba(239, 68, 68, 0.06)' : 'rgba(59, 130, 246, 0.06)';
-                const hoverBorder = isEven ? '#EF4444' : '#3B82F6';
-                const textCol = isEven ? '#991B1B' : '#1E40AF';
-                const isNew = new Date() - new Date(alert.createdAt) < 3 * 24 * 60 * 60 * 1000;
-
-                return (
-                  <Link key={alert._id} to="/job-alerts" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
-                    <Box
-                      sx={{
-                        p: { xs: 1.2, sm: 1.5 },
-                        flexGrow: 1,
-                        width: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        background: cardBg,
-                        border: isNew ? `1.5px solid ${isEven ? '#EF4444' : '#3B82F6'}` : `1px solid ${cardBorder}`,
-                        borderRadius: '12px',
-                        position: 'relative',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: isNew 
-                          ? `0 2px 8px ${isEven ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)'}`
-                          : `0 2px 4px -1px ${shadowColor}`,
-                        '&:hover': {
-                          transform: 'translateY(-3px)',
-                          boxShadow: `0 8px 16px -3px ${shadowColor}`,
-                          borderColor: hoverBorder,
-                          '& .alert-board-title': { color: hoverBorder },
-                          '& .alert-card-title': { color: '#111827' }
-                        }
-                      }}
-                    >
-                      {isNew && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: 6,
-                            right: 6,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 0.3,
-                            bgcolor: isEven ? '#EF4444' : '#3B82F6',
-                            color: 'white',
-                            px: 0.5,
-                            py: 0.1,
-                            borderRadius: '3px',
-                            fontSize: '0.5rem',
-                            fontWeight: 900,
-                            boxShadow: isEven ? '0 1px 4px rgba(239, 68, 68, 0.3)' : '0 1px 4px rgba(59, 130, 246, 0.3)',
-                            animation: 'pulse 1.5s infinite ease-in-out',
-                            '@keyframes pulse': {
-                              '0%': { transform: 'scale(1)', opacity: 0.9 },
-                              '50%': { transform: 'scale(1.05)', opacity: 1 },
-                              '100%': { transform: 'scale(1)', opacity: 0.9 }
-                            }
-                          }}
-                        >
-                          <Box sx={{ width: 3, height: 3, bgcolor: 'white', borderRadius: '50%' }} />
-                          NEW 🔥
-                        </Box>
-                      )}
-                      <Typography 
-                        className="alert-board-title"
-                        variant="caption" 
-                        sx={{ 
-                          fontWeight: 850, 
-                          color: textCol, 
-                          textTransform: 'uppercase', 
-                          fontSize: '0.58rem',
-                          letterSpacing: 0.3,
-                          mb: 0.3,
-                          pr: isNew ? 4 : 0,
-                          transition: 'color 0.2s ease'
-                        }}
-                      >
-                        {alert.boardName || 'Official Board'}
-                      </Typography>
-                      <Typography 
-                        className="alert-card-title"
-                        variant="body2" 
-                        sx={{ 
-                          fontWeight: 750, 
-                          color: '#374151', 
-                          lineHeight: 1.3,
-                          fontSize: '0.76rem',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 1,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          mb: 0.4,
-                          transition: 'color 0.2s ease'
-                        }}
-                      >
-                        {alert.title}
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
-                        <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.58rem' }}>
-                          {new Date(alert.createdAt).toLocaleDateString()}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: textCol, fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
-                          Apply ↗
-                        </Typography>
+            <>
+              {/* Desktop Slider View (sm and up) */}
+              <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'relative', width: '100%' }}>
+                <Box sx={{ overflow: 'hidden', width: '100%', borderRadius: '12px' }}>
+                  <Box sx={{
+                    display: 'flex',
+                    transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: `translate3d(-${currentSlide * 100}%, 0, 0)`,
+                    width: '100%'
+                  }}>
+                    {desktopPages.map((pageItems, pageIdx) => (
+                      <Box key={pageIdx} sx={{ flex: '0 0 100%', width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, px: 0.5 }}>
+                        {pageItems.map((alert, idx) => (
+                          <AlertCard key={alert._id} alert={alert} idx={pageIdx * 8 + idx} />
+                        ))}
                       </Box>
-                    </Box>
-                  </Link>
-                );
-              })}
-            </Box>
+                    ))}
+                  </Box>
+                </Box>
+                
+                {/* Arrow navigation buttons */}
+                {currentSlide > 0 && (
+                  <IconButton 
+                    onClick={handlePrev}
+                    aria-label="Previous Slide"
+                    sx={{
+                      position: 'absolute',
+                      left: -20,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      bgcolor: 'white',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                      border: '1px solid #E5E7EB',
+                      color: '#374151',
+                      zIndex: 10,
+                      width: 40,
+                      height: 40,
+                      '&:hover': { bgcolor: '#F3F4F6' }
+                    }}
+                  >
+                    <ChevronLeft />
+                  </IconButton>
+                )}
+
+                {currentSlide < desktopPages.length - 1 && (
+                  <IconButton 
+                    onClick={handleNext}
+                    aria-label="Next Slide"
+                    sx={{
+                      position: 'absolute',
+                      right: -20,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      bgcolor: 'white',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                      border: '1px solid #E5E7EB',
+                      color: '#374151',
+                      zIndex: 10,
+                      width: 40,
+                      height: 40,
+                      '&:hover': { bgcolor: '#F3F4F6' }
+                    }}
+                  >
+                    <ChevronRight />
+                  </IconButton>
+                )}
+              </Box>
+
+              {/* Mobile Swipeable View (xs, finger scroll, no arrows, 2 rows of cards) */}
+              <Box sx={{
+                display: { xs: 'flex', sm: 'none' },
+                overflowX: 'auto',
+                gap: 2,
+                pb: 1.5,
+                px: 0.5,
+                scrollSnapType: 'x mandatory',
+                '&::-webkit-scrollbar': { display: 'none' }
+              }}>
+                {mobilePairs.map((pair, pairIdx) => (
+                  <Box key={pairIdx} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: '0 0 250px', scrollSnapAlign: 'start' }}>
+                    {pair.map((alert, idx) => (
+                      <Box key={alert._id} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                        <AlertCard alert={alert} idx={pairIdx * 2 + idx} />
+                      </Box>
+                    ))}
+                  </Box>
+                ))}
+              </Box>
+            </>
           )}
         </Container>
       </Box>
