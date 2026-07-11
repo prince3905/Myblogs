@@ -77,31 +77,17 @@ export default function Layout({ children }) {
             </IconButton>
 
             {/* Logo */}
-            <Box component={Link} to="/" sx={{ display: { xs: 'flex', md: 'flex' }, alignItems: 'center', gap: 0.5, textDecoration: 'none' }}>
-              <Avatar
-                sx={{
-                  width: 26,
-                  height: 26,
-                  bgcolor: 'primary.main',
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  color: 'white',
-                }}
-              >
-                D
-              </Avatar>
-              <Typography 
-                variant="h5" 
+            <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+              <Box 
+                component="img"
+                src="/logo.png"
+                alt="Digital Home Logo"
                 sx={{ 
-                  fontWeight: 700, 
-                  fontSize: { xs: '0.85rem', md: '1rem' },
-                  color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111',
-                  letterSpacing: '-0.02em',
-                  whiteSpace: 'nowrap',
+                  height: { xs: 28, md: 34 }, 
+                  width: 'auto',
+                  display: 'block'
                 }}
-              >
-                Digital Home
-              </Typography>
+              />
             </Box>
             
             {/* Desktop Nav items */}
