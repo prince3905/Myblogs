@@ -166,6 +166,20 @@ export default function HomePage() {
       .finally(() => setLoadingAlerts(false));
   }, []);
 
+  // Autoplay slideshow timer (advances every 5 seconds, manual arrow click resets the timer)
+  useEffect(() => {
+    if (loadingAlerts || alerts.length === 0) return;
+    
+    const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
+    if (maxSlide <= 0) return;
+
+    const timer = setInterval(() => {
+      setCurrentSlide(prev => (prev < maxSlide ? prev + 1 : 0));
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [alerts, loadingAlerts, currentSlide]);
+
   return (
     <Layout>
       <Seo title="Digital Home | Your Daily Dose of Information & Insights" description="Sarkari Result, Admit Card, Latest Jobs, Vacancies, Sarkari Result Tools, Kids Games (बचो का गेम), Health, Education, and Tech Insights from Digital Home Blog." keywords="sarkari result, admit card, latest jobs, vacancies, govt jobs, sarkari result tools, kids games, bacho ka game, health tips, education, tech tutorials, all insights blog, digital home" />

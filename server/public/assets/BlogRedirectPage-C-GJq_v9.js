@@ -1,1 +1,0 @@
-import{ah as o,l as s,a2 as u,a7 as i,ak as t,ab as n}from"./index-BJp_ty2j.js";import{u as l}from"./usePost-C4hlb0Lf.js";function c(){const{slug:a}=o(),{post:r,loading:e}=l(a);return e?s.jsx(u,{sx:{display:"flex",justifyContent:"center",py:8},children:s.jsx(i,{})}):r?s.jsx(t,{to:n(r),replace:!0}):s.jsx(t,{to:"/",replace:!0})}export{c as default};
