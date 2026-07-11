@@ -186,9 +186,8 @@ export default function HomePage() {
         const clientWidth = container.clientWidth;
         const currentScrollLeft = container.scrollLeft;
 
-        // Card column width on mobile is 250px, gap is 16px (2rem), so total width per step is 266px.
-        const cardStepWidth = 266;
-        let nextScrollLeft = currentScrollLeft + cardStepWidth;
+        // Advance by one full page/screen width
+        let nextScrollLeft = currentScrollLeft + clientWidth;
 
         // If we have reached near the end of scrollable content, wrap back to 0
         if (nextScrollLeft + clientWidth >= scrollWidth - 10) {
@@ -345,7 +344,7 @@ export default function HomePage() {
                 '&::-webkit-scrollbar': { display: 'none' }
               }}>
                 {mobilePairs.map((pair, pairIdx) => (
-                  <Box key={pairIdx} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: '0 0 250px', scrollSnapAlign: 'start' }}>
+                  <Box key={pairIdx} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: '0 0 calc(50% - 8px)', scrollSnapAlign: 'start' }}>
                     {pair.map((alert, idx) => (
                       <Box key={alert._id} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                         <AlertCard alert={alert} idx={pairIdx * 2 + idx} />
