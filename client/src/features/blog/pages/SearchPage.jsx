@@ -49,7 +49,7 @@ export default function SearchPage() {
 
   return (
     <Layout>
-      <Seo title={q ? `Search: ${q} | Digital Home` : 'Search | Digital Home'} description="Search articles on Digital Home" />
+      <Seo title={q ? `Search: ${q} | Digital Home` : 'Search | Digital Home'} description="Search articles on Digital Home" noindex={true} />
 
       <>
         <Typography variant="h5" component="h1" sx={{ fontWeight: 700, mb: 0.5 }}>Search Insights</Typography>

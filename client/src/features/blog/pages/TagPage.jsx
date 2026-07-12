@@ -24,7 +24,7 @@ export default function TagPage() {
 
   return (
     <Layout>
-      <Seo title={`#${tag} — Digital Home`} description={`Browse all posts tagged with #${tag}.`} />
+      <Seo title={`#${tag} — Digital Home`} description={`Browse all posts tagged with #${tag}.`} noindex={true} />
 
       <Box sx={{ pt: { xs: 4, md: 6 }, pb: { xs: 8, md: 12 } }}>
         {/* Header Section */}

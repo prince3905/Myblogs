@@ -32,7 +32,7 @@ export default function ArchivePage() {
 
   return (
     <Layout>
-      <Seo title="Archive | Inkspire Blog" description="Browse all posts by month and year." />
+      <Seo title="Archive | Inkspire Blog" description="Browse all posts by month and year." noindex={true} />
       
       {/* Header Section */}
       <Box 
