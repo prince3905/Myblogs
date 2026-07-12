@@ -123,15 +123,245 @@ const AlertCard = ({ alert, idx }) => {
   );
 };
 
+const CategoryRowSlider = ({ categoryName, posts, loading }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const mobileScrollRef = useRef(null);
+  const sliderRef = useRef(null);
+  const [isIntersecting, setIsIntersecting] = useState(false);
+  const [lastInteraction, setLastInteraction] = useState(Date.now());
+
+  // Setup Intersection Observer for lazy autoplay with browser compatibility fallback
+  useEffect(() => {
+    if (typeof window === 'undefined' || !sliderRef.current) return;
+    if (!window.IntersectionObserver) {
+      setIsIntersecting(true);
+      return;
+    }
+    
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsIntersecting(entry.isIntersecting);
+    }, { threshold: 0.1 });
+
+    observer.observe(sliderRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Split posts into pages of 4 items for desktop
+  const desktopPages = [];
+  for (let i = 0; i < posts.length; i += 4) {
+    desktopPages.push(posts.slice(i, i + 4));
+  }
+
+  // Split posts into pages of 2 items for mobile
+  const mobilePages = [];
+  for (let i = 0; i < posts.length; i += 2) {
+    mobilePages.push(posts.slice(i, i + 2));
+  }
+
+  const maxSlide = Math.max(0, desktopPages.length - 1);
+
+  const handleNext = () => {
+    if (currentSlide < maxSlide) {
+      setCurrentSlide(prev => prev + 1);
+      setLastInteraction(Date.now());
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(prev => prev - 1);
+      setLastInteraction(Date.now());
+    }
+  };
+
+  // Autoplay slideshow timer (only active when category section is visible in the viewport)
+  useEffect(() => {
+    if (loading || posts.length === 0 || !isIntersecting) return;
+
+    const timer = setInterval(() => {
+      // 1. Desktop Autoplay
+      if (maxSlide > 0) {
+        setCurrentSlide(prev => (prev < maxSlide ? prev + 1 : 0));
+      }
+
+      // 2. Mobile Autoplay
+      if (mobileScrollRef.current) {
+        const container = mobileScrollRef.current;
+        const scrollWidth = container.scrollWidth;
+        const clientWidth = container.clientWidth;
+        const currentScrollLeft = container.scrollLeft;
+
+        let nextScrollLeft = currentScrollLeft + clientWidth;
+        if (nextScrollLeft + clientWidth >= scrollWidth - 10) {
+          nextScrollLeft = 0;
+        }
+
+        container.scrollTo({
+          left: nextScrollLeft,
+          behavior: 'smooth'
+        });
+      }
+    }, 6000); // Autoplay every 6 seconds
+
+    return () => clearInterval(timer);
+  }, [posts, loading, isIntersecting, maxSlide, currentSlide, lastInteraction]);
+
+  if (loading) {
+    return (
+      <Box sx={{ mb: 6 }}>
+        <Typography variant="h3" component="h3" sx={{ fontWeight: 700, mb: 3, fontSize: { xs: '1.25rem', md: '1.5rem' }, color: '#111827' }}>
+          {categoryName}
+        </Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: '24px' }}>
+          {[...Array(4)].map((_, idx) => (
+            <Box key={idx} sx={{ height: 280, bgcolor: '#f3f4f6', borderRadius: '16px', animation: 'pulse 1.5s infinite ease-in-out' }} />
+          ))}
+        </Box>
+      </Box>
+    );
+  }
+
+  if (posts.length === 0) return null;
+
+  return (
+    <Box ref={sliderRef} sx={{ mb: 6, position: 'relative' }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography
+          variant="h3"
+          component="h3"
+          sx={{
+            fontWeight: 700, 
+            color: '#111827', 
+            letterSpacing: '-0.02em',
+            fontSize: { xs: '1.25rem', md: '1.5rem' }
+          }}
+        >
+          {categoryName}
+        </Typography>
+        <Button
+          component={Link}
+          to={`/category/${encodeURIComponent(categoryName)}`}
+          sx={{
+            fontWeight: 600, 
+            fontSize: '0.85rem',
+            color: '#4F46E5',
+            '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.04)' }
+          }}
+        >
+          View all →
+        </Button>
+      </Box>
+
+      {/* Desktop Slider View (sm and up) */}
+      <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'relative', width: '100%' }}>
+        <Box sx={{ overflow: 'hidden', width: '100%', borderRadius: '16px' }}>
+          <Box sx={{
+            display: 'flex',
+            transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: `translate3d(-${currentSlide * 100}%, 0, 0)`,
+            width: '100%'
+          }}>
+            {desktopPages.map((pageItems, pageIdx) => (
+              <Box key={pageIdx} sx={{ flex: '0 0 100%', width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
+                {pageItems.map((post) => (
+                  <Box key={post._id} component="article" sx={{ minWidth: 0 }}>
+                    <PostCard post={post} headingLevel="h4" />
+                  </Box>
+                ))}
+              </Box>
+            ))}
+          </Box>
+        </Box>
+
+        {/* Desktop Navigation Arrows */}
+        {currentSlide > 0 && (
+          <IconButton
+            onClick={handlePrev}
+            aria-label="Previous Slide"
+            sx={{
+              position: 'absolute',
+              left: -20,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              bgcolor: 'white',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+              border: '1px solid #E5E7EB',
+              color: '#374151',
+              zIndex: 10,
+              width: 40,
+              height: 40,
+              '&:hover': { bgcolor: '#F3F4F6' }
+            }}
+          >
+            <ChevronLeft />
+          </IconButton>
+        )}
+
+        {currentSlide < maxSlide && (
+          <IconButton
+            onClick={handleNext}
+            aria-label="Next Slide"
+            sx={{
+              position: 'absolute',
+              right: -20,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              bgcolor: 'white',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+              border: '1px solid #E5E7EB',
+              color: '#374151',
+              zIndex: 10,
+              width: 40,
+              height: 40,
+              '&:hover': { bgcolor: '#F3F4F6' }
+            }}
+          >
+            <ChevronRight />
+          </IconButton>
+        )}
+      </Box>
+
+      {/* Mobile Swipeable View (xs, finger scroll, 2 columns per screen view) */}
+      <Box
+        ref={mobileScrollRef}
+        onTouchStart={() => setLastInteraction(Date.now())}
+        sx={{
+          display: { xs: 'flex', sm: 'none' },
+          overflowX: 'auto',
+          gap: 2,
+          pb: 1.5,
+          px: 0.5,
+          scrollSnapType: 'x mandatory',
+          '&::-webkit-scrollbar': { display: 'none' }
+        }}
+      >
+        {mobilePages.map((pageItems, pageIdx) => (
+          <Box key={pageIdx} sx={{ flex: '0 0 calc(50% - 8px)', display: 'flex', flexDirection: 'column', gap: 2, scrollSnapAlign: 'start' }}>
+            {pageItems.map((post) => (
+              <Box key={post._id} component="article" sx={{ width: '100%' }}>
+                <PostCard post={post} headingLevel="h4" />
+              </Box>
+            ))}
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
 export default function HomePage() {
-  const { posts, loading, error } = usePosts({ limit: 17 });
+  const { posts, loading, error } = usePosts({ limit: 1 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
-  const regularPosts = posts.length > 1 ? posts.slice(1) : [];
+  const regularPosts = [];
 
   const [alerts, setAlerts] = useState([]);
   const [loadingAlerts, setLoadingAlerts] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const mobileScrollRef = useRef(null);
+
+  const [categoriesData, setCategoriesData] = useState({});
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const handleNext = () => {
     const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
@@ -166,7 +396,35 @@ export default function HomePage() {
       .catch(err => console.error(err))
       .finally(() => setLoadingAlerts(false));
   }, []);
+  useEffect(() => {
+    const categories = [
+      'Sarkari Jobs & Exams',
+      'Health & Wellness',
+      'Tech & Tutorials',
+      'AI & Web Tools',
+      'News & Trends',
+      'Finance & Business'
+    ];
 
+    setLoadingCategories(true);
+    Promise.all(
+      categories.map(cat => 
+        request(`/api/posts?category=${encodeURIComponent(cat)}&limit=12`)
+          .then(res => ({ category: cat, posts: res.posts || [] }))
+          .catch(err => {
+            console.error(`Error fetching category ${cat}:`, err);
+            return { category: cat, posts: [] };
+          })
+      )
+    ).then(results => {
+      const dataMap = {};
+      results.forEach(item => {
+        dataMap[item.category] = item.posts;
+      });
+      setCategoriesData(dataMap);
+      setLoadingCategories(false);
+    });
+  }, []);
   // Autoplay slideshow timer (advances every 5 seconds, manual arrow click resets the timer)
   useEffect(() => {
     if (loadingAlerts || alerts.length === 0) return;
@@ -524,60 +782,31 @@ export default function HomePage() {
       {/* Latest Insights Section (H2) */}
       <Box component="section" sx={{ py: { xs: 4, md: 6 }, bgcolor: '#F9FAFB' }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-          <Box sx={{ display: 'flex', justifycontent: 'space-between', alignItems: 'center', mb: 5 }}>
-            <Typography
-              variant="h2"
-              sx={{
-                fontWeight: 700, color: '#111827', letterSpacing: '-0.02em',
-                fontSize: { xs: '1.5rem', md: '2rem' }
-              }}
-            >
-              Latest Insights
-            </Typography>
-            <Button
-              component={Link}
-              to="/blog"
-              sx={{
-                fontWeight: 600, fontSize: '0.9rem',
-                color: '#4F46E5',
-                '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.04)' }
-              }}
-            >
-              View all →
-            </Button>
-          </Box>
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: 750, color: '#111827', letterSpacing: '-0.02em', mb: 5,
+              fontSize: { xs: '1.5rem', md: '2rem' }
+            }}
+          >
+            Latest Insights
+          </Typography>
 
-          {loading ? (
-            <Typography sx={{ textAlign: 'center', py: 4 }}>Loading posts...</Typography>
-          ) : error ? (
-            <Typography color="error" sx={{ textAlign: 'center', py: 4 }}>
-              Error loading posts: {error}
-            </Typography>
-          ) : (
-            <Box sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: regularPosts.length === 1 ? '1fr' : 'repeat(3, 1fr)',
-                lg: regularPosts.length === 1 ? '1fr' : 'repeat(4, 1fr)'
-              },
-              gap: '24px',
-            }}>
-              {regularPosts.map((post) => (
-                <Box key={post._id} component="article" sx={{ minWidth: 0 }}>
-                  <PostCard post={post} headingLevel="h3" />
-                </Box>
-              ))}
-              {!regularPosts.length ? (
-                <Box sx={{ gridColumn: '1 / -1' }}>
-                  <Typography sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-                    No published posts yet. Log in to admin and create your first article.
-                  </Typography>
-                </Box>
-              ) : null}
-            </Box>
-          )}
+          {[
+            'Sarkari Jobs & Exams',
+            'Health & Wellness',
+            'Tech & Tutorials',
+            'AI & Web Tools',
+            'News & Trends',
+            'Finance & Business'
+          ].map(cat => (
+            <CategoryRowSlider 
+              key={cat}
+              categoryName={cat}
+              posts={categoriesData[cat] || []}
+              loading={loadingCategories}
+            />
+          ))}
         </Container>
       </Box>
 
