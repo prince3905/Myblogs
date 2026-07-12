@@ -490,7 +490,14 @@ async function scrapeDetailedUrls(pageUrl) {
           rowText.includes('mobile app') || 
           rowText.includes('android app') || 
           rowText.includes('apple ios app') ||
-          rowText.includes('join sarkari')
+          rowText.includes('join sarkari') ||
+          rowText.includes('itunes.apple.com') ||
+          rowText.includes('play.google.com') ||
+          rowText.includes('facebook.com') ||
+          rowText.includes('twitter.com') ||
+          rowText.includes('instagram.com') ||
+          rowText.includes('youtube.com') ||
+          rowText.includes('sarkariresult.com/app')
         ) {
           return;
         }
@@ -510,6 +517,22 @@ async function scrapeDetailedUrls(pageUrl) {
                 : (href.startsWith('/') ? `${baseUrl}${href}` : `${baseUrl}/${href}`);
               
               const lower = resolvedHref.toLowerCase();
+              
+              // Skip promotional / third-party brand links entirely
+              if (
+                lower.includes('telegram') ||
+                lower.includes('whatsapp') ||
+                lower.includes('itunes.apple.com') ||
+                lower.includes('play.google.com') ||
+                lower.includes('facebook') ||
+                lower.includes('twitter') ||
+                lower.includes('instagram') ||
+                lower.includes('youtube.com') ||
+                lower.includes('sarkariresult.com/app')
+              ) {
+                return;
+              }
+
               if (
                 (lower.includes('sarkariresult') || lower.includes('freejobalert') || lower.includes('ilovepdf') || lower.includes('imageresizer') || lower.includes('pdfresizer')) &&
                 (lower.includes('tool') || lower.includes('resize') || lower.includes('compress') || lower.includes('crop') || lower.includes('convert') || lower.includes('age'))
@@ -822,15 +845,14 @@ async function scrapeFeeds() {
   }
 
   try {
-    // Only process alerts created today (IST calendar day)
-    const startOfToday = new Date();
-    startOfToday.setUTCHours(0, 0, 0, 0);
-    startOfToday.setMinutes(startOfToday.getMinutes() - 330); // shift back 5.5 hours to align with IST 00:00
+    // Process active alerts created within the last 3 days
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-    console.log(`[Autopilot] Scanning for same-day active alerts (created after: ${startOfToday.toISOString()})...`);
+    console.log(`[Autopilot] Scanning for active alerts (created after: ${threeDaysAgo.toISOString()})...`);
     const activeAlerts = await LiveAlert.find({ 
       status: 'active',
-      createdAt: { $gte: startOfToday }
+      createdAt: { $gte: threeDaysAgo }
     }).limit(3);
     if (activeAlerts.length > 0) {
       console.log(`[Autopilot] Found active alerts. Processing a limited batch of ${activeAlerts.length} alerts to prevent API overload...`);

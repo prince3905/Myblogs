@@ -240,6 +240,10 @@ FACTUAL METADATA:
 
 CRITICAL DIRECTIVES:
 - You must use the mandatory 'Sarkari Jobs & Exams' category framework headings in Hinglish/Hindi, but at least one of these H2 headings MUST contain the exact Focus Keyword/Title phrase "${cleanTitle}" (e.g., "## ${cleanTitle} की महत्वपूर्ण तिथियाँ" or "## ${cleanTitle} योग्यता और पात्रता" or prepend the title to any H2 heading). Do NOT use plain English headings.
+- You MUST include the following three unique educational sections as H2 headings to provide high-value content for students:
+  * "## चयन प्रक्रिया (Selection Process)" - Explaining step-by-step how the selection happens (Written Exam, Physical, Interview, Document Verification).
+  * "## परीक्षा की तैयारी कैसे करें? (Exam Preparation Tips)" - Provide 3-4 actionable tips and study guidelines for candidates preparing for this specific exam.
+  * "## परीक्षा के मुख्य विषय (Key Syllabus Subjects)" - Summarize the core subjects they need to study (General Knowledge, Mathematics, Reasoning, etc.) to pass.
 - Under EACH H2 heading, you MUST write at least 2 detailed body paragraphs (each 5-6 sentences long) to explain the details in depth and guarantee a long-form article of at least 1,800+ words to pass SEO length checks.
 - To present details in a premium, highly readable format for students:
   * Under the "## महत्वपूर्ण तिथियाँ" section, you MUST construct a neat Markdown table containing key dates (e.g., Event Name like Start Date / Last Date vs Date value).
@@ -252,7 +256,7 @@ CRITICAL DIRECTIVES:
 ${buttonHtmlBlock}
 - You MUST naturally link to other pages of our portal inside the post content body paragraphs (e.g. using anchor text like "Digital Home Blog", "Government Job Vacancy & Result 2026", "latest government jobs" pointing to root URL "/").
 - The FAQ section heading MUST be exactly "## अक्सर पूछे जाने वाले सवाल (FAQ)" so it is detected correctly.
-- Under the FAQ section, provide exactly 3 questions formatted as H3. Each question must be in Hinglish using Latin query words like "Kaise", "Kab", "Kya", "How", or "What" (e.g., "### Question: UPTGT 2026 Apply Kaise Karein?"). Each answer must be immediately below it and strictly under 45 words.`
+- Under the FAQ section, provide exactly 3 questions formatted as H3. Each question must be in Hinglish using Latin query words like "Kaise", "Kab", "Kya", "How", or "What" (e.g., "### Question: UPTGT 2026 Apply Kaise Karein?"). Each answer must be immediately below it and strictly under 45 words.`;
   };
 
   // Trigger backend AI post generator
