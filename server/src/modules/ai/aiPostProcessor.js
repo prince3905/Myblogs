@@ -198,6 +198,8 @@ async function addInternalLinks(content, category) {
 
 function ensureKeywordFrequency(content, title, keywords) {
   if (!content) return content;
+  // Disable automatic keyword stuffing booster paragraph injection for SEO & AdSense compliance
+  return content;
 
   // Determine focus keyword (first keyword in list, or title)
   let focusKeyword = '';
