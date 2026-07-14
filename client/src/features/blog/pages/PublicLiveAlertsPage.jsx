@@ -1,5 +1,5 @@
 import { useEffect, useState, Fragment, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Typography, Button, Table, TableBody, TableCell, TableContainer,
   TableRow, Paper, Chip, Box, Alert, CircularProgress,
@@ -748,6 +748,8 @@ const getCardStyles = (item, index) => {
 };
 
 export default function PublicLiveAlertsPage() {
+  const [searchParams] = useSearchParams();
+  const alertIdParam = searchParams.get('alert');
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -840,6 +842,23 @@ export default function PublicLiveAlertsPage() {
   useEffect(() => {
     loadAlerts();
   }, []);
+
+  useEffect(() => {
+    if (alerts.length > 0 && alertIdParam) {
+      const matched = alerts.find(a => a._id === alertIdParam);
+      if (matched) {
+        setSelectedAlert(matched);
+      } else {
+        request(`/api/public/live-alerts/${alertIdParam}`)
+          .then(res => {
+            if (res.success && res.data) {
+              setSelectedAlert(res.data);
+            }
+          })
+          .catch(err => console.error('Failed to auto-load alert details:', err.message));
+      }
+    }
+  }, [alerts, alertIdParam]);
 
   const uniqueStates = useMemo(() => {
     return ['All States', ...new Set(alerts.map(a => a.state || 'Central/All India'))].sort();
