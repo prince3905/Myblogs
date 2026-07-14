@@ -1,0 +1,1 @@
+import{ah as o,l as s,a2 as u,a7 as i,al as t,ab as l}from"./index-CKd3hJZw.js";import{u as n}from"./usePost-CKl3BE8h.js";function c(){const{slug:a}=o(),{post:r,loading:e}=n(a);return e?s.jsx(u,{sx:{display:"flex",justifyContent:"center",py:8},children:s.jsx(i,{})}):r?s.jsx(t,{to:l(r),replace:!0}):s.jsx(t,{to:"/",replace:!0})}export{c as default};

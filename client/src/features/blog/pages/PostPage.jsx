@@ -10,7 +10,8 @@ import SocialShare from '../../../components/SocialShare';
 import TableOfContents from '../../../components/TableOfContents';
 import AdSlot from '../../../components/AdSlot';
 import { MonetizationOn, Info, PictureAsPdf } from '@mui/icons-material';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useToast } from '../../../components/Toast';
 import Prism from 'prismjs';
 import { optimizeImage } from '../../../shared/lib/images';
 import 'prismjs/themes/prism-tomorrow.css';
@@ -224,6 +225,8 @@ function parseTableSpecs(htmlContent) {
 export default function PostPage() {
   const { slug, category } = useParams();
   const { post, loading, error } = usePost(slug);
+  const { addToast } = useToast();
+  const [pdfGenerating, setPdfGenerating] = useState(false);
 
   useEffect(() => {
     if (post && post.content) {
@@ -248,6 +251,9 @@ export default function PostPage() {
   const heroImage = optimizeImage(post.featuredImage || pickHero(post.title), 1000, 600);
 
   const generateBrandedPDF = async () => {
+    if (pdfGenerating) return;
+    setPdfGenerating(true);
+    addToast('Preparing PDF summary. This might take a few seconds... 📄', 'info');
     try {
       const { jsPDF } = await import('jspdf');
       const html2canvasModule = await import('html2canvas');
@@ -410,6 +416,38 @@ export default function PostPage() {
           const imgData = canvas.toDataURL('image/jpeg', 0.95);
           doc.addImage(imgData, 'JPEG', 12, currentY, printableWidth, nodeHeight);
 
+          // Make all links inside this block clickable in the PDF
+          try {
+            const scaleFactor = printableWidth / node.getBoundingClientRect().width;
+            const nodeRect = node.getBoundingClientRect();
+            const aTags = node.querySelectorAll('a');
+            aTags.forEach(aTag => {
+              const aHref = aTag.getAttribute('href');
+              if (aHref && !aHref.startsWith('javascript:')) {
+                const aRect = aTag.getBoundingClientRect();
+                const xInNode = aRect.left - nodeRect.left;
+                const yInNode = aRect.top - nodeRect.top;
+                const wInNode = aRect.width;
+                const hInNode = aRect.height;
+                
+                const xInPdf = 12 + (xInNode * scaleFactor);
+                const yInPdf = currentY + (yInNode * scaleFactor);
+                const wInPdf = wInNode * scaleFactor;
+                const hInPdf = hInNode * scaleFactor;
+
+                // Resolve relative URLs to absolute
+                let targetUrl = aHref;
+                if (targetUrl.startsWith('/')) {
+                  targetUrl = `${window.location.origin}${targetUrl}`;
+                }
+
+                doc.link(xInPdf, yInPdf, wInPdf, hInPdf, { url: targetUrl });
+              }
+            });
+          } catch (linkErr) {
+            console.warn('Failed to add PDF links for node:', linkErr);
+          }
+
           currentY += nodeHeight + 4; // Add spacing between sibling blocks
         } catch (nodeErr) {
           console.warn('Skipping unrenderable PDF node:', node, nodeErr);
@@ -421,8 +459,12 @@ export default function PostPage() {
 
       const fileName = `${post.slug}-summary.pdf`;
       doc.save(fileName);
+      addToast('PDF downloaded successfully! 🚀', 'success');
     } catch (err) {
       console.error('PDF Generation failed:', err);
+      addToast('Failed to generate PDF summary. Please try again.', 'error');
+    } finally {
+      setPdfGenerating(false);
     }
   };
 
@@ -692,8 +734,9 @@ export default function PostPage() {
                 <Button
                   variant="contained"
                   color="error"
+                  disabled={pdfGenerating}
                   onClick={generateBrandedPDF}
-                  startIcon={<PictureAsPdf />}
+                  startIcon={pdfGenerating ? <CircularProgress size={20} color="inherit" /> : <PictureAsPdf />}
                   sx={{
                     py: 1.2,
                     px: 3,
@@ -707,7 +750,7 @@ export default function PostPage() {
                     }
                   }}
                 >
-                  Download Job Summary (PDF डाउनलोड करें)
+                  {pdfGenerating ? 'Generating PDF...' : 'Download Job Summary (PDF डाउनलोड करें)'}
                 </Button>
               )}
               
