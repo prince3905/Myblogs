@@ -100,6 +100,28 @@ app.get('/', async (req, res, next) => {
       const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data).replace(/</g, '\\u003c')};</script>`;
       html = html.replace('</head>', `${scriptTag}\n</head>`);
     }
+
+    // Inject static HTML links for SEO crawlers who do not execute client-side Javascript
+    try {
+      const mongoose = require('mongoose');
+      const BlogPost = mongoose.model('BlogPost');
+      const allPosts = await BlogPost.find({ status: 'published' })
+        .select('title category slug')
+        .lean();
+      
+      const catUrlSlug = (cat) => (cat || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      
+      let seoLinks = '\n<div style="display:none;" id="seo-crawler-links" aria-hidden="true">\n';
+      allPosts.forEach(p => {
+        const path = `/blog/${catUrlSlug(p.category)}/${p.slug}`;
+        seoLinks += `  <a href="${path}">${p.title}</a>\n`;
+      });
+      seoLinks += '</div>\n';
+      
+      html = html.replace('<body>', `<body>${seoLinks}`);
+    } catch (dbErr) {
+      console.warn('Failed to inject SEO crawler links:', dbErr.message);
+    }
     
     res.setHeader('Content-Type', 'text/html');
     return res.send(html);
