@@ -201,10 +201,15 @@ async function listPublishedPosts(req, res) {
 }
 
 async function listAdminPosts(req, res) {
-  const posts = await BlogPost.find()
-    .sort({ updatedAt: -1 })
-    .lean();
-  return res.json(posts);
+  try {
+    const posts = await BlogPost.find()
+      .select('title category slug status views createdAt updatedAt seoScore')
+      .sort({ updatedAt: -1 })
+      .lean();
+    return res.json(posts);
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to retrieve posts: ' + err.message });
+  }
 }
 
 async function getPostBySlug(req, res) {
