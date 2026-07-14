@@ -112,6 +112,7 @@ app.get('/', async (req, res, next) => {
       const catUrlSlug = (cat) => (cat || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       
       let seoLinks = '\n<div style="display:none;" id="seo-crawler-links" aria-hidden="true">\n';
+      seoLinks += '  <h1 style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;">Digital Home - Latest Sarkari Jobs, Exams & Tech Updates</h1>\n';
       allPosts.forEach(p => {
         const path = `/blog/${catUrlSlug(p.category)}/${p.slug}`;
         seoLinks += `  <a href="${path}">${p.title}</a>\n`;

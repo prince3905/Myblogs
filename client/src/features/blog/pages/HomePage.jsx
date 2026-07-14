@@ -466,6 +466,23 @@ export default function HomePage() {
     <Layout>
       <Seo title="Digital Home | Your Daily Dose of Information & Insights" description="Sarkari Result, Admit Card, Latest Jobs, Vacancies, Sarkari Result Tools, Kids Games (बचो का गेम), Health, Education, and Tech Insights from Digital Home Blog." keywords="sarkari result, admit card, latest jobs, vacancies, govt jobs, sarkari result tools, kids games, bacho ka game, health tips, education, tech tutorials, all insights blog, digital home" />
 
+      <Typography
+        component="h1"
+        sx={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: '0',
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          border: '0',
+        }}
+      >
+        Digital Home - Latest Sarkari Jobs, Exams & Tech Updates
+      </Typography>
+
       {/* Live Job Alerts Board Section */}
       <Box 
         component="section" 
