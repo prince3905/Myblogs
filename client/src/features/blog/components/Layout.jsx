@@ -8,6 +8,7 @@ import { useState } from 'react';
 import NewsletterWidget from '../../../components/NewsletterWidget';
 import DarkModeToggle from '../../../components/DarkModeToggle';
 import BreadcrumbsNav from '../../../components/Breadcrumbs';
+import TelegramStickyBanner from '../../../components/TelegramStickyBanner';
 
 
 export default function Layout({ children }) {
@@ -35,7 +36,7 @@ export default function Layout({ children }) {
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', pb: { xs: 8, sm: 9 } }}>
       {/* Floating pill-shaped navbar */}
       <Box
         sx={{
@@ -267,6 +268,8 @@ export default function Layout({ children }) {
       </Box>
 
 
+      {/* Telegram Sticky Banner */}
+      <TelegramStickyBanner />
     </Box>
   );
 }
