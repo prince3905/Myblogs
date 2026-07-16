@@ -19,6 +19,7 @@ import {
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
 import { request } from '../../../shared/lib/api';
+import TelegramRedirectModal from '../../../components/TelegramRedirectModal';
 
 const keyKeywords = [
   'Application Begin',
@@ -758,6 +759,8 @@ export default function PublicLiveAlertsPage() {
   const [selectedAlert, setSelectedAlertState] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [errorLoadingDetails, setErrorLoadingDetails] = useState('');
+  const [redirectModalOpen, setRedirectModalOpen] = useState(false);
+  const [pendingRedirectUrl, setPendingRedirectUrl] = useState('');
 
   const setSelectedAlert = async (alert) => {
     if (!alert) {
@@ -1778,9 +1781,11 @@ export default function PublicLiveAlertsPage() {
                   {pdfLink && (
                     <Button
                       variant="outlined"
-                      href={pdfLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPendingRedirectUrl(pdfLink);
+                        setRedirectModalOpen(true);
+                      }}
                       startIcon={<PdfIcon />}
                       sx={{ 
                         textTransform: 'none', 
@@ -1802,9 +1807,11 @@ export default function PublicLiveAlertsPage() {
                   {applyLink && (
                     <Button
                       variant="contained"
-                      href={applyLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPendingRedirectUrl(applyLink);
+                        setRedirectModalOpen(true);
+                      }}
                       startIcon={<ApplyIcon />}
                       sx={{ 
                         textTransform: 'none', 
@@ -1826,9 +1833,11 @@ export default function PublicLiveAlertsPage() {
                   {officialWeb && (
                     <Button
                       variant="outlined"
-                      href={officialWeb}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPendingRedirectUrl(officialWeb);
+                        setRedirectModalOpen(true);
+                      }}
                       startIcon={<WebIcon />}
                       sx={{ 
                         textTransform: 'none', 
@@ -1843,7 +1852,7 @@ export default function PublicLiveAlertsPage() {
                         '&:hover': { bgcolor: '#EFF6FF', borderColor: '#2563EB' }
                       }}
                     >
-                      Board Website
+                      Official Website
                     </Button>
                   )}
 
@@ -1869,6 +1878,13 @@ export default function PublicLiveAlertsPage() {
           </DialogActions>
         </Dialog>
       )}
+
+      {/* Interstitial Redirect Modal for Telegram */}
+      <TelegramRedirectModal 
+        open={redirectModalOpen} 
+        onClose={() => setRedirectModalOpen(false)} 
+        targetUrl={pendingRedirectUrl} 
+      />
     </Layout>
   );
 }

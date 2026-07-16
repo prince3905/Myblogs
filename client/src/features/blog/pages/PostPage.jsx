@@ -9,6 +9,7 @@ import CommentSection from '../components/CommentSection';
 import SocialShare from '../../../components/SocialShare';
 import TableOfContents from '../../../components/TableOfContents';
 import AdSlot from '../../../components/AdSlot';
+import TelegramRedirectModal from '../../../components/TelegramRedirectModal';
 import { MonetizationOn, Info, PictureAsPdf } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import { useToast } from '../../../components/Toast';
@@ -227,6 +228,20 @@ export default function PostPage() {
   const { post, loading, error } = usePost(slug);
   const { addToast } = useToast();
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [redirectModalOpen, setRedirectModalOpen] = useState(false);
+  const [pendingRedirectUrl, setPendingRedirectUrl] = useState('');
+
+  const handleContentClick = (e) => {
+    const linkEl = e.target.closest('.btn-link-action');
+    if (linkEl) {
+      const targetUrl = linkEl.getAttribute('href');
+      if (targetUrl && !targetUrl.startsWith('#') && !targetUrl.startsWith('javascript:')) {
+        e.preventDefault();
+        setPendingRedirectUrl(targetUrl);
+        setRedirectModalOpen(true);
+      }
+    }
+  };
 
   useEffect(() => {
     if (post && post.content) {
@@ -811,6 +826,7 @@ export default function PostPage() {
           <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, mb: 4, bgcolor: 'background.paper' }}>
             <div 
               className="blog-content"
+              onClick={handleContentClick}
               dangerouslySetInnerHTML={{ __html: post.content }} 
               style={{ lineHeight: 1.8, fontSize: '1.1rem', color: 'inherit' }}
             />
@@ -880,6 +896,13 @@ export default function PostPage() {
           </Container>
         </Box>
       )}
+
+      {/* Interstitial Redirect Modal for Telegram */}
+      <TelegramRedirectModal 
+        open={redirectModalOpen} 
+        onClose={() => setRedirectModalOpen(false)} 
+        targetUrl={pendingRedirectUrl} 
+      />
     </Layout>
   );
 }
