@@ -178,10 +178,16 @@ Each slide MUST contain a descriptive 'imageQuery' to fetch the background.
       throw new Error('AI generator failed to return exactly 5 slides.');
     }
 
-    // 4. Fetch background portrait images for each slide in parallel
+    // 4. Fetch background portrait images for each slide in parallel (Use featuredImage for Cover Slide if available)
     console.log('[WebStory Sourcing] Sourcing portrait background images...');
-    const slidePromises = result.slides.map(async (slide) => {
-      const imageUrl = await fetchPortraitImage(slide.imageQuery);
+    const slidePromises = result.slides.map(async (slide, idx) => {
+      let imageUrl;
+      if (idx === 0 && post.featuredImage) {
+        imageUrl = post.featuredImage;
+        console.log(`[WebStory Sourcing] Using post featured image for Cover Slide: ${imageUrl}`);
+      } else {
+        imageUrl = await fetchPortraitImage(slide.imageQuery);
+      }
       return {
         heading: slide.heading,
         text: slide.text,
