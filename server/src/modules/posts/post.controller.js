@@ -113,12 +113,45 @@ async function listPublishedPosts(req, res) {
   }
 
   if (search) {
-    query.$or = [
-      { title: { $regex: search, $options: 'i' } },
-      { content: { $regex: search, $options: 'i' } },
-      { excerpt: { $regex: search, $options: 'i' } },
-      { tags: { $regex: search, $options: 'i' } }
-    ];
+    const synonymMap = {
+      'rrb': ['railway', 'rrc', 'rail'],
+      'railway': ['rrb', 'rrc', 'rail'],
+      'rail': ['railway', 'rrb', 'rrc'],
+      'up': ['uttar pradesh', 'uttarpradesh'],
+      'mp': ['madhya pradesh', 'madhyapradesh'],
+      'uk': ['uttarakhand', 'uttaranchal'],
+      'hp': ['himachal pradesh'],
+      'delhi': ['dcb'],
+      'dcb': ['delhi', 'cantonment'],
+      'mts': ['multi tasking staff', 'multitasking'],
+      'deo': ['data entry operator'],
+      'je': ['junior engineer'],
+      'ae': ['assistant engineer'],
+      'si': ['sub inspector'],
+      'constable': ['police'],
+      'police': ['constable', 'si']
+    };
+
+    const words = search.trim().split(/\s+/).filter(Boolean);
+    if (words.length > 0) {
+      const conditions = words.map(word => {
+        const lowerWord = word.toLowerCase();
+        const synonyms = synonymMap[lowerWord] || [];
+        const searchTerms = [word, ...synonyms];
+        const escapedTerms = searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+        const regex = new RegExp(escapedTerms.join('|'), 'i');
+        
+        return {
+          $or: [
+            { title: { $regex: regex } },
+            { content: { $regex: regex } },
+            { excerpt: { $regex: regex } },
+            { tags: { $regex: regex } }
+          ]
+        };
+      });
+      query.$and = conditions;
+    }
   }
 
   if (dateFrom || dateTo) {
@@ -512,15 +545,46 @@ async function searchPosts(req, res, next) {
       return res.json({ posts: [], total: 0, page: 1, pages: 0 });
     }
 
-    const regex = new RegExp(trimmed, 'i');
+    const synonymMap = {
+      'rrb': ['railway', 'rrc', 'rail'],
+      'railway': ['rrb', 'rrc', 'rail'],
+      'rail': ['railway', 'rrb', 'rrc'],
+      'up': ['uttar pradesh', 'uttarpradesh'],
+      'mp': ['madhya pradesh', 'madhyapradesh'],
+      'uk': ['uttarakhand', 'uttaranchal'],
+      'hp': ['himachal pradesh'],
+      'delhi': ['dcb'],
+      'dcb': ['delhi', 'cantonment'],
+      'mts': ['multi tasking staff', 'multitasking'],
+      'deo': ['data entry operator'],
+      'je': ['junior engineer'],
+      'ae': ['assistant engineer'],
+      'si': ['sub inspector'],
+      'constable': ['police'],
+      'police': ['constable', 'si']
+    };
+
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    const conditions = words.map(word => {
+      const lowerWord = word.toLowerCase();
+      const synonyms = synonymMap[lowerWord] || [];
+      const searchTerms = [word, ...synonyms];
+      const escapedTerms = searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+      const regex = new RegExp(escapedTerms.join('|'), 'i');
+      
+      return {
+        $or: [
+          { title: { $regex: regex } },
+          { content: { $regex: regex } },
+          { excerpt: { $regex: regex } },
+          { tags: { $regex: regex } }
+        ]
+      };
+    });
+
     const query = {
       status: 'published',
-      $or: [
-        { title: { $regex: regex } },
-        { content: { $regex: regex } },
-        { excerpt: { $regex: regex } },
-        { tags: { $regex: regex } }
-      ]
+      $and: conditions
     };
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
