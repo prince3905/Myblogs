@@ -713,8 +713,11 @@ ${categoryFrameworkInstr}
   - Generate a professional, standard, and highly engaging article title (and store it in the "title" JSON field).
   - DO NOT use generic, plain AI query structures or question-based headings/titles (e.g. avoid words/phrases like "Do you know what is", "What is", "When to", "How to", "Why you need").
   - Rephrase the user's initial input topic/keyword into a powerful, click-worthy copywriting statement that keeps the exact original meaning but changes the wording and structure completely to ensure it does not look like a direct copy of search engine results or other websites.
+  - For 'Sarkari Jobs & Exams' category, you MUST write a highly urgent, click-magnet Title inside the "title" JSON field (incorporating key phrases like "Vacancy 2026", "Apply Online Now", "Direct Link", or seat counts dynamically. Example format: "[Job/Board Name] Recruitment 2026: [Vacancy Count/Post Name] Apply Online Now | Direct Link").
   - *Example*: Convert a query like "Do you know what is prompt engineering?" to "Prompt Engineering May Change Your Life" or similar high-impact copywriting statements.
   - The title must look professional, human-crafted, premium, and authoritative.
+- LOCAL HINDI TOUCH (MANDATORY FOR JOBS/EXAMS):
+  - In the very first paragraph of the post (the introduction), and right above the main vacancy summary table, you MUST write 1-2 lines in pure, conversational Devanagari Hindi or natural Hinglish explaining the core update (e.g., "उत्तर प्रदेश डेयरी विकास विभाग में Data Entry Operator (DEO) की संविदा भर्ती 2026 का नोटिफिकेशन जारी हो गया है..." or similar context). This localized touch captures local search queries and ranks much higher in Google India.
 - FOCUS KEYWORD PLACEMENT: The exact focus keyword provided must be injected naturally in the generated Title, the first 2-3 lines of the Introduction paragraph, inside at least one H2 subheading, and maintain a natural density of 1.0% to 1.5% throughout the text body.
 - WORD COUNT BOUNDS: Force a deep, comprehensive contextual envelope stretching strictly as per the selected Structure instructions (up to 2500 words for long-form posts). Suppress thin content.
 - RICH SNIPPETS DATA: Automatically structure a clean specification data table or comparison grid comparing the topic with current market competitors.
@@ -760,7 +763,7 @@ ${ADSENSE_CONSTRAINTS}
 - IMAGES: NEVER include raw JPEG/PNG in content. All images must use <picture> element with WebP format.
   - First/hero image at top: fetchpriority="high" — NO loading="lazy"
   - All other images: loading="lazy" + width="800" height="450" + style="width:100%; height:auto; object-fit:cover;
-  - Required format (do NOT output external image URLs like Unsplash to avoid safety filters; strictly use local placeholders and replace [SEO-Alt] with your focus keyword): <picture><source srcset="/assets/images/placeholder.webp" type="image/webp" /><img src="/assets/images/placeholder.jpg" alt="[SEO-Alt]" width="800" height="450" style="width:100%; height:auto; object-fit:cover;" fetchpriority="high" /></picture>
+  - Required format (do NOT output external image URLs like Unsplash to avoid safety filters; strictly use local placeholders and replace [SEO-Alt] with a descriptive, search-oriented Alt tag using the main focus keyword combined with modifiers like 'Notification Image', 'Apply Online Portal', 'Syllabus Details', e.g. alt="UP Dairy Development Vacancy 2026 Notification Details Image"): <picture><source srcset="/assets/images/placeholder.webp" type="image/webp" /><img src="/assets/images/placeholder.jpg" alt="[SEO-Alt]" width="800" height="450" style="width:100%; height:auto; object-fit:cover;" fetchpriority="high" /></picture>
 - ZERO BACKGROUND SCRIPTS: content MUST NOT contain any script tags, iframes, crypto widgets, OKX API calls, useEffect hooks, fetch calls to external APIs, or any JavaScript execution code. Page must be 100% clean static content only.
 - Keep the output clean HTML with no embedded scripts, no external resource calls.
 
