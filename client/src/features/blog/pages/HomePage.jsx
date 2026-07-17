@@ -363,6 +363,9 @@ export default function HomePage() {
   const [categoriesData, setCategoriesData] = useState({});
   const [loadingCategories, setLoadingCategories] = useState(true);
 
+  const [stories, setStories] = useState([]);
+  const [loadingStories, setLoadingStories] = useState(true);
+
   const handleNext = () => {
     const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
     if (currentSlide < maxSlide) {
@@ -395,6 +398,16 @@ export default function HomePage() {
       })
       .catch(err => console.error(err))
       .finally(() => setLoadingAlerts(false));
+  }, []);
+  useEffect(() => {
+    request('/api/public/web-stories?limit=12')
+      .then(res => {
+        if (res.success) {
+          setStories(res.data || []);
+        }
+      })
+      .catch(err => console.error(err))
+      .finally(() => setLoadingStories(false));
   }, []);
   useEffect(() => {
     const categories = [
@@ -633,7 +646,157 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* Hero Section - Featured Article (H1) or Loading Skeleton to prevent CLS */}
+      {/* Web Stories Section */}
+      {!loadingStories && stories.length > 0 && (
+        <Box 
+          component="section" 
+          sx={{ 
+            py: { xs: 3, md: 4 }, 
+            bgcolor: '#F9FAFB', 
+            borderBottom: '1px solid #ECECEC'
+          }}
+        >
+          <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box 
+                  sx={{ 
+                    px: 1.5, py: 0.5,
+                    bgcolor: '#2563EB',
+                    borderRadius: '4px',
+                    color: '#fff',
+                    fontSize: '0.75rem',
+                    fontWeight: 900,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    animation: 'pulseGlow 2s infinite ease-in-out',
+                    '@keyframes pulseGlow': {
+                      '0%': { boxShadow: '0 0 0 0 rgba(37,99,235,0.7)' },
+                      '70%': { boxShadow: '0 0 0 10px rgba(37,99,235,0)' },
+                      '100%': { boxShadow: '0 0 0 0 rgba(37,99,235,0)' }
+                    }
+                  }}
+                >
+                  Stories
+                </Box>
+                <Typography
+                  variant="h2"
+                  sx={{
+                    fontWeight: 800, color: '#111827', letterSpacing: '-0.02em',
+                    fontSize: { xs: '1.4rem', md: '1.8rem' }
+                  }}
+                >
+                  Visual Web Stories
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box 
+              sx={{ 
+                display: 'flex',
+                gap: 2.5,
+                overflowX: 'auto',
+                pb: 2,
+                pt: 0.5,
+                px: 0.5,
+                scrollSnapType: 'x mandatory',
+                '&::-webkit-scrollbar': { height: '6px' },
+                '&::-webkit-scrollbar-thumb': { bgcolor: '#E5E7EB', borderRadius: '99px' },
+                '&::-webkit-scrollbar-track': { bgcolor: 'transparent' }
+              }}
+            >
+              {stories.map((story) => (
+                <Box 
+                  key={story._id}
+                  component="a"
+                  href={`/web-stories/${story.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    flex: { xs: '0 0 160px', sm: '0 0 200px', md: '0 0 220px' },
+                    aspectRatio: '9/16',
+                    position: 'relative',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-6px)',
+                      boxShadow: '0 12px 25px rgba(37,99,235,0.25)',
+                      '& img': {
+                        transform: 'scale(1.08)'
+                      }
+                    }
+                  }}
+                >
+                  {/* Background Image */}
+                  <Box 
+                    component="img"
+                    src={story.slides[0]?.image}
+                    alt={story.title}
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      transition: 'transform 0.5s ease'
+                    }}
+                  />
+                  {/* Overlay Gradient */}
+                  <Box 
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '70%',
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      p: 2,
+                      color: '#fff',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <Typography 
+                      sx={{
+                        fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                        fontWeight: 800,
+                        lineHeight: 1.3,
+                        mb: 0.5,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textShadow: '0 1.5px 3px rgba(0,0,0,0.8)'
+                      }}
+                    >
+                      {story.title}
+                    </Typography>
+                    <Typography 
+                      sx={{
+                        fontSize: '0.65rem',
+                        opacity: 0.8,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}
+                    >
+                      {new Date(story.createdAt).toLocaleDateString('hi-IN', { month: 'short', day: 'numeric' })}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Container>
+        </Box>
+      )}
+
       {/* Hero Section - Featured Article (H1) or Loading Skeleton (Unified to prevent CLS) */}
       <Box component="section" sx={{ pt: { xs: 2.5, md: 4 }, pb: { xs: 2, md: 4 } }}>
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>

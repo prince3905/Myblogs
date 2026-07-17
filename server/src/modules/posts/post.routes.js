@@ -10,6 +10,10 @@ router.get('/categories', listCategories);
 router.get('/meta/site', siteMeta);
 router.post('/posts/:slug/like', likePost);
 
+// Public Web Stories list endpoint
+const { getPublishedWebStories } = require('./webstory.controller');
+router.get('/public/web-stories', getPublishedWebStories);
+
 // Public Live Alerts endpoint
 router.get('/public/live-alerts', getAlerts);
 router.get('/public/live-alerts/:id', getAlertById);

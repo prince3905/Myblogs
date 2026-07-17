@@ -223,4 +223,22 @@ async function renderWebStory(req, res, next) {
   }
 }
 
-module.exports = { renderWebStory };
+async function getPublishedWebStories(req, res, next) {
+  try {
+    const limit = parseInt(req.query.limit) || 12;
+    const stories = await WebStory.find({ status: 'published' })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate('post', 'category')
+      .lean();
+      
+    return res.json({
+      success: true,
+      data: stories
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { renderWebStory, getPublishedWebStories };
