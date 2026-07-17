@@ -115,6 +115,7 @@ async function listPublishedPosts(req, res) {
   if (search) {
     query.$or = [
       { title: { $regex: search, $options: 'i' } },
+      { content: { $regex: search, $options: 'i' } },
       { excerpt: { $regex: search, $options: 'i' } },
       { tags: { $regex: search, $options: 'i' } }
     ];
@@ -511,11 +512,21 @@ async function searchPosts(req, res, next) {
       return res.json({ posts: [], total: 0, page: 1, pages: 0 });
     }
 
-    const query = { status: 'published', $text: { $search: trimmed } };
+    const regex = new RegExp(trimmed, 'i');
+    const query = {
+      status: 'published',
+      $or: [
+        { title: { $regex: regex } },
+        { content: { $regex: regex } },
+        { excerpt: { $regex: regex } },
+        { tags: { $regex: regex } }
+      ]
+    };
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const total = await BlogPost.countDocuments(query);
-    const posts = await BlogPost.find(query, { score: { $meta: 'textScore' } })
-      .sort({ score: { $meta: 'textScore' } })
+    const posts = await BlogPost.find(query)
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
       .select('title slug category featuredImage excerpt views createdAt')
