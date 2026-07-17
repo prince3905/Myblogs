@@ -359,6 +359,7 @@ export default function HomePage() {
   const [loadingAlerts, setLoadingAlerts] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const mobileScrollRef = useRef(null);
+  const mobileStoriesScrollRef = useRef(null);
 
   const [categoriesData, setCategoriesData] = useState({});
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -470,10 +471,29 @@ export default function HomePage() {
           behavior: 'smooth'
         });
       }
+
+      // 3. Mobile Web Stories Autoplay
+      if (mobileStoriesScrollRef.current && window.innerWidth < 600 && stories.length > 2) {
+        const container = mobileStoriesScrollRef.current;
+        const scrollWidth = container.scrollWidth;
+        const clientWidth = container.clientWidth;
+        const currentScrollLeft = container.scrollLeft;
+
+        // Slide by half of the screen size (roughly 1 card + gap spacing)
+        let nextScrollLeft = currentScrollLeft + (clientWidth / 2 + 10);
+        if (nextScrollLeft >= scrollWidth - clientWidth - 10) {
+          nextScrollLeft = 0;
+        }
+
+        container.scrollTo({
+          left: nextScrollLeft,
+          behavior: 'smooth'
+        });
+      }
     }, 5000);
 
     return () => clearInterval(timer);
-  }, [alerts, loadingAlerts, currentSlide]);
+  }, [alerts, loadingAlerts, currentSlide, stories, loadingStories]);
 
   return (
     <Layout>
@@ -692,6 +712,7 @@ export default function HomePage() {
             </Box>
 
             <Box 
+              ref={mobileStoriesScrollRef}
               sx={{ 
                 display: 'flex',
                 gap: 2.5,
