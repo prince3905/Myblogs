@@ -102,6 +102,7 @@ setTimeout(warmUpCache, 5000);
 async function listPublishedPosts(req, res) {
   const { search = '', category = '', tags = '', dateFrom = '', dateTo = '', page = 1, limit = 10, sortBy = 'date', order = 'desc' } = req.query;
   const query = { status: 'published' };
+  let titleRegexPattern = '';
 
   if (category) {
     query.category = category;
@@ -151,6 +152,14 @@ async function listPublishedPosts(req, res) {
         };
       });
       query.$and = conditions;
+
+      const allPatterns = words.map(word => {
+        const lowerWord = word.toLowerCase();
+        const synonyms = synonymMap[lowerWord] || [];
+        const searchTerms = [word, ...synonyms];
+        return searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|');
+      });
+      titleRegexPattern = allPatterns.map(p => `(${p})`).join('|');
     }
   }
 
@@ -213,21 +222,70 @@ async function listPublishedPosts(req, res) {
       cacheTimestamp = now;
     }
   } else {
-    total = await BlogPost.countDocuments(query);
-    if (!search && !category && !tags && !dateFrom && !dateTo && parseInt(limit) === 1000 && parseInt(page) === 1 && sortBy === 'date' && order === 'desc') {
-      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
-      posts = await Post.find({ status: 'published' })
-        .sort({ publishedAt: -1, createdAt: -1 })
-        .limit(1000)
-        .select('title slug category featuredImage excerpt views createdAt')
-        .lean();
+    if (search && titleRegexPattern) {
+      // Use aggregation pipeline to calculate relevance score and sort
+      const pipeline = [
+        { $match: query },
+        {
+          $addFields: {
+            relevanceScore: {
+              $cond: {
+                if: { $regexMatch: { input: "$title", regex: titleRegexPattern, options: "i" } },
+                then: 10,
+                else: 0
+              }
+            }
+          }
+        },
+        {
+          $sort: {
+            relevanceScore: -1,
+            ...sortObj
+          }
+        }
+      ];
+
+      // Fetch total documents count
+      const countRes = await BlogPost.aggregate([
+        { $match: query },
+        { $count: "count" }
+      ]);
+      total = countRes[0]?.count || 0;
+
+      // Fetch posts with pagination
+      posts = await BlogPost.aggregate([
+        ...pipeline,
+        { $skip: skip },
+        { $limit: parseInt(limit) },
+        {
+          $project: {
+            title: 1,
+            slug: 1,
+            category: 1,
+            featuredImage: 1,
+            excerpt: 1,
+            views: 1,
+            createdAt: 1
+          }
+        }
+      ]);
     } else {
-      posts = await BlogPost.find(query)
-        .sort(sortObj)
-        .skip(skip)
-        .limit(parseInt(limit))
-        .select('title slug category featuredImage excerpt views createdAt')
-        .lean();
+      total = await BlogPost.countDocuments(query);
+      if (!search && !category && !tags && !dateFrom && !dateTo && parseInt(limit) === 1000 && parseInt(page) === 1 && sortBy === 'date' && order === 'desc') {
+        res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+        posts = await Post.find({ status: 'published' })
+          .sort({ publishedAt: -1, createdAt: -1 })
+          .limit(1000)
+          .select('title slug category featuredImage excerpt views createdAt')
+          .lean();
+      } else {
+        posts = await BlogPost.find(query)
+          .sort(sortObj)
+          .skip(skip)
+          .limit(parseInt(limit))
+          .select('title slug category featuredImage excerpt views createdAt')
+          .lean();
+      }
     }
   }
 
