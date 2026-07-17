@@ -8,6 +8,7 @@ const requestLogger = require('./middleware/requestLogger');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./modules/auth/auth.routes');
+require('./modules/posts/webstory.model');
 const postRoutes = require('./modules/posts/post.routes');
 const adminRoutes = require('./modules/posts/admin-post.routes');
 const adminActivityRoutes = require('./modules/admin/admin.routes');
@@ -81,6 +82,8 @@ app.use('/api/admin', liveAlertRoutes);
 app.use('/api/admin', settingsRoutes);
 
 // SEO routes - before static files
+const { renderWebStory } = require('./modules/posts/webstory.controller');
+app.get('/web-stories/:slug', renderWebStory);
 app.get('/sitemap.xml', sitemap);
 app.get('/robots.txt', robots);
 app.get('/rss.xml', rssFeed);

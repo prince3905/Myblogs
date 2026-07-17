@@ -343,6 +343,14 @@ ${buttonHtmlBlock}
   await BlogPost.deleteMany({ slug: processed.slug });
   await newPost.save();
 
+  // Generate Web Story for this new post in background (Autopilot decision logic)
+  try {
+    const { generateWebStoryForPost } = require('../posts/webstory.service');
+    await generateWebStoryForPost(newPost, alert);
+  } catch (storyErr) {
+    console.error(`[LiveAlert Sourcing] Failed to generate Web Story for "${newPost.title}":`, storyErr.message);
+  }
+
   // Mark the alert as drafted
   alert.status = 'drafted';
   await alert.save();

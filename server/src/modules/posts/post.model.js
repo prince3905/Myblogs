@@ -266,6 +266,14 @@ blogPostSchema.pre('save', async function (next) {
 });
 
 blogPostSchema.post('save', async function (doc) {
+  // Sync associated WebStory status (draft vs published)
+  try {
+    const WebStory = mongoose.model('WebStory');
+    await WebStory.updateMany({ post: doc._id }, { $set: { status: doc.status } });
+  } catch (storyErr) {
+    console.error('[WebStory Sync] Failed to sync status in post-save hook:', storyErr.message);
+  }
+
   if (doc.status === 'published') {
     // 1. Google Indexing Auto-Notification
     try {
@@ -298,6 +306,26 @@ blogPostSchema.post('save', async function (doc) {
       }
     } catch (linkErr) {
       console.error('[Two-Way Linking] Failed in post-save linking builder:', linkErr.message);
+    }
+  }
+});
+
+blogPostSchema.post('remove', async function (doc) {
+  try {
+    const WebStory = mongoose.model('WebStory');
+    await WebStory.deleteMany({ post: doc._id });
+  } catch (err) {
+    console.error('[WebStory Delete] Failed to clean up story on post remove:', err.message);
+  }
+});
+
+blogPostSchema.post('findOneAndDelete', async function (doc) {
+  if (doc) {
+    try {
+      const WebStory = mongoose.model('WebStory');
+      await WebStory.deleteMany({ post: doc._id });
+    } catch (err) {
+      console.error('[WebStory Delete] Failed to clean up story on post findOneAndDelete:', err.message);
     }
   }
 });

@@ -455,7 +455,19 @@ async function sitemap(req, res) {
     .map((tag) => `<url><loc>${env.siteUrl}/tags/${encodeURIComponent(tag.toLowerCase())}</loc><priority>0.6</priority></url>`)
     .join('');
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${env.siteUrl}</loc><priority>1.0</priority></url><url><loc>${env.siteUrl}/blog</loc><priority>0.9</priority></url>${staticPages}${categoryUrls}${tagUrls}${urls}</urlset>`;
+  // Include published Web Stories dynamically
+  let storyUrls = '';
+  try {
+    const WebStory = mongoose.model('WebStory');
+    const stories = await WebStory.find({ status: 'published' }).sort({ updatedAt: -1 });
+    storyUrls = stories
+      .map((story) => `<url><loc>${env.siteUrl}/web-stories/${story.slug}</loc><lastmod>${story.updatedAt.toISOString()}</lastmod><priority>0.8</priority></url>`)
+      .join('');
+  } catch (storyErr) {
+    console.error('[Sitemap] Failed to append Web Stories:', storyErr.message);
+  }
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${env.siteUrl}</loc><priority>1.0</priority></url><url><loc>${env.siteUrl}/blog</loc><priority>0.9</priority></url>${staticPages}${categoryUrls}${tagUrls}${urls}${storyUrls}</urlset>`;
   res.type('application/xml');
   return res.send(xml);
 }
