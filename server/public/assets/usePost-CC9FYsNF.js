@@ -1,0 +1,1 @@
+import{r as e,p as l}from"./index-DT_Yopsq.js";function p(s){const[a,n]=e.useState(null),[c,r]=e.useState(!0),[u,o]=e.useState(null);return e.useEffect(()=>{if(!s)return;(async()=>{try{r(!0),o(null);const t=await l.getBySlug(s);n({...t.post,relatedPosts:t.relatedPosts})}catch(t){o(t.message)}finally{r(!1)}})()},[s]),{post:a,loading:c,error:u}}export{p as u};
