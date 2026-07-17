@@ -64,7 +64,7 @@ export default function Seo({ title, description, image, url, canonical, keyword
         {JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'Organization',
-          '@id': `${typeof window !== 'undefined' ? window.location.origin : 'https://digitalhomeblog.in'}/#organization`,
+          '@id': `${typeof window !== 'undefined' ? window.location.origin : 'https://www.digitalhomeblog.in'}/#organization`,
           'name': siteName,
           'alternateName': [
             "Digital Home",
@@ -77,10 +77,10 @@ export default function Seo({ title, description, image, url, canonical, keyword
             "Sarkari Result Tool",
             "Digital Home Kids Games"
           ],
-          'url': typeof window !== 'undefined' ? window.location.origin : 'https://digitalhomeblog.in',
+          'url': typeof window !== 'undefined' ? window.location.origin : 'https://www.digitalhomeblog.in',
           'logo': {
             '@type': 'ImageObject',
-            'url': `${typeof window !== 'undefined' ? window.location.origin : 'https://digitalhomeblog.in'}/logo.png`,
+            'url': `${typeof window !== 'undefined' ? window.location.origin : 'https://www.digitalhomeblog.in'}/logo.png`,
             'width': 190,
             'height': 60
           }

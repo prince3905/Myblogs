@@ -27,11 +27,15 @@ const { sitemap, robots, rssFeed, getHomepageData } = require('./modules/posts/p
 const app = express();
 const publicPath = path.join(__dirname, '../public');
 
-// Canonical domain redirect: digitalhomeblog.in -> www.digitalhomeblog.in
+// Force HTTPS and Canonical WWW Domain Redirect in Production (Prevents redirect loops/chains)
 app.use((req, res, next) => {
-  const host = req.headers.host;
-  if (host === 'digitalhomeblog.in') {
-    return res.redirect(301, `https://www.digitalhomeblog.in${req.originalUrl}`);
+  if (env.nodeEnv === 'production' && !req.path.startsWith('/api')) {
+    const isNotHttps = req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https';
+    const isNotCanonicalHost = req.headers.host && req.headers.host !== 'www.digitalhomeblog.in';
+    
+    if (isNotHttps || isNotCanonicalHost) {
+      return res.redirect(301, `https://www.digitalhomeblog.in${req.originalUrl}`);
+    }
   }
   next();
 });
@@ -133,6 +137,56 @@ app.get('/', async (req, res, next) => {
 
 // Serve static files
 app.use(express.static(publicPath));
+
+// Dynamic Server-Side Meta Tag Injection for Blog Post Pages (Forces perfect OG/Twitter social scraping)
+app.get('/blog/:category/:slug', async (req, res, next) => {
+  try {
+    const indexPath = path.join(publicPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(404).send('index.html not found');
+    }
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    const mongoose = require('mongoose');
+    const BlogPost = mongoose.model('BlogPost');
+    const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' }).lean();
+
+    if (post) {
+      const siteName = 'Digital Home Sarkari Result';
+      const cleanTitle = (post.title || '').replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '');
+      const fullTitle = `${cleanTitle} | ${siteName}`;
+      const desc = post.excerpt || post.seoDescription || 'Read the latest updates on Sarkari jobs, admit cards, and results.';
+      const pageUrl = `https://www.digitalhomeblog.in/blog/${req.params.category}/${req.params.slug}`;
+      const imageUrl = post.featuredImage || 'https://www.digitalhomeblog.in/logo.png';
+
+      // SEO Social Metadata Block
+      const metaTags = `
+    <title>${fullTitle}</title>
+    <meta name="description" content="${desc}" />
+    <meta property="og:title" content="${fullTitle}" />
+    <meta property="og:description" content="${desc}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="${pageUrl}" />
+    <meta property="og:site_name" content="${siteName}" />
+    <meta property="og:image" content="${imageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${fullTitle}" />
+    <meta name="twitter:description" content="${desc}" />
+    <meta name="twitter:image" content="${imageUrl}" />
+      `;
+
+      // Remove default title/meta tags to prevent duplicates and append post specific tags
+      html = html.replace(/<title>.*?<\/title>/, '');
+      html = html.replace(/<meta name="description" .*?\/>/, '');
+      html = html.replace('</head>', `${metaTags}\n</head>`);
+    }
+
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(html);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Handle client-side routing (React Router) - only if file doesn't exist
 app.get('*', (req, res) => {
