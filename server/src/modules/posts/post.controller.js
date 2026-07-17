@@ -139,7 +139,10 @@ async function listPublishedPosts(req, res) {
         const lowerWord = word.toLowerCase();
         const synonyms = synonymMap[lowerWord] || [];
         const searchTerms = [word, ...synonyms];
-        const escapedTerms = searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+        const escapedTerms = searchTerms.map(term => {
+          const escaped = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          return term.length <= 3 ? `\\b${escaped}\\b` : `\\b${escaped}`;
+        });
         const regex = new RegExp(escapedTerms.join('|'), 'i');
         
         return {
@@ -157,7 +160,10 @@ async function listPublishedPosts(req, res) {
         const lowerWord = word.toLowerCase();
         const synonyms = synonymMap[lowerWord] || [];
         const searchTerms = [word, ...synonyms];
-        return searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|');
+        return searchTerms.map(term => {
+          const escaped = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          return term.length <= 3 ? `\\b${escaped}\\b` : `\\b${escaped}`;
+        }).join('|');
       });
       titleRegexPattern = allPatterns.map(p => `(${p})`).join('|');
     }
@@ -623,38 +629,87 @@ async function searchPosts(req, res, next) {
     };
 
     const words = trimmed.split(/\s+/).filter(Boolean);
-    const conditions = words.map(word => {
-      const lowerWord = word.toLowerCase();
-      const synonyms = synonymMap[lowerWord] || [];
-      const searchTerms = [word, ...synonyms];
-      const escapedTerms = searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
-      const regex = new RegExp(escapedTerms.join('|'), 'i');
-      
-      return {
-        $or: [
-          { title: { $regex: regex } },
-          { content: { $regex: regex } },
-          { excerpt: { $regex: regex } },
-          { tags: { $regex: regex } }
-        ]
-      };
-    });
+    let query = { status: 'published' };
+    let titleRegexPattern = '';
 
-    const query = {
-      status: 'published',
-      $and: conditions
-    };
+    if (words.length > 0) {
+      const conditions = words.map(word => {
+        const lowerWord = word.toLowerCase();
+        const synonyms = synonymMap[lowerWord] || [];
+        const searchTerms = [word, ...synonyms];
+        const escapedTerms = searchTerms.map(term => {
+          const escaped = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          return term.length <= 3 ? `\\b${escaped}\\b` : `\\b${escaped}`;
+        });
+        const regex = new RegExp(escapedTerms.join('|'), 'i');
+        
+        return {
+          $or: [
+            { title: { $regex: regex } },
+            { content: { $regex: regex } },
+            { excerpt: { $regex: regex } },
+            { tags: { $regex: regex } }
+          ]
+        };
+      });
+      query.$and = conditions;
+
+      const allPatterns = words.map(word => {
+        const lowerWord = word.toLowerCase();
+        const synonyms = synonymMap[lowerWord] || [];
+        const searchTerms = [word, ...synonyms];
+        return searchTerms.map(term => {
+          const escaped = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          return term.length <= 3 ? `\\b${escaped}\\b` : `\\b${escaped}`;
+        }).join('|');
+      });
+      titleRegexPattern = allPatterns.map(p => `(${p})`).join('|');
+    }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    const total = await BlogPost.countDocuments(query);
-    const posts = await BlogPost.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
-      .select('title slug category featuredImage excerpt views createdAt')
-      .lean();
+    const limitInt = parseInt(limit);
 
-    res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+    let posts = [];
+    let total = 0;
+
+    if (titleRegexPattern) {
+      const countRes = await BlogPost.aggregate([
+        { $match: query },
+        { $count: "count" }
+      ]);
+      total = countRes[0]?.count || 0;
+
+      posts = await BlogPost.aggregate([
+        { $match: query },
+        {
+          $addFields: {
+            relevanceScore: {
+              $cond: {
+                if: { $regexMatch: { input: "$title", regex: titleRegexPattern, options: "i" } },
+                then: 10,
+                else: 0
+              }
+            }
+          }
+        },
+        { $sort: { relevanceScore: -1, createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limitInt },
+        {
+          $project: {
+            title: 1,
+            slug: 1,
+            category: 1,
+            featuredImage: 1,
+            excerpt: 1,
+            views: 1,
+            createdAt: 1
+          }
+        }
+      ]);
+    }
+
+    res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / limitInt) });
   } catch (err) {
     next(err);
   }
