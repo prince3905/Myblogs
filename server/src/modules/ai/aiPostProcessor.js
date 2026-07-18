@@ -489,8 +489,8 @@ function sanitizeThirdPartyLinks(content) {
       if (isTool) {
         return `<a href="/tools">Student Utility Tools</a>`;
       } else {
-        // Strip the link completely, leaving only the anchor text in plain text
-        return anchorText;
+        // Rewrite competitor links to point to our own job alerts page
+        return `<a href="/job-alerts">${anchorText}</a>`;
       }
     } else if (isTool && (lowerHref.includes('ilovepdf') || lowerHref.includes('imageresizer') || lowerHref.includes('pdfresizer'))) {
       return `<a href="/tools">Student Utility Tools</a>`;
@@ -502,8 +502,8 @@ function sanitizeThirdPartyLinks(content) {
   // 2. Also replace raw URLs or any link inside parentheses like (Link: https://...) or similar text that might not be in an <a> tag
   // Replace tool URLs with /tools
   c = c.replace(/(https?:\/\/[^\s<"'`()]+(?:sarkariresult\.com\/tools|sarkariresult\.com\/resizer|sarkariresult\.tools|freejobalert\.com\/tools|ilovepdf\.com|imageresizer\.com)[^\s<"'`()]*)/gi, '/tools');
-  // Replace general sarkariresult/freejobalert URLs with /
-  c = c.replace(/(https?:\/\/[^\s<"'`()]+(?:sarkariresult|freejobalert)[^\s<"'`()]*)/gi, '/');
+  // Replace general competitor URLs with /job-alerts
+  c = c.replace(/(https?:\/\/[^\s<"'`()]+(?:sarkariresult|freejobalert)[^\s<"'`()]*)/gi, '/job-alerts');
 
   return c;
 }

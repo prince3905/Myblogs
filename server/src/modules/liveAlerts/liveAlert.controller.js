@@ -127,7 +127,7 @@ function extractLinksFromText(text) {
   return parsedLinks;
 }
 
-// Helper to sanitize URLs (removes competitor links and falls back to search queries)
+// Helper to sanitize URLs (removes competitor links and falls back to our own site)
 function sanitizeUrlValue(url, boardName) {
   if (!url) return '';
   const lowerUrl = url.toLowerCase();
@@ -144,7 +144,7 @@ function sanitizeUrlValue(url, boardName) {
   }
   
   if (lowerUrl.includes('sarkariresult') || lowerUrl.includes('freejobalert')) {
-    return 'https://www.google.com/search?q=' + encodeURIComponent(boardName + ' official site');
+    return '/job-alerts';
   }
   
   return url;
