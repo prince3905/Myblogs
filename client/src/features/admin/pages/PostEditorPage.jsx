@@ -1637,7 +1637,7 @@ export default function PostEditorPage() {
                   const file = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
                   
                   const formData = new FormData();
-                  formData.append('file', file);
+                  formData.append('image', file);
                   
                   const res = await request('/api/admin/upload', {
                     method: 'POST',
