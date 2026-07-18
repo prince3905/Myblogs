@@ -364,9 +364,6 @@ function markdownToHtml(text) {
   // Always convert markdown tables to HTML tables first, even if the rest of the text is HTML
   h = convertMarkdownTablesToHtml(h);
   
-  // If it already looks like HTML, skip subsequent markdown conversions
-  if (/^\s*</.test(text)) return cleanHtml(h);
-  
   // Strip leading + prefix only (AI artifact for headings)
   h = h.replace(/^\+[ \t]*/gm, '');
   // Convert markdown headings to HTML headings
@@ -394,41 +391,54 @@ function markdownToHtml(text) {
   h = h.replace(/\[\d+\]/g, '');
   // Strip stray standalone brackets
   h = h.replace(/[[\]]/g, '');
-  // List items
-  h = h.replace(/^[-*]\s*(.+)$/gm, '<li>$1</li>');
-  // Wrap consecutive <li> in <ul>
-  h = h.replace(/((?:<li>.*?<\/li>\n?)+)/g, '<ul>\n$1</ul>\n');
+
+  // Convert Markdown lists to HTML lists using state-machine to prevent double wrapping
+  const listLines = h.split('\n');
+  const listResult = [];
+  let inList = false;
+  
+  for (const line of listLines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      if (!inList) {
+        listResult.push('<ul>');
+        inList = true;
+      }
+      const content = trimmed.substring(2).trim();
+      listResult.push(`<li>${content}</li>`);
+    } else {
+      if (inList) {
+        listResult.push('</ul>');
+        inList = false;
+      }
+      listResult.push(line);
+    }
+  }
+  if (inList) {
+    listResult.push('</ul>');
+  }
+  h = listResult.join('\n');
+
   // Wrap remaining unwrapped lines in <p>
   const lines = h.split('\n');
   const result = [];
+  const blockTags = [
+    '<h', '<ul', '<ol', '<li', '</ul', '</ol', '</li', '<p', '</p',
+    '<blockquote', '</blockquote', '<hr', '<table', '<tr', '<td', '<th',
+    '</table', '</tr', '</td', '</th', '<thead', '</thead', '<tbody', '</tbody',
+    '<a', '<div', '</div', '<picture', '</picture', '<img', '<section', '</section',
+    '<article', '</article', '<script', '</script', '<style', '</style', '<iframe', '</iframe',
+    '<!--'
+  ];
+
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    if (
-      trimmed.startsWith('<h') || 
-      trimmed.startsWith('<ul') || 
-      trimmed.startsWith('<li') || 
-      trimmed.startsWith('</ul') || 
-      trimmed.startsWith('<p') || 
-      trimmed.startsWith('<blockquote') || 
-      trimmed.startsWith('</blockquote') || 
-      trimmed.startsWith('<hr') ||
-      trimmed.startsWith('<table') ||
-      trimmed.startsWith('<tr') ||
-      trimmed.startsWith('<td') ||
-      trimmed.startsWith('<th') ||
-      trimmed.startsWith('</table') ||
-      trimmed.startsWith('</tr') ||
-      trimmed.startsWith('</td') ||
-      trimmed.startsWith('</th') ||
-      trimmed.startsWith('<thead') ||
-      trimmed.startsWith('</thead') ||
-      trimmed.startsWith('<tbody') ||
-      trimmed.startsWith('</tbody') ||
-      trimmed.startsWith('<a') ||
-      trimmed.startsWith('<div') ||
-      trimmed.startsWith('</div')
-    ) {
+    
+    const lower = trimmed.toLowerCase();
+    const isBlock = blockTags.some(tag => lower.startsWith(tag));
+    
+    if (isBlock) {
       result.push(trimmed);
     } else {
       result.push(`<p>${trimmed}</p>`);
