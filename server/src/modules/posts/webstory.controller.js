@@ -241,4 +241,126 @@ async function getPublishedWebStories(req, res, next) {
   }
 }
 
-module.exports = { renderWebStory, getPublishedWebStories };
+async function listAdminWebStories(req, res, next) {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const query = {};
+    if (req.query.search) {
+      query.title = new RegExp(req.query.search.trim(), 'i');
+    }
+
+    const stories = await WebStory.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('post', 'title category')
+      .lean();
+
+    const total = await WebStory.countDocuments(query);
+
+    return res.json({
+      success: true,
+      data: stories,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getAdminWebStoryById(req, res, next) {
+  try {
+    const story = await WebStory.findById(req.params.id).populate('post', 'title').lean();
+    if (!story) {
+      return res.status(404).json({ success: false, message: 'Web Story not found' });
+    }
+    return res.json({
+      success: true,
+      data: story
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateAdminWebStory(req, res, next) {
+  try {
+    const { title, status, slides } = req.body;
+    const story = await WebStory.findById(req.params.id);
+    if (!story) {
+      return res.status(404).json({ success: false, message: 'Web Story not found' });
+    }
+
+    if (title !== undefined) story.title = title;
+    if (status !== undefined) story.status = status;
+    if (slides !== undefined) story.slides = slides;
+
+    await story.save();
+    return res.json({
+      success: true,
+      message: 'Web Story successfully updated!',
+      data: story
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function deleteAdminWebStory(req, res, next) {
+  try {
+    const story = await WebStory.findByIdAndDelete(req.params.id);
+    if (!story) {
+      return res.status(404).json({ success: false, message: 'Web Story not found' });
+    }
+    return res.json({
+      success: true,
+      message: 'Web Story successfully deleted!'
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function pingWebStoryIndexing(req, res, next) {
+  try {
+    const story = await WebStory.findById(req.params.id);
+    if (!story) {
+      return res.status(404).json({ success: false, message: 'Web Story not found' });
+    }
+
+    if (story.status !== 'published') {
+      return res.status(400).json({ success: false, message: 'Web Story must be published to notify Google Indexing API.' });
+    }
+
+    const { notifyUrl } = require('../../shared/utils/google-indexing');
+    const env = require('../../config/env');
+    const storyUrl = `${env.siteUrl}/web-stories/${story.slug}`;
+    const result = await notifyUrl(storyUrl, 'URL_UPDATED');
+
+    if (result && result.success) {
+      return res.json({ success: true, message: 'Google Indexing request sent successfully for Web Story!', data: result.data });
+    } else {
+      return res.status(500).json({ success: false, message: result?.message || 'Google Indexing ping failed.', error: result?.error });
+    }
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { 
+  renderWebStory, 
+  getPublishedWebStories,
+  listAdminWebStories,
+  getAdminWebStoryById,
+  updateAdminWebStory,
+  deleteAdminWebStory,
+  pingWebStoryIndexing
+};

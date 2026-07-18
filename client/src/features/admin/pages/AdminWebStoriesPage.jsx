@@ -5,7 +5,7 @@ import {
   IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
   Select, MenuItem, FormControl, InputLabel, Tab, Tabs
 } from '@mui/material';
-import { Delete, Edit, OpenInNew, Search } from '@mui/icons-material';
+import { Delete, Edit, OpenInNew, Search, OfflineBolt } from '@mui/icons-material';
 import { request } from '../../../shared/lib/api';
 
 export default function AdminWebStoriesPage() {
@@ -16,11 +16,32 @@ export default function AdminWebStoriesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [msg, setMsg] = useState('');
   const [msgType, setMsgType] = useState('success');
+  const [pingingId, setPingingId] = useState(null);
 
   // Edit Story Modal State
   const [editOpen, setEditOpen] = useState(false);
   const [editingStory, setEditingStory] = useState(null);
   const [activeSlideTab, setActiveSlideTab] = useState(0);
+
+  const handlePingIndexing = (id) => {
+    setPingingId(id);
+    setMsg('');
+    request(`/api/admin/web-stories/${id}/index-ping`, { method: 'POST' })
+      .then(res => {
+        if (res.success) {
+          setMsg('Google Indexing API request sent successfully! Crawlers have been pinged.');
+          setMsgType('success');
+        } else {
+          setMsg(res.message || 'Indexing ping failed.');
+          setMsgType('error');
+        }
+      })
+      .catch(err => {
+        setMsg('Indexing request failed: ' + err.message);
+        setMsgType('error');
+      })
+      .finally(() => setPingingId(null));
+  };
 
   useEffect(() => {
     loadStories();
@@ -207,19 +228,30 @@ export default function AdminWebStoriesPage() {
                       {new Date(story.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell align="right">
+                      {story.status === 'published' && (
+                        <IconButton 
+                          onClick={() => handlePingIndexing(story._id)} 
+                          disabled={pingingId === story._id}
+                          title="Instant Index (Google Indexing API)"
+                          sx={{ color: '#F59E0B' }}
+                        >
+                          <OfflineBolt fontSize="small" sx={{ animation: pingingId === story._id ? 'pulse 1s infinite' : 'none' }} />
+                        </IconButton>
+                      )}
                       <IconButton 
                         component="a" 
                         href={`/web-stories/${story.slug}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         sx={{ color: '#2563EB' }}
+                        title="Preview Story"
                       >
                         <OpenInNew fontSize="small" />
                       </IconButton>
-                      <IconButton onClick={() => handleEditOpen(story)} sx={{ color: '#4B5563' }}>
+                      <IconButton onClick={() => handleEditOpen(story)} sx={{ color: '#4B5563' }} title="Edit Story">
                         <Edit fontSize="small" />
                       </IconButton>
-                      <IconButton onClick={() => handleDelete(story._id)} sx={{ color: '#EF4444' }}>
+                      <IconButton onClick={() => handleDelete(story._id)} sx={{ color: '#EF4444' }} title="Delete Story">
                         <Delete fontSize="small" />
                       </IconButton>
                     </TableCell>
