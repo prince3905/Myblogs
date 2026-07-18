@@ -476,24 +476,34 @@ function sanitizeThirdPartyLinks(content) {
   if (!content) return content;
   let c = content;
 
-  // 1. Replace <a> tags pointing to third-party tools
+  // 1. Replace <a> tags pointing to third-party tools/competitors
   c = c.replace(/<a\s+[^>]*href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi, (match, href, anchorText) => {
     const lowerHref = href.toLowerCase();
     const lowerAnchor = anchorText.toLowerCase();
     
-    // If it's a link to a third-party site and has keywords of tools/resizers, change to /tools
-    if (
-      (lowerHref.includes('sarkariresult') || lowerHref.includes('freejobalert') || lowerHref.includes('ilovepdf') || lowerHref.includes('imageresizer') || lowerHref.includes('pdfresizer')) &&
-      (lowerHref.includes('tool') || lowerHref.includes('resize') || lowerHref.includes('compress') || lowerHref.includes('crop') || lowerHref.includes('convert') || lowerHref.includes('age') ||
-       lowerAnchor.includes('tool') || lowerAnchor.includes('resize') || lowerAnchor.includes('compress') || lowerAnchor.includes('crop') || lowerAnchor.includes('signature') || lowerAnchor.includes('age-calculator'))
-    ) {
+    const isThirdPartyBad = lowerHref.includes('sarkariresult') || lowerHref.includes('freejobalert');
+    const isTool = lowerHref.includes('tool') || lowerHref.includes('resize') || lowerHref.includes('compress') || lowerHref.includes('crop') || lowerHref.includes('convert') || lowerHref.includes('age') || lowerHref.includes('ilovepdf') || lowerHref.includes('imageresizer') || lowerHref.includes('pdfresizer') ||
+                   lowerAnchor.includes('tool') || lowerAnchor.includes('resize') || lowerAnchor.includes('compress') || lowerAnchor.includes('crop') || lowerAnchor.includes('signature') || lowerAnchor.includes('age-calculator');
+
+    if (isThirdPartyBad) {
+      if (isTool) {
+        return `<a href="/tools">Student Utility Tools</a>`;
+      } else {
+        // Strip the link completely, leaving only the anchor text in plain text
+        return anchorText;
+      }
+    } else if (isTool && (lowerHref.includes('ilovepdf') || lowerHref.includes('imageresizer') || lowerHref.includes('pdfresizer'))) {
       return `<a href="/tools">Student Utility Tools</a>`;
     }
+    
     return match;
   });
 
   // 2. Also replace raw URLs or any link inside parentheses like (Link: https://...) or similar text that might not be in an <a> tag
+  // Replace tool URLs with /tools
   c = c.replace(/(https?:\/\/[^\s<"'`()]+(?:sarkariresult\.com\/tools|sarkariresult\.com\/resizer|sarkariresult\.tools|freejobalert\.com\/tools|ilovepdf\.com|imageresizer\.com)[^\s<"'`()]*)/gi, '/tools');
+  // Replace general sarkariresult/freejobalert URLs with /
+  c = c.replace(/(https?:\/\/[^\s<"'`()]+(?:sarkariresult|freejobalert)[^\s<"'`()]*)/gi, '/');
 
   return c;
 }

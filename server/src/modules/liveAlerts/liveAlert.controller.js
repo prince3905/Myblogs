@@ -127,6 +127,29 @@ function extractLinksFromText(text) {
   return parsedLinks;
 }
 
+// Helper to sanitize URLs (removes competitor links and falls back to search queries)
+function sanitizeUrlValue(url, boardName) {
+  if (!url) return '';
+  const lowerUrl = url.toLowerCase();
+  
+  if (
+    lowerUrl.includes('sarkariresult.com/tools') ||
+    lowerUrl.includes('sarkariresult.tools') ||
+    lowerUrl.includes('freejobalert.com/tools') ||
+    lowerUrl.includes('ilovepdf.com') ||
+    lowerUrl.includes('imageresizer.com') ||
+    lowerUrl.includes('pdfresizer.com')
+  ) {
+    return '/tools';
+  }
+  
+  if (lowerUrl.includes('sarkariresult') || lowerUrl.includes('freejobalert')) {
+    return 'https://www.google.com/search?q=' + encodeURIComponent(boardName + ' official site');
+  }
+  
+  return url;
+}
+
 // Core service to draft a blog post from an alert document
 async function draftAlertToPostDoc(alert) {
   console.log(`[LiveAlert Sourcing] Drafting blog post from alert: "${alert.title}"`);
@@ -137,9 +160,9 @@ async function draftAlertToPostDoc(alert) {
     .replace(/\b\w/g, c => c.toUpperCase());
 
   // Construct the context/command parameters for Gemini Flash to generate a 1200+ word post
-  const resolvedUrl = alert.officialUrl || '';
-  const resolvedPdf = alert.officialPdfUrl || '';
-  const resolvedApply = alert.officialApplyUrl || '';
+  const resolvedUrl = sanitizeUrlValue(alert.officialUrl || '', alert.boardName || cleanTitle);
+  const resolvedPdf = sanitizeUrlValue(alert.officialPdfUrl || '', alert.boardName || cleanTitle);
+  const resolvedApply = sanitizeUrlValue(alert.officialApplyUrl || '', alert.boardName || cleanTitle);
   const detailsTextContext = alert.detailsText || '';
 
   // Extract all links programmatically from scraped factsheet details
@@ -155,20 +178,21 @@ async function draftAlertToPostDoc(alert) {
 
   // Merge in any other parsed links from the text details
   detailsLinks.forEach(link => {
+    const url = sanitizeUrlValue(link.url, alert.boardName || cleanTitle);
     const nameLower = link.name.toLowerCase();
     if (nameLower.includes('apply')) {
-      allLinksMap.set('apply online', link.url);
+      allLinksMap.set('apply online', url);
     } else if (nameLower.includes('notification') || nameLower.includes('pdf') || nameLower.includes('advertisement') || nameLower.includes('notice')) {
       // Skip utility tools links so they don't overwrite download notification link
-      if (link.url !== '/tools' && !nameLower.includes('utility tools') && !nameLower.includes('resizer')) {
-        allLinksMap.set('download notification', link.url);
+      if (url !== '/tools' && !nameLower.includes('utility tools') && !nameLower.includes('resizer')) {
+        allLinksMap.set('download notification', url);
       } else {
         allLinksMap.set('student utility tools', '/tools');
       }
     } else if (nameLower.includes('website') || nameLower.includes('homepage') || nameLower.includes('official site')) {
-      allLinksMap.set('official website', link.url);
+      allLinksMap.set('official website', url);
     } else {
-      allLinksMap.set(link.name, link.url);
+      allLinksMap.set(link.name, url);
     }
   });
 
