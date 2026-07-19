@@ -75,12 +75,14 @@ export default function AdminSettingsPage() {
       });
   }, []);
 
+  const isTrueSetting = (val) => val === true || val === 'true';
+
   const handleToggle = async (key) => {
     setUpdatingKey(key);
     setError('');
     
     // Toggle active state: active state is !disableSetting
-    const currentDisabled = settings[key] === undefined ? true : settings[key];
+    const currentDisabled = settings[key] === undefined ? true : isTrueSetting(settings[key]);
     const newDisabled = !currentDisabled;
 
     try {
@@ -138,9 +140,6 @@ export default function AdminSettingsPage() {
     );
   }
 
-  // Check if WhatsApp is disabled
-  const isWhatsappDisabled = settings.disableWhatsappNotification === undefined ? true : settings.disableWhatsappNotification;
-
   return (
     <Box sx={{ px: { xs: 2, md: 4 }, py: 3, maxWidth: 1000, mx: 'auto' }}>
       {/* Title block */}
@@ -160,7 +159,7 @@ export default function AdminSettingsPage() {
 
       <Grid container spacing={3}>
         {settingOptions.map((option) => {
-          const isEnabled = settings[option.key] === undefined ? false : !settings[option.key];
+          const isEnabled = settings[option.key] === undefined ? false : !isTrueSetting(settings[option.key]);
           const isUpdating = updatingKey === option.key;
 
           return (
@@ -276,7 +275,6 @@ export default function AdminSettingsPage() {
               placeholder="e.g. 919999999999 (with country code, no + or spaces)"
               value={whatsappPhone}
               onChange={(e) => setWhatsappPhone(e.target.value)}
-              disabled={isWhatsappDisabled}
               variant="outlined"
             />
           </Grid>
@@ -287,7 +285,6 @@ export default function AdminSettingsPage() {
               placeholder="Enter your CallMeBot WhatsApp API Key"
               value={whatsappApiKey}
               onChange={(e) => setWhatsappApiKey(e.target.value)}
-              disabled={isWhatsappDisabled}
               variant="outlined"
             />
           </Grid>
@@ -300,7 +297,7 @@ export default function AdminSettingsPage() {
           <Button
             variant="contained"
             onClick={handleSaveWhatsappSettings}
-            disabled={isSavingWhatsapp || isWhatsappDisabled}
+            disabled={isSavingWhatsapp}
             sx={{
               fontWeight: 700,
               px: 3,
