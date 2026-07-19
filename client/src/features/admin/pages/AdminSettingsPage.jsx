@@ -24,6 +24,12 @@ const settingOptions = [
     icon: <Send sx={{ fontSize: 32, color: '#06b6d4' }} />
   },
   {
+    key: 'disableWhatsappNotification',
+    label: 'WhatsApp Draft Alerts',
+    description: 'Automatically receive instant WhatsApp notifications when a new job alert is scraped and drafted.',
+    icon: <span style={{ fontSize: 28 }}>💬</span>
+  },
+  {
     key: 'disableTwoWayLinking',
     label: 'Two-Way Internal Linking',
     description: 'Link older relevant posts to new ones automatically upon publication to drive indexing speed.',
@@ -260,29 +266,6 @@ export default function AdminSettingsPage() {
               Automatically receive instant WhatsApp notifications whenever a new Sarkari Job alert is scraped and drafted by the background autopilot.
             </Typography>
           </Box>
-        </Box>
-
-        <Box sx={{ mb: 3 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={!isWhatsappDisabled}
-                onChange={() => handleToggle('disableWhatsappNotification')}
-                color="primary"
-              />
-            }
-            label={!isWhatsappDisabled ? 'Active' : 'Paused'}
-            labelPlacement="start"
-            sx={{
-              m: 0,
-              '& .MuiTypography-root': {
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: !isWhatsappDisabled ? '#10b981' : '#6b7280',
-                mr: 1
-              }
-            }}
-          />
         </Box>
 
         <Grid container spacing={3}>
