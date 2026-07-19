@@ -24,6 +24,12 @@ const settingOptions = [
     icon: <Send sx={{ fontSize: 32, color: '#06b6d4' }} />
   },
   {
+    key: 'disableTelegramDraftAlert',
+    label: 'Telegram Draft Alerts',
+    description: 'Automatically receive instant private Telegram notifications from your bot when a new job alert is drafted.',
+    icon: <span style={{ fontSize: 28 }}>🤖</span>
+  },
+  {
     key: 'disableWhatsappNotification',
     label: 'WhatsApp Draft Alerts',
     description: 'Automatically receive instant WhatsApp notifications when a new job alert is scraped and drafted.',
@@ -61,12 +67,17 @@ export default function AdminSettingsPage() {
   const [whatsappApiKey, setWhatsappApiKey] = useState('');
   const [isSavingWhatsapp, setIsSavingWhatsapp] = useState(false);
 
+  // Telegram Private States
+  const [telegramPrivateChatId, setTelegramPrivateChatId] = useState('');
+  const [isSavingTelegram, setIsSavingTelegram] = useState(false);
+
   useEffect(() => {
     request('/api/admin/settings')
       .then(data => {
         setSettings(data.settings || {});
         setWhatsappPhone(data.settings?.whatsappPhone || '');
         setWhatsappApiKey(data.settings?.whatsappApiKey || '');
+        setTelegramPrivateChatId(data.settings?.telegramPrivateChatId || '');
         setLoading(false);
       })
       .catch(err => {
@@ -129,6 +140,27 @@ export default function AdminSettingsPage() {
       addToast(err.message || 'Error occurred while saving configurations.', 'error');
     } finally {
       setIsSavingWhatsapp(false);
+    }
+  };
+
+  const handleSaveTelegramSettings = async () => {
+    setIsSavingTelegram(true);
+    try {
+      const res = await request('/api/admin/settings', {
+        method: 'PUT',
+        body: { key: 'telegramPrivateChatId', value: telegramPrivateChatId.trim() }
+      });
+
+      if (res.success) {
+        setSettings(prev => ({ ...prev, telegramPrivateChatId: telegramPrivateChatId.trim() }));
+        addToast('Telegram configurations saved successfully!', 'success');
+      } else {
+        addToast('Failed to save Telegram settings.', 'error');
+      }
+    } catch (err) {
+      addToast(err.message || 'Error occurred while saving configurations.', 'error');
+    } finally {
+      setIsSavingTelegram(false);
     }
   };
 
@@ -310,6 +342,76 @@ export default function AdminSettingsPage() {
             }}
           >
             {isSavingWhatsapp ? <CircularProgress size={20} color="inherit" /> : 'Save WhatsApp Settings'}
+          </Button>
+        </Box>
+      </Paper>
+
+      {/* Telegram Private Alert Settings section */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          mt: 4,
+          borderRadius: 3,
+          border: '1px solid #e5e7eb',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Box
+            sx={{
+              p: 1.5,
+              borderRadius: 2.5,
+              bgcolor: '#f5f3ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span style={{ fontSize: 28 }}>🤖</span>
+          </Box>
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#111827', mb: 0.5 }}>
+              Telegram Private Alerts
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#4b5563', lineHeight: 1.5 }}>
+              Configure your personal Telegram Chat ID to receive instant draft notifications directly from your official Telegram Bot.
+            </Typography>
+          </Box>
+        </Box>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Telegram Private Chat ID"
+              placeholder="e.g. 546738920 (Send a message to @userinfobot to get your Chat ID)"
+              value={telegramPrivateChatId}
+              onChange={(e) => setTelegramPrivateChatId(e.target.value)}
+              variant="outlined"
+            />
+          </Grid>
+        </Grid>
+
+        <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Typography variant="caption" sx={{ color: '#6b7280', maxWidth: { xs: '100%', md: '60%' }, display: 'block', lineHeight: 1.6 }}>
+            💡 <strong>How to find your Telegram Chat ID:</strong> Open Telegram, search for <strong>@userinfobot</strong> or <strong>@GetIDBot</strong>, and click <strong>Start</strong>. It will reply with your numeric Chat ID instantly.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={handleSaveTelegramSettings}
+            disabled={isSavingTelegram}
+            sx={{
+              fontWeight: 700,
+              px: 3,
+              py: 1,
+              borderRadius: 2,
+              boxShadow: 'none',
+              textTransform: 'none',
+              bgcolor: '#2563eb',
+              '&:hover': { bgcolor: '#1d4ed8' }
+            }}
+          >
+            {isSavingTelegram ? <CircularProgress size={20} color="inherit" /> : 'Save Telegram Settings'}
           </Button>
         </Box>
       </Paper>

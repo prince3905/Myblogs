@@ -375,6 +375,14 @@ ${buttonHtmlBlock}
     console.error('[LiveAlert Sourcing] WhatsApp notification trigger failed:', wsErr.message);
   }
 
+  // Send Telegram private draft notification alert
+  try {
+    const { sendTelegramDraftAlert } = require('../../shared/services/telegramAlertService');
+    await sendTelegramDraftAlert(newPost);
+  } catch (tgErr) {
+    console.error('[LiveAlert Sourcing] Telegram private notification trigger failed:', tgErr.message);
+  }
+
   // Generate Web Story for this new post in background (Autopilot decision logic)
   try {
     const { generateWebStoryForPost } = require('../posts/webstory.service');
