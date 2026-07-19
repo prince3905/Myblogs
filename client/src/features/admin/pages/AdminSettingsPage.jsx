@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Paper, Grid, Switch, FormControlLabel, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, Paper, Grid, Switch, FormControlLabel, CircularProgress, Alert, TextField, Button } from '@mui/material';
 import { Settings, OfflineBolt, Schedule, Send, Link, ReportProblem, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
 import { useToast } from '../../../components/Toast';
 import { request } from '../../../shared/lib/api';
@@ -50,10 +50,17 @@ export default function AdminSettingsPage() {
   const [error, setError] = useState('');
   const { addToast } = useToast();
 
+  // WhatsApp States
+  const [whatsappPhone, setWhatsappPhone] = useState('');
+  const [whatsappApiKey, setWhatsappApiKey] = useState('');
+  const [isSavingWhatsapp, setIsSavingWhatsapp] = useState(false);
+
   useEffect(() => {
     request('/api/admin/settings')
       .then(data => {
         setSettings(data.settings || {});
+        setWhatsappPhone(data.settings?.whatsappPhone || '');
+        setWhatsappApiKey(data.settings?.whatsappApiKey || '');
         setLoading(false);
       })
       .catch(err => {
@@ -92,6 +99,31 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const handleSaveWhatsappSettings = async () => {
+    setIsSavingWhatsapp(true);
+    try {
+      const pRes = await request('/api/admin/settings', {
+        method: 'PUT',
+        body: { key: 'whatsappPhone', value: whatsappPhone.trim() }
+      });
+      const kRes = await request('/api/admin/settings', {
+        method: 'PUT',
+        body: { key: 'whatsappApiKey', value: whatsappApiKey.trim() }
+      });
+
+      if (pRes.success && kRes.success) {
+        setSettings(prev => ({ ...prev, whatsappPhone: whatsappPhone.trim(), whatsappApiKey: whatsappApiKey.trim() }));
+        addToast('WhatsApp configurations saved successfully!', 'success');
+      } else {
+        addToast('Failed to save some WhatsApp settings.', 'error');
+      }
+    } catch (err) {
+      addToast(err.message || 'Error occurred while saving configurations.', 'error');
+    } finally {
+      setIsSavingWhatsapp(false);
+    }
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
@@ -99,6 +131,9 @@ export default function AdminSettingsPage() {
       </Box>
     );
   }
+
+  // Check if WhatsApp is disabled
+  const isWhatsappDisabled = settings.disableWhatsappNotification === undefined ? true : settings.disableWhatsappNotification;
 
   return (
     <Box sx={{ px: { xs: 2, md: 4 }, py: 3, maxWidth: 1000, mx: 'auto' }}>
@@ -119,7 +154,6 @@ export default function AdminSettingsPage() {
 
       <Grid container spacing={3}>
         {settingOptions.map((option) => {
-          // Switch is toggled ON if the disable setting is FALSE or undefined (default active: let's assume default active if undefined)
           const isEnabled = settings[option.key] === undefined ? false : !settings[option.key];
           const isUpdating = updatingKey === option.key;
 
@@ -194,6 +228,111 @@ export default function AdminSettingsPage() {
           );
         })}
       </Grid>
+
+      {/* WhatsApp Notifications Settings section */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          mt: 4,
+          borderRadius: 3,
+          border: '1px solid #e5e7eb',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Box
+            sx={{
+              p: 1.5,
+              borderRadius: 2.5,
+              bgcolor: '#e0f2fe',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span style={{ fontSize: 28 }}>💬</span>
+          </Box>
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#111827', mb: 0.5 }}>
+              WhatsApp Draft Alerts (CallMeBot)
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#4b5563', lineHeight: 1.5 }}>
+              Automatically receive instant WhatsApp notifications whenever a new Sarkari Job alert is scraped and drafted by the background autopilot.
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={!isWhatsappDisabled}
+                onChange={() => handleToggle('disableWhatsappNotification')}
+                color="primary"
+              />
+            }
+            label={!isWhatsappDisabled ? 'Active' : 'Paused'}
+            labelPlacement="start"
+            sx={{
+              m: 0,
+              '& .MuiTypography-root': {
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: !isWhatsappDisabled ? '#10b981' : '#6b7280',
+                mr: 1
+              }
+            }}
+          />
+        </Box>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="WhatsApp Phone Number"
+              placeholder="e.g. 919999999999 (with country code, no + or spaces)"
+              value={whatsappPhone}
+              onChange={(e) => setWhatsappPhone(e.target.value)}
+              disabled={isWhatsappDisabled}
+              variant="outlined"
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="CallMeBot API Key"
+              placeholder="Enter your CallMeBot WhatsApp API Key"
+              value={whatsappApiKey}
+              onChange={(e) => setWhatsappApiKey(e.target.value)}
+              disabled={isWhatsappDisabled}
+              variant="outlined"
+            />
+          </Grid>
+        </Grid>
+
+        <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Typography variant="caption" sx={{ color: '#6b7280', maxWidth: { xs: '100%', md: '60%' }, display: 'block', lineHeight: 1.6 }}>
+            💡 <strong>How to activate CallMeBot:</strong> Send a WhatsApp message with the text <code>I allow callmebot to send me messages</code> to <strong>+34 644 20 23 88</strong> to get your API key instantly.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={handleSaveWhatsappSettings}
+            disabled={isSavingWhatsapp || isWhatsappDisabled}
+            sx={{
+              fontWeight: 700,
+              px: 3,
+              py: 1,
+              borderRadius: 2,
+              boxShadow: 'none',
+              textTransform: 'none',
+              bgcolor: '#2563eb',
+              '&:hover': { bgcolor: '#1d4ed8' }
+            }}
+          >
+            {isSavingWhatsapp ? <CircularProgress size={20} color="inherit" /> : 'Save WhatsApp Settings'}
+          </Button>
+        </Box>
+      </Paper>
     </Box>
   );
 }

@@ -367,6 +367,14 @@ ${buttonHtmlBlock}
   await BlogPost.deleteMany({ slug: processed.slug });
   await newPost.save();
 
+  // Send WhatsApp draft notification alert
+  try {
+    const { sendWhatsappDraftAlert } = require('../../shared/services/whatsappService');
+    await sendWhatsappDraftAlert(newPost);
+  } catch (wsErr) {
+    console.error('[LiveAlert Sourcing] WhatsApp notification trigger failed:', wsErr.message);
+  }
+
   // Generate Web Story for this new post in background (Autopilot decision logic)
   try {
     const { generateWebStoryForPost } = require('../posts/webstory.service');
