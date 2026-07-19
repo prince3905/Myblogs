@@ -23,11 +23,21 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>
 );
 
-// Register Service Worker for PWA support
+// Register Service Worker for PWA support (unregister in localhost to prevent local dev caching)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('[Service Worker] Registered successfully:', reg.scope))
-      .catch(err => console.error('[Service Worker] Registration failed:', err));
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (let registration of registrations) {
+          registration.unregister().then(() => {
+            console.log('[Service Worker] Unregistered active worker for local development');
+          });
+        }
+      });
+    } else {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('[Service Worker] Registered successfully:', reg.scope))
+        .catch(err => console.error('[Service Worker] Registration failed:', err));
+    }
   });
 }
