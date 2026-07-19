@@ -89,7 +89,7 @@ export default function AdminLayout() {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden',
+          overflowY: 'auto',
           pb: { xs: '56px', md: 0 },
         }}
       >
