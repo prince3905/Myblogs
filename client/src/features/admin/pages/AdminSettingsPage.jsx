@@ -292,7 +292,7 @@ export default function AdminSettingsPage() {
 
         <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
           <Typography variant="caption" sx={{ color: '#6b7280', maxWidth: { xs: '100%', md: '60%' }, display: 'block', lineHeight: 1.6 }}>
-            💡 <strong>How to activate CallMeBot:</strong> Send a WhatsApp message with the text <code>I allow callmebot to send me messages</code> to <strong>+34 644 20 23 88</strong> to get your API key instantly.
+            💡 <strong>How to activate CallMeBot:</strong> Send a WhatsApp message with the text <code>I allow callmebot to send me messages</code> to <strong>+34 621 34 22 27</strong> to get your API key instantly.
           </Typography>
           <Button
             variant="contained"
