@@ -40,8 +40,11 @@ async function sendTelegramDraftAlert(post) {
     return { success: true };
     
   } catch (err) {
-    console.error('[Telegram Private Notification] Telegram API trigger failed:', err.message);
-    return { success: false, error: err.message };
+    const errorMsg = err.response && err.response.data && err.response.data.description 
+      ? err.response.data.description 
+      : err.message;
+    console.error('[Telegram Private Notification] Telegram API trigger failed:', errorMsg);
+    return { success: false, error: errorMsg };
   }
 }
 

@@ -924,7 +924,7 @@ async function publishNextQueuedPost() {
 
     // Auto share to Telegram
     try {
-      const { sendTelegramMessage } = require('../services/telegramService');
+      const { sendTelegramMessage } = require('../../shared/services/telegramService');
       await sendTelegramMessage(oldestDraft);
       console.log(`[Queue Publisher] Successfully shared auto-published post to Telegram: "${oldestDraft.title}"`);
     } catch (tgErr) {
