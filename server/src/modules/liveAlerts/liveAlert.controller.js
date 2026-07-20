@@ -263,6 +263,7 @@ FACTUAL METADATA:
 - Official Apply Portal URL: "${resolvedApply || ''}"
 
 CRITICAL DIRECTIVES:
+- The generated post title MUST be a click-magnet, high-CTR title. You MUST append an action-oriented hook at the end of the title, formatting it precisely like: "${cleanTitle} (Direct Link) - Step by Step Apply Now" or "${cleanTitle} (Direct Link) - Apply Online Now".
 - You must use the mandatory 'Sarkari Jobs & Exams' category framework headings in Hinglish/Hindi, but at least one of these H2 headings MUST contain the exact Focus Keyword/Title phrase "${cleanTitle}" (e.g., "## ${cleanTitle} की महत्वपूर्ण तिथियाँ" or "## ${cleanTitle} योग्यता और पात्रता" or prepend the title to any H2 heading). Do NOT use plain English headings.
 - You MUST include the following three unique educational sections as H2 headings to provide high-value content for students:
   * "## चयन प्रक्रिया (Selection Process)" - Explaining step-by-step how the selection happens (Written Exam, Physical, Interview, Document Verification).
