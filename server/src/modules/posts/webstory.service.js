@@ -220,4 +220,4 @@ Each slide MUST contain a descriptive 'imageQuery' to fetch the background.
   }
 }
 
-module.exports = { generateWebStoryForPost };
+module.exports = { generateWebStoryForPost, callAiJson };

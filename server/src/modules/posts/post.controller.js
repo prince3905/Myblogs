@@ -806,6 +806,78 @@ async function sharePostToTelegram(req, res) {
   }
 }
 
+async function optimizePostSEO(req, res) {
+  try {
+    const post = await BlogPost.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    const catSlug = (post.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
+    const pagePath = `/blog/${catSlug}/${post.slug}`;
+
+    // Get search queries from GSC
+    const { getTopQueriesForPage } = require('../../shared/services/gscService');
+    let queries = [];
+    try {
+      queries = await getTopQueriesForPage(pagePath);
+    } catch (gscErr) {
+      console.warn('[Post Controller] Failed to fetch queries from GSC:', gscErr.message);
+    }
+
+    // Fallback search terms
+    const cleanTitle = post.title.replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2').replace(/\b\w/g, c => c.toUpperCase());
+    const fallbackKeywords = [
+      cleanTitle,
+      ...(post.seoKeywords || []),
+      ...(post.tags || [])
+    ].filter(Boolean);
+
+    const keywords = queries.length > 0 ? queries : fallbackKeywords;
+
+    const prompt = `You are a professional SEO copywriter and CTR (Click-Through Rate) optimization expert.
+Analyze this job post details and optimize the SEO Title and Meta Description (SEO Description) to maximize search clicks.
+
+Current Title: "${post.title}"
+Category: "${post.category}"
+Page Search Queries/Keywords: [${keywords.slice(0, 15).join(', ')}]
+
+OPTIMIZATION REQUIREMENTS:
+1. Suggest a high-CTR click-magnet Title (SEO Title):
+   - You MUST include a highly converting click-magnet hook at the end, such as "(Direct Link) - Step-by-Step Apply Now" or "(Direct Link) - Apply Online Now" or "(Direct Apply) - No Exam, Direct Selection!".
+   - Keep the length strictly under 65 characters so it doesn't get truncated in Google Search results.
+2. Suggest an engaging Meta Description (SEO Description) hook:
+   - Use action-oriented keywords. Start with the core topic/job name.
+   - Keep it strictly between 110 and 150 characters.
+
+Return ONLY a valid JSON object matching this structure:
+{
+  "optimizedTitle": "optimized title here",
+  "optimizedDescription": "meta description here"
+}
+Do NOT include any extra words, formatting, markdown markers, or quotes. Output ONLY the JSON block.`;
+
+    const { callAiJson } = require('./webstory.service');
+    const result = await callAiJson(prompt);
+
+    if (!result || !result.optimizedTitle || !result.optimizedDescription) {
+      throw new Error('AI failed to generate both optimized title and description.');
+    }
+
+    return res.json({
+      success: true,
+      optimizedTitle: result.optimizedTitle.trim(),
+      optimizedDescription: result.optimizedDescription.trim(),
+      queriesUsed: queries.length > 0,
+      keywords: keywords.slice(0, 10)
+    });
+
+  } catch (err) {
+    console.error('[Post Controller] SEO auto-optimization failed:', err.message);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+}
+
 module.exports = {
   listPublishedPosts,
   listAdminPosts,
@@ -823,6 +895,7 @@ module.exports = {
   likePost,
   getHomepageData,
   pingPostIndexing,
-  sharePostToTelegram
+  sharePostToTelegram,
+  optimizePostSEO
 };
 

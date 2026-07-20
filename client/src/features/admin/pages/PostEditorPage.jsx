@@ -54,6 +54,7 @@ export default function PostEditorPage() {
   const [canvasHindiTitle, setCanvasHindiTitle] = useState('');
   const [canvasTheme, setCanvasTheme] = useState('bank');
   const [isGeneratingCanvas, setIsGeneratingCanvas] = useState(false);
+  const [isOptimizingSEO, setIsOptimizingSEO] = useState(false);
 
   const handleOpenCanvasMaker = () => {
     if (!form.title.trim()) {
@@ -388,6 +389,31 @@ export default function PostEditorPage() {
       addToast(err.message || 'Failed to ping Google Indexing API', 'error');
     } finally {
       setYtLoading(false);
+    }
+  }
+
+  async function handleAutoOptimizeSEO() {
+    if (!id) return;
+    setIsOptimizingSEO(true);
+    setError('');
+    try {
+      const res = await request(`/api/admin/posts/${id}/optimize-seo`, { method: 'POST' });
+      if (res.success) {
+        if (res.optimizedTitle) {
+          updateField('title', res.optimizedTitle);
+          updateField('seoTitle', res.optimizedTitle);
+        }
+        if (res.optimizedDescription) {
+          updateField('seoDescription', res.optimizedDescription);
+        }
+        addToast(res.message || 'SEO titles and description optimized with GSC keywords!', 'success');
+      } else {
+        addToast(res.message || 'SEO auto-optimization failed.', 'error');
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to auto-optimize SEO', 'error');
+    } finally {
+      setIsOptimizingSEO(false);
     }
   }
 
@@ -1185,9 +1211,23 @@ export default function PostEditorPage() {
 
               <Divider sx={{ my: 3 }} />
 
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
-                SEO Settings
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, m: 0 }}>
+                  SEO Settings
+                </Typography>
+                {id && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    color="secondary"
+                    onClick={handleAutoOptimizeSEO}
+                    disabled={isOptimizingSEO}
+                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
+                  >
+                    {isOptimizingSEO ? 'Optimizing...' : '⚡ Auto-Optimize SEO'}
+                  </Button>
+                )}
+              </Box>
 
               <TextField
                 fullWidth
