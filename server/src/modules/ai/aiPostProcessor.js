@@ -199,17 +199,26 @@ async function addInternalLinks(content, category) {
 function ensureKeywordFrequency(content, title, keywords) {
   if (!content) return content;
 
-  // Determine focus keyword
-  let focusKeyword = '';
+  // Extract clean core focus keyword (max 4 words, no Hindi text, no brackets/colons)
+  let rawKw = '';
   if (Array.isArray(keywords) && keywords.length > 0) {
-    focusKeyword = keywords[0];
+    rawKw = keywords[0];
   } else if (typeof keywords === 'string') {
-    focusKeyword = keywords.split(',')[0];
+    rawKw = keywords.split(',')[0];
   }
-  if (!focusKeyword && title) {
-    focusKeyword = title.replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2');
+  if (!rawKw && title) {
+    rawKw = title.split(/[-:|(]/)[0]; // take main prefix before dash/colon/bracket
   }
-  focusKeyword = (focusKeyword || '').toLowerCase().trim();
+  let focusKeyword = (rawKw || '')
+    .replace(/[\u0900-\u097F]/g, '') // remove Hindi characters
+    .replace(/[()|:!?-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const kwWords = focusKeyword.split(' ').filter(Boolean);
+  if (kwWords.length > 4) {
+    focusKeyword = kwWords.slice(0, 4).join(' ');
+  }
   if (!focusKeyword || focusKeyword.length < 3) return content;
 
   const plainText = content.replace(/<[^>]*>/g, ' ').toLowerCase();
@@ -222,48 +231,16 @@ function ensureKeywordFrequency(content, title, keywords) {
   const regex = new RegExp('\\b' + flexiblePattern + '\\b', 'gi');
   const count = (plainText.match(regex) || []).length;
 
-  const words = plainText.split(/\s+/).filter(Boolean);
-  const wordCount = words.length;
-  if (wordCount === 0) return content;
+  // If focus keyword is already present in content at least once, keep it 100% natural
+  if (count >= 1) return content;
 
-  const density = (count / wordCount) * 100;
   let c = content;
+  const cap = focusKeyword.replace(/\b\w/g, l => l.toUpperCase());
+  const naturalSentence = ` Check official updates, eligibility criteria, and application details for <strong>${cap}</strong> below.`;
 
-  // Enforce minimum density of 0.8%
-  if (density < 0.8) {
-    const targetCount = Math.max(3, Math.ceil(wordCount * 0.009)); // target 0.9% density
-    const needed = targetCount - count;
-    if (needed > 0) {
-      const cap = focusKeyword.replace(/\b\w/g, l => l.toUpperCase());
-      const parts = c.split('</p>');
-      if (parts.length > 2) {
-        let inserted = 0;
-        let updated = '';
-        for (let idx = 0; idx < parts.length - 1; idx++) {
-          updated += parts[idx];
-          if (inserted < needed) {
-            const injectText = ` (Read all details regarding <strong>${cap}</strong> inside this official portal report)`;
-            if (!parts[idx].toLowerCase().includes(focusKeyword.toLowerCase())) {
-              updated += injectText;
-              inserted++;
-            }
-          }
-          updated += '</p>';
-        }
-        updated += parts[parts.length - 1];
-        c = updated;
-        if (inserted < needed) {
-          const remaining = needed - inserted;
-          for (let r = 0; r < remaining; r++) {
-            c += `\n<p>Explore all official updates and notifications regarding <strong>${cap}</strong> on our live portal.</p>\n`;
-          }
-        }
-      } else {
-        for (let r = 0; r < needed; r++) {
-          c += `\n<p>Explore all updates regarding <strong>${cap}</strong> on our official portal.</p>\n`;
-        }
-      }
-    }
+  const firstP = c.indexOf('</p>');
+  if (firstP > 0 && !c.toLowerCase().includes(focusKeyword.toLowerCase())) {
+    c = c.slice(0, firstP) + naturalSentence + c.slice(firstP);
   }
 
   return c;
