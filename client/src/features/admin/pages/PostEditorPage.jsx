@@ -170,6 +170,68 @@ export default function PostEditorPage() {
       ctx.fillStyle = '#ffffff';
       ctx.fillText(catLabel, catPillX + 16, 91);
 
+      // Dynamic Official Organization Emblem Detector
+      const detectOrgEmblem = (titleStr = '', catStr = '') => {
+        const t = (titleStr + ' ' + catStr).toLowerCase();
+        if (t.includes('rrb') || t.includes('railway')) {
+          return { code: 'RRB', label: 'INDIAN RAILWAYS', symbol: '🚂', primaryColor: '#facc15', bgCircle: '#1e3a8a' };
+        }
+        if (t.includes('ssc') || t.includes('cgl') || t.includes('chsl') || t.includes('mts')) {
+          return { code: 'SSC', label: 'SSC SELECTION', symbol: '🏛️', primaryColor: '#38bdf8', bgCircle: '#0f172a' };
+        }
+        if (t.includes('police') || t.includes('si ') || t.includes('constable')) {
+          return { code: 'POLICE', label: 'STATE POLICE', symbol: '🛡️', primaryColor: '#f87171', bgCircle: '#450a0a' };
+        }
+        if (t.includes('bank') || t.includes('sbi') || t.includes('ibps') || t.includes('ubi') || t.includes('rbi')) {
+          return { code: 'BANK', label: 'BANKING EXAM', symbol: '🏦', primaryColor: '#facc15', bgCircle: '#0369a1' };
+        }
+        if (t.includes('upsc') || t.includes('ias') || t.includes('ips') || t.includes('ras')) {
+          return { code: 'UPSC', label: 'UPSC CIVIL', symbol: '⚖️', primaryColor: '#fbbf24', bgCircle: '#7c2d12' };
+        }
+        if (t.includes('army') || t.includes('navy') || t.includes('air force') || t.includes('defence') || t.includes('iaf') || t.includes('ncc')) {
+          return { code: 'DEFENCE', label: 'ARMED FORCES', symbol: '⚔️', primaryColor: '#c084fc', bgCircle: '#312e81' };
+        }
+        if (t.includes('isro') || t.includes('drdo')) {
+          return { code: 'ISRO', label: 'ISRO SPACE', symbol: '🚀', primaryColor: '#38bdf8', bgCircle: '#0c4a6e' };
+        }
+        if (t.includes('nta') || t.includes('neet') || t.includes('jee') || t.includes('cuet')) {
+          return { code: 'NTA', label: 'NTA TESTING', symbol: '🎓', primaryColor: '#34d399', bgCircle: '#064e3b' };
+        }
+        return { code: 'GOVT', label: 'OFFICIAL SELECTION', symbol: '🏛️', primaryColor: '#10b981', bgCircle: '#065f46' };
+      };
+
+      // Draw Dynamic Organization Emblem Seal (Right side)
+      const emblem = detectOrgEmblem(canvasEngTitle, form.category);
+      if (emblem) {
+        const sealX = width - 115;
+        const sealY = 165;
+        const radius = 42;
+
+        ctx.shadowColor = emblem.primaryColor;
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = emblem.bgCircle;
+        ctx.strokeStyle = emblem.primaryColor;
+        ctx.lineWidth = 3;
+
+        ctx.beginPath();
+        ctx.arc(sealX, sealY, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.font = '28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(emblem.symbol, sealX, sealY - 7);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 12px sans-serif';
+        ctx.fillText(emblem.code, sealX, sealY + 20);
+
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+      }
+
       // Text wrapping & auto-fit font scaling function
       const wrapText = (context, text, x, y, lineGap, maxW, startFontSize) => {
         let fontSize = startFontSize;
