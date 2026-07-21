@@ -4,9 +4,9 @@ const mongoose = require('mongoose');
 function formatWhatsappBroadcastMessage(post) {
   const title = post.title || 'New Post';
   const category = post.category || 'Sarkari Jobs & Exams';
-  const catSlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
-  const siteUrl = process.env.SITE_URL || 'https://www.digitalhomeblog.in';
-  const url = post.canonicalUrl || `${siteUrl}/blog/${catSlug}/${post.slug}`;
+  const catSlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'blog';
+  const siteUrl = 'https://www.digitalhomeblog.in';
+  const url = `${siteUrl}/blog/${catSlug}/${post.slug}`;
   const content = post.content || '';
   const cleanContent = content.replace(/<[^>]*>/g, ' ');
 
