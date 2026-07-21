@@ -227,26 +227,32 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
     <Box ref={sliderRef} sx={{ mb: 6, position: 'relative' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography
-          variant="h3"
-          component="h3"
-          sx={{
-            fontWeight: 700, 
-            color: '#111827', 
-            letterSpacing: '-0.02em',
-            fontSize: { xs: '1.25rem', md: '1.5rem' }
-          }}
-        >
-          {categoryName}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ width: 5, height: 26, bgcolor: '#4F46E5', borderRadius: '4px' }} />
+          <Typography
+            variant="h3"
+            component="h3"
+            sx={{
+              fontWeight: 850, 
+              color: '#0f172a', 
+              letterSpacing: '-0.025em',
+              fontSize: { xs: '1.35rem', sm: '1.55rem', md: '1.75rem' }
+            }}
+          >
+            {categoryName}
+          </Typography>
+        </Box>
         <Button
           component={Link}
           to={`/category/${encodeURIComponent(categoryName)}`}
           sx={{
-            fontWeight: 600, 
-            fontSize: '0.85rem',
+            fontWeight: 700, 
+            fontSize: { xs: '0.85rem', md: '0.92rem' },
             color: '#4F46E5',
-            '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.04)' }
+            borderRadius: '8px',
+            px: 1.5,
+            py: 0.5,
+            '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.08)' }
           }}
         >
           View all →
@@ -322,7 +328,7 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
         )}
       </Box>
 
-      {/* Mobile Swipeable View (xs, finger scroll, 2 columns per screen view) */}
+      {/* Mobile Swipeable View (xs, finger scroll, 1 prominent wide card view with peek next) */}
       <Box
         ref={mobileScrollRef}
         onTouchStart={() => setLastInteraction(Date.now())}
@@ -336,13 +342,9 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
           '&::-webkit-scrollbar': { display: 'none' }
         }}
       >
-        {mobilePages.map((pageItems, pageIdx) => (
-          <Box key={pageIdx} sx={{ flex: '0 0 calc(50% - 8px)', display: 'flex', flexDirection: 'column', gap: 2, scrollSnapAlign: 'start' }}>
-            {pageItems.map((post) => (
-              <Box key={post._id} component="article" sx={{ width: '100%' }}>
-                <PostCard post={post} headingLevel="h4" />
-              </Box>
-            ))}
+        {posts.map((post) => (
+          <Box key={post._id} component="article" sx={{ flex: '0 0 82%', width: '82%', scrollSnapAlign: 'start' }}>
+            <PostCard post={post} headingLevel="h4" />
           </Box>
         ))}
       </Box>

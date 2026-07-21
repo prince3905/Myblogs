@@ -141,15 +141,15 @@ export default function PostEditorPage() {
       ctx.shadowBlur = 0; // reset shadow
 
       // Brand Title text (Top Left)
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+      ctx.shadowBlur = 10;
       ctx.fillStyle = '#10b981';
-      ctx.font = '900 28px sans-serif';
-      ctx.fillText('DIGITAL HOME BLOG', 75, 80);
+      ctx.font = '900 34px sans-serif';
+      ctx.fillText('DIGITAL HOME BLOG', 75, 85);
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.font = '600 16px sans-serif';
-      ctx.fillText('Official Portal Updates • 2026', 75, 108);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      ctx.font = '700 20px sans-serif';
+      ctx.fillText('Official Portal Updates • 2026', 75, 115);
 
       // Dynamic Official Organization Emblem Detector
       const detectOrgEmblem = (titleStr = '', catStr = '') => {
@@ -184,36 +184,36 @@ export default function PostEditorPage() {
       // Draw One Compact Organization Emblem Pill Tag (Top Right)
       const emblem = detectOrgEmblem(canvasEngTitle, form.category);
       if (emblem) {
-        ctx.font = '900 16px sans-serif';
+        ctx.font = '900 20px sans-serif';
         const labelText = `${emblem.symbol} ${emblem.code}`;
         const pillTextWidth = ctx.measureText(labelText).width;
-        const pillW = pillTextWidth + 36;
+        const pillW = pillTextWidth + 44;
         const pillX = width - 75 - pillW;
 
         ctx.shadowColor = emblem.primaryColor;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 12;
         ctx.fillStyle = emblem.bgCircle;
         ctx.strokeStyle = emblem.primaryColor;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         if (ctx.roundRect) {
           ctx.beginPath();
-          ctx.roundRect(pillX, 65, pillW, 44, 22);
+          ctx.roundRect(pillX, 65, pillW, 52, 26);
           ctx.fill();
           ctx.stroke();
         }
         ctx.shadowBlur = 0;
 
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(labelText, pillX + 18, 92);
+        ctx.fillText(labelText, pillX + 22, 97);
       }
 
-      // Text wrapping & auto-fit font scaling function
+      // Text wrapping & auto-fit font scaling function (HUGE FONT SIZES FOR MAXIMUM MOBILE CARD VISIBILITY)
       const wrapText = (context, text, x, y, lineGap, maxW, startFontSize) => {
         let fontSize = startFontSize;
-        if (text.length > 60) fontSize = Math.max(34, startFontSize - 10);
-        else if (text.length > 40) fontSize = Math.max(38, startFontSize - 6);
+        if (text.length > 55) fontSize = Math.max(58, startFontSize - 20);
+        else if (text.length > 35) fontSize = Math.max(68, startFontSize - 12);
 
-        context.font = `800 ${fontSize}px sans-serif`;
+        context.font = `900 ${fontSize}px sans-serif`;
         const words = text.split(' ');
         let line = '';
         let currentY = y;
@@ -233,21 +233,21 @@ export default function PostEditorPage() {
         return currentY;
       };
 
-      // Draw Main English Title with Drop Shadow
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-      ctx.shadowBlur = 12;
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 3;
+      // Draw Main English Title with High-Contrast Drop Shadow (HUGE 84px FONT)
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetX = 3;
+      ctx.shadowOffsetY = 4;
       ctx.fillStyle = pillBg;
 
-      let textY = 225;
-      textY = wrapText(ctx, canvasEngTitle.toUpperCase(), 75, textY, 62, 1050, 48);
+      let textY = 240;
+      textY = wrapText(ctx, canvasEngTitle.toUpperCase(), 75, textY, 92, 1050, 84);
 
-      // Draw Hindi Subtitle
-      textY += 60;
+      // Draw Hindi Subtitle (56px FONT)
+      textY += 70;
       ctx.fillStyle = '#ffffff';
-      ctx.shadowBlur = 8;
-      textY = wrapText(ctx, canvasHindiTitle, 75, textY, 50, 1050, 36);
+      ctx.shadowBlur = 14;
+      textY = wrapText(ctx, canvasHindiTitle, 75, textY, 70, 1050, 56);
 
       // Reset shadow for badges
       ctx.shadowColor = 'transparent';
@@ -255,33 +255,33 @@ export default function PostEditorPage() {
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
 
-      // Draw Bottom Badges
-      textY += 70;
+      // Draw Bottom Badges (Enlarged for Mobile Visibility)
+      textY += 60;
       const drawBadge = (label, x, y, bgColor, textColor = '#0f172a') => {
-        ctx.font = '800 17px sans-serif';
+        ctx.font = '900 23px sans-serif';
         const textWidth = ctx.measureText(label).width;
-        const paddingH = 22;
-        const paddingV = 11;
+        const paddingH = 26;
+        const paddingV = 14;
         const badgeW = textWidth + paddingH * 2;
-        const badgeH = 17 + paddingV * 2;
+        const badgeH = 23 + paddingV * 2;
 
         ctx.fillStyle = bgColor;
         if (ctx.roundRect) {
           ctx.beginPath();
-          ctx.roundRect(x, y - 20, badgeW, badgeH, 12);
+          ctx.roundRect(x, y - 24, badgeW, badgeH, 14);
           ctx.fill();
         } else {
-          ctx.fillRect(x, y - 20, badgeW, badgeH);
+          ctx.fillRect(x, y - 24, badgeW, badgeH);
         }
 
         ctx.fillStyle = textColor;
-        ctx.fillText(label, x + paddingH, y + 8);
+        ctx.fillText(label, x + paddingH, y + 10);
         return badgeW;
       };
 
       const w1 = drawBadge('✔ OFFICIAL FORM', 75, textY, pillBg, '#0f172a');
-      const w2 = drawBadge('⚡ DIRECT LINK', 75 + w1 + 18, textY, '#10b981', '#ffffff');
-      drawBadge('📄 NOTIFICATION PDF', 75 + w1 + 18 + w2 + 18, textY, 'rgba(255, 255, 255, 0.2)', '#ffffff');
+      const w2 = drawBadge('⚡ DIRECT LINK', 75 + w1 + 22, textY, '#10b981', '#ffffff');
+      drawBadge('📄 NOTIFICATION PDF', 75 + w1 + 22 + w2 + 22, textY, 'rgba(255, 255, 255, 0.22)', '#ffffff');
     }
   }, [canvasEngTitle, canvasHindiTitle, canvasTheme, form.category]);
 

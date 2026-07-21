@@ -89,21 +89,21 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
         p: { xs: 1.5, md: 2 },
         '&:last-child': { pb: { xs: 1.5, md: 2 } }
       }}>
-        <Box sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ mb: 1.2, display: 'flex', alignItems: 'center' }}>
           <Chip 
             label={post.category} 
             size="small" 
             sx={{ 
-              fontWeight: 800,
-              fontSize: '0.7rem',
+              fontWeight: 850,
+              fontSize: '0.78rem',
               letterSpacing: '0.04em',
               textTransform: 'uppercase',
               bgcolor: `${categoryColor}18`,
               color: categoryColor,
-              border: `1.5px solid ${categoryColor}45`,
+              border: `1.5px solid ${categoryColor}50`,
               borderRadius: '8px',
-              height: 24,
-              px: 0.8,
+              height: 26,
+              px: 1,
             }} 
           />
         </Box>
@@ -112,17 +112,17 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
           variant={headingLevel}
           component={headingLevel}
           sx={{ 
-            fontWeight: 800,
-            fontSize: { xs: '1.05rem', sm: '1.12rem', md: '1.2rem' },
+            fontWeight: 850,
+            fontSize: { xs: '1.12rem', sm: '1.2rem', md: '1.28rem' },
             lineHeight: 1.35,
             letterSpacing: '-0.025em',
-            mb: 0.8,
+            mb: 1,
             color: '#0f172a',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            minHeight: { xs: '2.4em', md: '2.4em' },
+            minHeight: { xs: '2.5em', md: '2.5em' },
             transition: 'color 0.2s ease-in-out',
             '&:hover': {
               color: 'primary.main',
@@ -135,9 +135,9 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
         <Typography 
           variant="body2" 
           sx={{ 
-            mb: 1.5,
-            fontSize: { xs: '0.82rem', md: '0.88rem' },
-            lineHeight: 1.55,
+            mb: 2,
+            fontSize: { xs: '0.88rem', md: '0.94rem' },
+            lineHeight: 1.6,
             color: '#475569',
             display: '-webkit-box',
             WebkitLineClamp: { xs: 2, md: 2 },
@@ -149,7 +149,7 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
           {post.excerpt}
         </Typography>
         
-        <Box sx={{ mt: 'auto', pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ mt: 'auto', pt: 1.2, borderTop: '1px solid', borderColor: 'divider' }}>
           <Box 
             sx={{ 
               display: 'flex', 
@@ -157,24 +157,24 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
               alignItems: 'center',
             }}
           >
-            <Box sx={{ display: 'flex', gap: { xs: 0.5, md: 1 }, alignItems: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-                <CalendarToday sx={{ fontSize: { xs: 10, md: 12 }, color: 'text.secondary' }} />
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: { xs: '0.65rem', md: '0.75rem' } }}>
+            <Box sx={{ display: 'flex', gap: { xs: 1, md: 1.5 }, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                <CalendarToday sx={{ fontSize: { xs: 12, md: 14 }, color: 'text.secondary' }} />
+                <Typography variant="caption" sx={{ color: '#64748b', fontSize: { xs: '0.72rem', md: '0.8rem' }, fontWeight: 600 }}>
                   {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-                <AccessTime sx={{ fontSize: { xs: 10, md: 12 }, color: 'text.secondary' }} />
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: { xs: '0.65rem', md: '0.75rem' } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                <AccessTime sx={{ fontSize: { xs: 12, md: 14 }, color: 'text.secondary' }} />
+                <Typography variant="caption" sx={{ color: '#64748b', fontSize: { xs: '0.72rem', md: '0.8rem' }, fontWeight: 600 }}>
                   {post.readingTime || 5}m
                 </Typography>
               </Box>
             </Box>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-              <Visibility sx={{ fontSize: { xs: 10, md: 12 }, color: 'text.secondary' }} />
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: { xs: '0.65rem', md: '0.75rem' } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+              <Visibility sx={{ fontSize: { xs: 12, md: 14 }, color: 'text.secondary' }} />
+              <Typography variant="caption" sx={{ color: '#64748b', fontSize: { xs: '0.72rem', md: '0.8rem' }, fontWeight: 700 }}>
                 {post.views || 0}
               </Typography>
             </Box>
