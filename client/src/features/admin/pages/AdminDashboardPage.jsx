@@ -106,7 +106,8 @@ export default function AdminDashboardPage() {
 
   const [successMsg, setSuccessMsg] = useState('');
   const [indexLoadingId, setIndexLoadingId] = useState(null);
-  const [shareLoadingId, setShareLoadingId] = useState(null);
+  const [tgLoadingId, setTgLoadingId] = useState(null);
+  const [waLoadingId, setWaLoadingId] = useState(null);
 
   async function handleIndexPing(postId) {
     setIndexLoadingId(postId);
@@ -129,41 +130,49 @@ export default function AdminDashboardPage() {
     }
   }
 
-  async function handleShareAll(postId) {
-    setShareLoadingId(postId);
+  async function handleTelegramShare(postId) {
+    setTgLoadingId(postId);
     setError('');
     setSuccessMsg('');
     try {
-      // Send to Telegram and WhatsApp simultaneously
-      const [tgRes, waRes] = await Promise.allSettled([
-        request(`/api/admin/posts/${postId}/telegram-share`, { method: 'POST' }),
-        request(`/api/admin/posts/${postId}/whatsapp-share`, { method: 'POST' }),
-      ]);
-
-      const tgOk = tgRes.status === 'fulfilled' && tgRes.value?.success;
-      const waOk = waRes.status === 'fulfilled' && waRes.value?.success;
-
-      if (tgOk && waOk) {
-        addToast('✅ Telegram + WhatsApp dono pe post ho gaya!', 'success');
-        setSuccessMsg('✅ Telegram + WhatsApp dono pe post ho gaya!');
-      } else if (tgOk) {
-        const waMsg = waRes.status === 'fulfilled' ? waRes.value?.message : waRes.reason?.message;
-        addToast(`✅ Telegram done! ⚠️ WhatsApp: ${waMsg || 'failed'}`, 'warning');
-        setSuccessMsg(`Telegram done. WhatsApp: ${waMsg || 'failed'}`);
-      } else if (waOk) {
-        const tgMsg = tgRes.status === 'fulfilled' ? tgRes.value?.message : tgRes.reason?.message;
-        addToast(`⚠️ Telegram: ${tgMsg || 'failed'} | ✅ WhatsApp done!`, 'warning');
-        setSuccessMsg(`WhatsApp done. Telegram: ${tgMsg || 'failed'}`);
+      const res = await request(`/api/admin/posts/${postId}/telegram-share`, { method: 'POST' });
+      if (res.success) {
+        addToast(res.message || '✅ Telegram Channel pe post ho gaya!', 'success');
+        setSuccessMsg(res.message || 'Telegram pe post ho gaya!');
       } else {
-        const tgMsg = tgRes.status === 'fulfilled' ? tgRes.value?.message : tgRes.reason?.message;
-        addToast(`❌ Dono fail: Telegram=${tgMsg || 'error'}`, 'error');
-        setError(`Share failed. Telegram: ${tgMsg || 'error'}`);
+        addToast(res.message || 'Telegram sharing failed.', 'error');
+        setError(res.message || 'Telegram sharing failed.');
       }
     } catch (err) {
-      addToast(err.message || 'Share failed', 'error');
-      setError(err.message || 'Share failed');
+      addToast(err.message || 'Failed to share to Telegram', 'error');
+      setError(err.message || 'Failed to share to Telegram');
     } finally {
-      setShareLoadingId(null);
+      setTgLoadingId(null);
+    }
+  }
+
+  async function handleWhatsappShare(postId) {
+    setWaLoadingId(postId);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const res = await request(`/api/admin/posts/${postId}/whatsapp-share`, { method: 'POST' });
+      if (res.success) {
+        // Open WhatsApp Web with pre-filled message so admin can send to channel
+        if (res.shareUrl) {
+          window.open(res.shareUrl, '_blank', 'noopener,noreferrer');
+        }
+        addToast('✅ WhatsApp Web khul gaya — Channel pe send karo!', 'success');
+        setSuccessMsg('WhatsApp Web open hua — channel me paste karke send karo!');
+      } else {
+        addToast(res.message || 'WhatsApp sharing failed.', 'error');
+        setError(res.message || 'WhatsApp sharing failed.');
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to share to WhatsApp', 'error');
+      setError(err.message || 'Failed to share to WhatsApp');
+    } finally {
+      setWaLoadingId(null);
     }
   }
 
@@ -517,25 +526,48 @@ export default function AdminDashboardPage() {
                             </Button>
                           )}
                           {post.status === 'published' && (
-                            <Button
-                              size="small"
-                              disabled={shareLoadingId === post._id}
-                              onClick={() => handleShareAll(post._id)}
-                              sx={{
-                                minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 700,
-                                color: '#7c3aed', borderRadius: 1.5,
-                                border: '1px solid #ede9fe',
-                                '&:hover': { bgcolor: '#F5F3FF', borderColor: '#7c3aed' },
-                                display: 'flex', alignItems: 'center', gap: 0.4,
-                              }}
-                            >
-                              {shareLoadingId === post._id ? (
-                                <CircularProgress size={12} color="inherit" sx={{ mr: 0.3 }} />
-                              ) : (
-                                <span style={{ fontSize: '13px' }}>📤</span>
-                              )}
-                              Share
-                            </Button>
+                            <>
+                              {/* WhatsApp — opens WhatsApp Web with pre-filled message */}
+                              <Button
+                                size="small"
+                                disabled={waLoadingId === post._id}
+                                onClick={() => handleWhatsappShare(post._id)}
+                                sx={{
+                                  minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600,
+                                  color: '#16a34a', borderRadius: 1.5,
+                                  '&:hover': { bgcolor: '#F0FDF4' }
+                                }}
+                              >
+                                {waLoadingId === post._id ? (
+                                  <CircularProgress size={12} color="inherit" sx={{ mr: 0.3 }} />
+                                ) : (
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '4px' }}>
+                                    <path d="M17.472 14.382C17.11 14.201 15.33 13.325 14.998 13.205C14.667 13.085 14.426 13.025 14.185 13.386C13.944 13.747 13.252 14.56 13.042 14.801C12.831 15.042 12.62 15.072 12.259 14.891C11.898 14.71 10.736 14.33 9.359 13.102C8.28 12.14 7.551 10.952 7.34 10.591C7.129 10.23 7.318 10.035 7.499 9.855C7.662 9.693 7.861 9.432 8.042 9.221C8.223 9.01 8.283 8.86 8.403 8.619C8.524 8.378 8.464 8.167 8.374 7.986C8.284 7.805 7.561 6.031 7.26 5.308C6.967 4.604 6.67 4.7 6.452 4.689C6.246 4.679 6.005 4.678 5.764 4.678C5.523 4.678 5.132 4.768 4.801 5.129C4.47 5.49 3.538 6.362 3.538 8.138C3.538 9.914 4.831 11.629 5.012 11.87C5.193 12.111 7.561 15.748 11.18 17.313C12.041 17.684 12.712 17.907 13.237 18.074C14.101 18.349 14.888 18.31 15.512 18.217C16.208 18.113 17.653 17.342 17.954 16.499C18.255 15.656 18.255 14.934 18.165 14.783C18.075 14.633 17.834 14.543 17.472 14.382Z" fill="currentColor"/>
+                                    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12C2 13.891 2.525 15.66 3.438 17.168L2.05 21.737L6.758 20.395C8.217 21.421 9.99 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM4.011 12C4.011 7.588 7.588 4.011 12 4.011C16.412 4.011 19.989 7.588 19.989 12C19.989 16.412 16.412 19.989 12 19.989C10.285 19.989 8.704 19.447 7.411 18.528L4.629 19.324L5.448 16.604C4.536 15.289 4.011 13.705 4.011 12Z" fill="currentColor"/>
+                                  </svg>
+                                )}
+                                WA
+                              </Button>
+
+                              {/* Telegram — auto-posts to channel */}
+                              <Button
+                                size="small"
+                                disabled={tgLoadingId === post._id}
+                                onClick={() => handleTelegramShare(post._id)}
+                                sx={{
+                                  minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600,
+                                  color: '#2563eb', borderRadius: 1.5,
+                                  '&:hover': { bgcolor: '#EFF6FF' }
+                                }}
+                              >
+                                {tgLoadingId === post._id ? (
+                                  <CircularProgress size={12} color="inherit" sx={{ mr: 0.3 }} />
+                                ) : (
+                                  <Forum sx={{ fontSize: '0.9rem', mr: 0.3 }} />
+                                )}
+                                TG
+                              </Button>
+                            </>
                           )}
                           <Button component={Link} to={`/admin/posts/${post._id}/edit`} size="small"
                             sx={{ minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600, color: '#4F46E5', borderRadius: 1.5, '&:hover': { bgcolor: '#EEF2FF' } }}
