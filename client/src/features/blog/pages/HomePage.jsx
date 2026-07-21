@@ -913,11 +913,13 @@ export default function HomePage() {
                       sx={{
                         bgcolor: 'primary.main',
                         color: 'white',
-                        fontWeight: 700,
+                        fontWeight: 800,
                         fontSize: '0.75rem',
-                        borderRadius: '6px',
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        borderRadius: '8px',
                         px: 1,
-                        height: 26,
+                        height: 28,
                       }}
                     />
                   </Box>
@@ -925,13 +927,14 @@ export default function HomePage() {
                     <Typography
                       variant="h1"
                       sx={{
-                        fontWeight: 800,
+                        fontWeight: 900,
                         mb: 1.5,
-                        fontSize: { xs: '1.35rem', sm: '1.7rem', md: '2.1rem' },
-                        lineHeight: 1.3,
-                        color: '#111827',
-                        letterSpacing: '-0.03em',
-                        '&:hover': { opacity: 0.85 }
+                        fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
+                        lineHeight: 1.25,
+                        color: '#0f172a',
+                        letterSpacing: '-0.035em',
+                        transition: 'color 0.2s ease-in-out',
+                        '&:hover': { color: 'primary.main' }
                       }}
                     >
                       {featuredPost.title}

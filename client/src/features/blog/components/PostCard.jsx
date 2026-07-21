@@ -89,19 +89,21 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
         p: { xs: 1.5, md: 2 },
         '&:last-child': { pb: { xs: 1.5, md: 2 } }
       }}>
-        <Box sx={{ mb: 0.8, display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
           <Chip 
             label={post.category} 
             size="small" 
             sx={{ 
-              fontWeight: 700,
-              fontSize: '0.68rem',
-              bgcolor: `${categoryColor}15`,
+              fontWeight: 800,
+              fontSize: '0.7rem',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              bgcolor: `${categoryColor}18`,
               color: categoryColor,
-              border: `1px solid ${categoryColor}40`,
-              borderRadius: '6px',
-              height: 22,
-              px: 0.5,
+              border: `1.5px solid ${categoryColor}45`,
+              borderRadius: '8px',
+              height: 24,
+              px: 0.8,
             }} 
           />
         </Box>
@@ -110,17 +112,18 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
           variant={headingLevel}
           component={headingLevel}
           sx={{ 
-            fontWeight: 700,
-            fontSize: { xs: '0.95rem', md: '1.1rem' },
-            lineHeight: 1.3,
-            mb: 0.5,
-            color: 'text.primary',
+            fontWeight: 800,
+            fontSize: { xs: '1.05rem', sm: '1.12rem', md: '1.2rem' },
+            lineHeight: 1.35,
+            letterSpacing: '-0.025em',
+            mb: 0.8,
+            color: '#0f172a',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            minHeight: { xs: '2.2em', md: '2.2em' },
-            transition: 'color 0.2s',
+            minHeight: { xs: '2.4em', md: '2.4em' },
+            transition: 'color 0.2s ease-in-out',
             '&:hover': {
               color: 'primary.main',
             }
@@ -133,11 +136,11 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
           variant="body2" 
           sx={{ 
             mb: 1.5,
-            fontSize: { xs: '0.8rem', md: '0.875rem' },
-            lineHeight: 1.5,
-            color: 'text.secondary',
+            fontSize: { xs: '0.82rem', md: '0.88rem' },
+            lineHeight: 1.55,
+            color: '#475569',
             display: '-webkit-box',
-            WebkitLineClamp: { xs: 1, md: 2 },
+            WebkitLineClamp: { xs: 2, md: 2 },
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
             flex: 1,
