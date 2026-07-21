@@ -106,8 +106,10 @@ export default function AdminDashboardPage() {
 
   const [successMsg, setSuccessMsg] = useState('');
   const [indexLoadingId, setIndexLoadingId] = useState(null);
-  const [tgLoadingId, setTgLoadingId] = useState(null);
-  const [waLoadingId, setWaLoadingId] = useState(null);
+  const [loadingMap, setLoadingMap] = useState({});
+
+  const setLoading = (key, val) => setLoadingMap(prev => ({ ...prev, [key]: val }));
+  const isLoading = (key) => !!loadingMap[key];
 
   async function handleIndexPing(postId) {
     setIndexLoadingId(postId);
@@ -131,7 +133,7 @@ export default function AdminDashboardPage() {
   }
 
   async function handleTelegramShare(postId) {
-    setTgLoadingId(postId);
+    setLoading(`${postId}-tg`, true);
     setError('');
     setSuccessMsg('');
     try {
@@ -147,18 +149,17 @@ export default function AdminDashboardPage() {
       addToast(err.message || 'Failed to share to Telegram', 'error');
       setError(err.message || 'Failed to share to Telegram');
     } finally {
-      setTgLoadingId(null);
+      setLoading(`${postId}-tg`, false);
     }
   }
 
   async function handleWhatsappShare(postId) {
-    setWaLoadingId(postId);
+    setLoading(`${postId}-wa`, true);
     setError('');
     setSuccessMsg('');
     try {
       const res = await request(`/api/admin/posts/${postId}/whatsapp-share`, { method: 'POST' });
       if (res.success) {
-        // Open WhatsApp Web with pre-filled message so admin can send to channel
         if (res.shareUrl) {
           window.open(res.shareUrl, '_blank', 'noopener,noreferrer');
         }
@@ -172,7 +173,7 @@ export default function AdminDashboardPage() {
       addToast(err.message || 'Failed to share to WhatsApp', 'error');
       setError(err.message || 'Failed to share to WhatsApp');
     } finally {
-      setWaLoadingId(null);
+      setLoading(`${postId}-wa`, false);
     }
   }
 
@@ -530,7 +531,7 @@ export default function AdminDashboardPage() {
                               {/* WhatsApp — opens WhatsApp Web with pre-filled message */}
                               <Button
                                 size="small"
-                                disabled={waLoadingId === post._id}
+                                disabled={isLoading(`${post._id}-wa`)}
                                 onClick={() => handleWhatsappShare(post._id)}
                                 sx={{
                                   minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600,
@@ -538,7 +539,7 @@ export default function AdminDashboardPage() {
                                   '&:hover': { bgcolor: '#F0FDF4' }
                                 }}
                               >
-                                {waLoadingId === post._id ? (
+                                {isLoading(`${post._id}-wa`) ? (
                                   <CircularProgress size={12} color="inherit" sx={{ mr: 0.3 }} />
                                 ) : (
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '4px' }}>
@@ -552,7 +553,7 @@ export default function AdminDashboardPage() {
                               {/* Telegram — auto-posts to channel */}
                               <Button
                                 size="small"
-                                disabled={tgLoadingId === post._id}
+                                disabled={isLoading(`${post._id}-tg`)}
                                 onClick={() => handleTelegramShare(post._id)}
                                 sx={{
                                   minWidth: 0, px: 1.2, py: 0.4, fontSize: '0.75rem', fontWeight: 600,
@@ -560,7 +561,7 @@ export default function AdminDashboardPage() {
                                   '&:hover': { bgcolor: '#EFF6FF' }
                                 }}
                               >
-                                {tgLoadingId === post._id ? (
+                                {isLoading(`${post._id}-tg`) ? (
                                   <CircularProgress size={12} color="inherit" sx={{ mr: 0.3 }} />
                                 ) : (
                                   <Forum sx={{ fontSize: '0.9rem', mr: 0.3 }} />
