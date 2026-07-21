@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { calculateSeoScore } = require('../../shared/utils/seoAuditor');
 require('../liveAlerts/liveAlert.model');
+require('./webstory.model');
 
 const blogPostSchema = new mongoose.Schema(
   {

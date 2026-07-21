@@ -431,7 +431,20 @@ export default function PostEditorPage() {
     setIsBoostingGSC(true);
     setError('');
     try {
-      const res = await request(`/api/admin/posts/${id}/gsc-boost`, { method: 'POST' });
+      const payload = {
+        title: form.title,
+        content: form.content,
+        focusKeyword: form.focusKeyword,
+        category: form.category,
+        slug: form.slug,
+        seoTitle: form.seoTitle,
+        seoDescription: form.seoDescription,
+        tags: form.tags
+      };
+      const res = await request(`/api/admin/posts/${id}/gsc-boost`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
       if (res.success) {
         if (res.data) {
           updateField('content', res.data.content);

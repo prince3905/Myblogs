@@ -887,6 +887,16 @@ async function boostPostWithGSC(req, res) {
       return res.status(404).json({ success: false, message: 'Post not found' });
     }
 
+    if (req.body && typeof req.body === 'object') {
+      if (req.body.title) post.title = req.body.title;
+      if (req.body.content) post.content = req.body.content;
+      if (req.body.focusKeyword) post.focusKeyword = req.body.focusKeyword;
+      if (req.body.category) post.category = req.body.category;
+      if (req.body.slug) post.slug = req.body.slug;
+      if (req.body.seoTitle) post.seoTitle = req.body.seoTitle;
+      if (req.body.seoDescription) post.seoDescription = req.body.seoDescription;
+    }
+
     const catSlug = (post.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
     const pagePath = `/blog/${catSlug}/${post.slug}`;
 
