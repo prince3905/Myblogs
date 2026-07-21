@@ -1,1 +1,0 @@
-import{ag as o,k as s,a1 as i,a6 as u,aj as t,aa as n}from"./index-DI6rG3_1.js";import{u as l}from"./usePost-CLVJ7z3b.js";import"./vendor-pdf-Dka_QDh5.js";function f(){const{slug:a}=o(),{post:r,loading:e}=l(a);return e?s.jsx(i,{sx:{display:"flex",justifyContent:"center",py:8},children:s.jsx(u,{})}):r?s.jsx(t,{to:n(r),replace:!0}):s.jsx(t,{to:"/",replace:!0})}export{f as default};

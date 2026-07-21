@@ -79,51 +79,108 @@ export default function PostEditorPage() {
       // Clear
       ctx.clearRect(0, 0, width, height);
 
-      // Gradient background
+      // Gradient background theme presets
       const grad = ctx.createLinearGradient(0, 0, width, height);
+      let accentGlow = '#38bdf8';
+      let pillBg = '#facc15';
+
       if (canvasTheme === 'bank') {
         grad.addColorStop(0, '#0f172a');
         grad.addColorStop(1, '#1e3a8a');
+        accentGlow = '#38bdf8';
+        pillBg = '#facc15';
       } else if (canvasTheme === 'police') {
         grad.addColorStop(0, '#450a0a');
         grad.addColorStop(1, '#991b1b');
+        accentGlow = '#f87171';
+        pillBg = '#fef08a';
       } else if (canvasTheme === 'defense') {
         grad.addColorStop(0, '#090514');
         grad.addColorStop(1, '#1e1b4b');
+        accentGlow = '#a78bfa';
+        pillBg = '#c084fc';
       } else if (canvasTheme === 'orange') {
         grad.addColorStop(0, '#1e293b');
-        grad.addColorStop(1, '#c2410c');
+        grad.addColorStop(1, '#ea580c');
+        accentGlow = '#fbbf24';
+        pillBg = '#fde047';
+      } else if (canvasTheme === 'emerald') {
+        grad.addColorStop(0, '#022c22');
+        grad.addColorStop(1, '#065f46');
+        accentGlow = '#34d399';
+        pillBg = '#a7f3d0';
       } else {
         grad.addColorStop(0, '#0f051d');
-        grad.addColorStop(1, '#581c87');
+        grad.addColorStop(1, '#6b21a8');
+        accentGlow = '#e879f9';
+        pillBg = '#f0abfc';
       }
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, width, height);
 
-      // Accent diagonal split/shape to make it look premium
+      // Modern Diagonal Background Mesh Overlay
       ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
       ctx.beginPath();
-      ctx.moveTo(width * 0.55, 0);
+      ctx.moveTo(width * 0.5, 0);
       ctx.lineTo(width, 0);
       ctx.lineTo(width, height);
-      ctx.lineTo(width * 0.4, height);
+      ctx.lineTo(width * 0.35, height);
       ctx.closePath();
       ctx.fill();
 
+      // Outer Glowing Rounded Frame Inset (30px margin)
+      ctx.shadowColor = accentGlow;
+      ctx.shadowBlur = 15;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 3;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(35, 35, width - 70, height - 70, 20);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0; // reset shadow
+
       // Brand Title text (Top Left)
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      ctx.shadowBlur = 8;
       ctx.fillStyle = '#10b981';
       ctx.font = '900 28px sans-serif';
-      ctx.fillText('DIGITAL HOME BLOG', 80, 80);
+      ctx.fillText('DIGITAL HOME BLOG', 75, 85);
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-      ctx.font = '500 18px sans-serif';
-      ctx.fillText('Official Job Alert Portal', 80, 115);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.font = '600 17px sans-serif';
+      ctx.fillText('Official Portal Updates • 2026', 75, 115);
 
-      // Text wrapping function helper
-      const wrapText = (context, text, x, y, lineGap, maxW) => {
+      // Category Pill Tag (Top Right)
+      const catLabel = (form.category || 'Sarkari Jobs & Exams').toUpperCase();
+      ctx.font = '800 15px sans-serif';
+      const catWidth = ctx.measureText(catLabel).width;
+      const catPillW = catWidth + 32;
+      const catPillX = width - 75 - catPillW;
+      
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.strokeStyle = accentGlow;
+      ctx.lineWidth = 1.5;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(catPillX, 68, catPillW, 36, 18);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(catLabel, catPillX + 16, 91);
+
+      // Text wrapping & auto-fit font scaling function
+      const wrapText = (context, text, x, y, lineGap, maxW, startFontSize) => {
+        let fontSize = startFontSize;
+        if (text.length > 60) fontSize = Math.max(34, startFontSize - 10);
+        else if (text.length > 40) fontSize = Math.max(38, startFontSize - 6);
+
+        context.font = `800 ${fontSize}px sans-serif`;
         const words = text.split(' ');
         let line = '';
         let currentY = y;
+
         for (let n = 0; n < words.length; n++) {
           let testLine = line + words[n] + ' ';
           let metrics = context.measureText(testLine);
@@ -139,47 +196,57 @@ export default function PostEditorPage() {
         return currentY;
       };
 
-      // Draw English Title (Main)
-      ctx.fillStyle = '#facc15';
-      ctx.font = '800 52px sans-serif';
-      let textY = 230;
-      textY = wrapText(ctx, canvasEngTitle.toUpperCase(), 80, textY, 65, 1040);
+      // Draw Main English Title with Drop Shadow
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 3;
+      ctx.fillStyle = pillBg;
+
+      let textY = 225;
+      textY = wrapText(ctx, canvasEngTitle.toUpperCase(), 75, textY, 62, 1050, 48);
 
       // Draw Hindi Subtitle
-      textY += 65;
+      textY += 60;
       ctx.fillStyle = '#ffffff';
-      ctx.font = '800 38px sans-serif';
-      textY = wrapText(ctx, canvasHindiTitle, 80, textY, 52, 1040);
+      ctx.shadowBlur = 8;
+      textY = wrapText(ctx, canvasHindiTitle, 75, textY, 50, 1050, 36);
 
-      // Draw Badges
-      textY += 80;
-      
-      const drawBadge = (label, x, y, color) => {
-        ctx.font = '800 18px sans-serif';
+      // Reset shadow for badges
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Draw Bottom Badges
+      textY += 70;
+      const drawBadge = (label, x, y, bgColor, textColor = '#0f172a') => {
+        ctx.font = '800 17px sans-serif';
         const textWidth = ctx.measureText(label).width;
-        const paddingH = 20;
-        const paddingV = 12;
+        const paddingH = 22;
+        const paddingV = 11;
         const badgeW = textWidth + paddingH * 2;
-        const badgeH = 18 + paddingV * 2;
+        const badgeH = 17 + paddingV * 2;
 
-        ctx.fillStyle = color;
-        ctx.beginPath();
+        ctx.fillStyle = bgColor;
         if (ctx.roundRect) {
-          ctx.roundRect(x, y - 20, badgeW, badgeH, 10);
+          ctx.beginPath();
+          ctx.roundRect(x, y - 20, badgeW, badgeH, 12);
+          ctx.fill();
         } else {
-          ctx.rect(x, y - 20, badgeW, badgeH);
+          ctx.fillRect(x, y - 20, badgeW, badgeH);
         }
-        ctx.fill();
 
-        ctx.fillStyle = '#0f172a';
+        ctx.fillStyle = textColor;
         ctx.fillText(label, x + paddingH, y + 8);
         return badgeW;
       };
 
-      const w1 = drawBadge('Official Form', 80, textY, '#facc15');
-      drawBadge('Time-Saving', 80 + w1 + 20, textY, '#10b981');
+      const w1 = drawBadge('✔ OFFICIAL FORM', 75, textY, pillBg, '#0f172a');
+      const w2 = drawBadge('⚡ DIRECT LINK', 75 + w1 + 18, textY, '#10b981', '#ffffff');
+      drawBadge('📄 NOTIFICATION PDF', 75 + w1 + 18 + w2 + 18, textY, 'rgba(255, 255, 255, 0.2)', '#ffffff');
     }
-  }, [canvasEngTitle, canvasHindiTitle, canvasTheme]);
+  }, [canvasEngTitle, canvasHindiTitle, canvasTheme, form.category]);
 
   const seoAudit = useMemo(() => {
     return calculateSeoScore(form, kwData);
@@ -1873,14 +1940,14 @@ export default function PostEditorPage() {
               // Get canvas element inside DOM and trigger upload
               const canvasEl = document.querySelector('canvas[width="1200"]');
               if (canvasEl) {
-                // Convert canvas to Base64 image
-                const dataUri = canvasEl.toDataURL('image/jpeg', 0.9);
+                // Convert canvas to lightweight WebP image (< 50KB)
+                const dataUri = canvasEl.toDataURL('image/webp', 0.85);
                 setIsGeneratingCanvas(true);
-                addToast('Saving and uploading custom thumbnail... 🚀', 'info');
+                addToast('Saving and uploading custom WebP thumbnail... 🚀', 'info');
                 try {
                   const responseBlob = await fetch(dataUri);
                   const blob = await responseBlob.blob();
-                  const file = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
+                  const file = new File([blob], 'banner.webp', { type: 'image/webp' });
                   
                   const formData = new FormData();
                   formData.append('image', file);
