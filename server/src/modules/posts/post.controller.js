@@ -912,8 +912,8 @@ async function boostPostWithGSC(req, res) {
 
     // Fallback if no GSC queries yet (e.g. fresh post)
     if (queries.length === 0) {
-      const cleanTitle = post.title.replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2');
-      queries = [cleanTitle, ...(post.tags || [])];
+      const shortCleanTitle = (post.title || '').split(/[-:|(]/)[0].trim();
+      queries = [shortCleanTitle, ...(post.tags || [])];
     }
 
     const { processAIOutput, enrichWithGscQueries } = require('../ai/aiPostProcessor');

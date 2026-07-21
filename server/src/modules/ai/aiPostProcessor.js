@@ -851,10 +851,19 @@ function enrichWithGscQueries(content, title, queries = []) {
   let c = content;
   const cleanTitle = title.toLowerCase().replace(/[^a-z0-9\s]/g, '');
   
-  // Pick top 3 unique non-empty queries that are not identical to title
+  // Pick top 3 unique non-empty queries that are not identical to title and max 4 words
   const topQueries = queries
-    .map(q => String(q).trim())
-    .filter(q => q.length >= 4 && !cleanTitle.includes(q.toLowerCase()))
+    .map(q => {
+      let cleanQ = String(q || '')
+        .split(/[-:|(]/)[0]
+        .replace(/[\u0900-\u097F]/g, '')
+        .replace(/[()|:!?-]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const words = cleanQ.split(' ').filter(Boolean);
+      return words.slice(0, 4).join(' ');
+    })
+    .filter(q => q.length >= 3 && !cleanTitle.includes(q.toLowerCase()))
     .slice(0, 3);
 
   if (topQueries.length === 0) return c;
