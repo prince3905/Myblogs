@@ -8,6 +8,7 @@ const {
   deletePost,
   pingPostIndexing,
   sharePostToTelegram,
+  sharePostToWhatsapp,
   optimizePostSEO,
   boostPostWithGSC
 } = require('./post.controller');
@@ -30,6 +31,7 @@ router.put('/posts/:id', updatePost);
 router.delete('/posts/:id', deletePost);
 router.post('/posts/:id/index-ping', pingPostIndexing);
 router.post('/posts/:id/telegram-share', sharePostToTelegram);
+router.post('/posts/:id/whatsapp-share', sharePostToWhatsapp);
 router.post('/posts/:id/optimize-seo', optimizePostSEO);
 router.post('/posts/:id/gsc-boost', boostPostWithGSC);
 

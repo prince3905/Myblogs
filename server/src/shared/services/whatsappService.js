@@ -1,5 +1,81 @@
-const mongoose = require('mongoose');
-const axios = require('axios');
+function formatWhatsappBroadcastMessage(post) {
+  const title = post.title || 'New Post';
+  const category = post.category || 'Sarkari Jobs & Exams';
+  const catSlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
+  const siteUrl = process.env.SITE_URL || 'https://www.digitalhomeblog.in';
+  const url = post.canonicalUrl || `${siteUrl}/blog/${catSlug}/${post.slug}`;
+  const content = post.content || '';
+  const cleanContent = content.replace(/<[^>]*>/g, ' ');
+
+  let lastDate = 'Check Notification';
+  let qualification = '10th, 12th, Graduate / Check Details';
+  let totalPosts = 'Various Posts';
+
+  // Extract total posts
+  const postsMatch = cleanContent.match(/(?:कुल पद|Total Posts|Total Vacancy|No. of Posts|Total Vacancies)\s*:?\s*([^\n|•:<>]+)/i);
+  if (postsMatch) totalPosts = postsMatch[1].trim();
+
+  // Extract last date
+  const dateMatch = cleanContent.match(/(?:अंतिम तिथि|Last Date|last date for apply|Last Date for Apply|आवेदन की अंतिम तिथि)\s*:?\s*([^\n|•:<>]+)/i);
+  if (dateMatch) lastDate = dateMatch[1].trim();
+
+  // Extract qualification
+  const qualMatch = cleanContent.match(/(?:योग्यता|Eligibility|Qualification|Educational Qualification)\s*:?\s*([^\n|•:<>]+)/i);
+  if (qualMatch) qualification = qualMatch[1].trim();
+
+  let message = '';
+  if (category === 'Sarkari Jobs & Exams') {
+    message = `🔥 *नई सरकारी भर्ती अलर्ट! (New Job Notification)* 🔥\n\n`;
+    message += `📝 *पद का नाम:* ${title}\n`;
+    message += `📋 *योग्यता (Eligibility):* ${qualification.slice(0, 100)}\n`;
+    message += `🔢 *कुल पद (Vacancies):* ${totalPosts.slice(0, 40)}\n`;
+    message += `📅 *अंतिम तिथि (Last Date):* ${lastDate.slice(0, 30)}\n\n`;
+    message += `📚 पूरी जानकारी और ऑनलाइन आवेदन के लिए नीचे दिए गए लिंक पर क्लिक करें:\n`;
+    message += `👉 ${url}\n\n`;
+    message += `📲 *ऑफिशियल व्हाट्सएप चैनल ज्वाइन करें:* \nhttps://whatsapp.com/channel/0029VbD4hpfBA1esfvy9gY1Y`;
+  } else {
+    message = `📢 *नया आर्टिकल लाइव! (New Post Alert)* 📢\n\n`;
+    message += `💡 *शीर्षक:* ${title}\n\n`;
+    message += `🔗 *पूरा आर्टिकल पढ़ने के लिए नीचे क्लिक करें:*\n`;
+    message += `👉 ${url}\n\n`;
+    message += `📲 *व्हाट्सएप चैनल ज्वाइन करें:* \nhttps://whatsapp.com/channel/0029VbD4hpfBA1esfvy9gY1Y`;
+  }
+
+  const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+  return { message, shareUrl, url };
+}
+
+async function sendWhatsappChannelMessage(post) {
+  try {
+    const formatted = formatWhatsappBroadcastMessage(post);
+    console.log(`[WhatsApp Auto-Share] Prepared WhatsApp Channel broadcast for: "${post.title}"`);
+
+    const token = process.env.WHATSAPP_API_TOKEN;
+    const phoneId = process.env.WHATSAPP_PHONE_ID;
+    const channelId = process.env.WHATSAPP_CHANNEL_ID;
+
+    // Meta Cloud API or Webhook trigger if configured
+    if (token && (phoneId || channelId)) {
+      const targetId = channelId || phoneId;
+      console.log('[WhatsApp Auto-Share] Sending via Meta WhatsApp Cloud API...');
+      await axios.post(`https://graph.facebook.com/v19.0/${targetId}/messages`, {
+        messaging_product: 'whatsapp',
+        to: targetId,
+        type: 'text',
+        text: { body: formatted.message }
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('[WhatsApp Auto-Share] Successfully broadcasted to Meta WhatsApp Channel!');
+    }
+
+    return { success: true, message: 'WhatsApp Broadcast formatted successfully!', shareUrl: formatted.shareUrl, formattedText: formatted.message };
+  } catch (err) {
+    console.error('[WhatsApp Auto-Share] Cloud API trigger warning:', err.message);
+    const formatted = formatWhatsappBroadcastMessage(post);
+    return { success: true, shareUrl: formatted.shareUrl, formattedText: formatted.message };
+  }
+}
 
 async function sendWhatsappDraftAlert(post) {
   try {
@@ -42,4 +118,4 @@ async function sendWhatsappDraftAlert(post) {
   }
 }
 
-module.exports = { sendWhatsappDraftAlert };
+module.exports = { sendWhatsappDraftAlert, sendWhatsappChannelMessage, formatWhatsappBroadcastMessage };

@@ -406,6 +406,9 @@ async function createPost(req, res, next) {
 
       const { sendTelegramMessage } = require('../../shared/services/telegramService');
       sendTelegramMessage(post).catch(() => {});
+
+      const { sendWhatsappChannelMessage } = require('../../shared/services/whatsappService');
+      sendWhatsappChannelMessage(post).catch(() => {});
     }
 
     return res.status(201).json(post);
@@ -469,10 +472,13 @@ async function updatePost(req, res, next) {
         notifyUrl(oldUrl, 'URL_DELETED').catch(() => {});
       }
 
-      // Share to Telegram if the status just changed to published
+      // Share to Telegram & WhatsApp if status just changed to published
       if (oldStatus !== 'published') {
         const { sendTelegramMessage } = require('../../shared/services/telegramService');
         sendTelegramMessage(existing).catch(() => {});
+
+        const { sendWhatsappChannelMessage } = require('../../shared/services/whatsappService');
+        sendWhatsappChannelMessage(existing).catch(() => {});
       }
     } else if (oldStatus === 'published' && existing.status !== 'published') {
       const { notifyUrl } = require('../../shared/utils/google-indexing');
@@ -807,6 +813,31 @@ async function sharePostToTelegram(req, res) {
   }
 }
 
+async function sharePostToWhatsapp(req, res) {
+  try {
+    const post = await BlogPost.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    if (post.status !== 'published') {
+      return res.status(400).json({ success: false, message: 'Post must be published to share to WhatsApp.' });
+    }
+
+    const { sendWhatsappChannelMessage } = require('../../shared/services/whatsappService');
+    const result = await sendWhatsappChannelMessage(post);
+
+    return res.json({
+      success: true,
+      message: 'WhatsApp broadcast link prepared successfully!',
+      shareUrl: result.shareUrl,
+      formattedText: result.formattedText
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
 async function optimizePostSEO(req, res) {
   try {
     const post = await BlogPost.findById(req.params.id);
@@ -995,6 +1026,7 @@ module.exports = {
   getHomepageData,
   pingPostIndexing,
   sharePostToTelegram,
+  sharePostToWhatsapp,
   optimizePostSEO,
   boostPostWithGSC
 };

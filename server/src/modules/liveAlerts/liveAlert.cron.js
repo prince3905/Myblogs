@@ -922,13 +922,21 @@ async function publishNextQueuedPost() {
     oldestDraft.publishedAt = new Date();
     await oldestDraft.save(); // Automatically triggers Google Indexing & Two-Way linking hooks!
 
-    // Auto share to Telegram
+    // Auto share to Telegram & WhatsApp Channel
     try {
       const { sendTelegramMessage } = require('../../shared/services/telegramService');
       await sendTelegramMessage(oldestDraft);
       console.log(`[Queue Publisher] Successfully shared auto-published post to Telegram: "${oldestDraft.title}"`);
     } catch (tgErr) {
       console.error('[Queue Publisher] Failed to send Telegram message for auto-published post:', tgErr.message);
+    }
+
+    try {
+      const { sendWhatsappChannelMessage } = require('../../shared/services/whatsappService');
+      await sendWhatsappChannelMessage(oldestDraft);
+      console.log(`[Queue Publisher] Successfully shared auto-published post to WhatsApp: "${oldestDraft.title}"`);
+    } catch (waErr) {
+      console.error('[Queue Publisher] Failed to send WhatsApp message for auto-published post:', waErr.message);
     }
   } catch (err) {
     console.error('[Queue Publisher] Error during scheduled auto-publish:', err.message);
