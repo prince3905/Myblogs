@@ -1,3 +1,6 @@
+const axios = require('axios');
+const mongoose = require('mongoose');
+
 function formatWhatsappBroadcastMessage(post) {
   const title = post.title || 'New Post';
   const category = post.category || 'Sarkari Jobs & Exams';
@@ -52,26 +55,29 @@ async function sendWhatsappChannelMessage(post) {
 
     const token = process.env.WHATSAPP_API_TOKEN;
     const phoneId = process.env.WHATSAPP_PHONE_ID;
-    const channelId = process.env.WHATSAPP_CHANNEL_ID;
+    const recipientPhone = process.env.WHATSAPP_PHONE || process.env.WHATSAPP_CHANNEL_ID;
 
     // Meta Cloud API or Webhook trigger if configured
-    if (token && (phoneId || channelId)) {
-      const targetId = channelId || phoneId;
-      console.log('[WhatsApp Auto-Share] Sending via Meta WhatsApp Cloud API...');
-      await axios.post(`https://graph.facebook.com/v19.0/${targetId}/messages`, {
+    if (token && phoneId && recipientPhone) {
+      console.log(`[WhatsApp Auto-Share] Sending via Meta WhatsApp Cloud API to ${recipientPhone}...`);
+      await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
         messaging_product: 'whatsapp',
-        to: targetId,
+        recipient_type: 'individual',
+        to: recipientPhone,
         type: 'text',
         text: { body: formatted.message }
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      console.log('[WhatsApp Auto-Share] Successfully broadcasted to Meta WhatsApp Channel!');
+      console.log('[WhatsApp Auto-Share] Successfully broadcasted to Meta WhatsApp!');
     }
 
     return { success: true, message: 'WhatsApp Broadcast formatted successfully!', shareUrl: formatted.shareUrl, formattedText: formatted.message };
   } catch (err) {
-    console.error('[WhatsApp Auto-Share] Cloud API trigger warning:', err.message);
+    console.error('[WhatsApp Auto-Share] Cloud API trigger warning:', err.response?.data || err.message);
     const formatted = formatWhatsappBroadcastMessage(post);
     return { success: true, shareUrl: formatted.shareUrl, formattedText: formatted.message };
   }
