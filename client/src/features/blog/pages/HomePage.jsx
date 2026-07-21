@@ -877,19 +877,6 @@ export default function HomePage() {
                     <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>{featuredPost.category}</Typography>
                   </Box>
                 ) : null}
-                {!loading && featuredPost && (
-                  <Chip
-                    label={featuredPost.category}
-                    size="small"
-                    sx={{
-                      position: 'absolute', top: 16, left: 16,
-                      bgcolor: 'rgba(0,0,0,0.55)', color: 'white',
-                      fontWeight: 600, fontSize: '0.75rem',
-                      backdropFilter: 'blur(6px)', borderRadius: '8px',
-                      px: 1, height: 28,
-                    }}
-                  />
-                )}
               </Box>
             </Box>
  
@@ -919,6 +906,21 @@ export default function HomePage() {
                 </>
               ) : featuredPost ? (
                 <>
+                  <Box sx={{ mb: 1.5 }}>
+                    <Chip
+                      label={featuredPost.category}
+                      size="small"
+                      sx={{
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        borderRadius: '6px',
+                        px: 1,
+                        height: 26,
+                      }}
+                    />
+                  </Box>
                   <Link to={postUrl(featuredPost)} style={{ textDecoration: 'none', color: 'inherit' }}>
                     <Typography
                       variant="h1"

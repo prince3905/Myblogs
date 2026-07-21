@@ -80,21 +80,6 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
             </Typography>
           </Box>
         )}
-        <Chip 
-          label={post.category} 
-          size="small" 
-          sx={{ 
-            position: 'absolute',
-            top: 12,
-            left: 12,
-            fontWeight: 600,
-            fontSize: '0.7rem',
-            bgcolor: 'rgba(255,255,255,0.95)',
-            color: categoryColor,
-            borderRadius: '9999px',
-            px: 1,
-          }} 
-        />
       </Box>
       
       <CardContent sx={{ 
@@ -104,6 +89,23 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
         p: { xs: 1.5, md: 2 },
         '&:last-child': { pb: { xs: 1.5, md: 2 } }
       }}>
+        <Box sx={{ mb: 0.8, display: 'flex', alignItems: 'center' }}>
+          <Chip 
+            label={post.category} 
+            size="small" 
+            sx={{ 
+              fontWeight: 700,
+              fontSize: '0.68rem',
+              bgcolor: `${categoryColor}15`,
+              color: categoryColor,
+              border: `1px solid ${categoryColor}40`,
+              borderRadius: '6px',
+              height: 22,
+              px: 0.5,
+            }} 
+          />
+        </Box>
+
         <Typography 
           variant={headingLevel}
           component={headingLevel}
