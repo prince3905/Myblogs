@@ -132,19 +132,10 @@ blogPostSchema.pre('save', async function (next) {
       content = content.replace(/(?:<br\s*\/?>\s*){2,}/gi, '<br>');
       content = content.replace(/[ \t]{3,}/g, ' '); // Normalize spaces but keep line breaks
 
-      content = content.replace(/(?:<p>If you found this helpful, also check out our guide on.*?for more details.<\/p>\s*){2,}/gi, (match) => {
-        const firstMatch = match.match(/<p>If you found this helpful, also check out our guide on.*?for more details.<\/p>/i);
-        return firstMatch ? firstMatch[0] + '\n' : '';
-      });
-      content = content.replace(/(?:<p>For more information, read our article on.*?\.\s*<\/p>\s*){2,}/gi, (match) => {
-        const firstMatch = match.match(/<p>For more information, read our article on.*?\.\s*<\/p>/i);
-        return firstMatch ? firstMatch[0] + '\n' : '';
-      });
-      // Also clean up unspaced/raw repetitions if any
-      content = content.replace(/(?:If you found this helpful, also check out our guide on.*?for more details\.\s*){2,}/gi, (match) => {
-        const firstMatch = match.match(/If you found this helpful, also check out our guide on.*?for more details\./i);
-        return firstMatch ? firstMatch[0] + '\n' : '';
-      });
+      content = content.replace(/<p>If you found this helpful, also check out our guide on[^]*?for more details.<\/p>\s*/gi, '');
+      content = content.replace(/<p>For more information, read our article on[^]*?\.<\/p>\s*/gi, '');
+      content = content.replace(/If you found this helpful, also check out our guide on[^]*?for more details\.\s*/gi, '');
+      content = content.replace(/For more information, read our article on[^]*?\.\s*/gi, '');
 
       // 0. Remove any old quick highlights or promo blocks
       content = content.replace(/<div[^>]*class=["'](?:ql-table-embed\s+)?quick-highlights-box["'][^]*?<\/div>\s*<\/div>/gi, '');

@@ -152,46 +152,16 @@ function cleanContent(content, category) {
 async function addInternalLinks(content, category) {
   if (!content) return content;
   try {
-    // Strip any existing generated guide links to prevent duplicates
+    // Strip any existing artificial boilerplate guide links to keep text 100% clean
     let c = content;
     c = c.replace(/<p>If you found this helpful, also check out our guide on[^]*?for more details.<\/p>\s*/gi, '');
     c = c.replace(/<p>For more information, read our article on[^]*?\.<\/p>\s*/gi, '');
     c = c.replace(/If you found this helpful, also check out our guide on[^]*?for more details./gi, '');
     c = c.replace(/For more information, read our article on[^]*?\./gi, '');
 
-    const BlogPost = require('../posts/post.model');
-    const relatedPosts = await BlogPost.find({
-      category,
-      status: 'published',
-    }).sort({ publishedAt: -1 }).limit(3);
-
-    if (relatedPosts.length < 2) return c;
-
-    const linkPost1 = relatedPosts[0];
-    const linkPost2 = relatedPosts[1] || relatedPosts[0];
-
-    const catUrl = (linkPost1.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
-    const targetWord1 = linkPost1.title.split(' ').slice(0, 2).join(' ');
-    const linkHtml1 = '<a href="/blog/' + catUrl + '/' + linkPost1.slug + '">' + targetWord1 + '</a>';
-
-    const firstThird = c.indexOf('</p>', c.length / 3);
-    if (firstThird > 0) {
-      const insertPos = firstThird + 4;
-      c = c.slice(0, insertPos) + '\n<p>If you found this helpful, also check out our guide on ' + linkHtml1 + ' for more details.</p>\n' + c.slice(insertPos);
-    }
-
-    const catUrl2 = (linkPost2.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
-    const targetWord2 = linkPost2.title.split(' ').slice(0, 2).join(' ');
-    const linkHtml2 = '<a href="/blog/' + catUrl2 + '/' + linkPost2.slug + '">' + targetWord2 + '</a>';
-    const twoThirds = c.indexOf('</p>', (c.length * 2) / 3);
-    if (twoThirds > 0) {
-      const insertPos2 = twoThirds + 4;
-      c = c.slice(0, insertPos2) + '\n<p>For more information, read our article on ' + linkHtml2 + '.</p>\n' + c.slice(insertPos2);
-    }
-
     return c;
   } catch (e) {
-    console.warn('Internal linking failed:', e.message);
+    console.warn('Internal linking cleanup failed:', e.message);
     return content;
   }
 }
@@ -648,10 +618,16 @@ async function processAIOutput(data) {
   processedContent = validateHeadingHierarchy(processedContent);
   processedContent = cleanContent(processedContent, category);
 
+  // Extract clean short title (max 6 words before dash/colon) for GEO definitions and tables
+  const shortCleanTitle = (title || '')
+    .split(/[-:|(]/)[0]
+    .replace(/\s+/g, ' ')
+    .trim() || title;
+
   // Concept Definition Check (GEO)
   const definitionsRegex = /is\s+defined\s+as|refers\s+to|means\s+that|is\s+the\s+process\s+of|is\s+a\s+type\s+of|defined\s+as|refers\s+as|ka\s+matlab\s+hai|ka\s+arth\s+hai|means\s+is|meaning\s+is/i;
   if (!definitionsRegex.test(stripHtml(processedContent).toLowerCase())) {
-    const defParagraph = `\n<p>अधिसूचना विवरण के अनुसार: <strong>${title} refers to</strong> the official recruitment updates, eligibility criteria, and selection notification released by the conducting board. Candidates are advised to read the full notification and verify all parameters carefully.</p>\n`;
+    const defParagraph = `\n<p>अधिसूचना विवरण के अनुसार: <strong>${shortCleanTitle} refers to</strong> official recruitment updates, eligibility criteria, and selection notification released by the conducting board. Candidates are advised to read the full notification and verify all parameters carefully.</p>\n`;
     const firstP = processedContent.indexOf('</p>');
     if (firstP > 0) {
       processedContent = processedContent.slice(0, firstP + 4) + defParagraph + processedContent.slice(firstP + 4);
@@ -758,6 +734,31 @@ async function processAIOutput(data) {
       } else {
         processedContent = processedContent + tableHtml;
       }
+    }
+  }
+
+  if (category === 'Sarkari Jobs & Exams' && !processedContent.includes('<h2>महत्वपूर्ण लिंक्स')) {
+    const appUrl = data.applyOnlineUrl || data.officialWebsiteUrl || 'https://sewayojna.up.nic.in/';
+    const notifUrl = data.officialNotificationUrl || '/job-alerts';
+    const webUrl = data.officialWebsiteUrl || 'https://upsrtc.up.gov.in/';
+
+    const linksBlock = `
+<h2>महत्वपूर्ण लिंक्स</h2>
+<div class="ql-table-embed">
+<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">
+<a href="${appUrl}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Apply Online (यहाँ क्लिक करें)</a>
+<a href="${notifUrl}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Download Official Notification (देखें अभी)</a>
+<a href="${webUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Official Website (विजिट करें)</a>
+<a href="/tools" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Photo & Sign Resizer Tools (यहाँ क्लिक करें)</a>
+</div>
+</div>
+`;
+
+    const faqIdx = processedContent.indexOf('<h2>अक्सर पूछे जाने वाले सवाल');
+    if (faqIdx > 0) {
+      processedContent = processedContent.slice(0, faqIdx) + linksBlock + '\n' + processedContent.slice(faqIdx);
+    } else {
+      processedContent = processedContent + '\n' + linksBlock;
     }
   }
 
