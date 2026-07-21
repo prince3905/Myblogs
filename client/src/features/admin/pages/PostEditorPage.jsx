@@ -145,91 +145,66 @@ export default function PostEditorPage() {
       ctx.shadowBlur = 8;
       ctx.fillStyle = '#10b981';
       ctx.font = '900 28px sans-serif';
-      ctx.fillText('DIGITAL HOME BLOG', 75, 85);
+      ctx.fillText('DIGITAL HOME BLOG', 75, 80);
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.font = '600 17px sans-serif';
-      ctx.fillText('Official Portal Updates • 2026', 75, 115);
-
-      // Category Pill Tag (Top Right)
-      const catLabel = (form.category || 'Sarkari Jobs & Exams').toUpperCase();
-      ctx.font = '800 15px sans-serif';
-      const catWidth = ctx.measureText(catLabel).width;
-      const catPillW = catWidth + 32;
-      const catPillX = width - 75 - catPillW;
-      
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.strokeStyle = accentGlow;
-      ctx.lineWidth = 1.5;
-      if (ctx.roundRect) {
-        ctx.beginPath();
-        ctx.roundRect(catPillX, 68, catPillW, 36, 18);
-        ctx.fill();
-        ctx.stroke();
-      }
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(catLabel, catPillX + 16, 91);
+      ctx.font = '600 16px sans-serif';
+      ctx.fillText('Official Portal Updates • 2026', 75, 108);
 
       // Dynamic Official Organization Emblem Detector
       const detectOrgEmblem = (titleStr = '', catStr = '') => {
         const t = (titleStr + ' ' + catStr).toLowerCase();
         if (t.includes('rrb') || t.includes('railway')) {
-          return { code: 'RRB', label: 'INDIAN RAILWAYS', symbol: '🚂', primaryColor: '#facc15', bgCircle: '#1e3a8a' };
+          return { code: 'RRB GOVT', symbol: '🚂', primaryColor: '#facc15', bgCircle: '#1e3a8a' };
         }
         if (t.includes('ssc') || t.includes('cgl') || t.includes('chsl') || t.includes('mts')) {
-          return { code: 'SSC', label: 'SSC SELECTION', symbol: '🏛️', primaryColor: '#38bdf8', bgCircle: '#0f172a' };
+          return { code: 'SSC EXAM', symbol: '🏛️', primaryColor: '#38bdf8', bgCircle: '#0f172a' };
         }
         if (t.includes('police') || t.includes('si ') || t.includes('constable')) {
-          return { code: 'POLICE', label: 'STATE POLICE', symbol: '🛡️', primaryColor: '#f87171', bgCircle: '#450a0a' };
+          return { code: 'POLICE RECRUITMENT', symbol: '🛡️', primaryColor: '#f87171', bgCircle: '#450a0a' };
         }
         if (t.includes('bank') || t.includes('sbi') || t.includes('ibps') || t.includes('ubi') || t.includes('rbi')) {
-          return { code: 'BANK', label: 'BANKING EXAM', symbol: '🏦', primaryColor: '#facc15', bgCircle: '#0369a1' };
+          return { code: 'BANK SO EXAM', symbol: '🏦', primaryColor: '#facc15', bgCircle: '#0369a1' };
         }
         if (t.includes('upsc') || t.includes('ias') || t.includes('ips') || t.includes('ras')) {
-          return { code: 'UPSC', label: 'UPSC CIVIL', symbol: '⚖️', primaryColor: '#fbbf24', bgCircle: '#7c2d12' };
+          return { code: 'UPSC CIVIL', symbol: '⚖️', primaryColor: '#fbbf24', bgCircle: '#7c2d12' };
         }
         if (t.includes('army') || t.includes('navy') || t.includes('air force') || t.includes('defence') || t.includes('iaf') || t.includes('ncc')) {
-          return { code: 'DEFENCE', label: 'ARMED FORCES', symbol: '⚔️', primaryColor: '#c084fc', bgCircle: '#312e81' };
+          return { code: 'ARMED FORCES', symbol: '⚔️', primaryColor: '#c084fc', bgCircle: '#312e81' };
         }
         if (t.includes('isro') || t.includes('drdo')) {
-          return { code: 'ISRO', label: 'ISRO SPACE', symbol: '🚀', primaryColor: '#38bdf8', bgCircle: '#0c4a6e' };
+          return { code: 'ISRO SPACE', symbol: '🚀', primaryColor: '#38bdf8', bgCircle: '#0c4a6e' };
         }
         if (t.includes('nta') || t.includes('neet') || t.includes('jee') || t.includes('cuet')) {
-          return { code: 'NTA', label: 'NTA TESTING', symbol: '🎓', primaryColor: '#34d399', bgCircle: '#064e3b' };
+          return { code: 'NTA TESTING', symbol: '🎓', primaryColor: '#34d399', bgCircle: '#064e3b' };
         }
-        return { code: 'GOVT', label: 'OFFICIAL SELECTION', symbol: '🏛️', primaryColor: '#10b981', bgCircle: '#065f46' };
+        return { code: 'OFFICIAL SELECTION', symbol: '🏛️', primaryColor: '#10b981', bgCircle: '#065f46' };
       };
 
-      // Draw Dynamic Organization Emblem Seal (Right side)
+      // Draw One Compact Organization Emblem Pill Tag (Top Right)
       const emblem = detectOrgEmblem(canvasEngTitle, form.category);
       if (emblem) {
-        const sealX = width - 115;
-        const sealY = 165;
-        const radius = 42;
+        ctx.font = '900 16px sans-serif';
+        const labelText = `${emblem.symbol} ${emblem.code}`;
+        const pillTextWidth = ctx.measureText(labelText).width;
+        const pillW = pillTextWidth + 36;
+        const pillX = width - 75 - pillW;
 
         ctx.shadowColor = emblem.primaryColor;
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = 10;
         ctx.fillStyle = emblem.bgCircle;
         ctx.strokeStyle = emblem.primaryColor;
-        ctx.lineWidth = 3;
-
-        ctx.beginPath();
-        ctx.arc(sealX, sealY, radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+        ctx.lineWidth = 2;
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(pillX, 65, pillW, 44, 22);
+          ctx.fill();
+          ctx.stroke();
+        }
         ctx.shadowBlur = 0;
 
-        ctx.font = '28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(emblem.symbol, sealX, sealY - 7);
-
         ctx.fillStyle = '#ffffff';
-        ctx.font = '900 12px sans-serif';
-        ctx.fillText(emblem.code, sealX, sealY + 20);
-
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(labelText, pillX + 18, 92);
       }
 
       // Text wrapping & auto-fit font scaling function
