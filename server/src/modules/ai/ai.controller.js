@@ -1242,6 +1242,7 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
     seoDescription: processed.seoDescription,
     keywords: finalTags,
     category: finalCategory,
+    focusKeyword: resolvedFocusKeyword || processed.focusKeyword || '',
     imageTag: processed.imageTag,
     imageKeywords: processed.imageKeywords
   };

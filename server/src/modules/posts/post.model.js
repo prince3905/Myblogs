@@ -15,6 +15,7 @@ const blogPostSchema = new mongoose.Schema(
     seoTitle: { type: String, trim: true, default: '' },
     seoDescription: { type: String, trim: true, default: '' },
     seoKeywords: { type: [String], default: [] },
+    focusKeyword: { type: String, trim: true, default: '' },
     seoScore: { type: Number, default: 0 },
     canonicalUrl: { type: String, trim: true, default: '' },
     publishedAt: { type: Date, default: null },
@@ -255,9 +256,13 @@ blogPostSchema.pre('save', async function (next) {
         slug: post.slug,
         tags: post.tags,
         excerpt: post.excerpt,
-        canonicalUrl: post.canonicalUrl
+        canonicalUrl: post.canonicalUrl,
+        focusKeyword: post.focusKeyword
       });
       post.seoScore = audit.score || 0;
+      if (!post.focusKeyword && audit.focusKeyword) {
+        post.focusKeyword = audit.focusKeyword;
+      }
     }
   } catch (err) {
     console.error('Error calculating seoScore in post pre-save hook:', err.message);

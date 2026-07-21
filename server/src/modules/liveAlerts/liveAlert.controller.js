@@ -293,6 +293,7 @@ ${buttonHtmlBlock}
     title: generatedData.title,
     content: generatedData.content || '',
     keywords: generatedData.keywords || [],
+    focusKeyword: generatedData.focusKeyword || '',
     category: 'Sarkari Jobs & Exams',
     length: 'long',
     slug: generatedData.slug,
@@ -310,13 +311,13 @@ ${buttonHtmlBlock}
   if (hasLinksSection) {
     const match = finalContent.match(linksHeaderRegex);
     const startIndex = match.index;
-    const nextHeadingRegex = /<h[23]>/gi;
-    nextHeadingRegex.lastIndex = startIndex + match[0].length;
-    const nextHeadingMatch = nextHeadingRegex.exec(finalContent);
-    if (nextHeadingMatch) {
-      finalContent = finalContent.slice(0, startIndex) + standardLinksBlock + finalContent.slice(nextHeadingMatch.index);
+    const rest = finalContent.slice(startIndex + match[0].length);
+    const nextBoundary = rest.search(/<h[23]>|<div[^>]*class=["'](?:brand-authority-block|games-promo-block|student-tools-promo)["']/i);
+    if (nextBoundary !== -1) {
+      finalContent = finalContent.slice(0, startIndex) + standardLinksBlock + '\n' + rest.slice(nextBoundary);
     } else {
-      finalContent = finalContent.slice(0, startIndex) + standardLinksBlock;
+      // If no subsequent block is found, replace only the links header and keep rest
+      finalContent = finalContent.slice(0, startIndex) + standardLinksBlock + '\n' + rest.replace(/^[\s\S]*?(?=<p|<div|<h|\b|$)/, '');
     }
   } else {
     const faqHeaderRegex = /<h[23]>(?:अक्सर पूछे जाने वाले सवाल \(FAQ\)|Frequently Asked Questions)<\/h[23]>/i;
@@ -360,6 +361,7 @@ ${buttonHtmlBlock}
     seoTitle: processed.seoTitle,
     seoDescription: processed.seoDescription,
     seoKeywords: processed.tags || [],
+    focusKeyword: processed.focusKeyword || '',
     canonicalUrl: generatedData.permalink,
     author: 'Harry Prince'
   });

@@ -16,31 +16,33 @@ function calculateSeoScore(post, keywordResearch = null) {
   const slug = post.slug || '';
 
   // 1. Determine Focus Keyword
-  let focusKeyword = '';
+  let focusKeyword = post.focusKeyword || '';
   let keywordKD = 35; // default moderate competition
   let keywordVolume = 1000;
 
-  if (keywordResearch && Array.isArray(keywordResearch.filtered) && keywordResearch.filtered.length > 0) {
-    const focusObj = keywordResearch.filtered.find(k => k.type === 'short-tail') || keywordResearch.filtered[0];
-    focusKeyword = focusObj.keyword;
-    keywordKD = focusObj.kd || 35;
-    keywordVolume = focusObj.searchVolume || 1000;
-  }
+  if (!focusKeyword) {
+    if (keywordResearch && Array.isArray(keywordResearch.filtered) && keywordResearch.filtered.length > 0) {
+      const focusObj = keywordResearch.filtered.find(k => k.type === 'short-tail') || keywordResearch.filtered[0];
+      focusKeyword = focusObj.keyword;
+      keywordKD = focusObj.kd || 35;
+      keywordVolume = focusObj.searchVolume || 1000;
+    }
 
-  if (!focusKeyword && post.tags) {
-    const tagsArr = typeof post.tags === 'string' ? post.tags.split(',') : Array.isArray(post.tags) ? post.tags : [];
-    const cleanTags = tagsArr.map(t => t.trim()).filter(Boolean);
-    const suitableTag = cleanTags.find(t => {
-      const wordsLen = t.split(/\s+/).length;
-      return wordsLen >= 2 && wordsLen <= 4 && t.toLowerCase() !== title.toLowerCase();
-    });
-    focusKeyword = suitableTag || cleanTags[0] || '';
-  }
+    if (!focusKeyword && post.tags) {
+      const tagsArr = typeof post.tags === 'string' ? post.tags.split(',') : Array.isArray(post.tags) ? post.tags : [];
+      const cleanTags = tagsArr.map(t => t.trim()).filter(Boolean);
+      const suitableTag = cleanTags.find(t => {
+        const wordsLen = t.split(/\s+/).length;
+        return wordsLen >= 2 && wordsLen <= 4 && t.toLowerCase() !== title.toLowerCase();
+      });
+      focusKeyword = suitableTag || cleanTags[0] || '';
+    }
 
-  // If focus keyword is still empty, too long, or equal to title, clean it
-  if (!focusKeyword || focusKeyword.split(/\s+/).length > 5 || focusKeyword.toLowerCase() === title.toLowerCase()) {
-    const titleWords = title.split(/\s+/).filter(Boolean);
-    focusKeyword = titleWords.slice(0, Math.min(4, titleWords.length)).join(' ');
+    // If focus keyword is still empty, too long, or equal to title, clean it
+    if (!focusKeyword || focusKeyword.split(/\s+/).length > 5 || focusKeyword.toLowerCase() === title.toLowerCase()) {
+      const titleWords = title.split(/\s+/).filter(Boolean);
+      focusKeyword = titleWords.slice(0, Math.min(4, titleWords.length)).join(' ');
+    }
   }
 
   focusKeyword = (focusKeyword || '').toLowerCase().trim();

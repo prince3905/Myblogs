@@ -96,7 +96,7 @@ async function getAccessToken(credentials) {
  * @param {string} relativePagePath - e.g. "/blog/sarkari-jobs-exams/uttarakhand-tet-utet-online-form-2026"
  * @returns {Promise<string[]>} List of query keywords
  */
-async function getTopQueriesForPage(relativePagePath) {
+async function getDetailedQueriesForPage(relativePagePath) {
   const credentials = getCredentials();
   if (!credentials) {
     console.warn('[GSC Service] GSC credentials not configured. Skipping query search.');
@@ -195,11 +195,12 @@ async function getTopQueriesForPage(relativePagePath) {
       .map(row => ({
         query: row.keys[1],
         impressions: row.impressions || 0,
-        clicks: row.clicks || 0
+        clicks: row.clicks || 0,
+        ctr: row.ctr || 0,
+        position: row.position || 0
       }))
-      .filter(q => q.query && q.impressions > 5) // filter low relevance
-      .sort((a, b) => b.impressions - a.impressions)
-      .map(q => q.query);
+      .filter(q => q.query && q.impressions >= 1) // filter low relevance
+      .sort((a, b) => b.impressions - a.impressions);
 
     return queries;
 
@@ -209,4 +210,12 @@ async function getTopQueriesForPage(relativePagePath) {
   }
 }
 
-module.exports = { getTopQueriesForPage };
+/**
+ * Fetch top GSC query strings for a specific page path.
+ */
+async function getTopQueriesForPage(relativePagePath) {
+  const detailed = await getDetailedQueriesForPage(relativePagePath);
+  return detailed.map(d => d.query);
+}
+
+module.exports = { getTopQueriesForPage, getDetailedQueriesForPage };

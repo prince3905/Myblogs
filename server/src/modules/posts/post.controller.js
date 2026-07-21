@@ -50,6 +50,7 @@ function mapPayload(body) {
     seoTitle: `${body.seoTitle || ''}`.trim() || title,
     seoDescription,
     seoKeywords: normalizeCsvOrArray(body.seoKeywords),
+    focusKeyword: `${body.focusKeyword || ''}`.trim(),
     canonicalUrl: `${body.canonicalUrl || ''}`.trim(),
     readingTime: calculateReadingTime(content),
     sponsored: body.sponsored === true || body.sponsored === 'true',
@@ -868,12 +869,100 @@ Do NOT include any extra words, formatting, markdown markers, or quotes. Output 
       success: true,
       optimizedTitle: result.optimizedTitle.trim(),
       optimizedDescription: result.optimizedDescription.trim(),
+      focusKeyword: queries[0] || (keywords.length > 0 ? keywords[0] : ''),
       queriesUsed: queries.length > 0,
       keywords: keywords.slice(0, 10)
     });
 
   } catch (err) {
     console.error('[Post Controller] SEO auto-optimization failed:', err.message);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+async function boostPostWithGSC(req, res) {
+  try {
+    const post = await BlogPost.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    const catSlug = (post.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
+    const pagePath = `/blog/${catSlug}/${post.slug}`;
+
+    const { getTopQueriesForPage, getDetailedQueriesForPage } = require('../../shared/services/gscService');
+    let queries = [];
+    let detailedQueries = [];
+    try {
+      detailedQueries = await getDetailedQueriesForPage(pagePath);
+      queries = detailedQueries.map(d => d.query);
+    } catch (gscErr) {
+      console.warn('[Post Controller] GSC fetch warning:', gscErr.message);
+    }
+
+    // Fallback if no GSC queries yet (e.g. fresh post)
+    if (queries.length === 0) {
+      const cleanTitle = post.title.replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2');
+      queries = [cleanTitle, ...(post.tags || [])];
+    }
+
+    const { processAIOutput, enrichWithGscQueries } = require('../ai/aiPostProcessor');
+
+    // Step 1: Enrich content naturally with GSC queries
+    let enrichedContent = enrichWithGscQueries(post.content, post.title, queries);
+
+    // Step 2: Run processAIOutput to ensure 100/100 SEO & formatting
+    const processed = await processAIOutput({
+      title: post.title,
+      content: enrichedContent,
+      keywords: [queries[0] || post.focusKeyword || post.title, ...(post.tags || [])],
+      focusKeyword: post.focusKeyword || queries[0] || '',
+      category: post.category,
+      length: 'long',
+      slug: post.slug,
+      seoTitle: post.seoTitle,
+      seoDescription: post.seoDescription
+    });
+
+    post.content = processed.content;
+    post.tags = processed.tags;
+    if (processed.seoTitle) post.seoTitle = processed.seoTitle;
+    if (processed.seoDescription) {
+      post.seoDescription = processed.seoDescription;
+      post.excerpt = processed.seoDescription;
+    }
+
+    // Recalculate SEO score
+    const { calculateSeoScore } = require('../../shared/utils/seoAuditor');
+    const audit = calculateSeoScore(post);
+    post.seoScore = audit.score;
+
+    await post.save();
+
+    // Step 3: Trigger Google Indexing API ping
+    let pingStatus = 'skipped';
+    try {
+      const { pingUrlIndexing } = require('../../shared/services/googleIndexingService');
+      const siteUrlRaw = env.siteUrl || 'https://www.digitalhomeblog.in';
+      const fullUrl = `${siteUrlRaw.replace(/\/$/, '')}${pagePath}`;
+      await pingUrlIndexing(fullUrl);
+      pingStatus = 'success';
+    } catch (pingErr) {
+      console.warn('[Post Controller] Auto-indexing ping failed:', pingErr.message);
+      pingStatus = 'error';
+    }
+
+    return res.json({
+      success: true,
+      message: 'Post successfully boosted with GSC search data & submitted for indexing!',
+      queriesFound: queries.slice(0, 10),
+      seoScore: audit.score,
+      overallVisibilityIndex: audit.overallVisibilityIndex,
+      pingStatus,
+      data: post
+    });
+  } catch (err) {
+    console.error('Boost with GSC failed:', err);
     return res.status(500).json({ success: false, message: err.message });
   }
 }
@@ -896,6 +985,7 @@ module.exports = {
   getHomepageData,
   pingPostIndexing,
   sharePostToTelegram,
-  optimizePostSEO
+  optimizePostSEO,
+  boostPostWithGSC
 };
 

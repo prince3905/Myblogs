@@ -8,7 +8,8 @@ const {
   deletePost,
   pingPostIndexing,
   sharePostToTelegram,
-  optimizePostSEO
+  optimizePostSEO,
+  boostPostWithGSC
 } = require('./post.controller');
 
 const {
@@ -30,6 +31,7 @@ router.delete('/posts/:id', deletePost);
 router.post('/posts/:id/index-ping', pingPostIndexing);
 router.post('/posts/:id/telegram-share', sharePostToTelegram);
 router.post('/posts/:id/optimize-seo', optimizePostSEO);
+router.post('/posts/:id/gsc-boost', boostPostWithGSC);
 
 // Admin Web Stories Management Endpoints
 router.get('/web-stories', listAdminWebStories);
