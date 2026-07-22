@@ -327,36 +327,101 @@ export default function AdminDashboardPage() {
           </Box>
 
           {psiResult && psiResult.success && (
-            <Box sx={{ mt: 3, pt: 2.5, borderTop: '1px solid #ECECEC', display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(5, 1fr)' }, gap: 2 }}>
-              <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
-                <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>Performance Score</Typography>
-                <Typography variant="h5" sx={{ fontWeight: 900, color: psiResult.score >= 85 ? '#059669' : '#D97706', mt: 0.5 }}>
-                  {psiResult.score} / 100
-                </Typography>
+            <Box sx={{ mt: 3, pt: 2.5, borderTop: '1px solid #ECECEC' }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
+                <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
+                  <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>Performance Score</Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 900, color: psiResult.score >= 85 ? '#059669' : '#D97706', mt: 0.5 }}>
+                    {psiResult.score} / 100
+                  </Typography>
+                </Box>
+                <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
+                  <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>CLS (Layout Shift)</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: psiResult.metrics.cls < 0.1 ? '#059669' : '#DC2626', mt: 0.5 }}>
+                    {psiResult.metrics.cls} {psiResult.metrics.cls < 0.1 ? '✅' : '⚠️'}
+                  </Typography>
+                </Box>
+                <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
+                  <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>LCP (Largest Render)</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827', mt: 0.5 }}>
+                    {psiResult.metrics.lcp}
+                  </Typography>
+                </Box>
+                <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
+                  <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>TBT (Blocking Time)</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827', mt: 0.5 }}>
+                    {psiResult.metrics.tbt}
+                  </Typography>
+                </Box>
+                <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
+                  <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>Speed Index</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827', mt: 0.5 }}>
+                    {psiResult.metrics.speedIndex}
+                  </Typography>
+                </Box>
               </Box>
-              <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
-                <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>CLS (Layout Shift)</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: psiResult.metrics.cls < 0.1 ? '#059669' : '#DC2626', mt: 0.5 }}>
-                  {psiResult.metrics.cls} {psiResult.metrics.cls < 0.1 ? '✅' : '⚠️'}
+
+              {/* Detailed Diagnostic Items Breakdown */}
+              <Box sx={{ bgcolor: '#F8FAFC', p: 2.5, borderRadius: 2.5, border: '1px solid #E2E8F0' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0F172A', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  🔍 Google PageSpeed Diagnostic Findings ({psiResult.targetUrl}):
                 </Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
-                <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>LCP (Largest Render)</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827', mt: 0.5 }}>
-                  {psiResult.metrics.lcp}
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
-                <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>TBT (Blocking Time)</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827', mt: 0.5 }}>
-                  {psiResult.metrics.tbt}
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
-                <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>Speed Index</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827', mt: 0.5 }}>
-                  {psiResult.metrics.speedIndex}
-                </Typography>
+
+                {/* CLS Culprits */}
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#DC2626', display: 'block', mb: 0.5 }}>
+                    🔴 CLS Layout Shift Culprits ({psiResult.diagnostics.clsElements?.length || 0} elements):
+                  </Typography>
+                  {psiResult.diagnostics.clsElements?.length === 0 ? (
+                    <Typography variant="caption" sx={{ color: '#059669', fontStyle: 'italic' }}>
+                      No major layout shifts detected on this page! ✅
+                    </Typography>
+                  ) : (
+                    psiResult.diagnostics.clsElements.map((el, idx) => (
+                      <Box key={idx} sx={{ bgcolor: 'white', p: 1, mb: 0.8, borderRadius: 1.5, border: '1px solid #F1F5F9', fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                        <strong>Element:</strong> <code>{el.snippet}</code> | <strong>Score Contribution:</strong> {el.score}
+                      </Box>
+                    ))
+                  )}
+                </Box>
+
+                {/* Render Blocking Resources */}
+                {psiResult.diagnostics.renderBlocking?.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#D97706', display: 'block', mb: 0.5 }}>
+                      ⏳ Render Blocking CSS & JS ({psiResult.diagnostics.renderBlocking.length} resources):
+                    </Typography>
+                    {psiResult.diagnostics.renderBlocking.map((rb, idx) => (
+                      <Typography key={idx} variant="caption" sx={{ display: 'block', color: '#475569', fontFamily: 'monospace', fontSize: '0.72rem' }}>
+                        • {rb.url.split('/').pop()} ({rb.wastedMs}ms wasted delay)
+                      </Typography>
+                    ))}
+                  </Box>
+                )}
+
+                {/* Unused JS Payload */}
+                {psiResult.diagnostics.unusedJs?.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#2563EB', display: 'block', mb: 0.5 }}>
+                      📦 Unused JavaScript Payloads ({psiResult.diagnostics.unusedJs.length} chunks):
+                    </Typography>
+                    {psiResult.diagnostics.unusedJs.map((js, idx) => (
+                      <Typography key={idx} variant="caption" sx={{ display: 'block', color: '#475569', fontFamily: 'monospace', fontSize: '0.72rem' }}>
+                        • {js.url.split('/').pop()} ({js.wastedKb} KB unused)
+                      </Typography>
+                    ))}
+                  </Box>
+                )}
+
+                {/* AI Agent Auto-Fix Instruction Box */}
+                <Box sx={{ mt: 2, p: 1.5, bgcolor: '#EFF6FF', borderRadius: 2, border: '1px solid #BFDBFE' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: '#1E40AF', display: 'block', mb: 0.3 }}>
+                    🤖 AI Agent Auto-Fix Command Context:
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#1E3A8A', fontSize: '0.72rem', display: 'block', fontFamily: 'monospace' }}>
+                    "Bhai PageSpeed Diagnosis me Score: {psiResult.score}, CLS: {psiResult.metrics.cls}. CLS Culprits: {psiResult.diagnostics.clsElements.map(e => e.snippet).slice(0,2).join(', ')}. Inhe auto-fix kar do!"
+                  </Typography>
+                </Box>
               </Box>
             </Box>
           )}

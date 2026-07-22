@@ -8,7 +8,7 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
       apiUrl += `&key=${encodeURIComponent(apiKey)}`;
     }
 
-    console.log(`[PageSpeed Service] Running ${strategy} audit for ${targetUrl}...`);
+    console.log(`[PageSpeed Service] Running ${strategy} deep diagnostic audit for ${targetUrl}...`);
     const response = await axios.get(apiUrl, { timeout: 60000 });
     const data = response.data;
 
@@ -33,17 +33,59 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
     const fcp = fcpAudit.displayValue || (fcpAudit.numericValue ? `${Math.round(fcpAudit.numericValue)} ms` : 'N/A');
     const speedIndex = speedIndexAudit.displayValue || (speedIndexAudit.numericValue ? `${Math.round(speedIndexAudit.numericValue)} ms` : 'N/A');
 
-    // Layout shift culprits
+    // 1. Layout Shift Culprit Elements
     const clsElements = (audits['layout-shift-elements']?.details?.items || []).map(item => ({
-      snippet: item.node?.snippet || item.node?.nodeLabel || 'Unknown Element',
+      snippet: item.node?.snippet || item.node?.nodeLabel || item.node?.selector || 'Unknown Element',
+      selector: item.node?.selector || '',
       score: item.score ? item.score.toFixed(4) : '0'
     }));
 
-    // Render blocking resources
+    // 2. Render Blocking Resources (CSS / JS)
     const renderBlocking = (audits['render-blocking-resources']?.details?.items || []).map(item => ({
       url: item.url,
-      wastedMs: item.wastedMs
+      wastedMs: Math.round(item.wastedMs || 0),
+      totalBytes: Math.round((item.totalBytes || 0) / 1024)
     }));
+
+    // 3. Unused JavaScript Payload
+    const unusedJs = (audits['unused-javascript']?.details?.items || []).map(item => ({
+      url: item.url,
+      wastedKb: Math.round((item.wastedBytes || 0) / 1024),
+      wastedPercent: Math.round(item.wastedPercent || 0)
+    }));
+
+    // 4. Unused CSS Rules
+    const unusedCss = (audits['unused-css-rules']?.details?.items || []).map(item => ({
+      url: item.url,
+      wastedKb: Math.round((item.wastedBytes || 0) / 1024)
+    }));
+
+    // 5. Oversized Images & Formatting
+    const oversizedImages = (audits['offscreen-images']?.details?.items || [])
+      .concat(audits['uses-responsive-images']?.details?.items || [])
+      .concat(audits['uses-optimized-images']?.details?.items || [])
+      .map(item => ({
+        url: item.url,
+        wastedKb: Math.round((item.wastedBytes || 0) / 1024)
+      })).filter((v, i, a) => a.findIndex(t => t.url === v.url) === i);
+
+    // 6. DOM Element Count
+    const domCount = audits['dom-size']?.numericValue || 0;
+
+    // Build Actionable Agent Fix Suggestions
+    const fixSuggestions = [];
+    if (cls >= 0.1) {
+      fixSuggestions.push(`[CLS Fix Required] Cumulative Layout Shift is ${cls}. Check layout shift culprit elements (${clsElements.length} found) and add explicit width/height or aspect-ratio wrappers.`);
+    }
+    if (renderBlocking.length > 0) {
+      fixSuggestions.push(`[Render Blocking Fix] ${renderBlocking.length} resources are blocking render. Consider deferring scripts or async loading stylesheets.`);
+    }
+    if (unusedJs.length > 0) {
+      fixSuggestions.push(`[JS Code Splitting] Unused JS detected in ${unusedJs.length} chunks. Use Vite manualChunks or dynamic React.lazy imports.`);
+    }
+    if (oversizedImages.length > 0) {
+      fixSuggestions.push(`[Image Compression Fix] ${oversizedImages.length} images can be compressed or converted to WebP format.`);
+    }
 
     return {
       success: true,
@@ -56,11 +98,16 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
         lcp,
         tbt,
         fcp,
-        speedIndex
+        speedIndex,
+        domCount
       },
       diagnostics: {
         clsElements,
-        renderBlocking
+        renderBlocking,
+        unusedJs,
+        unusedCss,
+        oversizedImages,
+        fixSuggestions
       }
     };
   } catch (err) {
