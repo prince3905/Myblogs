@@ -103,10 +103,21 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
     // 4. PASSED AUDITS & GENERAL INFO
     const passedAudits = [];
     const failedAudits = [];
+    const insights = [];
 
     Object.keys(audits).forEach(key => {
       const a = audits[key];
       if (a && a.title) {
+        if (a.details && a.details.type === 'opportunity') {
+          insights.push({
+            id: a.id,
+            title: a.title,
+            description: a.description || '',
+            overallSavingsMs: a.details.overallSavingsMs ? Math.round(a.details.overallSavingsMs) : 0,
+            overallSavingsBytes: a.details.overallSavingsBytes ? Math.round(a.details.overallSavingsBytes / 1024) : 0,
+            displayValue: a.displayValue || ''
+          });
+        }
         if (a.score === 1 || a.scoreDisplayMode === 'notApplicable') {
           passedAudits.push({ id: a.id, title: a.title, description: a.description || '' });
         } else if (a.score !== null && a.score < 1 && a.scoreDisplayMode !== 'informative') {
@@ -130,6 +141,7 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
         speedIndex,
         domCount
       },
+      insights,
       diagnostics: {
         clsElements,
         renderBlocking,

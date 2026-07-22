@@ -110,7 +110,7 @@ export default function AdminDashboardPage() {
 
   const [psiLoading, setPsiLoading] = useState(false);
   const [psiResult, setPsiResult] = useState(null);
-  const [psiTab, setPsiTab] = useState('metrics');
+  const [psiTab, setPsiTab] = useState('insights');
   const [psiTargetUrl, setPsiTargetUrl] = useState('https://www.digitalhomeblog.in');
   const [autoFixLoading, setAutoFixLoading] = useState(false);
   const [fixResult, setFixResult] = useState(null);
@@ -483,14 +483,15 @@ export default function AdminDashboardPage() {
                 </Box>
               </Box>
 
-              {/* 5 Report Section Navigation Tabs */}
+              {/* 6 Report Section Navigation Tabs */}
               <Box sx={{ display: 'flex', gap: 1, borderBottom: '2px solid #E2E8F0', mb: 2.5, overflowX: 'auto', pb: 0.5 }}>
                 {[
+                  { id: 'insights', label: '💡 INSIGHTS & OPPORTUNITIES', color: '#D97706' },
                   { id: 'metrics', label: '📊 METRICS', color: '#2563EB' },
                   { id: 'diagnostics', label: '🔍 DIAGNOSTICS', color: '#DC2626' },
                   { id: 'contrast', label: '♿ CONTRAST & ACCESSIBILITY', color: '#7C3AED' },
                   { id: 'passed', label: '✅ PASSED AUDITS', color: '#059669' },
-                  { id: 'seo', label: '🌐 GENERAL & SEO', color: '#D97706' },
+                  { id: 'seo', label: '🌐 GENERAL & SEO', color: '#059669' },
                 ].map(tab => (
                   <Button
                     key={tab.id}
@@ -512,6 +513,39 @@ export default function AdminDashboardPage() {
                   </Button>
                 ))}
               </Box>
+
+              {/* TAB 0: INSIGHTS & OPPORTUNITIES */}
+              {psiTab === 'insights' && (
+                <Box sx={{ bgcolor: '#F8FAFC', p: 2.5, borderRadius: 2.5, border: '1px solid #E2E8F0' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#D97706', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    💡 Speed Insights & Optimization Opportunities ({psiResult.strategy.toUpperCase()} View):
+                  </Typography>
+                  {(psiResult.insights?.length || 0) === 0 ? (
+                    <Typography variant="caption" sx={{ color: '#059669', fontStyle: 'italic', display: 'block', p: 1.5, bgcolor: 'white', borderRadius: 2 }}>
+                      🎉 Zero major speed bottlenecks found! Page loading speed is optimal. ✅
+                    </Typography>
+                  ) : (
+                    psiResult.insights.map((insight, idx) => (
+                      <Box key={idx} sx={{ bgcolor: 'white', p: 1.8, mb: 1.2, borderRadius: 2, border: '1px solid #E2E8F0' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0F172A' }}>
+                            ⚡ {insight.title}
+                          </Typography>
+                          {insight.overallSavingsMs > 0 && (
+                            <Chip label={`Save ${insight.overallSavingsMs} ms`} size="small" color="warning" sx={{ fontWeight: 800, fontSize: '0.7rem' }} />
+                          )}
+                          {insight.overallSavingsBytes > 0 && (
+                            <Chip label={`Save ${insight.overallSavingsBytes} KB`} size="small" color="info" sx={{ fontWeight: 800, fontSize: '0.7rem' }} />
+                          )}
+                        </Box>
+                        <Typography variant="caption" sx={{ color: '#475569', display: 'block', fontSize: '0.75rem' }}>
+                          {insight.description}
+                        </Typography>
+                      </Box>
+                    ))
+                  )}
+                </Box>
+              )}
 
               {/* TAB 1: METRICS */}
               {psiTab === 'metrics' && (
