@@ -152,7 +152,18 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
 
     const mongoose = require('mongoose');
     const BlogPost = mongoose.model('BlogPost');
-    const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' }).lean();
+    let post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' }).lean();
+    if (!post && req.params.slug) {
+      const cleanSlug = req.params.slug.replace(/-(direct-link|step-by-step|apply-now|online-form|\d+).*$/i, '');
+      const prefix = req.params.slug.slice(0, 20);
+      post = await BlogPost.findOne({
+        status: 'published',
+        $or: [
+          { slug: new RegExp(cleanSlug.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') },
+          { slug: new RegExp('^' + prefix.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') }
+        ]
+      }).sort({ publishedAt: -1 }).lean();
+    }
 
     if (post) {
       const siteName = 'Digital Home Sarkari Result';

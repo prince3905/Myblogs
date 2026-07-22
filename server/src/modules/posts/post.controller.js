@@ -312,7 +312,19 @@ async function listAdminPosts(req, res) {
 }
 
 async function getPostBySlug(req, res) {
-  const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' }).lean();
+  let post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' }).lean();
+  if (!post && req.params.slug) {
+    // Fallback fuzzy search by prefix or cleaned slug to prevent 404 on modified/legacy links
+    const cleanSlug = req.params.slug.replace(/-(direct-link|step-by-step|apply-now|online-form|\d+).*$/i, '');
+    const prefix = req.params.slug.slice(0, 20);
+    post = await BlogPost.findOne({
+      status: 'published',
+      $or: [
+        { slug: new RegExp(cleanSlug.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') },
+        { slug: new RegExp('^' + prefix.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') }
+      ]
+    }).sort({ publishedAt: -1 }).lean();
+  }
   if (!post) {
     return res.status(404).json({ message: 'Post not found' });
   }
