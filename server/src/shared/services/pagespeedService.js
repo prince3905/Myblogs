@@ -2,7 +2,7 @@ const axios = require('axios');
 
 async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', strategy = 'desktop') {
   try {
-    const apiKey = process.env.PAGESPEED_API_KEY || process.env.PSI_API_KEY || '';
+    const apiKey = process.env.PAGESPEED_API_KEY || process.env.PSI_API_KEY || process.env.GEMINI_API_KEY || '';
     let apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=${strategy}&category=performance`;
     if (apiKey) {
       apiUrl += `&key=${encodeURIComponent(apiKey)}`;
