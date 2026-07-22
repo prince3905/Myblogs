@@ -377,20 +377,41 @@ export default function AdminDashboardPage() {
                 disabled={psiLoading || autoFixLoading}
                 onClick={() => handleRunAutoFix('desktop')}
                 sx={{
-                  background: 'linear-gradient(135deg, #7C3AED 0%, #C026D3 100%)',
+                  background: 'linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)',
                   color: 'white',
                   fontWeight: 700,
                   borderRadius: 2,
-                  px: 2.2,
+                  px: 2,
                   py: 0.9,
-                  fontSize: '0.82rem',
+                  fontSize: '0.8rem',
                   textTransform: 'none',
                   boxShadow: '0 4px 12px rgba(124, 58, 237, 0.25)',
-                  '&:hover': { background: 'linear-gradient(135deg, #6D28D9 0%, #A21CAF 100%)' }
+                  '&:hover': { background: 'linear-gradient(135deg, #6D28D9 0%, #4F46E5 100%)' }
                 }}
               >
-                {autoFixLoading ? <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} /> : '🛠️ '}
-                {autoFixLoading ? 'Auto-Fixing...' : 'Auto-Fix PageSpeed Issues'}
+                {autoFixLoading ? <CircularProgress size={15} color="inherit" sx={{ mr: 1 }} /> : '🛠️ '}
+                {autoFixLoading ? 'Fixing Desktop...' : 'Auto-Fix Desktop (100/100)'}
+              </Button>
+
+              <Button
+                variant="contained"
+                disabled={psiLoading || autoFixLoading}
+                onClick={() => handleRunAutoFix('mobile')}
+                sx={{
+                  background: 'linear-gradient(135deg, #D946EF 0%, #EC4899 100%)',
+                  color: 'white',
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  px: 2,
+                  py: 0.9,
+                  fontSize: '0.8rem',
+                  textTransform: 'none',
+                  boxShadow: '0 4px 12px rgba(217, 70, 239, 0.25)',
+                  '&:hover': { background: 'linear-gradient(135deg, #C026D3 0%, #DB2777 100%)' }
+                }}
+              >
+                {autoFixLoading ? <CircularProgress size={15} color="inherit" sx={{ mr: 1 }} /> : '🛠️ '}
+                {autoFixLoading ? 'Fixing Mobile...' : 'Auto-Fix Mobile (100/100)'}
               </Button>
             </Box>
           </Box>
