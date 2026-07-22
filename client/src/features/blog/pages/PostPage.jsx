@@ -694,8 +694,10 @@ export default function PostPage() {
             component="img"
             src={heroImage}
             alt={post.title}
+            width="1200"
+            height="675"
             loading="eager"
-            fetchpriority="high"
+            fetchPriority="high"
             sx={{
               position: 'absolute',
               top: 0,
@@ -704,6 +706,7 @@ export default function PostPage() {
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center',
+              aspectRatio: '16/9',
               zIndex: 0,
             }}
           />

@@ -8,8 +8,8 @@ const bounce = keyframes`
 `;
 
 const pulse = keyframes`
-  0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1); }
-  50% { transform: scale(1.05); box-shadow: 0 6px 18px rgba(255, 255, 255, 0.2); }
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50% { transform: scale(1.05); opacity: 1; }
 `;
 
 export default function TelegramStickyBanner() {

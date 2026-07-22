@@ -81,11 +81,14 @@ export default function Layout({ children }) {
             <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
               <Box 
                 component="img"
-                src="/logo.png"
+                src="/logo.webp"
                 alt="Digital Home Logo"
+                width="66"
+                height="34"
                 sx={{ 
                   height: { xs: 28, md: 34 }, 
                   width: 'auto',
+                  aspectRatio: '66/34',
                   display: 'block'
                 }}
               />

@@ -53,26 +53,29 @@
     <meta property="og:description" content="Get the latest updates on Sarkari jobs, admit cards, exam results, and trending tech news on Digital Home Blog." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.digitalhomeblog.in" />
-    <meta property="og:image" content="https://www.digitalhomeblog.in/logo.png" />
+    <meta property="og:image" content="https://www.digitalhomeblog.in/logo.webp" />
     
     <!-- Twitter/X Card Fallback Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Digital Home — Your Daily Dose of Information & Insights" />
     <meta name="twitter:description" content="Get the latest updates on Sarkari jobs, admit cards, exam results, and trending tech news on Digital Home Blog." />
-    <meta name="twitter:image" content="https://www.digitalhomeblog.in/logo.png" />
+    <meta name="twitter:image" content="https://www.digitalhomeblog.in/logo.webp" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.pexels.com">
     <link rel="preconnect" href="https://res.cloudinary.com">
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=optional">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=optional" media="print" onload="this.media='all'">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
     <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=optional">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     </noscript>
     <meta name="google-adsense-account" content="ca-pub-7044184444698366">
-    <script type="module" crossorigin src="/assets/index-bqNTWMH_.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/vendor-pdf-Dka_QDh5.js">
+    <script type="module" crossorigin src="/assets/index-D6csCZ4G.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-framework-G7kkNex7.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-pdf-CFzNb1yu.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-icons-BCr6mgwr.js">
+    <link rel="stylesheet" crossorigin href="/assets/vendor-framework-D-Ncpkvi.css">
     <link rel="stylesheet" crossorigin href="/assets/index-DWUKsRnl.css">
   </head>
   <body>
@@ -90,7 +93,7 @@
           align-items: center;
           justify-content: center;
           background-color: #ffffff;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           z-index: 9999;
           transition: opacity 0.3s ease;
         }
@@ -105,8 +108,8 @@
           justify-content: center;
           font-size: 24px;
           font-weight: 800;
-          box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25);
           margin-bottom: 16px;
+          will-change: transform;
           animation: brand-pulse 1.8s infinite ease-in-out;
         }
         .brand-loader-title {
@@ -124,16 +127,16 @@
         @keyframes brand-pulse {
           0%, 100% {
             transform: scale(1);
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25);
+            opacity: 0.95;
           }
           50% {
             transform: scale(1.08);
-            box-shadow: 0 15px 35px rgba(79, 70, 229, 0.45);
+            opacity: 1;
           }
         }
       </style>
       <div class="brand-loader-container">
-        <img src="/favicon.png" alt="Digital Home" style="width: 60px; height: 60px; margin-bottom: 16px; animation: brand-pulse 1.8s infinite ease-in-out;" />
+        <img src="/favicon.png" alt="Digital Home" width="60" height="60" style="width: 60px; height: 60px; margin-bottom: 16px; will-change: transform; animation: brand-pulse 1.8s infinite ease-in-out;" />
         <div class="brand-loader-title">Digital Home</div>
       </div>
     </div>

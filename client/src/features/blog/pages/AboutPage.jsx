@@ -67,7 +67,7 @@ export default function AboutPage() {
         'url': origin,
         'logo': {
           '@type': 'ImageObject',
-          'url': `${origin}/logo.png`
+          'url': `${origin}/logo.webp`
         }
       }
     },

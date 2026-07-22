@@ -10,6 +10,9 @@ export default defineConfig({
   build: {
     outDir: '../server/public',
     emptyOutDir: true,
+    target: 'esnext',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -22,6 +25,12 @@ export default defineConfig({
             }
             if (id.includes('html2canvas')) {
               return 'vendor-canvas';
+            }
+            if (id.includes('@mui/icons-material')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('@mui') || id.includes('@emotion') || id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-framework';
             }
           }
         }

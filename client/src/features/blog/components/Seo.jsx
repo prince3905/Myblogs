@@ -22,7 +22,7 @@ export default function Seo({ title, description, image, url, canonical, keyword
           ...schema.publisher,
           logo: schema.publisher.logo || {
             '@type': 'ImageObject',
-            url: `${window.location.origin}/logo.png`,
+            url: `${window.location.origin}/logo.webp`,
             width: 190,
             height: 60
           }
@@ -80,7 +80,7 @@ export default function Seo({ title, description, image, url, canonical, keyword
           'url': typeof window !== 'undefined' ? window.location.origin : 'https://www.digitalhomeblog.in',
           'logo': {
             '@type': 'ImageObject',
-            'url': `${typeof window !== 'undefined' ? window.location.origin : 'https://www.digitalhomeblog.in'}/logo.png`,
+            'url': `${typeof window !== 'undefined' ? window.location.origin : 'https://www.digitalhomeblog.in'}/logo.webp`,
             'width': 190,
             'height': 60
           }

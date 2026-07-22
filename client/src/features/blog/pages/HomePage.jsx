@@ -774,9 +774,9 @@ export default function HomePage() {
                     textTransform: 'uppercase',
                     animation: 'pulseGlow 2s infinite ease-in-out',
                     '@keyframes pulseGlow': {
-                      '0%': { boxShadow: '0 0 0 0 rgba(37,99,235,0.7)' },
-                      '70%': { boxShadow: '0 0 0 10px rgba(37,99,235,0)' },
-                      '100%': { boxShadow: '0 0 0 0 rgba(37,99,235,0)' }
+                      '0%': { transform: 'scale(1)', opacity: 0.9 },
+                      '50%': { transform: 'scale(1.05)', opacity: 1 },
+                      '100%': { transform: 'scale(1)', opacity: 0.9 }
                     }
                   }}
                 >
@@ -838,8 +838,11 @@ export default function HomePage() {
                   {/* Background Image */}
                   <Box 
                     component="img"
-                    src={story.slides[0]?.image}
+                    src={optimizeImage(story.slides[0]?.image, 220, 391)}
                     alt={story.title}
+                    width="220"
+                    height="391"
+                    loading="lazy"
                     sx={{
                       width: '100%',
                       height: '100%',
@@ -847,6 +850,7 @@ export default function HomePage() {
                       position: 'absolute',
                       top: 0,
                       left: 0,
+                      aspectRatio: '9/16',
                       transition: 'transform 0.5s ease'
                     }}
                   />
