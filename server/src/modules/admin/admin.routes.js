@@ -58,4 +58,15 @@ router.post('/pagespeed-audit', async (req, res, next) => {
   }
 });
 
+router.post('/pagespeed-autofix', async (req, res, next) => {
+  try {
+    const { runPageSpeedAutoFix } = require('../../shared/services/pagespeedService');
+    const { targetUrl, strategy } = req.body || {};
+    const fixResult = await runPageSpeedAutoFix(targetUrl || 'https://www.digitalhomeblog.in', strategy || 'desktop');
+    res.json(fixResult);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

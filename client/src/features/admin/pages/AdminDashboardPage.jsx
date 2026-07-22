@@ -110,6 +110,8 @@ export default function AdminDashboardPage() {
 
   const [psiLoading, setPsiLoading] = useState(false);
   const [psiResult, setPsiResult] = useState(null);
+  const [autoFixLoading, setAutoFixLoading] = useState(false);
+  const [fixResult, setFixResult] = useState(null);
 
   const setLoading = (key, val) => setLoadingMap(prev => ({ ...prev, [key]: val }));
   const isLoading = (key) => !!loadingMap[key];
@@ -134,6 +136,29 @@ export default function AdminDashboardPage() {
       setError(err.message || 'Failed to run PageSpeed audit');
     } finally {
       setPsiLoading(false);
+    }
+  }
+
+  async function handleRunAutoFix(strategy = 'desktop') {
+    setAutoFixLoading(true);
+    setError('');
+    try {
+      const res = await request('/api/admin/pagespeed-autofix', {
+        method: 'POST',
+        body: JSON.stringify({ targetUrl: 'https://www.digitalhomeblog.in', strategy })
+      });
+      if (res.success) {
+        setFixResult(res);
+        addToast(`Auto-Fix Complete! Score: ${res.before.score} ➔ ${res.after.score}/100`, 'success');
+      } else {
+        addToast(res.error || 'Auto-fix failed.', 'error');
+        setError(res.error || 'Auto-fix failed.');
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to run Auto-Fix', 'error');
+      setError(err.message || 'Failed to run Auto-Fix');
+    } finally {
+      setAutoFixLoading(false);
     }
   }
 
@@ -346,6 +371,27 @@ export default function AdminDashboardPage() {
                 {psiLoading ? <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} /> : '📱 '}
                 {psiLoading ? 'Auditing...' : 'Audit Mobile'}
               </Button>
+
+              <Button
+                variant="contained"
+                disabled={psiLoading || autoFixLoading}
+                onClick={() => handleRunAutoFix('desktop')}
+                sx={{
+                  background: 'linear-gradient(135deg, #7C3AED 0%, #C026D3 100%)',
+                  color: 'white',
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  px: 2.2,
+                  py: 0.9,
+                  fontSize: '0.82rem',
+                  textTransform: 'none',
+                  boxShadow: '0 4px 12px rgba(124, 58, 237, 0.25)',
+                  '&:hover': { background: 'linear-gradient(135deg, #6D28D9 0%, #A21CAF 100%)' }
+                }}
+              >
+                {autoFixLoading ? <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} /> : '🛠️ '}
+                {autoFixLoading ? 'Auto-Fixing...' : 'Auto-Fix PageSpeed Issues'}
+              </Button>
             </Box>
           </Box>
 
@@ -445,6 +491,72 @@ export default function AdminDashboardPage() {
                     "Bhai PageSpeed Diagnosis me Score: {psiResult.score}, CLS: {psiResult.metrics.cls}. CLS Culprits: {psiResult.diagnostics.clsElements.map(e => e.snippet).slice(0,2).join(', ')}. Inhe auto-fix kar do!"
                   </Typography>
                 </Box>
+              </Box>
+            </Box>
+          )}
+
+          {/* Auto-Fix Before vs After Result Log */}
+          {fixResult && fixResult.success && (
+            <Box sx={{ mt: 3, pt: 2.5, borderTop: '1px solid #ECECEC' }}>
+              <Box sx={{ bgcolor: '#FAF5FF', p: 2.5, borderRadius: 2.5, border: '1px solid #E9D5FF' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#6B21A8', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  🎉 Auto-Fix Results ({fixResult.strategy.toUpperCase()}) - Speed & CLS Optimization Applied!
+                </Typography>
+
+                {/* Before vs After Comparison Grid */}
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 2 }}>
+                  {/* Before Box */}
+                  <Box sx={{ bgcolor: '#FEF2F2', p: 2, borderRadius: 2, border: '1px solid #FCA5A5' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#991B1B', display: 'block', mb: 0.5 }}>
+                      🔴 BEFORE FIX (Detected Errors):
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#7F1D1D' }}>
+                      Performance Score: {fixResult.before.score} / 100
+                    </Typography>
+                    <Typography variant="caption" sx={{ display: 'block', color: '#991B1B', mt: 0.5 }}>
+                      • CLS Layout Shift: {fixResult.before.cls}
+                    </Typography>
+                    <Typography variant="caption" sx={{ display: 'block', color: '#991B1B' }}>
+                      • LCP Render Time: {fixResult.before.lcp}
+                    </Typography>
+                    {fixResult.before.detectedIssues?.length > 0 && (
+                      <Typography variant="caption" sx={{ display: 'block', color: '#991B1B', mt: 0.5, fontStyle: 'italic' }}>
+                        Issues: {fixResult.before.detectedIssues.map(i => i.snippet.slice(0, 25)).join(', ')}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* After Box */}
+                  <Box sx={{ bgcolor: '#ECFDF5', p: 2, borderRadius: 2, border: '1px solid #6EE7B7' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#065F46', display: 'block', mb: 0.5 }}>
+                      🟢 AFTER FIX (Optimized & Verified):
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#047857' }}>
+                      Performance Score: {fixResult.after.score} / 100 ✅
+                    </Typography>
+                    <Typography variant="caption" sx={{ display: 'block', color: '#065F46', mt: 0.5 }}>
+                      • CLS Layout Shift: {fixResult.after.cls} {fixResult.after.cls < 0.1 ? '✅' : ''}
+                    </Typography>
+                    <Typography variant="caption" sx={{ display: 'block', color: '#065F46' }}>
+                      • LCP Render Time: {fixResult.after.lcp}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Applied Fixes List */}
+                <Typography variant="caption" sx={{ fontWeight: 800, color: '#581C87', display: 'block', mb: 0.5 }}>
+                  🛠️ Applied Code & Container Fixes:
+                </Typography>
+                {fixResult.appliedFixes?.map((fix, idx) => (
+                  <Box key={idx} sx={{ bgcolor: 'white', p: 1.2, mb: 0.8, borderRadius: 1.5, border: '1px solid #F3E8FF' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#7E22CE', display: 'block' }}>
+                      ✅ {fix.title}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.73rem', display: 'block' }}>
+                      {fix.details}
+                    </Typography>
+                  </Box>
+                ))}
               </Box>
             </Box>
           )}

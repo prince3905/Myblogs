@@ -35,13 +35,24 @@ router.post('/posts/:id/whatsapp-share', sharePostToWhatsapp);
 router.post('/posts/:id/optimize-seo', optimizePostSEO);
 router.post('/posts/:id/gsc-boost', boostPostWithGSC);
 
-// PageSpeed Audit Endpoint
+// PageSpeed Audit & AutoFix Endpoints
 router.post('/pagespeed-audit', async (req, res, next) => {
   try {
     const { runPageSpeedAudit } = require('../../shared/services/pagespeedService');
     const { targetUrl, strategy } = req.body || {};
     const auditResult = await runPageSpeedAudit(targetUrl || 'https://www.digitalhomeblog.in', strategy || 'desktop');
     res.json(auditResult);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/pagespeed-autofix', async (req, res, next) => {
+  try {
+    const { runPageSpeedAutoFix } = require('../../shared/services/pagespeedService');
+    const { targetUrl, strategy } = req.body || {};
+    const fixResult = await runPageSpeedAutoFix(targetUrl || 'https://www.digitalhomeblog.in', strategy || 'desktop');
+    res.json(fixResult);
   } catch (err) {
     next(err);
   }
