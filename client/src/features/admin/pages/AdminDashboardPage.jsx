@@ -111,6 +111,7 @@ export default function AdminDashboardPage() {
   const [psiLoading, setPsiLoading] = useState(false);
   const [psiResult, setPsiResult] = useState(null);
   const [psiTab, setPsiTab] = useState('metrics');
+  const [psiTargetUrl, setPsiTargetUrl] = useState('https://www.digitalhomeblog.in');
   const [autoFixLoading, setAutoFixLoading] = useState(false);
   const [fixResult, setFixResult] = useState(null);
 
@@ -123,7 +124,7 @@ export default function AdminDashboardPage() {
     try {
       const res = await request('/api/admin/pagespeed-audit', {
         method: 'POST',
-        body: JSON.stringify({ targetUrl: 'https://www.digitalhomeblog.in', strategy })
+        body: JSON.stringify({ targetUrl: psiTargetUrl, strategy })
       });
       if (res.success) {
         setPsiResult(res);
@@ -146,7 +147,7 @@ export default function AdminDashboardPage() {
     try {
       const res = await request('/api/admin/pagespeed-autofix', {
         method: 'POST',
-        body: JSON.stringify({ targetUrl: 'https://www.digitalhomeblog.in', strategy })
+        body: JSON.stringify({ targetUrl: psiTargetUrl, strategy })
       });
       if (res.success) {
         setFixResult(res);
@@ -330,7 +331,42 @@ export default function AdminDashboardPage() {
               </Box>
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+            {/* Target URL Selector Input Bar */}
+            <Box sx={{ width: '100%', mt: 2, pt: 2, borderTop: '1px solid #F1F5F9' }}>
+              <Typography variant="caption" sx={{ fontWeight: 800, color: '#475569', display: 'block', mb: 1 }}>
+                🎯 Select / Type Target Page URL to Audit & Auto-Fix:
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1.5 }}>
+                {[
+                  { label: '🏠 Homepage', url: 'https://www.digitalhomeblog.in' },
+                  { label: '⚡ Job Alerts', url: 'https://www.digitalhomeblog.in/job-alerts' },
+                  { label: '🛠️ Tools Page', url: 'https://www.digitalhomeblog.in/tools' },
+                  { label: '📖 Latest Post', url: 'https://www.digitalhomeblog.in/blog/sarkari-jobs-exams/up-bijnor-ecce-educator-online-form-2026-for-159-post-direct-link-step-by-step-apply-now' },
+                ].map(preset => (
+                  <Chip
+                    key={preset.url}
+                    label={preset.label}
+                    onClick={() => setPsiTargetUrl(preset.url)}
+                    color={psiTargetUrl === preset.url ? 'primary' : 'default'}
+                    variant={psiTargetUrl === preset.url ? 'filled' : 'outlined'}
+                    sx={{ fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}
+                  />
+                ))}
+              </Box>
+              <TextField
+                fullWidth
+                size="small"
+                value={psiTargetUrl}
+                onChange={(e) => setPsiTargetUrl(e.target.value)}
+                placeholder="https://www.digitalhomeblog.in/blog/..."
+                sx={{
+                  bgcolor: '#F8FAFC',
+                  '& .MuiInputBase-input': { fontFamily: 'monospace', fontSize: '0.8rem' }
+                }}
+              />
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mt: 2 }}>
               <Button
                 variant="contained"
                 disabled={psiLoading}

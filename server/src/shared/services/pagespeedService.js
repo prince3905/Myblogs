@@ -72,6 +72,17 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
         wastedKb: Math.round((item.wastedBytes || 0) / 1024)
       })).filter((v, i, a) => a.findIndex(t => t.url === v.url) === i);
 
+    const bootupTime = (audits['bootup-time']?.details?.items || []).map(item => ({
+      url: item.url,
+      totalMs: Math.round(item.total || 0),
+      scriptParseCompile: Math.round(item.scriptParseCompile || 0)
+    }));
+
+    const mainThreadWork = (audits['mainthread-work-breakdown']?.details?.items || []).map(item => ({
+      group: item.groupLabel || item.group || 'Other',
+      durationMs: Math.round(item.duration || 0)
+    }));
+
     const domCount = audits['dom-size']?.numericValue || 0;
 
     // 3. CONTRAST & ACCESSIBILITY AUDITS
@@ -125,6 +136,8 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
         unusedJs,
         unusedCss,
         oversizedImages,
+        bootupTime,
+        mainThreadWork,
         failedAudits
       },
       accessibility: {
@@ -133,7 +146,7 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
         imageAltIssues,
         tapTargetIssues
       },
-      passedAudits: passedAudits.slice(0, 40)
+      passedAudits: passedAudits.slice(0, 50)
     };
   } catch (err) {
     console.error('[PageSpeed Service] Audit failed:', err.response?.data?.error?.message || err.message);
