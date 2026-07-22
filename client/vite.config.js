@@ -13,19 +13,14 @@ export default defineConfig({
     target: 'esnext',
     cssCodeSplit: true,
     chunkSizeWarningLimit: 1000,
+    modulePreload: {
+      // Only modulepreload the main framework entry point to prevent 1.3MB PDF payload on homepage
+      polyfill: false,
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('@imgly/background-removal')) {
-              return 'vendor-bg-removal';
-            }
-            if (id.includes('jspdf') || id.includes('pdf-lib') || id.includes('pdfjs-dist')) {
-              return 'vendor-pdf';
-            }
-            if (id.includes('html2canvas')) {
-              return 'vendor-canvas';
-            }
             if (id.includes('@mui/icons-material')) {
               return 'vendor-icons';
             }
