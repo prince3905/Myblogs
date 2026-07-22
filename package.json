@@ -6,7 +6,8 @@
     "postinstall": "cd server && npm install && cd ../client && npm install",
     "build": "cd client && npm run build",
     "start": "cd server && node src/server.js",
-    "dev": "concurrently \"cd server && node src/server.js\" \"cd client && npm run dev\""
+    "dev": "concurrently \"cd server && node src/server.js\" \"cd client && npm run dev\"",
+    "monitor:pagespeed": "node scripts/monitor-pagespeed.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -1,0 +1,40 @@
+name: PageSpeed Insights Performance Monitor
+
+on:
+  schedule:
+    # Run every 12 hours (at 00:00 and 12:00 UTC)
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+jobs:
+  pagespeed-audit:
+    name: Run PageSpeed Insights Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Desktop PageSpeed Audit
+        run: node scripts/monitor-pagespeed.js
+        env:
+          TARGET_URL: 'https://www.digitalhomeblog.in'
+          STRATEGY: 'desktop'
+          TARGET_SCORE: '85'
+          TARGET_CLS: '0.1'
+          PAGESPEED_API_KEY: ${{ secrets.PAGESPEED_API_KEY }}
+
+      - name: Run Mobile PageSpeed Audit
+        if: always()
+        run: node scripts/monitor-pagespeed.js
+        env:
+          TARGET_URL: 'https://www.digitalhomeblog.in'
+          STRATEGY: 'mobile'
+          TARGET_SCORE: '70'
+          TARGET_CLS: '0.1'
+          PAGESPEED_API_KEY: ${{ secrets.PAGESPEED_API_KEY }}
