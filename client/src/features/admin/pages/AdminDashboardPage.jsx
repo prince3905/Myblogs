@@ -114,17 +114,17 @@ export default function AdminDashboardPage() {
   const setLoading = (key, val) => setLoadingMap(prev => ({ ...prev, [key]: val }));
   const isLoading = (key) => !!loadingMap[key];
 
-  async function handleRunPagespeedAudit() {
+  async function handleRunPagespeedAudit(strategy = 'desktop') {
     setPsiLoading(true);
     setError('');
     try {
       const res = await request('/api/admin/pagespeed-audit', {
         method: 'POST',
-        body: JSON.stringify({ targetUrl: 'https://www.digitalhomeblog.in', strategy: 'desktop' })
+        body: JSON.stringify({ targetUrl: 'https://www.digitalhomeblog.in', strategy })
       });
       if (res.success) {
         setPsiResult(res);
-        addToast(`PageSpeed Audit Complete! Score: ${res.score}/100, CLS: ${res.metrics.cls}`, 'success');
+        addToast(`PageSpeed (${strategy.toUpperCase()}) Complete! Score: ${res.score}/100, CLS: ${res.metrics.cls}`, 'success');
       } else {
         addToast(res.error || 'PageSpeed audit failed.', 'error');
         setError(res.error || 'PageSpeed audit failed.');
@@ -304,26 +304,49 @@ export default function AdminDashboardPage() {
               </Box>
             </Box>
 
-            <Button
-              variant="contained"
-              disabled={psiLoading}
-              onClick={handleRunPagespeedAudit}
-              sx={{
-                bgcolor: '#4F46E5',
-                color: 'white',
-                fontWeight: 700,
-                borderRadius: 2,
-                px: 2.5,
-                py: 1,
-                fontSize: '0.85rem',
-                textTransform: 'none',
-                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
-                '&:hover': { bgcolor: '#4338CA' }
-              }}
-            >
-              {psiLoading ? <CircularProgress size={18} color="inherit" sx={{ mr: 1 }} /> : '🔍 '}
-              {psiLoading ? 'Diagnosing Speed...' : 'Run Google PageSpeed Audit'}
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+              <Button
+                variant="contained"
+                disabled={psiLoading}
+                onClick={() => handleRunPagespeedAudit('desktop')}
+                sx={{
+                  bgcolor: '#4F46E5',
+                  color: 'white',
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  px: 2.2,
+                  py: 0.9,
+                  fontSize: '0.82rem',
+                  textTransform: 'none',
+                  boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
+                  '&:hover': { bgcolor: '#4338CA' }
+                }}
+              >
+                {psiLoading ? <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} /> : '💻 '}
+                {psiLoading ? 'Auditing...' : 'Audit Desktop'}
+              </Button>
+
+              <Button
+                variant="contained"
+                disabled={psiLoading}
+                onClick={() => handleRunPagespeedAudit('mobile')}
+                sx={{
+                  bgcolor: '#059669',
+                  color: 'white',
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  px: 2.2,
+                  py: 0.9,
+                  fontSize: '0.82rem',
+                  textTransform: 'none',
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
+                  '&:hover': { bgcolor: '#047857' }
+                }}
+              >
+                {psiLoading ? <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} /> : '📱 '}
+                {psiLoading ? 'Auditing...' : 'Audit Mobile'}
+              </Button>
+            </Box>
           </Box>
 
           {psiResult && psiResult.success && (
