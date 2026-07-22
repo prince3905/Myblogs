@@ -35,11 +35,16 @@ router.post('/posts/:id/whatsapp-share', sharePostToWhatsapp);
 router.post('/posts/:id/optimize-seo', optimizePostSEO);
 router.post('/posts/:id/gsc-boost', boostPostWithGSC);
 
-// Admin Web Stories Management Endpoints
-router.get('/web-stories', listAdminWebStories);
-router.get('/web-stories/:id', getAdminWebStoryById);
-router.put('/web-stories/:id', updateAdminWebStory);
-router.delete('/web-stories/:id', deleteAdminWebStory);
-router.post('/web-stories/:id/index-ping', pingWebStoryIndexing);
+// PageSpeed Audit Endpoint
+router.post('/pagespeed-audit', async (req, res, next) => {
+  try {
+    const { runPageSpeedAudit } = require('../../shared/services/pagespeedService');
+    const { targetUrl, strategy } = req.body || {};
+    const auditResult = await runPageSpeedAudit(targetUrl || 'https://www.digitalhomeblog.in', strategy || 'desktop');
+    res.json(auditResult);
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = router;
