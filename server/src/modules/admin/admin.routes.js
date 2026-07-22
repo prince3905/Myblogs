@@ -47,4 +47,15 @@ router.get('/analytics', async (req, res, next) => {
   }
 });
 
+router.post('/pagespeed-audit', async (req, res, next) => {
+  try {
+    const { runPageSpeedAudit } = require('../../shared/services/pagespeedService');
+    const { targetUrl, strategy } = req.body || {};
+    const auditResult = await runPageSpeedAudit(targetUrl || 'https://www.digitalhomeblog.in', strategy || 'desktop');
+    res.json(auditResult);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

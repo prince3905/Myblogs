@@ -108,8 +108,34 @@ export default function AdminDashboardPage() {
   const [indexLoadingId, setIndexLoadingId] = useState(null);
   const [loadingMap, setLoadingMap] = useState({});
 
+  const [psiLoading, setPsiLoading] = useState(false);
+  const [psiResult, setPsiResult] = useState(null);
+
   const setLoading = (key, val) => setLoadingMap(prev => ({ ...prev, [key]: val }));
   const isLoading = (key) => !!loadingMap[key];
+
+  async function handleRunPagespeedAudit() {
+    setPsiLoading(true);
+    setError('');
+    try {
+      const res = await request('/api/admin/pagespeed-audit', {
+        method: 'POST',
+        body: JSON.stringify({ targetUrl: 'https://www.digitalhomeblog.in', strategy: 'desktop' })
+      });
+      if (res.success) {
+        setPsiResult(res);
+        addToast(`PageSpeed Audit Complete! Score: ${res.score}/100, CLS: ${res.metrics.cls}`, 'success');
+      } else {
+        addToast(res.error || 'PageSpeed audit failed.', 'error');
+        setError(res.error || 'PageSpeed audit failed.');
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to run PageSpeed audit', 'error');
+      setError(err.message || 'Failed to run PageSpeed audit');
+    } finally {
+      setPsiLoading(false);
+    }
+  }
 
   async function handleIndexPing(postId) {
     setIndexLoadingId(postId);
@@ -260,6 +286,81 @@ export default function AdminDashboardPage() {
             </Paper>
           ))}
         </Box>
+
+        {/* PageSpeed Live Audit Bar */}
+        <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: 3, border: '1px solid #ECECEC', bgcolor: '#FFFFFF' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{ p: 1, bgcolor: '#EEF2FF', borderRadius: 2, color: '#4F46E5', display: 'flex' }}>
+                <TrendingUp />
+              </Box>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#111827' }}>
+                  ⚡ Live Google PageSpeed Self-Diagnosis
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.8rem' }}>
+                  Run live Lighthouse performance audit to diagnose speed and layout stability (CLS).
+                </Typography>
+              </Box>
+            </Box>
+
+            <Button
+              variant="contained"
+              disabled={psiLoading}
+              onClick={handleRunPagespeedAudit}
+              sx={{
+                bgcolor: '#4F46E5',
+                color: 'white',
+                fontWeight: 700,
+                borderRadius: 2,
+                px: 2.5,
+                py: 1,
+                fontSize: '0.85rem',
+                textTransform: 'none',
+                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
+                '&:hover': { bgcolor: '#4338CA' }
+              }}
+            >
+              {psiLoading ? <CircularProgress size={18} color="inherit" sx={{ mr: 1 }} /> : '🔍 '}
+              {psiLoading ? 'Diagnosing Speed...' : 'Run Google PageSpeed Audit'}
+            </Button>
+          </Box>
+
+          {psiResult && psiResult.success && (
+            <Box sx={{ mt: 3, pt: 2.5, borderTop: '1px solid #ECECEC', display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(5, 1fr)' }, gap: 2 }}>
+              <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>Performance Score</Typography>
+                <Typography variant="h5" sx={{ fontWeight: 900, color: psiResult.score >= 85 ? '#059669' : '#D97706', mt: 0.5 }}>
+                  {psiResult.score} / 100
+                </Typography>
+              </Box>
+              <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>CLS (Layout Shift)</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 800, color: psiResult.metrics.cls < 0.1 ? '#059669' : '#DC2626', mt: 0.5 }}>
+                  {psiResult.metrics.cls} {psiResult.metrics.cls < 0.1 ? '✅' : '⚠️'}
+                </Typography>
+              </Box>
+              <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>LCP (Largest Render)</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827', mt: 0.5 }}>
+                  {psiResult.metrics.lcp}
+                </Typography>
+              </Box>
+              <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>TBT (Blocking Time)</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827', mt: 0.5 }}>
+                  {psiResult.metrics.tbt}
+                </Typography>
+              </Box>
+              <Box sx={{ bgcolor: '#F9FAFB', p: 2, borderRadius: 2, border: '1px solid #ECECEC', textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, display: 'block' }}>Speed Index</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 800, color: '#111827', mt: 0.5 }}>
+                  {psiResult.metrics.speedIndex}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+        </Paper>
 
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4, mb: 4 }}>
           {/* Recent Comments */}
