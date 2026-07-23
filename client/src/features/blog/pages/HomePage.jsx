@@ -591,9 +591,13 @@ export default function HomePage() {
             </Button>
           </Box>
 
-          <Box sx={{ minHeight: '210px' }}>
+          <Box sx={{ minHeight: { xs: '220px', sm: '210px' }, width: '100%' }}>
             {loadingAlerts ? (
-              <Typography variant="body2" sx={{ color: 'text.secondary', py: 4, textAlign: 'center' }}>Loading updates...</Typography>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 2, py: 1 }}>
+                {[1, 2, 3, 4].map(i => (
+                  <Box key={i} sx={{ height: 95, borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                ))}
+              </Box>
             ) : alerts.length === 0 ? (
               <Typography variant="body2" sx={{ color: 'text.secondary', py: 4, fontStyle: 'italic', textAlign: 'center' }}>No active updates at the moment.</Typography>
             ) : (
@@ -1001,6 +1005,7 @@ export default function HomePage() {
                 display: 'flex', 
                 flexDirection: 'column', 
                 justifyContent: 'center',
+                minHeight: { xs: '180px', md: '240px' },
                 width: '100%'
               }}
             >
