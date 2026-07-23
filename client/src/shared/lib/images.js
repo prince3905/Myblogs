@@ -20,7 +20,7 @@ export function optimizeImage(url, width = 380, height = null) {
       );
       const mainPath = subparts.slice(mainPathIdx >= 0 ? mainPathIdx : 0).join('/');
       const h = height || Math.round(width * 9 / 16);
-      return `${parts[0]}/upload/f_auto,q_auto,w_${width},h_${h},c_fill,g_auto/${mainPath}`;
+      return `${parts[0]}/upload/f_auto,q_auto:good,w_${width},h_${h},c_fill,g_auto/${mainPath}`;
     }
     return clean;
   }
