@@ -771,7 +771,7 @@ export default function AdminDashboardPage() {
                     </Typography>
                     {fixResult.before.detectedIssues?.length > 0 && (
                       <Typography variant="caption" sx={{ display: 'block', color: '#991B1B', mt: 0.5, fontStyle: 'italic' }}>
-                        Issues: {fixResult.before.detectedIssues.map(i => i.snippet.slice(0, 25)).join(', ')}
+                        Issues: {fixResult.before.detectedIssues.map(i => typeof i === 'string' ? i : (i.snippet || i.selector || 'Issue')).join(', ')}
                       </Typography>
                     )}
                   </Box>
