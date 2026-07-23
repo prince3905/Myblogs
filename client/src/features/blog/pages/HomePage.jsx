@@ -583,8 +583,8 @@ export default function HomePage() {
               to="/job-alerts"
               sx={{
                 fontWeight: 700, fontSize: '0.85rem',
-                color: '#EF4444',
-                '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.04)' }
+                color: '#1E40AF',
+                '&:hover': { bgcolor: 'rgba(30, 64, 175, 0.06)' }
               }}
             >
               View All Alerts →

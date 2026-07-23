@@ -45,7 +45,7 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
         }
       }}
     >
-      <Box sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '16/9', minHeight: { xs: '200px', sm: '225px' }, width: '100%', flexShrink: 0, bgcolor: '#0f172a' }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '16/9', minHeight: { xs: '220px', sm: '260px' }, width: '100%', flexShrink: 0, bgcolor: '#0f172a' }}>
         {post.featuredImage ? (
           <Box
             component="img"
@@ -152,7 +152,7 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
           {post.excerpt}
         </Typography>
         
-        <Box sx={{ mt: 'auto', pt: 1.2, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ mt: 'auto', pt: 1.2, borderTop: '1px solid', borderColor: 'divider', minHeight: '24px' }}>
           <Box 
             sx={{ 
               display: 'flex', 
