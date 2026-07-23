@@ -14,7 +14,6 @@ export default defineConfig({
     cssCodeSplit: true,
     chunkSizeWarningLimit: 1000,
     modulePreload: {
-      // Only modulepreload the main framework entry point to prevent 1.3MB PDF payload on homepage
       polyfill: false,
     },
     rollupOptions: {

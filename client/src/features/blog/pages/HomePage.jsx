@@ -413,32 +413,52 @@ export default function HomePage() {
       .finally(() => setLoadingStories(false));
   }, []);
   useEffect(() => {
-    const categories = [
+    const primaryCategories = [
       'Sarkari Jobs & Exams',
       'Health & Wellness',
-      'Tech & Tutorials',
+      'Tech & Tutorials'
+    ];
+    const secondaryCategories = [
       'AI & Web Tools',
       'News & Trends',
       'Finance & Business'
     ];
 
     setLoadingCategories(true);
+    
+    // Step 1: Fetch top primary categories immediately for instant FCP/LCP
     Promise.all(
-      categories.map(cat => 
+      primaryCategories.map(cat => 
         request(`/api/posts?category=${encodeURIComponent(cat)}&limit=12`)
           .then(res => ({ category: cat, posts: res.posts || [] }))
-          .catch(err => {
-            console.error(`Error fetching category ${cat}:`, err);
-            return { category: cat, posts: [] };
-          })
+          .catch(err => ({ category: cat, posts: [] }))
       )
-    ).then(results => {
+    ).then(primaryResults => {
       const dataMap = {};
-      results.forEach(item => {
+      primaryResults.forEach(item => {
         dataMap[item.category] = item.posts;
       });
       setCategoriesData(dataMap);
       setLoadingCategories(false);
+
+      // Step 2: Defer secondary below-the-fold categories after initial paint
+      setTimeout(() => {
+        Promise.all(
+          secondaryCategories.map(cat => 
+            request(`/api/posts?category=${encodeURIComponent(cat)}&limit=12`)
+              .then(res => ({ category: cat, posts: res.posts || [] }))
+              .catch(err => ({ category: cat, posts: [] }))
+          )
+        ).then(secondaryResults => {
+          setCategoriesData(prev => {
+            const updated = { ...prev };
+            secondaryResults.forEach(item => {
+              updated[item.category] = item.posts;
+            });
+            return updated;
+          });
+        });
+      }, 600);
     });
   }, []);
   // Autoplay slideshow timer (advances every 5 seconds, manual arrow click resets the timer)
