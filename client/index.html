@@ -73,67 +73,7 @@
     <meta name="google-adsense-account" content="ca-pub-7044184444698366">
   </head>
   <body>
-    <div id="root">
-      <!-- Minimalist Brand Loading Splash Screen -->
-      <style>
-        .brand-loader-container {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          background-color: #ffffff;
-          font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-          z-index: 9999;
-          transition: opacity 0.3s ease;
-        }
-        .brand-loader-logo {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          background: #4F46E5;
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-          font-weight: 800;
-          margin-bottom: 16px;
-          will-change: transform;
-          animation: brand-pulse 1.8s infinite ease-in-out;
-        }
-        .brand-loader-title {
-          font-size: 20px;
-          font-weight: 700;
-          color: #111111;
-          letter-spacing: -0.02em;
-        }
-        .dark .brand-loader-container {
-          background-color: #0a0a0a;
-        }
-        .dark .brand-loader-title {
-          color: #F9FAFB;
-        }
-        @keyframes brand-pulse {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.95;
-          }
-          50% {
-            transform: scale(1.08);
-            opacity: 1;
-          }
-        }
-      </style>
-      <div class="brand-loader-container">
-        <img src="/favicon.png" alt="Digital Home" width="60" height="60" style="width: 60px; height: 60px; margin-bottom: 16px; will-change: transform; animation: brand-pulse 1.8s infinite ease-in-out;" />
-        <div class="brand-loader-title">Digital Home</div>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
