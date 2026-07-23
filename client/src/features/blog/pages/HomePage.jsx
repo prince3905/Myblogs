@@ -959,7 +959,6 @@ export default function HomePage() {
                 overflow: 'hidden', 
                 boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
                 aspectRatio: '16/9',
-                minHeight: { xs: '240px', sm: '280px' },
                 width: '100%',
                 bgcolor: '#f1f5f9'
               }}>
