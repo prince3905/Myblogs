@@ -57,85 +57,94 @@ async function sendWhatsappChannelMessage(post) {
     const templateName = process.env.TEMPLATE_NAME || process.env.WHATSAPP_TEMPLATE_NAME || 'job_alert';
     const langCode = process.env.WHATSAPP_TEMPLATE_LANG || 'hi';
 
-    // Meta Cloud API zero-click push
-    if (token && phoneId && recipientPhone) {
-      console.log(`[WhatsApp Auto-Share] Pushing via Meta WhatsApp Cloud API to ${recipientPhone} (Template: ${templateName})...`);
+    if (!token || !phoneId || !recipientPhone) {
+      const missingMsg = 'Meta Cloud API Credentials missing in .env (WHATSAPP_TOKEN, PHONE_NUMBER_ID, or WHATSAPP_PHONE).';
+      console.warn(`[WhatsApp Auto-Share] ${missingMsg}`);
+      return { success: false, error: missingMsg, shareUrl: formatted.shareUrl, formattedText: formatted.message };
+    }
 
+    console.log(`[WhatsApp Auto-Share] Pushing via Meta WhatsApp Cloud API to ${recipientPhone} (Template: ${templateName})...`);
+
+    try {
+      // Try sending approved Message Template (job_alert) with {{1}} and {{2}} parameters
+      const templateResponse = await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: recipientPhone,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: langCode },
+          components: [
+            {
+              type: 'body',
+              parameters: [
+                { type: 'text', text: (post.title || 'New Job Alert').slice(0, 100) },
+                { type: 'text', text: formatted.url }
+              ]
+            }
+          ]
+        }
+      }, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log(`[WhatsApp Auto-Share] Successfully pushed via Meta Cloud API template (${templateName})! ID: ${templateResponse.data?.messages?.[0]?.id || 'OK'}`);
+      return { 
+        success: true, 
+        message: `WhatsApp Push via template ${templateName} delivered successfully!`, 
+        shareUrl: formatted.shareUrl, 
+        formattedText: formatted.message,
+        metaMessageId: templateResponse.data?.messages?.[0]?.id
+      };
+    } catch (templateErr) {
+      const errorData = templateErr.response?.data?.error || {};
+      const errorMsg = errorData.message || templateErr.message;
+      const errorCode = errorData.code || 'UNKNOWN';
+      console.warn(`[WhatsApp Auto-Share] Meta Template (${templateName}) push error [Code ${errorCode}]:`, errorMsg);
+      
+      // Fallback to direct text payload if customer service window is open
+      console.log('[WhatsApp Auto-Share] Attempting direct text payload fallback...');
       try {
-        // Try sending approved Message Template (job_alert) with {{1}} and {{2}} parameters
-        const templateResponse = await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
+        const textResponse = await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
           messaging_product: 'whatsapp',
           recipient_type: 'individual',
           to: recipientPhone,
-          type: 'template',
-          template: {
-            name: templateName,
-            language: { code: langCode },
-            components: [
-              {
-                type: 'body',
-                parameters: [
-                  { type: 'text', text: (post.title || 'New Job Alert').slice(0, 100) },
-                  { type: 'text', text: formatted.url }
-                ]
-              }
-            ]
-          }
+          type: 'text',
+          text: { body: formatted.message }
         }, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
-
-        console.log(`[WhatsApp Auto-Share] Successfully pushed via Meta Cloud API template (${templateName})! ID: ${templateResponse.data?.messages?.[0]?.id || 'OK'}`);
-        return { 
-          success: true, 
-          message: `WhatsApp Push via template ${templateName} delivered successfully!`, 
-          shareUrl: formatted.shareUrl, 
+        console.log('[WhatsApp Auto-Share] Successfully pushed direct text payload!');
+        return {
+          success: true,
+          message: 'WhatsApp Push delivered via direct text payload!',
+          shareUrl: formatted.shareUrl,
           formattedText: formatted.message,
-          metaMessageId: templateResponse.data?.messages?.[0]?.id
+          metaMessageId: textResponse.data?.messages?.[0]?.id
         };
-      } catch (templateErr) {
-        const errorDetails = templateErr.response?.data || templateErr.message;
-        console.warn(`[WhatsApp Auto-Share] Template (${templateName}) push warning:`, JSON.stringify(errorDetails));
-        
-        // Fallback to direct text payload if customer service window is open
-        console.log('[WhatsApp Auto-Share] Attempting direct text payload fallback...');
-        try {
-          const textResponse = await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: recipientPhone,
-            type: 'text',
-            text: { body: formatted.message }
-          }, {
-            headers: { 
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          console.log('[WhatsApp Auto-Share] Successfully pushed direct text payload!');
-          return {
-            success: true,
-            message: 'WhatsApp Push delivered via direct text payload!',
-            shareUrl: formatted.shareUrl,
-            formattedText: formatted.message,
-            metaMessageId: textResponse.data?.messages?.[0]?.id
-          };
-        } catch (textErr) {
-          console.error('[WhatsApp Auto-Share] Direct text fallback also failed:', textErr.response?.data || textErr.message);
-        }
+      } catch (textErr) {
+        const textErrorData = textErr.response?.data?.error || {};
+        const finalErrorMsg = `Meta API Error [Code ${textErrorData.code || errorCode}]: ${textErrorData.message || errorMsg}`;
+        console.error('[WhatsApp Auto-Share] Direct text fallback also failed:', finalErrorMsg);
+        return {
+          success: false,
+          error: finalErrorMsg,
+          shareUrl: formatted.shareUrl,
+          formattedText: formatted.message
+        };
       }
-    } else {
-      console.warn('[WhatsApp Auto-Share] Skipping Meta Cloud API trigger: WHATSAPP_TOKEN, PHONE_NUMBER_ID, or WHATSAPP_PHONE is missing.');
     }
-
-    return { success: true, message: 'WhatsApp Push fallback URL prepared.', shareUrl: formatted.shareUrl, formattedText: formatted.message };
   } catch (err) {
-    console.error('[WhatsApp Auto-Share] Cloud API trigger exception:', err.response?.data || err.message);
-    const formatted = formatWhatsappBroadcastMessage(post);
-    return { success: true, shareUrl: formatted.shareUrl, formattedText: formatted.message };
+    const catchMsg = err.response?.data?.error?.message || err.message;
+    console.error('[WhatsApp Auto-Share] Cloud API trigger exception:', catchMsg);
+    return { success: false, error: `Meta API Error: ${catchMsg}` };
   }
 }
 

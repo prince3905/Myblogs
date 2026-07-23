@@ -839,9 +839,17 @@ async function sharePostToWhatsapp(req, res) {
     const { sendWhatsappChannelMessage } = require('../../shared/services/whatsappService');
     const result = await sendWhatsappChannelMessage(post);
 
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: result.error || 'WhatsApp sharing failed.',
+        shareUrl: result.shareUrl
+      });
+    }
+
     return res.json({
       success: true,
-      message: result.metaMessageId ? '✅ Meta WhatsApp Cloud API pe instant post ho gaya!' : 'WhatsApp Broadcast Triggered!',
+      message: result.metaMessageId ? '✅ Meta WhatsApp Cloud API pe instant post ho gaya!' : 'WhatsApp Broadcast Sent!',
       metaMessageId: result.metaMessageId,
       shareUrl: result.shareUrl,
       formattedText: result.formattedText
