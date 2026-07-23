@@ -568,11 +568,12 @@ export default function HomePage() {
             </Button>
           </Box>
 
-          {loadingAlerts ? (
-            <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>Loading updates...</Typography>
-          ) : alerts.length === 0 ? (
-            <Typography variant="body2" sx={{ color: 'text.secondary', py: 2, fontStyle: 'italic' }}>No active updates at the moment.</Typography>
-          ) : (
+          <Box sx={{ minHeight: '210px' }}>
+            {loadingAlerts ? (
+              <Typography variant="body2" sx={{ color: 'text.secondary', py: 4, textAlign: 'center' }}>Loading updates...</Typography>
+            ) : alerts.length === 0 ? (
+              <Typography variant="body2" sx={{ color: 'text.secondary', py: 4, fontStyle: 'italic', textAlign: 'center' }}>No active updates at the moment.</Typography>
+            ) : (
             <>
               {/* Desktop Slider View (sm and up) */}
               <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'relative', width: '100%' }}>
@@ -665,6 +666,7 @@ export default function HomePage() {
               </Box>
             </>
           )}
+          </Box>
         </Container>
       </Box>
 
