@@ -7,6 +7,42 @@ import { request } from '../../../shared/lib/api';
 import { calculateSeoScore } from '../../../shared/utils/seoAuditor';
 import { useToast } from '../../../components/Toast';
 
+const CircularScoreGauge = ({ score, label }) => {
+  const strokeColor = score >= 90 ? '#059669' : score >= 50 ? '#D97706' : '#DC2626';
+  const bgColor = score >= 90 ? '#ECFDF5' : score >= 50 ? '#FEF3C7' : '#FEF2F2';
+  const circumference = 2 * Math.PI * 38;
+  const strokeDashoffset = circumference - ((score || 0) / 100) * circumference;
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2, bgcolor: bgColor, borderRadius: 3.5, border: `1.5px solid ${strokeColor}40`, boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+      <Box sx={{ position: 'relative', width: 90, height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="90" height="90" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="38" stroke="#E2E8F0" strokeWidth="7" fill="none" />
+          <circle
+            cx="45"
+            cy="45"
+            r="38"
+            stroke={strokeColor}
+            strokeWidth="7"
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            transform="rotate(-90 45 45)"
+            style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+          />
+        </svg>
+        <Typography variant="h6" sx={{ position: 'absolute', fontWeight: 900, color: strokeColor, fontSize: '1.25rem' }}>
+          {score}
+        </Typography>
+      </Box>
+      <Typography variant="caption" sx={{ fontWeight: 800, color: '#334155', mt: 1, textTransform: 'uppercase', fontSize: '0.72rem', letterSpacing: '0.5px' }}>
+        {label}
+      </Typography>
+    </Box>
+  );
+};
+
 export default function AdminDashboardPage() {
   const { user } = useAuth();
   const { addToast } = useToast();
@@ -455,32 +491,12 @@ export default function AdminDashboardPage() {
 
           {psiResult && psiResult.success && (
             <Box sx={{ mt: 3, pt: 2.5, borderTop: '1px solid #ECECEC' }}>
-              {/* Category Scores Header Bar */}
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 2, mb: 3 }}>
-                <Box sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 2.5, border: '1px solid #E2E8F0', textAlign: 'center' }}>
-                  <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block' }}>PERFORMANCE</Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 900, color: (psiResult.scores?.performance || psiResult.score) >= 85 ? '#059669' : '#D97706', mt: 0.5 }}>
-                    {psiResult.scores?.performance || psiResult.score} / 100
-                  </Typography>
-                </Box>
-                <Box sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 2.5, border: '1px solid #E2E8F0', textAlign: 'center' }}>
-                  <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block' }}>ACCESSIBILITY</Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 900, color: (psiResult.scores?.accessibility || 95) >= 90 ? '#059669' : '#D97706', mt: 0.5 }}>
-                    {psiResult.scores?.accessibility || 95} / 100
-                  </Typography>
-                </Box>
-                <Box sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 2.5, border: '1px solid #E2E8F0', textAlign: 'center' }}>
-                  <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block' }}>BEST PRACTICES</Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 900, color: (psiResult.scores?.bestPractices || 96) >= 90 ? '#059669' : '#D97706', mt: 0.5 }}>
-                    {psiResult.scores?.bestPractices || 96} / 100
-                  </Typography>
-                </Box>
-                <Box sx={{ bgcolor: '#F8FAFC', p: 2, borderRadius: 2.5, border: '1px solid #E2E8F0', textAlign: 'center' }}>
-                  <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, display: 'block' }}>SEO READINESS</Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 900, color: (psiResult.scores?.seo || 100) >= 90 ? '#059669' : '#D97706', mt: 0.5 }}>
-                    {psiResult.scores?.seo || 100} / 100
-                  </Typography>
-                </Box>
+              {/* Official Google Lighthouse Style Circular Gauge Score Header */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 2.5, mb: 3 }}>
+                <CircularScoreGauge score={psiResult.scores?.performance || psiResult.score || 0} label="Performance" />
+                <CircularScoreGauge score={psiResult.scores?.accessibility || 95} label="Accessibility" />
+                <CircularScoreGauge score={psiResult.scores?.bestPractices || 96} label="Best Practices" />
+                <CircularScoreGauge score={psiResult.scores?.seo || 100} label="SEO Readiness" />
               </Box>
 
               {/* 6 Report Section Navigation Tabs */}
