@@ -119,7 +119,7 @@ export default function TelegramStickyBanner() {
           <Button
             variant="contained"
             component="a"
-            href="https://t.me/DigitalHomeJobsAlerts"
+            href="https://t.me/SarkariJob_DigitalHome"
             target="_blank"
             rel="noopener noreferrer"
             startIcon={<SendIcon sx={{ transform: 'rotate(-30deg)', fontSize: '18px !important' }} />}

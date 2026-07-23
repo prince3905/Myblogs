@@ -332,7 +332,7 @@ export default function PostPage() {
           <div style="margin-bottom: 15px; padding: 10px 15px; background-color: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 4px; font-size: 13px; color: #0369a1; display: flex; align-items: center; gap: 8px;">
             <span>📢</span>
             <strong>Join Our Telegram Channel for Live Updates: </strong>
-            <a href="https://t.me/DigitalHomeJobsAlerts" style="color: #2563eb; font-weight: 700; text-decoration: underline;">t.me/DigitalHomeJobsAlerts</a>
+            <a href="https://t.me/SarkariJob_DigitalHome" style="color: #2563eb; font-weight: 700; text-decoration: underline;">t.me/SarkariJob_DigitalHome</a>
           </div>
           <h3 style="margin-top: 0; color: #10b981; font-weight: 800; font-size: 16px; margin-bottom: 12px;">🚀 Free Student Utility Services (100% Free & No Ads):</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
@@ -801,7 +801,7 @@ export default function PostPage() {
               
               <Button
                 variant="contained"
-                href="https://t.me/DigitalHomeJobsAlerts"
+                href="https://t.me/SarkariJob_DigitalHome"
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={{
