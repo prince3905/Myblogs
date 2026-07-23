@@ -1,24 +1,55 @@
 const axios = require('axios');
 
 async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', strategy = 'desktop') {
-  try {
-    const apiKey = process.env.PAGESPEED_API_KEY || process.env.PSI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyAgIM5iOgxLZslRaLPAk1DrwelhjOFm6Jc';
-    let apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=${strategy}&category=performance&category=accessibility&category=best-practices&category=seo`;
-    if (apiKey) {
-      apiUrl += `&key=${encodeURIComponent(apiKey)}`;
-    }
+  const apiKey = process.env.PAGESPEED_API_KEY || process.env.PSI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyAgIM5iOgxLZslRaLPAk1DrwelhjOFm6Jc';
+  
+  let primaryApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=${strategy}&category=performance&category=accessibility&category=best-practices&category=seo`;
+  if (apiKey) {
+    primaryApiUrl += `&key=${encodeURIComponent(apiKey)}`;
+  }
 
-    console.log(`[PageSpeed Service] Running ${strategy} full multi-category audit for ${targetUrl}...`);
-    const response = await axios.get(apiUrl, {
+  const fallbackApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=${strategy}&category=performance&category=accessibility&category=best-practices&category=seo`;
+
+  console.log(`[PageSpeed Service] Running ${strategy} full multi-category audit for ${targetUrl}...`);
+
+  let responseData = null;
+  try {
+    const response = await axios.get(primaryApiUrl, {
       timeout: 60000,
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     });
-    const data = response.data;
+    responseData = response.data;
+  } catch (primaryErr) {
+    console.warn('[PageSpeed Service] Primary Key query failed/disabled. Retrying with fallback unauthenticated endpoint...', primaryErr.response?.data?.error?.message || primaryErr.message);
+    try {
+      const fallbackResponse = await axios.get(fallbackApiUrl, {
+        timeout: 60000,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      });
+      responseData = fallbackResponse.data;
+    } catch (fallbackErr) {
+      console.error('[PageSpeed Service] Audit failed on both primary and fallback endpoints:', fallbackErr.response?.data?.error?.message || fallbackErr.message);
+      const statusCode = fallbackErr.response?.status || primaryErr.response?.status;
+      let userMsg = fallbackErr.response?.data?.error?.message || primaryErr.response?.data?.error?.message || fallbackErr.message;
+      if (userMsg.includes('disabled') || userMsg.includes('has not been used')) {
+        userMsg = 'PageSpeed Insights API is disabled for this key in Google Cloud. Please enable it here: https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com';
+      }
+      return {
+        success: false,
+        error: userMsg,
+        statusCode
+      };
+    }
+  }
 
-    const lh = data.lighthouseResult;
+  try {
+    const lh = responseData.lighthouseResult;
     if (!lh) {
       throw new Error('Invalid Google PageSpeed response: missing lighthouseResult');
     }
@@ -167,16 +198,10 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
       passedAudits: passedAudits.slice(0, 50)
     };
   } catch (err) {
-    console.error('[PageSpeed Service] Audit failed:', err.response?.data?.error?.message || err.message);
-    const statusCode = err.response?.status;
-    let userMsg = err.response?.data?.error?.message || err.message;
-    if (statusCode === 429) {
-      userMsg = 'Quota exceeded when unauthenticated. Please configure PAGESPEED_API_KEY in environment.';
-    }
+    console.error('[PageSpeed Service] Parsing error:', err.message);
     return {
       success: false,
-      error: userMsg,
-      statusCode
+      error: err.message
     };
   }
 }
