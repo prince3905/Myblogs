@@ -841,7 +841,8 @@ async function sharePostToWhatsapp(req, res) {
 
     return res.json({
       success: true,
-      message: 'WhatsApp broadcast link prepared successfully!',
+      message: result.metaMessageId ? '✅ Meta WhatsApp Cloud API pe instant post ho gaya!' : 'WhatsApp Broadcast Triggered!',
+      metaMessageId: result.metaMessageId,
       shareUrl: result.shareUrl,
       formattedText: result.formattedText
     });

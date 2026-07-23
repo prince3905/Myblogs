@@ -249,11 +249,16 @@ export default function AdminDashboardPage() {
     try {
       const res = await request(`/api/admin/posts/${postId}/whatsapp-share`, { method: 'POST' });
       if (res.success) {
-        if (res.shareUrl) {
+        if (res.metaMessageId) {
+          addToast('✅ Meta WhatsApp Cloud API pe instant post ho gaya!', 'success');
+          setSuccessMsg('✅ WhatsApp Channel / Phone pe message deliver ho gaya!');
+        } else if (res.shareUrl) {
           window.open(res.shareUrl, '_blank', 'noopener,noreferrer');
+          addToast('✅ WhatsApp Web khul gaya — Channel pe send karo!', 'success');
+          setSuccessMsg('WhatsApp Web open hua — channel me paste karke send karo!');
+        } else {
+          addToast('✅ WhatsApp Trigger complete!', 'success');
         }
-        addToast('✅ WhatsApp Web khul gaya — Channel pe send karo!', 'success');
-        setSuccessMsg('WhatsApp Web open hua — channel me paste karke send karo!');
       } else {
         addToast(res.message || 'WhatsApp sharing failed.', 'error');
         setError(res.message || 'WhatsApp sharing failed.');
