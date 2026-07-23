@@ -252,12 +252,9 @@ export default function AdminDashboardPage() {
         if (res.metaMessageId) {
           addToast('✅ Meta WhatsApp Cloud API pe instant post ho gaya!', 'success');
           setSuccessMsg('✅ WhatsApp Channel / Phone pe message deliver ho gaya!');
-        } else if (res.shareUrl) {
-          window.open(res.shareUrl, '_blank', 'noopener,noreferrer');
-          addToast('✅ WhatsApp Web khul gaya — Channel pe send karo!', 'success');
-          setSuccessMsg('WhatsApp Web open hua — channel me paste karke send karo!');
         } else {
-          addToast('✅ WhatsApp Trigger complete!', 'success');
+          addToast(res.message || 'WhatsApp Cloud API Trigger Executed!', 'info');
+          setSuccessMsg('WhatsApp Auto-Share trigger completed.');
         }
       } else {
         addToast(res.message || 'WhatsApp sharing failed.', 'error');
