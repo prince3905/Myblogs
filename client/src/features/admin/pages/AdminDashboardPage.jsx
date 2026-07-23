@@ -779,13 +779,18 @@ export default function AdminDashboardPage() {
 
                 {/* Applied Fixes List */}
                 <Typography variant="caption" sx={{ fontWeight: 800, color: '#581C87', display: 'block', mb: 0.5 }}>
-                  🛠️ Applied Code & Container Fixes:
+                  🛠️ Real Automated Code & Container Fixes Executed:
                 </Typography>
                 {fixResult.appliedFixes?.map((fix, idx) => (
                   <Box key={idx} sx={{ bgcolor: 'white', p: 1.2, mb: 0.8, borderRadius: 1.5, border: '1px solid #F3E8FF' }}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#7E22CE', display: 'block' }}>
-                      ✅ {fix.title}
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.3 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: '#7E22CE' }}>
+                        {fix.status || 'FIXED ✅'} {fix.title}
+                      </Typography>
+                      {fix.targetFile && (
+                        <Chip label={fix.targetFile} size="small" sx={{ fontFamily: 'monospace', fontSize: '0.65rem', height: 20, bgcolor: '#F3E8FF', color: '#6B21A8', fontWeight: 700 }} />
+                      )}
+                    </Box>
                     <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.73rem', display: 'block' }}>
                       {fix.details}
                     </Typography>
