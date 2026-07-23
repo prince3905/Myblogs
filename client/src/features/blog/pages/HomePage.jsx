@@ -690,14 +690,14 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* WhatsApp Channel Callout Banner */}
+      {/* Telegram Channel Callout Banner */}
       <Box 
         component="section"
         sx={{
           py: { xs: 2.5, md: 3 },
           px: { xs: 2, md: 6 },
-          bgcolor: '#f0fdf4',
-          borderBottom: '1px solid #dcfce7',
+          bgcolor: '#f0f9ff',
+          borderBottom: '1px solid #e0f2fe',
         }}
       >
         <Container maxWidth="xl" sx={{ px: { xs: 0, md: 6 } }}>
@@ -705,9 +705,9 @@ export default function HomePage() {
             sx={{
               p: { xs: 2.5, md: 3.5 },
               borderRadius: '16px',
-              background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
+              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
               color: '#ffffff',
-              boxShadow: '0 10px 25px -5px rgba(21, 128, 61, 0.3)',
+              boxShadow: '0 10px 25px -5px rgba(2, 132, 199, 0.3)',
               display: 'flex',
               flexDirection: { xs: 'column', md: 'row' },
               alignItems: { xs: 'flex-start', md: 'center' },
@@ -719,7 +719,7 @@ export default function HomePage() {
               <Box 
                 sx={{ 
                   bgcolor: '#ffffff', 
-                  color: '#25D366', 
+                  color: '#0284c7', 
                   borderRadius: '12px', 
                   p: 1.5, 
                   display: 'flex',
@@ -728,44 +728,43 @@ export default function HomePage() {
                 }}
               >
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M17.472 14.382C17.11 14.201 15.33 13.325 14.998 13.205C14.667 13.085 14.426 13.025 14.185 13.386C13.944 13.747 13.252 14.56 13.042 14.801C12.831 15.042 12.62 15.072 12.259 14.891C11.898 14.71 10.736 14.33 9.359 13.102C8.28 12.14 7.551 10.952 7.34 10.591C7.129 10.23 7.318 10.035 7.499 9.855C7.662 9.693 7.861 9.432 8.042 9.221C8.223 9.01 8.283 8.86 8.403 8.619C8.524 8.378 8.464 8.167 8.374 7.986C8.284 7.805 7.561 6.031 7.26 5.308C6.967 4.604 6.67 4.7 6.452 4.689C6.246 4.679 6.005 4.678 5.764 4.678C5.523 4.678 5.132 4.768 4.801 5.129C4.47 5.49 3.538 6.362 3.538 8.138C3.538 9.914 4.831 11.629 5.012 11.87C5.193 12.111 7.561 15.748 11.18 17.313C12.041 17.684 12.712 17.907 13.237 18.074C14.101 18.349 14.888 18.31 15.512 18.217C16.208 18.113 17.653 17.342 17.954 16.499C18.255 15.656 18.255 14.934 18.165 14.783C18.075 14.633 17.834 14.543 17.472 14.382Z" fill="currentColor"/>
-                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12C2 13.891 2.525 15.66 3.438 17.168L2.05 21.737L6.758 20.395C8.217 21.417 9.99 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM4.011 12C4.011 7.588 7.588 4.011 12 4.011C16.412 4.011 19.989 7.588 19.989 12C19.989 16.412 16.412 19.989 12 19.989C10.285 19.989 8.704 19.447 7.411 18.528L4.629 19.324L5.448 16.604C4.536 15.289 4.011 13.705 4.011 12Z" fill="currentColor"/>
+                  <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.84 9.1L15.22 16.74C15.1 17.29 14.77 17.42 14.31 17.16L11.84 15.34L10.65 16.49C10.52 16.62 10.41 16.73 10.16 16.73L10.34 14.18L14.98 9.98C15.18 9.8 14.94 9.7 14.67 9.88L8.94 13.49L6.47 12.71C5.93 12.54 5.92 12.17 6.58 11.91L16.23 8.19C16.68 8.02 17.07 8.29 16.84 9.1Z" fill="currentColor"/>
                 </svg>
               </Box>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 800, fontSize: { xs: '1.1rem', md: '1.35rem' }, lineHeight: 1.3 }}>
-                  Join Official WhatsApp Channel 📲
+                  Join Official Telegram Channel ✈️
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#dcfce7', fontWeight: 500, mt: 0.5, fontSize: { xs: '0.85rem', md: '0.95rem' } }}>
-                  Sarkari Result, Admit Card, Answer Key aur Instant Job Alerts direct apne WhatsApp par paayein!
+                <Typography variant="body2" sx={{ color: '#e0f2fe', fontWeight: 500, mt: 0.5, fontSize: { xs: '0.85rem', md: '0.95rem' } }}>
+                  Sarkari Result, Admit Card, Answer Key aur Instant Job Alerts direct apne Telegram par paayein!
                 </Typography>
               </Box>
             </Box>
 
             <Button
               component="a"
-              href="https://whatsapp.com/channel/0029VbD4hpfBA1esfvy9gY1Y"
+              href="https://t.me/SarkariJob_DigitalHome"
               target="_blank"
               rel="noopener noreferrer"
               variant="contained"
               sx={{
-                bgcolor: '#25D366',
-                color: '#ffffff',
+                bgcolor: '#ffffff',
+                color: '#0284c7',
                 fontWeight: 900,
                 fontSize: { xs: '0.85rem', md: '0.95rem' },
                 py: 1.3,
                 px: 3.5,
                 borderRadius: '12px',
                 textTransform: 'none',
-                boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)',
+                boxShadow: '0 4px 14px rgba(255, 255, 255, 0.4)',
                 whiteSpace: 'nowrap',
                 '&:hover': {
-                  bgcolor: '#1eaa53',
-                  boxShadow: '0 6px 18px rgba(37, 211, 102, 0.5)',
+                  bgcolor: '#f8fafc',
+                  color: '#0369a1',
                 }
               }}
             >
-              Join WhatsApp Channel Now 🚀
+              Join Telegram Channel Now 🚀
             </Button>
           </Box>
         </Container>
