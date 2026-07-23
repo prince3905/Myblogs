@@ -8,10 +8,18 @@ const labels = {
   afterpost: 'After Post Ad',
 };
 
+const defaultMinHeights = {
+  sidebar: 250,
+  incontent: 120,
+  afterpost: 160,
+};
+
 export default function AdSlot({ format = 'sidebar', style }) {
   const [code, setCode] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const ref = useRef(null);
+
+  const minH = defaultMinHeights[format] || 250;
 
   useEffect(() => {
     request('/api/ads')
@@ -40,35 +48,26 @@ export default function AdSlot({ format = 'sidebar', style }) {
     ref.current.appendChild(div);
   }, [code]);
 
-  if (!loaded) return null;
+  if (!loaded) {
+    return <Box sx={{ minHeight: minH, width: '100%', ...style }} />;
+  }
 
   if (!code) {
-    const s = {
-      sidebar: { minHeight: 250 },
-      incontent: { minHeight: 120 },
-      afterpost: { minHeight: 160 },
-    }[format] || { minHeight: 250 };
-
     return (
       <Paper elevation={0} sx={{
         borderRadius: 3, border: '1px dashed', borderColor: 'divider',
         bgcolor: 'action.hover', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', minHeight: s.minHeight, textAlign: 'center',
+        justifyContent: 'center', minHeight: minH, textAlign: 'center',
         overflow: 'hidden', ...style,
       }}>
         <Box sx={{ py: 3, px: 2 }}>
           <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
-            — {labels[format] || format} —
-          </Typography>
-          <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 0.5 }}>
-            No ad code set
+            {labels[format] || 'Ad Space'}
           </Typography>
         </Box>
       </Paper>
     );
   }
 
-  return (
-    <Box ref={ref} sx={{ overflow: 'hidden', ...style }} />
-  );
+  return <Box ref={ref} sx={{ minHeight: minH, overflow: 'hidden', ...style }} />;
 }
