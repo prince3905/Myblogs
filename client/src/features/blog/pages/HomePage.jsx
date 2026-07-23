@@ -393,7 +393,7 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    request('/api/public/live-alerts?status=active&limit=24')
+    request('/api/public/live-alerts?status=active&limit=16')
       .then(res => {
         if (res.success) {
           setAlerts(res.data || []);
@@ -403,14 +403,17 @@ export default function HomePage() {
       .finally(() => setLoadingAlerts(false));
   }, []);
   useEffect(() => {
-    request('/api/public/web-stories?limit=12')
-      .then(res => {
-        if (res.success) {
-          setStories(res.data || []);
-        }
-      })
-      .catch(err => console.error(err))
-      .finally(() => setLoadingStories(false));
+    // Defer below-the-fold Web Stories slightly for instant Hero LCP
+    setTimeout(() => {
+      request('/api/public/web-stories?limit=8')
+        .then(res => {
+          if (res.success) {
+            setStories(res.data || []);
+          }
+        })
+        .catch(err => console.error(err))
+        .finally(() => setLoadingStories(false));
+    }, 150);
   }, []);
   useEffect(() => {
     const primaryCategories = [
@@ -429,7 +432,7 @@ export default function HomePage() {
     // Step 1: Fetch top primary categories immediately for instant FCP/LCP
     Promise.all(
       primaryCategories.map(cat => 
-        request(`/api/posts?category=${encodeURIComponent(cat)}&limit=12`)
+        request(`/api/posts?category=${encodeURIComponent(cat)}&limit=6`)
           .then(res => ({ category: cat, posts: res.posts || [] }))
           .catch(err => ({ category: cat, posts: [] }))
       )
@@ -445,7 +448,7 @@ export default function HomePage() {
       setTimeout(() => {
         Promise.all(
           secondaryCategories.map(cat => 
-            request(`/api/posts?category=${encodeURIComponent(cat)}&limit=12`)
+            request(`/api/posts?category=${encodeURIComponent(cat)}&limit=6`)
               .then(res => ({ category: cat, posts: res.posts || [] }))
               .catch(err => ({ category: cat, posts: [] }))
           )
@@ -458,7 +461,7 @@ export default function HomePage() {
             return updated;
           });
         });
-      }, 600);
+      }, 400);
     });
   }, []);
   // Autoplay slideshow timer (advances every 5 seconds, manual arrow click resets the timer)
