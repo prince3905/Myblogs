@@ -6,7 +6,7 @@ function formatWhatsappBroadcastMessage(post) {
   const category = post.category || 'Sarkari Jobs & Exams';
   const catSlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'blog';
   const siteUrl = 'https://www.digitalhomeblog.in';
-  const url = `${siteUrl}/blog/${catSlug}/${post.slug}`;
+  const url = post.url || `${siteUrl}/blog/${catSlug}/${post.slug}`;
   const content = post.content || '';
   const cleanContent = content.replace(/<[^>]*>/g, ' ');
 
@@ -34,14 +34,12 @@ function formatWhatsappBroadcastMessage(post) {
     message += `🔢 *कुल पद (Vacancies):* ${totalPosts.slice(0, 40)}\n`;
     message += `📅 *अंतिम तिथि (Last Date):* ${lastDate.slice(0, 30)}\n\n`;
     message += `📚 पूरी जानकारी और ऑनलाइन आवेदन के लिए नीचे दिए गए लिंक पर क्लिक करें:\n`;
-    message += `👉 ${url}\n\n`;
-    message += `📲 *ऑफिशियल व्हाट्सएप चैनल ज्वाइन करें:* \nhttps://whatsapp.com/channel/0029VbD4hpfBA1esfvy9gY1Y`;
+    message += `👉 ${url}`;
   } else {
     message = `📢 *नया आर्टिकल लाइव! (New Post Alert)* 📢\n\n`;
     message += `💡 *शीर्षक:* ${title}\n\n`;
     message += `🔗 *पूरा आर्टिकल पढ़ने के लिए नीचे क्लिक करें:*\n`;
-    message += `👉 ${url}\n\n`;
-    message += `📲 *व्हाट्सएप चैनल ज्वाइन करें:* \nhttps://whatsapp.com/channel/0029VbD4hpfBA1esfvy9gY1Y`;
+    message += `👉 ${url}`;
   }
 
   const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
@@ -53,25 +51,26 @@ async function sendWhatsappChannelMessage(post) {
     const formatted = formatWhatsappBroadcastMessage(post);
     console.log(`[WhatsApp Auto-Share] Prepared WhatsApp broadcast for: "${post.title}"`);
 
-    const token = process.env.WHATSAPP_API_TOKEN;
-    const phoneId = process.env.WHATSAPP_PHONE_ID;
+    const token = process.env.WHATSAPP_TOKEN || process.env.WHATSAPP_API_TOKEN;
+    const phoneId = process.env.PHONE_NUMBER_ID || process.env.WHATSAPP_PHONE_ID;
     const recipientPhone = process.env.WHATSAPP_PHONE || process.env.WHATSAPP_CHANNEL_ID;
-    const templateName = process.env.WHATSAPP_TEMPLATE_NAME || 'job_alert';
+    const templateName = process.env.TEMPLATE_NAME || process.env.WHATSAPP_TEMPLATE_NAME || 'job_alert';
+    const langCode = process.env.WHATSAPP_TEMPLATE_LANG || 'hi';
 
     // Meta Cloud API zero-click push
     if (token && phoneId && recipientPhone) {
-      console.log(`[WhatsApp Auto-Share] Pushing via Meta WhatsApp Cloud API to ${recipientPhone}...`);
+      console.log(`[WhatsApp Auto-Share] Pushing via Meta WhatsApp Cloud API to ${recipientPhone} (Template: ${templateName})...`);
 
       try {
-        // Try sending approved Message Template (job_alert)
-        await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
+        // Try sending approved Message Template (job_alert) with {{1}} and {{2}} parameters
+        const templateResponse = await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
           messaging_product: 'whatsapp',
           recipient_type: 'individual',
           to: recipientPhone,
           type: 'template',
           template: {
             name: templateName,
-            language: { code: process.env.WHATSAPP_TEMPLATE_LANG || 'hi' },
+            language: { code: langCode },
             components: [
               {
                 type: 'body',
@@ -88,31 +87,53 @@ async function sendWhatsappChannelMessage(post) {
             'Content-Type': 'application/json'
           }
         });
-        console.log(`[WhatsApp Auto-Share] Successfully pushed via Meta Cloud API template (${templateName})!`);
+
+        console.log(`[WhatsApp Auto-Share] Successfully pushed via Meta Cloud API template (${templateName})! ID: ${templateResponse.data?.messages?.[0]?.id || 'OK'}`);
+        return { 
+          success: true, 
+          message: `WhatsApp Push via template ${templateName} delivered successfully!`, 
+          shareUrl: formatted.shareUrl, 
+          formattedText: formatted.message,
+          metaMessageId: templateResponse.data?.messages?.[0]?.id
+        };
       } catch (templateErr) {
-        console.warn(`[WhatsApp Auto-Share] Template (${templateName}) push warning:`, templateErr.response?.data?.error?.message || templateErr.message);
-        console.log('[WhatsApp Auto-Share] Falling back to direct text payload...');
+        const errorDetails = templateErr.response?.data || templateErr.message;
+        console.warn(`[WhatsApp Auto-Share] Template (${templateName}) push warning:`, JSON.stringify(errorDetails));
         
         // Fallback to direct text payload if customer service window is open
-        await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
-          messaging_product: 'whatsapp',
-          recipient_type: 'individual',
-          to: recipientPhone,
-          type: 'text',
-          text: { body: formatted.message }
-        }, {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        console.log('[WhatsApp Auto-Share] Successfully pushed direct text payload!');
+        console.log('[WhatsApp Auto-Share] Attempting direct text payload fallback...');
+        try {
+          const textResponse = await axios.post(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: recipientPhone,
+            type: 'text',
+            text: { body: formatted.message }
+          }, {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          console.log('[WhatsApp Auto-Share] Successfully pushed direct text payload!');
+          return {
+            success: true,
+            message: 'WhatsApp Push delivered via direct text payload!',
+            shareUrl: formatted.shareUrl,
+            formattedText: formatted.message,
+            metaMessageId: textResponse.data?.messages?.[0]?.id
+          };
+        } catch (textErr) {
+          console.error('[WhatsApp Auto-Share] Direct text fallback also failed:', textErr.response?.data || textErr.message);
+        }
       }
+    } else {
+      console.warn('[WhatsApp Auto-Share] Skipping Meta Cloud API trigger: WHATSAPP_TOKEN, PHONE_NUMBER_ID, or WHATSAPP_PHONE is missing.');
     }
 
-    return { success: true, message: 'WhatsApp Push triggered successfully!', shareUrl: formatted.shareUrl, formattedText: formatted.message };
+    return { success: true, message: 'WhatsApp Push fallback URL prepared.', shareUrl: formatted.shareUrl, formattedText: formatted.message };
   } catch (err) {
-    console.error('[WhatsApp Auto-Share] Cloud API trigger warning:', err.response?.data || err.message);
+    console.error('[WhatsApp Auto-Share] Cloud API trigger exception:', err.response?.data || err.message);
     const formatted = formatWhatsappBroadcastMessage(post);
     return { success: true, shareUrl: formatted.shareUrl, formattedText: formatted.message };
   }
@@ -123,9 +144,9 @@ async function sendWhatsappDraftAlert(post) {
     require('../../modules/settings/settings.model'); // Ensure settings schema is loaded
     const Settings = mongoose.model('Settings');
     
-    // Check if enabled (we use disableWhatsappNotification to be consistent with other configurations)
+    // Check if enabled
     const enabledSetting = await Settings.findOne({ key: 'disableWhatsappNotification' });
-    const isWhatsappDisabled = enabledSetting ? enabledSetting.value === true : true; // Default to disabled (true)
+    const isWhatsappDisabled = enabledSetting ? enabledSetting.value === true : true; // Default to disabled
     
     if (isWhatsappDisabled) {
       console.log('[WhatsApp Notification] WhatsApp alerts are currently paused in system settings.');
