@@ -45,20 +45,23 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
         }
       }}
     >
-      <Box sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '16/9', flexShrink: 0, bgcolor: '#0f172a' }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '16/9', minHeight: { xs: '190px', sm: '225px' }, flexShrink: 0, bgcolor: '#0f172a' }}>
         {post.featuredImage ? (
           <Box
             component="img"
             src={optimizeImage(post.featuredImage, 400)}
+            srcSet={`${optimizeImage(post.featuredImage, 360)} 360w, ${optimizeImage(post.featuredImage, 500)} 500w`}
+            sizes="(max-width: 600px) 100vw, 400px"
             alt={post.title}
-            width="700"
-            height="394"
+            width="400"
+            height="225"
             loading={isFirst ? "eager" : "lazy"}
             {...(isFirst ? { fetchpriority: "high" } : {})}
             sx={{
               width: '100%',
               height: '100%',
               objectFit: 'cover',
+              display: 'block',
               transition: 'transform 0.5s ease',
               '&:hover': {
                 transform: 'scale(1.05)',

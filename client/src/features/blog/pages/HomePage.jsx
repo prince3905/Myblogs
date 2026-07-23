@@ -968,10 +968,12 @@ export default function HomePage() {
                 ) : featuredPost?.featuredImage ? (
                   <Box
                     component="img"
-                    src={optimizeImage(featuredPost.featuredImage, 700)}
+                    src={optimizeImage(featuredPost.featuredImage, 480)}
+                    srcSet={`${optimizeImage(featuredPost.featuredImage, 380)} 380w, ${optimizeImage(featuredPost.featuredImage, 700)} 700w`}
+                    sizes="(max-width: 600px) 100vw, 700px"
                     alt={featuredPost.title}
-                    width="700"
-                    height="380"
+                    width="480"
+                    height="270"
                     loading="eager"
                     fetchPriority="high"
                     sx={{
