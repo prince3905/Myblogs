@@ -24,9 +24,13 @@ const liveAlertRoutes = require('./modules/liveAlerts/liveAlert.routes');
 const settingsRoutes = require('./modules/settings/settings.routes');
 const { geoTranslateMiddleware } = require('./shared/middleware/geoTranslate');
 const { sitemap, robots, rssFeed, getHomepageData } = require('./modules/posts/post.controller');
+const serverCacheService = require('./shared/services/serverCacheService');
 
 const app = express();
 const publicPath = path.join(__dirname, '../public');
+
+// Static asset HTTP Cache-Control header injection (max-age 1 year for static assets)
+app.use(serverCacheService.staticAssetCacheMiddleware());
 
 // Force HTTPS and Canonical WWW Domain Redirect in Production (Prevents redirect loops/chains)
 app.use((req, res, next) => {
@@ -56,9 +60,12 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(requestLogger);
 
+// In-Memory API Cache middleware for public read endpoints
+app.use('/api', serverCacheService.apiCacheMiddleware());
+
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, timestamp: new Date().toISOString() });
+  res.json({ success: true, cacheStats: serverCacheService.getStats(), timestamp: new Date().toISOString() });
 });
 
 // Geo-translate middleware (detects country & translates for non-IN visitors)
