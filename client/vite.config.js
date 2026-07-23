@@ -13,7 +13,9 @@ export default defineConfig({
     target: 'esnext',
     cssCodeSplit: true,
     chunkSizeWarningLimit: 1000,
-    modulePreload: false, // Disable render-blocking modulepreload links in HTML for heavy vendor chunks
+    modulePreload: {
+      polyfill: false,
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -21,11 +23,8 @@ export default defineConfig({
             if (id.includes('@mui/icons-material')) {
               return 'vendor-icons';
             }
-            if (id.includes('@mui') || id.includes('@emotion')) {
-              return 'vendor-mui';
-            }
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('scheduler')) {
-              return 'vendor-core';
+            if (id.includes('@mui') || id.includes('@emotion') || id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-framework';
             }
           }
         }
