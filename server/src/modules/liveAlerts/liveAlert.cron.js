@@ -901,8 +901,8 @@ async function publishNextQueuedPost() {
   try {
     const Settings = require('../settings/settings.model');
     const disableSetting = await Settings.findOne({ key: 'disableQueuePublisher' });
-    // Default to true (disabled/OFF) to verify manual review stays active by default
-    const isPublisherDisabled = disableSetting ? disableSetting.value === true : true;
+    // Default to false (ENABLED) so scheduled posts automatically publish and share to Telegram
+    const isPublisherDisabled = disableSetting ? disableSetting.value === true : false;
 
     if (isPublisherDisabled) {
       console.log('[Queue Publisher] Auto-publishing skipped: Queue Publisher is disabled in settings.');

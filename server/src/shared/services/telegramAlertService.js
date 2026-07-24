@@ -6,9 +6,9 @@ async function sendTelegramDraftAlert(post) {
     require('../../modules/settings/settings.model'); // Ensure settings schema is loaded
     const Settings = mongoose.model('Settings');
     
-    // Check if enabled
+    // Check if enabled (default to enabled: false)
     const enabledSetting = await Settings.findOne({ key: 'disableTelegramDraftAlert' });
-    const isTelegramDisabled = enabledSetting ? enabledSetting.value === true || enabledSetting.value === 'true' : true; // Default to disabled (true)
+    const isTelegramDisabled = enabledSetting ? enabledSetting.value === true || enabledSetting.value === 'true' : false;
     
     if (isTelegramDisabled) {
       console.log('[Telegram Private Notification] Private draft alerts are currently paused in system settings.');
@@ -16,7 +16,7 @@ async function sendTelegramDraftAlert(post) {
     }
     
     const chatIdSetting = await Settings.findOne({ key: 'telegramPrivateChatId' });
-    const chatId = chatIdSetting ? chatIdSetting.value : '';
+    const chatId = chatIdSetting && chatIdSetting.value ? chatIdSetting.value : '@SarkariJob_DigitalHome';
     const botToken = process.env.TELEGRAM_BOT_TOKEN || '8078376465:AAFeM1wzXr82zIrLDT1zaTkUjabD44RTByE';
     
     if (!chatId) {

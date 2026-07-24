@@ -1,8 +1,8 @@
 const axios = require('axios');
 
 async function sendTelegramMessage(post, actionType = 'URL_UPDATED') {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const token = process.env.TELEGRAM_BOT_TOKEN || '8078376465:AAFeM1wzXr82zIrLDT1zaTkUjabD44RTByE';
+  const chatId = process.env.TELEGRAM_CHAT_ID || '@SarkariJob_DigitalHome';
 
   if (!token || !chatId) {
     console.warn('[Telegram Auto-Share] TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set. Skipping Telegram notification.');
