@@ -444,8 +444,10 @@ export default function HomePage() {
       setCategoriesData(dataMap);
       setLoadingCategories(false);
 
-      // Step 2: Defer secondary below-the-fold categories after initial paint
-      setTimeout(() => {
+      // Step 2: Defer secondary below-the-fold categories until user interaction or 3.5s idle
+      const fetchSecondary = () => {
+        if (window.secondaryCategoriesFetched) return;
+        window.secondaryCategoriesFetched = true;
         Promise.all(
           secondaryCategories.map(cat => 
             request(`/api/posts?category=${encodeURIComponent(cat)}&limit=6`)
@@ -461,7 +463,12 @@ export default function HomePage() {
             return updated;
           });
         });
-      }, 400);
+      };
+
+      ['scroll', 'touchstart', 'mousemove'].forEach(ev => {
+        window.addEventListener(ev, fetchSecondary, { once: true, passive: true });
+      });
+      setTimeout(fetchSecondary, 3500);
     });
   }, []);
   // Autoplay slideshow timer (advances every 5 seconds, manual arrow click resets the timer)
