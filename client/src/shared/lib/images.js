@@ -20,9 +20,7 @@ export function optimizeImage(url, width = 380, height = null) {
       );
       const mainPath = subparts.slice(mainPathIdx >= 0 ? mainPathIdx : 0).join('/');
       const h = height || Math.round(width * 9 / 16);
-      const isMobile = width <= 380;
-      const q = isMobile ? `q_auto:eco,w_360` : `q_auto:good,w_${width}`;
-      return `${parts[0]}/upload/f_auto,${q},h_${h},c_fill,g_auto/${mainPath}`;
+      return `${parts[0]}/upload/f_webp,q_auto:eco,w_${width},h_${h},c_fill,g_auto/${mainPath}`;
     }
     return clean;
   }
@@ -30,13 +28,13 @@ export function optimizeImage(url, width = 380, height = null) {
   if (url.includes('images.unsplash.com')) {
     const h = height || Math.round(width * 9 / 16);
     let base = url.split('?')[0];
-    return `${base}?w=${width}&h=${h}&fit=crop&q=75&fm=webp&auto=format`;
+    return `${base}?w=${width}&h=${h}&fit=crop&q=60&fm=webp&auto=format`;
   }
 
   if (url.includes('images.pexels.com')) {
     const base = url.split('?')[0];
     const h = height || Math.round(width * 9 / 16);
-    return `${base}?w=${width}&h=${h}&fit=crop&auto=compress&fm=webp`;
+    return `${base}?w=${width}&h=${h}&fit=crop&auto=compress&fm=webp&q=60`;
   }
 
   return url;
