@@ -735,7 +735,7 @@ export default function HomePage() {
               variant="contained"
               sx={{
                 bgcolor: '#ffffff',
-                color: '#0284c7',
+                color: '#0f172a',
                 fontWeight: 900,
                 fontSize: { xs: '0.85rem', md: '0.95rem' },
                 py: 1.3,
