@@ -1004,21 +1004,21 @@ export default function HomePage() {
                 display: 'flex', 
                 flexDirection: 'column', 
                 justifyContent: 'center',
-                minHeight: { xs: '180px', md: '240px' },
+                minHeight: { xs: '220px', md: '260px' },
                 width: '100%'
               }}
             >
               {loading ? (
                 <>
-                  <Box sx={{ height: 36, bgcolor: '#ECECEC', borderRadius: '8px', mb: 2, width: '90%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1, width: '100%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1, width: '95%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ height: 20, bgcolor: '#ECECEC', borderRadius: '8px', mb: 3, width: '70%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#ECECEC', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ height: 26, width: 120, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1.5, animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ height: 48, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1.5, width: '95%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ height: 18, bgcolor: '#ECECEC', borderRadius: '6px', mb: 0.8, width: '100%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ height: 18, bgcolor: '#ECECEC', borderRadius: '6px', mb: 2, width: '85%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                    <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: '#ECECEC', animation: 'pulse 1.5s infinite ease-in-out' }} />
                     <Box sx={{ flex: 1 }}>
-                      <Box sx={{ height: 16, bgcolor: '#ECECEC', borderRadius: '4px', mb: 0.5, width: '40%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                      <Box sx={{ height: 12, bgcolor: '#ECECEC', borderRadius: '4px', width: '30%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                      <Box sx={{ height: 14, bgcolor: '#ECECEC', borderRadius: '4px', mb: 0.5, width: '35%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                      <Box sx={{ height: 12, bgcolor: '#ECECEC', borderRadius: '4px', width: '25%', animation: 'pulse 1.5s infinite ease-in-out' }} />
                     </Box>
                   </Box>
                 </>
