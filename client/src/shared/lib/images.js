@@ -28,13 +28,13 @@ export function optimizeImage(url, width = 380, height = null) {
   if (url.includes('images.unsplash.com')) {
     const h = height || Math.round(width * 9 / 16);
     let base = url.split('?')[0];
-    return `${base}?w=${width}&h=${h}&fit=crop&q=60&fm=webp&auto=format`;
+    return `${base}?w=${width}&h=${h}&fit=crop&q=45&fm=webp&auto=format`;
   }
 
   if (url.includes('images.pexels.com')) {
     const base = url.split('?')[0];
     const h = height || Math.round(width * 9 / 16);
-    return `${base}?w=${width}&h=${h}&fit=crop&auto=compress&fm=webp&q=60`;
+    return `${base}?w=${width}&h=${h}&fit=crop&auto=compress&cs=tinysrgb&dpr=1&fm=webp&q=45`;
   }
 
   return url;

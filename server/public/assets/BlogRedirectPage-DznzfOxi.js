@@ -1,0 +1,2 @@
+import{ay as o,j as r,a1 as i,a2 as u,a3 as t}from"./vendor-framework-DXEk-roL.js";import{u as n}from"./usePost-aO6NtW8N.js";import{a as p}from"./index-xLemyfjM.js";import"./vendor-pdf-tools-CbgxLUoa.js";import"./vendor-icons-CgnQTfDH.js";function j(){const{slug:a}=o(),{post:s,loading:e}=n(a);return e?r.jsx(i,{sx:{display:"flex",justifyContent:"center",py:8},children:r.jsx(u,{})}):s?r.jsx(t,{to:p(s),replace:!0}):r.jsx(t,{to:"/",replace:!0})}export{j as default};
+//# sourceMappingURL=BlogRedirectPage-DznzfOxi.js.map

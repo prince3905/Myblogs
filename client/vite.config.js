@@ -27,12 +27,19 @@ export default defineConfig({
     outDir: '../server/public',
     emptyOutDir: true,
     target: 'es2022',
-    sourcemap: 'hidden',
+    sourcemap: true,
     cssCodeSplit: true,
     cssMinify: true,
     chunkSizeWarningLimit: 2000,
     modulePreload: {
       polyfill: false,
+      resolveDependencies(filename, deps) {
+        return deps.filter(dep => 
+          !dep.includes('vendor-pdf-tools') && 
+          !dep.includes('vendor-editor') && 
+          !dep.includes('vendor-date-pickers')
+        );
+      }
     },
     rollupOptions: {
       output: {

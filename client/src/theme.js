@@ -168,6 +168,11 @@ const baseTheme = {
         },
       },
     },
+    MuiButtonBase: {
+      defaultProps: {
+        disableRipple: true,
+      },
+    },
     MuiContainer: {
       styleOverrides: {
         root: {
