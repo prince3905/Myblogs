@@ -206,25 +206,26 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
     return () => clearInterval(timer);
   }, [posts, loading, isIntersecting, maxSlide, currentSlide, lastInteraction]);
 
-  if (loading) {
+  if (loading || posts.length === 0) {
     return (
-      <Box sx={{ mb: 6 }}>
-        <Typography variant="h3" component="h3" sx={{ fontWeight: 700, mb: 3, fontSize: { xs: '1.25rem', md: '1.5rem' }, color: '#111827' }}>
-          {categoryName}
-        </Typography>
+      <Box component="section" sx={{ mb: 6, minHeight: { xs: '360px', md: '420px' } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+          <Box sx={{ width: 5, height: 26, bgcolor: '#4F46E5', borderRadius: '4px' }} />
+          <Typography variant="h3" component="h3" sx={{ fontWeight: 850, color: '#0f172a', fontSize: { xs: '1.35rem', sm: '1.55rem', md: '1.75rem' } }}>
+            {categoryName}
+          </Typography>
+        </Box>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: '24px' }}>
           {[...Array(4)].map((_, idx) => (
-            <Box key={idx} sx={{ height: 280, bgcolor: '#f3f4f6', borderRadius: '16px', animation: 'pulse 1.5s infinite ease-in-out' }} />
+            <Box key={idx} sx={{ height: { xs: 260, md: 320 }, bgcolor: '#f1f5f9', borderRadius: '20px', animation: 'pulse 1.5s infinite ease-in-out' }} />
           ))}
         </Box>
       </Box>
     );
   }
 
-  if (posts.length === 0) return null;
-
   return (
-    <Box ref={sliderRef} sx={{ mb: 6, position: 'relative' }}>
+    <Box component="section" ref={sliderRef} sx={{ mb: 6, position: 'relative', minHeight: { xs: '360px', md: '420px' } }}>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
