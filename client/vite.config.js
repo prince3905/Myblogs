@@ -27,6 +27,7 @@ export default defineConfig({
     outDir: '../server/public',
     emptyOutDir: true,
     target: 'es2022',
+    sourcemap: 'hidden',
     cssCodeSplit: true,
     cssMinify: true,
     chunkSizeWarningLimit: 2000,

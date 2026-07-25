@@ -1,0 +1,18 @@
+# Digital Home Blog
+
+> Digital Home Blog provides real-time updates on Sarkari Jobs, Exam Results, Admit Cards, Technology Tutorials, AI & Web Tools, Health & Wellness, and Financial Insights.
+
+## Main Sections
+
+- [Sarkari Jobs & Exams](https://www.digitalhomeblog.in/category/sarkari-jobs-exams): Latest Sarkari Result, Admit Card, Answer Key and Government Job Notifications.
+- [Health & Wellness](https://www.digitalhomeblog.in/category/health-wellness): Daily health habits, nutrition tips, sugar level guides, and wellness advice.
+- [Tech & Tutorials](https://www.digitalhomeblog.in/category/tech-tutorials): Technology tutorials, eye care for screen fatigue, coding guides, and tech reviews.
+- [AI & Web Tools](https://www.digitalhomeblog.in/category/ai-web-tools): Artificial Intelligence courses, AI monetization strategies, and web tools.
+- [News & Trends](https://www.digitalhomeblog.in/category/news-trends): Trending news, sports updates, Google core updates, and energy crisis solutions.
+- [Finance & Business](https://www.digitalhomeblog.in/category/finance-business): Personal finance management, smart saving habits, and investment strategies.
+- [Free Online Tools](https://www.digitalhomeblog.in/tools): Free WebP image optimizer, background remover, and PDF utility tools.
+
+## Key Feeds & Resources
+
+- [Sitemap](https://www.digitalhomeblog.in/sitemap.xml): XML sitemap for automated indexing.
+- [Telegram Channel](https://t.me/SarkariJob_DigitalHome): Instant live alerts channel.
