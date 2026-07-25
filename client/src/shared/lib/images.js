@@ -34,7 +34,7 @@ export function optimizeImage(url, width = 380, height = null) {
   if (url.includes('images.pexels.com')) {
     const base = url.split('?')[0];
     const h = height || Math.round(width * 9 / 16);
-    return `${base}?w=${width}&h=${h}&fit=crop&auto=compress&cs=tinysrgb&dpr=1&fm=webp&q=45`;
+    return `${base}?auto=compress&cs=tinysrgb&fm=webp&q=45&w=${width}&h=${h}&fit=crop`;
   }
 
   return url;

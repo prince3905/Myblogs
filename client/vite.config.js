@@ -5,7 +5,14 @@ function nonBlockingCssPlugin() {
   return {
     name: 'non-blocking-css-plugin',
     transformIndexHtml(html) {
-      return html.replace(
+      // 1. Strip modulepreload tags for heavy non-homepage vendor chunks
+      let cleaned = html.replace(
+        /<link rel="modulepreload"[^>]+href="[^"]*(vendor-pdf-tools|vendor-editor|vendor-date-pickers)[^"]*"[^>]*>/g,
+        ''
+      );
+
+      // 2. Convert stylesheet links to non-blocking async loaders
+      return cleaned.replace(
         /<link rel="stylesheet"([^>]+)href="([^"]+\.css)"([^>]*)>/g,
         '<link rel="stylesheet"$1href="$2"$3 media="print" onload="this.media=\'all\'"><noscript><link rel="stylesheet"$1href="$2"$3></noscript>'
       );
@@ -27,19 +34,12 @@ export default defineConfig({
     outDir: '../server/public',
     emptyOutDir: true,
     target: 'es2022',
-    sourcemap: true,
+    sourcemap: false,
     cssCodeSplit: true,
     cssMinify: true,
     chunkSizeWarningLimit: 2000,
     modulePreload: {
       polyfill: false,
-      resolveDependencies(filename, deps) {
-        return deps.filter(dep => 
-          !dep.includes('vendor-pdf-tools') && 
-          !dep.includes('vendor-editor') && 
-          !dep.includes('vendor-date-pickers')
-        );
-      }
     },
     rollupOptions: {
       output: {

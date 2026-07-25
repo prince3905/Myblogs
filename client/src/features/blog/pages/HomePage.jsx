@@ -1013,17 +1013,17 @@ export default function HomePage() {
                 display: 'flex', 
                 flexDirection: 'column', 
                 justifyContent: 'center',
-                minHeight: { xs: '220px', md: '260px' },
+                minHeight: { xs: '235px', md: '260px' },
                 width: '100%'
               }}
             >
               {loading ? (
                 <>
                   <Box sx={{ height: 26, width: 120, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1.5, animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ height: 48, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1.5, width: '95%', animation: 'pulse 1.5s infinite ease-in-out' }} />
+                  <Box sx={{ height: { xs: 66, md: 80 }, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1.5, width: '95%', animation: 'pulse 1.5s infinite ease-in-out' }} />
                   <Box sx={{ height: 18, bgcolor: '#ECECEC', borderRadius: '6px', mb: 0.8, width: '100%', animation: 'pulse 1.5s infinite ease-in-out' }} />
                   <Box sx={{ height: 18, bgcolor: '#ECECEC', borderRadius: '6px', mb: 2, width: '85%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', minHeight: '42px' }}>
                     <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: '#ECECEC', animation: 'pulse 1.5s infinite ease-in-out' }} />
                     <Box sx={{ flex: 1 }}>
                       <Box sx={{ height: 14, bgcolor: '#ECECEC', borderRadius: '4px', mb: 0.5, width: '35%', animation: 'pulse 1.5s infinite ease-in-out' }} />
@@ -1056,6 +1056,7 @@ export default function HomePage() {
                       sx={{
                         fontWeight: 900,
                         mb: 1.5,
+                        minHeight: { xs: '66px', md: '80px' },
                         fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
                         lineHeight: 1.25,
                         color: '#0f172a',
@@ -1082,7 +1083,7 @@ export default function HomePage() {
                   >
                     {featuredPost.excerpt}
                   </Typography>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', minHeight: '42px' }}>
                     <Avatar sx={{ width: 40, height: 40, bgcolor: '#4F46E5', fontSize: '0.9rem', fontWeight: 600 }}>
                       {featuredPost.author?.charAt(0) || 'H'}
                     </Avatar>

@@ -6,20 +6,20 @@ import Visibility from '@mui/icons-material/Visibility';
 import { postUrl } from '../../../shared/lib/category';
 import { optimizeImage } from '../../../shared/lib/images';
 
-// Category color mapping
-const categoryColors = {
-  'Sarkari Jobs & Exams': '#B45309',
-  'Health & Wellness': '#B91C1C',
-  'Tech & Tutorials': '#1D4ED8',
-  'AI & Web Tools': '#6D28D9',
-  'News & Trends': '#047857',
-  'Finance & Business': '#0F766E',
-  'default': '#1D4ED8'
+// Category high-contrast AAA chip styling
+const categoryChipStyles = {
+  'Sarkari Jobs & Exams': { color: '#7c2d12', bgcolor: '#ffedd5', border: '1px solid #fed7aa' },
+  'Health & Wellness':    { color: '#7f1d1d', bgcolor: '#fee2e2', border: '1px solid #fca5a5' },
+  'Tech & Tutorials':     { color: '#1e3a8a', bgcolor: '#dbeafe', border: '1px solid #93c5fd' },
+  'AI & Web Tools':       { color: '#4c1d95', bgcolor: '#f3e8ff', border: '1px solid #c084fc' },
+  'News & Trends':        { color: '#064e3b', bgcolor: '#d1fae5', border: '1px solid #6ee7b7' },
+  'Finance & Business':   { color: '#134e4a', bgcolor: '#ccfbf1', border: '1px solid #5eead4' },
+  'default':              { color: '#1e3a8a', bgcolor: '#dbeafe', border: '1px solid #93c5fd' }
 };
 
 export default function PostCard({ post, headingLevel = 'h6', index }) {
   const theme = useTheme();
-  const categoryColor = categoryColors[post.category] || categoryColors.default;
+  const chipStyle = categoryChipStyles[post.category] || categoryChipStyles.default;
   const isFirst = index === 0;
   
   return (
@@ -72,7 +72,7 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
           <Box 
             sx={{ 
               height: '100%', 
-              bgcolor: categoryColor,
+              bgcolor: chipStyle.color,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -101,9 +101,9 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
               fontSize: '0.78rem',
               letterSpacing: '0.04em',
               textTransform: 'uppercase',
-              bgcolor: `${categoryColor}18`,
-              color: categoryColor,
-              border: `1.5px solid ${categoryColor}50`,
+              bgcolor: chipStyle.bgcolor,
+              color: chipStyle.color,
+              border: chipStyle.border,
               borderRadius: '8px',
               height: 26,
               px: 1,
