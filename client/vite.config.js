@@ -7,10 +7,14 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  esbuild: {
+    target: 'es2022',
+    legalComments: 'none',
+  },
   build: {
     outDir: '../server/public',
     emptyOutDir: true,
-    target: 'esnext',
+    target: 'es2022',
     cssCodeSplit: true,
     chunkSizeWarningLimit: 1000,
     modulePreload: {
