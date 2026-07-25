@@ -417,12 +417,10 @@ export default function HomePage() {
     }, 150);
   }, []);
   useEffect(() => {
-    const primaryCategories = [
+    const allCategories = [
       'Sarkari Jobs & Exams',
       'Health & Wellness',
-      'Tech & Tutorials'
-    ];
-    const secondaryCategories = [
+      'Tech & Tutorials',
       'AI & Web Tools',
       'News & Trends',
       'Finance & Business'
@@ -430,46 +428,19 @@ export default function HomePage() {
 
     setLoadingCategories(true);
     
-    // Step 1: Fetch top primary categories immediately for instant FCP/LCP
     Promise.all(
-      primaryCategories.map(cat => 
+      allCategories.map(cat => 
         request(`/api/posts?category=${encodeURIComponent(cat)}&limit=6`)
           .then(res => ({ category: cat, posts: res.posts || [] }))
           .catch(err => ({ category: cat, posts: [] }))
       )
-    ).then(primaryResults => {
+    ).then(results => {
       const dataMap = {};
-      primaryResults.forEach(item => {
+      results.forEach(item => {
         dataMap[item.category] = item.posts;
       });
       setCategoriesData(dataMap);
       setLoadingCategories(false);
-
-      // Step 2: Defer secondary below-the-fold categories until user interaction or 3.5s idle
-      const fetchSecondary = () => {
-        if (window.secondaryCategoriesFetched) return;
-        window.secondaryCategoriesFetched = true;
-        Promise.all(
-          secondaryCategories.map(cat => 
-            request(`/api/posts?category=${encodeURIComponent(cat)}&limit=6`)
-              .then(res => ({ category: cat, posts: res.posts || [] }))
-              .catch(err => ({ category: cat, posts: [] }))
-          )
-        ).then(secondaryResults => {
-          setCategoriesData(prev => {
-            const updated = { ...prev };
-            secondaryResults.forEach(item => {
-              updated[item.category] = item.posts;
-            });
-            return updated;
-          });
-        });
-      };
-
-      ['scroll', 'touchstart', 'mousemove'].forEach(ev => {
-        window.addEventListener(ev, fetchSecondary, { once: true, passive: true });
-      });
-      setTimeout(fetchSecondary, 3500);
     });
   }, []);
   // Autoplay slideshow timer (advances every 5 seconds, manual arrow click resets the timer)
