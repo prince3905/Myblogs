@@ -68,7 +68,8 @@ export default function TelegramRedirectModal({ open, onClose, targetUrl }) {
               fontSize: '0.95rem',
               fontWeight: 800,
               borderRadius: 3,
-              bgcolor: '#24A1DE',
+              bgcolor: '#0077b5',
+              color: '#ffffff',
               boxShadow: '0 4px 14px rgba(36, 161, 222, 0.4)',
               textTransform: 'none',
               '&:hover': {

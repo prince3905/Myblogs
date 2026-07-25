@@ -259,7 +259,7 @@ export default function Layout({ children }) {
         <Container maxWidth="lg">
           <NewsletterWidget />
           <Box sx={{ display: 'flex', gap: { xs: 2, md: 3 }, justifyContent: 'center', mt: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-            <a href="https://t.me/SarkariJob_DigitalHome" target="_blank" rel="noopener noreferrer" style={{ color: '#24A1DE', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>✈️ Telegram Channel</a>
+            <a href="https://t.me/SarkariJob_DigitalHome" target="_blank" rel="noopener noreferrer" style={{ color: '#0284c7', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>✈️ Telegram Channel</a>
             <Link to="/privacy" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Privacy Policy</Link>
             <Link to="/terms" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Terms & Disclaimer</Link>
             <Link to="/contact" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Contact</Link>

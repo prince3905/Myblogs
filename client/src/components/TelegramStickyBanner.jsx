@@ -57,6 +57,7 @@ export default function TelegramStickyBanner() {
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography
               variant="subtitle1"
+              component="span"
               sx={{
                 color: 'white',
                 fontWeight: 800,
@@ -91,7 +92,7 @@ export default function TelegramStickyBanner() {
             rel="noopener noreferrer"
             startIcon={<SendIcon sx={{ transform: 'rotate(-30deg)', fontSize: '18px !important' }} />}
             sx={{
-              bgcolor: '#24A1DE',
+              bgcolor: '#0077b5',
               color: '#ffffff',
               fontWeight: 800,
               px: { xs: 2, sm: 3 },

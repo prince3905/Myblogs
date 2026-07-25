@@ -8,13 +8,13 @@ import { optimizeImage } from '../../../shared/lib/images';
 
 // Category color mapping
 const categoryColors = {
-  'Sarkari Jobs & Exams': '#F59E0B',
-  'Health & Wellness': '#EF4444',
-  'Tech & Tutorials': '#60A5FA',
-  'AI & Web Tools': '#A78BFA',
-  'News & Trends': '#34D399',
-  'Finance & Business': '#10B981',
-  'default': '#60A5FA'
+  'Sarkari Jobs & Exams': '#B45309',
+  'Health & Wellness': '#B91C1C',
+  'Tech & Tutorials': '#1D4ED8',
+  'AI & Web Tools': '#6D28D9',
+  'News & Trends': '#047857',
+  'Finance & Business': '#0F766E',
+  'default': '#1D4ED8'
 };
 
 export default function PostCard({ post, headingLevel = 'h6', index }) {

@@ -746,7 +746,7 @@ export default function HomePage() {
                 </svg>
               </Box>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 800, fontSize: { xs: '1.1rem', md: '1.35rem' }, lineHeight: 1.3 }}>
+                <Typography variant="h6" component="h3" sx={{ fontWeight: 800, fontSize: { xs: '1.1rem', md: '1.35rem' }, lineHeight: 1.3 }}>
                   Join Official Telegram Channel ✈️
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#e0f2fe', fontWeight: 500, mt: 0.5, fontSize: { xs: '0.85rem', md: '0.95rem' } }}>

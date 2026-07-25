@@ -28,7 +28,8 @@ export default defineConfig({
     emptyOutDir: true,
     target: 'es2022',
     cssCodeSplit: true,
-    chunkSizeWarningLimit: 1000,
+    cssMinify: true,
+    chunkSizeWarningLimit: 2000,
     modulePreload: {
       polyfill: false,
     },
@@ -38,6 +39,15 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             if (id.includes('@mui/icons-material')) {
               return 'vendor-icons';
+            }
+            if (id.includes('@mui/x-date-pickers') || id.includes('date-fns')) {
+              return 'vendor-date-pickers';
+            }
+            if (id.includes('jspdf') || id.includes('pdfjs-dist') || id.includes('pdf-lib') || id.includes('html2canvas')) {
+              return 'vendor-pdf-tools';
+            }
+            if (id.includes('react-quill') || id.includes('prismjs')) {
+              return 'vendor-editor';
             }
             if (id.includes('@mui') || id.includes('@emotion') || id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
               return 'vendor-framework';
