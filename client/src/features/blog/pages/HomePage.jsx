@@ -980,6 +980,7 @@ export default function HomePage() {
                     height="310"
                     loading="eager"
                     fetchPriority="high"
+                    fetchpriority="high"
                     sx={{
                       width: '100%',
                       height: '100%',
