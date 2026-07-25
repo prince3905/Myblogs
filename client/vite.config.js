@@ -1,9 +1,21 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+function nonBlockingCssPlugin() {
+  return {
+    name: 'non-blocking-css-plugin',
+    transformIndexHtml(html) {
+      return html.replace(
+        /<link rel="stylesheet"([^>]+)href="([^"]+\.css)"([^>]*)>/g,
+        '<link rel="stylesheet"$1href="$2"$3 media="print" onload="this.media=\'all\'"><noscript><link rel="stylesheet"$1href="$2"$3></noscript>'
+      );
+    }
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), nonBlockingCssPlugin()],
   server: {
     port: 5173,
   },
