@@ -351,13 +351,16 @@ async function pingWebStoryIndexing(req, res, next) {
     }
 
     const { notifyUrl } = require('../../shared/utils/google-indexing');
+    const { logAutomation } = require('../../shared/utils/automationLogger');
     const env = require('../../config/env');
     const storyUrl = `${env.siteUrl}/web-stories/${story.slug}`;
     const result = await notifyUrl(storyUrl, 'URL_UPDATED');
 
     if (result && result.success) {
+      logAutomation({ service: 'SEO_INDEXING', level: 'SUCCESS', action: 'Google Index Ping (WebStory)', message: `Pinged Google Indexing API for WebStory "${story.title}"`, metadata: { title: story.title, url: storyUrl } });
       return res.json({ success: true, message: 'Google Indexing request sent successfully for Web Story!', data: result.data });
     } else {
+      logAutomation({ service: 'SEO_INDEXING', level: 'ERROR', action: 'Google Index Ping Failed (WebStory)', message: result?.message || 'Google Indexing ping failed.', metadata: { title: story.title } });
       return res.status(500).json({ success: false, message: result?.message || 'Google Indexing ping failed.', error: result?.error });
     }
   } catch (err) {

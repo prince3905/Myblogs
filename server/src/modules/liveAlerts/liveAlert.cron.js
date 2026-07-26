@@ -1007,12 +1007,16 @@ function initScheduler() {
 
   // Run initial startup tasks immediately (asynchronously in the background)
   Promise.resolve().then(async () => {
+    const { logAutomation } = require('../../shared/utils/automationLogger');
     console.log('[LiveAlert Scheduler] Running initial startup scrape...');
+    logAutomation({ service: 'SCRAPER', level: 'INFO', action: 'Startup Scraper Start', message: 'Triggered initial background DOM scrape for SarkariResult feeds' });
     try {
-      await scrapeFeeds();
+      const totalSaved = await scrapeFeeds();
       console.log('[LiveAlert Scheduler] Initial startup scrape completed successfully.');
+      logAutomation({ service: 'SCRAPER', level: 'SUCCESS', action: 'Startup Scraper Finish', message: `Initial background DOM scrape finished. ${totalSaved || 0} alerts processed/saved.`, metadata: { totalSaved } });
     } catch (err) {
       console.error('[LiveAlert Scheduler] Initial startup scrape failed:', err.message);
+      logAutomation({ service: 'SCRAPER', level: 'ERROR', action: 'Startup Scraper Failed', message: err.message });
     }
 
     console.log('[LiveAlert Scheduler] Running initial startup post expiry check...');
@@ -1027,9 +1031,11 @@ function initScheduler() {
         const { checkAndFlagExpiredPosts } = require('../../shared/utils/expiryDaemon');
         await checkAndFlagExpiredPosts();
         console.log('[LiveAlert Scheduler] Initial startup post expiry check completed.');
+        logAutomation({ service: 'SYSTEM_CRON', level: 'SUCCESS', action: 'Startup Expiry Check', message: 'Initial startup job alert expiry check completed' });
       }
     } catch (err) {
       console.error('[LiveAlert Scheduler] Initial startup post expiry check failed:', err.message);
+      logAutomation({ service: 'SYSTEM_CRON', level: 'ERROR', action: 'Startup Expiry Check Failed', message: err.message });
     }
   });
 }
