@@ -1,7 +1,7 @@
 /**
- * Ultra High-CTR SEO & Schema Algorithm Engine
- * Maximizes Google Search & Google Discover Click-Through Rate (CTR) by 40%-65%
- * using Psychological Hook Matrices, Google FAQ Accordion Schemas & Action Badges.
+ * 100% Authentic Natural Indian SEO & Schema Engine
+ * Crafts natural, high-converting Indian Hindi-English titles, meta descriptions, and FAQ schemas
+ * matching how millions of Indian candidates search Google daily.
  */
 
 const CATEGORY_EMOJIS = {
@@ -14,97 +14,83 @@ const CATEGORY_EMOJIS = {
   'default': '📌'
 };
 
-const ACTION_HOOKS = [
-  '[Direct Link Active ⚡]',
-  '[100% Official Notice Out]',
-  '[अंतिम तिथि पास!]',
-  '[Step by Step Apply Now]',
-  '[New Update Out 🚀]'
+const NATURAL_INDIAN_HOOKS = [
+  ': जानिए कैसे डाउनलोड करें (Direct Link)',
+  ': डायरेक्ट लिंक व ऑनलाइन फॉर्म यहाँ देखें',
+  ': परीक्षा तिथि व हॉल टिकट जारी, तुरंत देखें',
+  ': कटऑफ मार्क्स व मेरिट लिस्ट यहाँ चेक करें',
+  ': 100% आधिकारिक नोटिफिकेशन व अप्लाई लिंक'
 ];
 
 /**
- * 1. Optimizes title for maximum Search Engine CTR (50-65 chars with high-converting hooks)
+ * 1. Crafts a 100% Natural Indian Hinglish SEO Title
  */
 function optimizeHighCtrTitle(title = '', category = '') {
   if (!title) return title;
 
   let clean = title.trim();
 
-  // Ensure 2026 year is present
+  // Strip excessive punctuation or weird tags
+  clean = clean.replace(/^(🔥|⚡|💼|🏥|🤖|💰|📌)\s*/, '');
+  clean = clean.replace(/\s*\|\s*(Digital Home|Sarkari Result|Inkspire Blog)\s*$/i, '');
+
+  // Add current year naturally if missing
   if (!clean.includes('2026') && !clean.includes('2027')) {
     clean += ' 2026';
   }
 
-  // Check if title already has a bracket hook
-  if (!clean.includes('[') && !clean.includes(']')) {
-    const hook = ACTION_HOOKS[Math.abs(hashString(clean)) % ACTION_HOOKS.length];
-    
-    // Position hook naturally
-    if (clean.length < 45) {
-      clean = `${clean} ${hook}`;
-    } else if (clean.length > 60) {
-      // Shorten slightly to fit hook
-      clean = `${clean.slice(0, 42)}... ${hook}`;
-    }
+  // Inject natural Indian phrase suffix if no bracket/colon exists
+  if (!clean.includes(':') && !clean.includes('(') && clean.length < 52) {
+    const hook = NATURAL_INDIAN_HOOKS[Math.abs(hashString(clean)) % NATURAL_INDIAN_HOOKS.length];
+    clean += hook;
   }
 
-  // Prepend emoji indicator for category
+  // Prepend clean category emoji
   const emoji = CATEGORY_EMOJIS[category] || CATEGORY_EMOJIS.default;
-  if (!clean.startsWith(emoji) && !clean.startsWith('🔥') && !clean.startsWith('⚡')) {
+  if (!clean.startsWith(emoji)) {
     clean = `${emoji} ${clean}`;
   }
 
-  return clean.slice(0, 70);
+  return clean.slice(0, 72);
 }
 
 /**
- * 2. Synthesizes a High-CTR Meta Description (120-155 characters)
+ * 2. Synthesizes a 100% Natural Indian Meta Description (120-155 characters)
  */
 function optimizeHighCtrMetaDescription(title = '', content = '', focusKeyword = '') {
-  const keyword = (focusKeyword || title).trim();
-  let baseDesc = `${keyword} के लिए आधिकारिक नोटिफिकेशन और आवेदन शुरू हो गए हैं!`;
+  const keyword = (focusKeyword || title).replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
 
-  if (content) {
-    const plainText = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    if (plainText.length > 50) {
-      const snippet = plainText.slice(0, 90).trim();
-      baseDesc = `${keyword}: ${snippet}`;
-    }
+  let naturalDesc = `${keyword} का आधिकारिक नोटिफिकेशन व डायरेक्ट लिंक जारी हो चुका है। ऑनलाइन फॉर्म भरने की तिथि, पात्रता, आयु सीमा व जरूरी दस्तावेज यहाँ तुरंत चेक करें!`;
+
+  if (naturalDesc.length > 158) {
+    naturalDesc = `${keyword}: आधिकारिक नोटिफिकेशन जारी। पात्रता, तिथियां व डायरेक्ट अप्लाई लिंक यहाँ देखें!`;
   }
 
-  const callToAction = 'पात्रता, तिथियां, शुल्क व 100% direct link यहाँ देखें!';
-  let finalDesc = `${baseDesc} ${callToAction}`;
-
-  if (finalDesc.length > 158) {
-    finalDesc = finalDesc.slice(0, 155) + '...';
-  }
-
-  return finalDesc;
+  return naturalDesc;
 }
 
 /**
- * 3. Generates Google FAQPage Structured JSON-LD Schema
- * Displays interactive dropdown Q&A accordion cards directly in Google Search results!
+ * 3. Generates 100% Natural Indian FAQ Schema (Google Accordion)
  */
-function generateFaqSchema(title = '', content = '', alertDetails = '') {
+function generateFaqSchema(title = '', content = '') {
   const cleanTitle = title.replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
 
   const questions = [
     {
-      q: `${cleanTitle} की आवेदन प्रक्रिया कब शुरू हुई?`,
-      a: `आवेदन प्रक्रिया आधिकारिक वेबसाइट पर शुरू हो चुकी है। पूरी समयसारणी, पात्रता और डायरेक्ट अप्लाई लिंक के लिए लेख में दी गई जानकारी देखें।`
+      q: `${cleanTitle} का आधिकारिक नोटिफिकेशन कैसे देखें?`,
+      a: `${cleanTitle} का आधिकारिक नोटिफिकेशन और भर्ती विवरण इस पृष्ठ के महत्वपूर्ण लिंक (Important Links) सेक्शन में दिए गए डायरेक्ट लिंक से चेक कर सकते हैं।`
     },
     {
-      q: `आवेदन फॉर्म भरने के लिए कौन-कौन से मुख्य दस्तावेज आवश्यक हैं?`,
-      a: `उम्मीदवारों के पास पासपोर्ट साइज फोटो, हस्ताक्षर, शैक्षिक योग्यता प्रमाण पत्र, पहचान पत्र (आधार कार्ड/पैन कार्ड) और जाति/निवास प्रमाण पत्र (यदि लागू हो) होना अनिवार्य है।`
+      q: `ऑनलाइन फॉर्म भरने के लिए कौन-कौन से मुख्य दस्तावेज चाहिए?`,
+      a: `आवेदन के लिए 10वीं/12वीं/स्नातक अंकपत्र, पासपोर्ट साइज फोटो, हस्ताक्षर, आधार कार्ड और जाति/निवास प्रमाण पत्र (यदि लागू हो) होना आवश्यक है।`
     },
     {
-      q: `क्या आवेदन शुल्क का भुगतान ऑनलाइन किया जा सकता है?`,
-      a: `हाँ, उम्मीदवार नेट बैंकिंग, डेबिट कार्ड, क्रेडिट कार्ड या UPI के माध्यम से ऑनलाइन शुल्क भुगतान कर सकते हैं।`
+      q: `क्या आवेदन शुल्क का भुगतान ऑनलाइन माध्यम से किया जा सकता है?`,
+      a: `जी हाँ, आप यूपीआई (UPI), नेट बैंकिंग, क्रेडिट कार्ड या डेबिट कार्ड से ऑनलाइन आवेदन शुल्क जमा कर सकते हैं।`
     },
     {
-      q: `ऑफिशियल नोटिफिकेशन और डायरेक्ट लिंक कहाँ मिलेगा?`,
-      a: `इस लेख के अंत में दिए गए 'Important Links' सेक्शन में ऑफिशियल नोटिफिकेशन PDF डाउनलोड और डायरेक्ट अप्लाई लिंक उपलब्ध कराया गया है।`
+      q: `डायरेक्ट ऑनलाइन अप्लाई लिंक कहाँ मिलेगा?`,
+      a: `इस लेख के अंत में 'Important Direct Links' तालिका दी गई है, जहाँ से आप सीधे ऑफिशियल पोर्टल पर जाकर ऑनलाइन आवेदन कर सकते हैं।`
     }
   ];
 
@@ -122,9 +108,6 @@ function generateFaqSchema(title = '', content = '', alertDetails = '') {
   };
 }
 
-/**
- * Simple string hashing helper for deterministic hook selection
- */
 function hashString(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
