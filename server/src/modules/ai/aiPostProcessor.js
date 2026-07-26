@@ -801,6 +801,10 @@ async function processAIOutput(data) {
   // Prettify links and layout structure before saving
   processedContent = prettifyLinksAndContent(processedContent);
 
+  // Auto-inject Hinglish Long-Tail Keyword Intent Box for Rank 1 Google Search
+  const { injectNaturalKeywordBox } = require('../../shared/utils/naturalKeywordEngine');
+  processedContent = injectNaturalKeywordBox(processedContent, processedTitle, focusKeyword);
+
   const tags = generateTags(processedTitle, processedContent, keywords, category);
 
   // Generate SEO-friendly fallbacks for all fields
