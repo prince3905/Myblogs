@@ -38,13 +38,13 @@ export default function AdminAutomationLogsPage() {
     if (!silent) setLoading(true);
     request(`/api/admin/automation-logs?page=${page}&service=${service}&level=${level}&search=${encodeURIComponent(search)}`)
       .then(res => {
-        if (res.success) {
-          setLogs(res.data || []);
-          setTotalPages(res.pagination?.pages || 1);
-          setTotalLogs(res.pagination?.total || 0);
-        }
+        const items = res?.data || res?.logs || (Array.isArray(res) ? res : []);
+        setLogs(items);
+        setTotalPages(res?.pagination?.pages || 1);
+        setTotalLogs(res?.pagination?.total || items.length);
       })
       .catch(err => {
+        console.error('Automation logs load error:', err);
         setMsg('Failed to fetch automation logs: ' + err.message);
         setMsgType('error');
       })
