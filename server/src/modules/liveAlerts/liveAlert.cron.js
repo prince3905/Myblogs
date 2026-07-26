@@ -1003,7 +1003,6 @@ function initScheduler() {
 
   console.log('[LiveAlert Scheduler] Node-cron initialized: Scraper (15m), Queue (9AM, 6PM) & Expiry (00:00).');
   logAutomation({ service: 'SYSTEM_CRON', level: 'SUCCESS', action: 'Scheduler Initialized', message: 'Node-cron active for Scraper (15m), Queue (9AM, 6PM) & Expiry (00:00)' });
-}
 
   // Run initial startup tasks immediately (asynchronously in the background)
   Promise.resolve().then(async () => {
