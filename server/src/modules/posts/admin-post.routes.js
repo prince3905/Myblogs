@@ -35,6 +35,13 @@ router.post('/posts/:id/whatsapp-share', sharePostToWhatsapp);
 router.post('/posts/:id/optimize-seo', optimizePostSEO);
 router.post('/posts/:id/gsc-boost', boostPostWithGSC);
 
+// Web Stories Admin Endpoints
+router.get('/web-stories', listAdminWebStories);
+router.get('/web-stories/:id', getAdminWebStoryById);
+router.put('/web-stories/:id', updateAdminWebStory);
+router.delete('/web-stories/:id', deleteAdminWebStory);
+router.post('/web-stories/:id/index-ping', pingWebStoryIndexing);
+
 // PageSpeed Audit & AutoFix Endpoints
 router.post('/pagespeed-audit', async (req, res, next) => {
   try {
