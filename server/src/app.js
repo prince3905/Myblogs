@@ -173,12 +173,17 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
     }
 
     if (post) {
+      const { generateFaqSchema, optimizeHighCtrTitle } = require('./shared/utils/ctrBoosterEngine');
       const siteName = 'Digital Home Sarkari Result';
       const cleanTitle = (post.title || '').replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '');
       const fullTitle = `${cleanTitle} | ${siteName}`;
       const desc = post.excerpt || post.seoDescription || 'Read the latest updates on Sarkari jobs, admit cards, and results.';
       const pageUrl = `https://www.digitalhomeblog.in/blog/${req.params.category}/${req.params.slug}`;
       const imageUrl = post.featuredImage || 'https://www.digitalhomeblog.in/logo.png';
+
+      // Generate Google FAQPage Accordion Schema for 60% Higher CTR
+      const faqSchema = generateFaqSchema(cleanTitle, post.content);
+      const faqScript = `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>`;
 
       // SEO Social Metadata Block
       const metaTags = `
@@ -194,6 +199,7 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
     <meta name="twitter:title" content="${fullTitle}" />
     <meta name="twitter:description" content="${desc}" />
     <meta name="twitter:image" content="${imageUrl}" />
+    ${faqScript}
       `;
 
       // Remove default title/meta tags to prevent duplicates and append post specific tags

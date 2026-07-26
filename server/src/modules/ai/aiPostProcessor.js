@@ -821,6 +821,11 @@ async function processAIOutput(data) {
   const fallbackImageKeywords = tags.slice(0, 5).join(', ') || (processedTitle + ', ' + cat);
   const fallbackSummary = stripHtml(processedContent).split(/[.!?\n]/).slice(0, 2).join('. ') + '.';
 
+  const { optimizeHighCtrTitle, optimizeHighCtrMetaDescription } = require('../../shared/utils/ctrBoosterEngine');
+
+  const highCtrTitle = optimizeHighCtrTitle(data.seoTitle || processedTitle, category);
+  const highCtrDesc = optimizeHighCtrMetaDescription(processedTitle, processedContent, focusKeyword);
+
   return {
     ...data,
     title: processedTitle,
@@ -831,17 +836,8 @@ async function processAIOutput(data) {
     imageTag: data.imageTag || fallbackImageTag,
     imageKeywords: data.imageKeywords || fallbackImageKeywords,
     summary: data.summary || fallbackSummary.slice(0, 300),
-    seoTitle: data.seoTitle || (processedTitle.length > 70 ? processedTitle.slice(0, 67) + '...' : processedTitle),
-    seoDescription: (() => {
-      const focusLower = (keywords && keywords.length > 0) ? keywords[0].toLowerCase().trim() : processedTitle.toLowerCase().trim();
-      const rawDesc = data.seoDescription || '';
-      if (rawDesc && rawDesc.length >= 110 && rawDesc.length <= 165 && rawDesc.toLowerCase().includes(focusLower)) {
-        return rawDesc;
-      }
-      const focusCap = focusLower.charAt(0).toUpperCase() + focusLower.slice(1);
-      const fallbackDesc = `${focusCap} has been officially released. Check important details such as selection process, vacancy details, eligibility criteria, and step-by-step instructions.`;
-      return fallbackDesc.length >= 110 && fallbackDesc.length <= 165 ? fallbackDesc : fallbackDesc.slice(0, 155);
-    })(),
+    seoTitle: highCtrTitle,
+    seoDescription: highCtrDesc,
   };
 }
 
