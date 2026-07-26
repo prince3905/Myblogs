@@ -51,9 +51,12 @@ export default function AdminWebStoriesPage() {
     setLoading(true);
     request(`/api/admin/web-stories?page=${page}&search=${encodeURIComponent(search)}`)
       .then(res => {
-        if (res.success) {
-          setStories(res.data || []);
-          setTotalPages(res.pagination?.pages || 1);
+        const rawList = res?.data || res?.stories || (Array.isArray(res) ? res : []);
+        if (Array.isArray(rawList)) {
+          setStories(rawList);
+          setTotalPages(res?.pagination?.pages || 1);
+        } else {
+          setStories([]);
         }
       })
       .catch(err => {

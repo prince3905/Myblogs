@@ -273,6 +273,7 @@ async function listAdminWebStories(req, res, next) {
     return res.json({
       success: true,
       data: stories,
+      stories: stories,
       pagination: {
         total,
         page,
