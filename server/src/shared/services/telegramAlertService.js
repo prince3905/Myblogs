@@ -36,14 +36,18 @@ async function sendTelegramDraftAlert(post) {
       parse_mode: 'Markdown'
     }, { timeout: 10000 });
     
+    const { logAutomation } = require('../utils/automationLogger');
     console.log('[Telegram Private Notification] Private alert sent successfully!');
+    logAutomation({ service: 'TELEGRAM', level: 'SUCCESS', action: 'Telegram Broadcast', message: `Successfully posted "${title}" to Telegram channel ${chatId}`, metadata: { title, chatId, postId: post._id } });
     return { success: true };
     
   } catch (err) {
+    const { logAutomation } = require('../utils/automationLogger');
     const errorMsg = err.response && err.response.data && err.response.data.description 
       ? err.response.data.description 
       : err.message;
     console.error('[Telegram Private Notification] Telegram API trigger failed:', errorMsg);
+    logAutomation({ service: 'TELEGRAM', level: 'ERROR', action: 'Telegram Broadcast Failed', message: errorMsg, metadata: { title: post.title } });
     return { success: false, error: errorMsg };
   }
 }

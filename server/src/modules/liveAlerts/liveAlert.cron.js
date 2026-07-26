@@ -942,16 +942,19 @@ async function publishNextQueuedPost() {
     console.error('[Queue Publisher] Error during scheduled auto-publish:', err.message);
   }
 }
-
 function initScheduler() {
   const cron = require('node-cron');
+  const { logAutomation } = require('../../shared/utils/automationLogger');
   
   // Scraper Run: Every 15 minutes
   cron.schedule('*/15 * * * *', async () => {
     try {
-      await scrapeFeeds();
+      logAutomation({ service: 'SCRAPER', level: 'INFO', action: '15m Scraper Start', message: 'Cron job initiated SarkariResult multi-source DOM scrape' });
+      const totalSaved = await scrapeFeeds();
+      logAutomation({ service: 'SCRAPER', level: 'SUCCESS', action: '15m Scraper Finish', message: `Scraper completed successfully. Processed/Saved ${totalSaved || 0} updates.`, metadata: { totalSaved } });
     } catch (err) {
       console.error('[LiveAlert Scheduler] Cron task error:', err.message);
+      logAutomation({ service: 'SCRAPER', level: 'ERROR', action: '15m Scraper Failed', message: err.message });
     }
   });
 
@@ -968,9 +971,11 @@ function initScheduler() {
       }
 
       console.log('[LiveAlert Scheduler] Executing scheduled peak-hour queue publisher...');
+      logAutomation({ service: 'SYSTEM_CRON', level: 'INFO', action: 'Peak-Hour Queue Publisher', message: 'Executing scheduled peak-hour queue publisher for Telegram/WhatsApp' });
       await publishNextQueuedPost();
     } catch (err) {
       console.error('[LiveAlert Scheduler] Queue publisher error:', err.message);
+      logAutomation({ service: 'SYSTEM_CRON', level: 'ERROR', action: 'Queue Publisher Failed', message: err.message });
     }
   });
 
@@ -979,7 +984,7 @@ function initScheduler() {
     try {
       const Settings = require('../settings/settings.model');
       const expirySetting = await Settings.findOne({ key: 'disableExpiryDaemon' });
-      const isExpiryDisabled = expirySetting ? expirySetting.value === true : false; // Default to active (false)
+      const isExpiryDisabled = expirySetting ? expirySetting.value === true : false;
       
       if (isExpiryDisabled) {
         console.log('[LiveAlert Scheduler] Daily post expiry check skipped: Expiry Daemon is disabled in settings.');
@@ -987,14 +992,18 @@ function initScheduler() {
       }
 
       console.log('[LiveAlert Scheduler] Running daily post expiry check...');
+      logAutomation({ service: 'SYSTEM_CRON', level: 'INFO', action: 'Midnight Expiry Daemon', message: 'Running daily job alert expiry check' });
       const { checkAndFlagExpiredPosts } = require('../../shared/utils/expiryDaemon');
       await checkAndFlagExpiredPosts();
     } catch (err) {
       console.error('[LiveAlert Scheduler] Expiry Daemon error:', err.message);
+      logAutomation({ service: 'SYSTEM_CRON', level: 'ERROR', action: 'Expiry Daemon Failed', message: err.message });
     }
   });
 
   console.log('[LiveAlert Scheduler] Node-cron initialized: Scraper (15m), Queue (9AM, 6PM) & Expiry (00:00).');
+  logAutomation({ service: 'SYSTEM_CRON', level: 'SUCCESS', action: 'Scheduler Initialized', message: 'Node-cron active for Scraper (15m), Queue (9AM, 6PM) & Expiry (00:00)' });
+}
 
   // Run initial startup tasks immediately (asynchronously in the background)
   Promise.resolve().then(async () => {

@@ -33,6 +33,7 @@ const PostEditorPage = lazy(() => import('../features/admin/pages/PostEditorPage
 const LiveAlertsPage = lazy(() => import('../features/admin/pages/LiveAlertsPage'));
 const AdminSettingsPage = lazy(() => import('../features/admin/pages/AdminSettingsPage'));
 const AdminWebStoriesPage = lazy(() => import('../features/admin/pages/AdminWebStoriesPage'));
+const AdminAutomationLogsPage = lazy(() => import('../features/admin/pages/AdminAutomationLogsPage'));
 
 const AdminLoading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontFamily: 'sans-serif', color: '#666' }}>
@@ -81,6 +82,7 @@ const PostEditorPageSuspense = withAdminSuspense(PostEditorPage);
 const LiveAlertsPageSuspense = withAdminSuspense(LiveAlertsPage);
 const AdminSettingsPageSuspense = withAdminSuspense(AdminSettingsPage);
 const AdminWebStoriesPageSuspense = withAdminSuspense(AdminWebStoriesPage);
+const AdminAutomationLogsPageSuspense = withAdminSuspense(AdminAutomationLogsPage);
 
 const BlogListPageSuspense = withPublicSuspense(BlogListPage);
 const PostPageSuspense = withPublicSuspense(PostPage);
@@ -139,6 +141,7 @@ export default function App() {
           <Route path="keywords" element={<KeywordResearchPageSuspense />} />
           <Route path="live-alerts" element={<LiveAlertsPageSuspense />} />
           <Route path="web-stories" element={<AdminWebStoriesPageSuspense />} />
+          <Route path="automation-logs" element={<AdminAutomationLogsPageSuspense />} />
           <Route path="posts/new" element={<PostEditorPageSuspense />} />
           <Route path="posts/:id/edit" element={<PostEditorPageSuspense />} />
           <Route path="settings" element={<AdminSettingsPageSuspense />} />

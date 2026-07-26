@@ -69,4 +69,59 @@ router.post('/pagespeed-autofix', async (req, res, next) => {
   }
 });
 
+// System Automation Logs Endpoints
+router.get('/automation-logs', async (req, res, next) => {
+  try {
+    require('./automationLog.model');
+    const AutomationLog = mongoose.model('AutomationLog');
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const query = {};
+    if (req.query.service && req.query.service !== 'ALL') {
+      query.service = req.query.service;
+    }
+    if (req.query.level && req.query.level !== 'ALL') {
+      query.level = req.query.level;
+    }
+    if (req.query.search) {
+      query.$or = [
+        { action: new RegExp(req.query.search.trim(), 'i') },
+        { message: new RegExp(req.query.search.trim(), 'i') }
+      ];
+    }
+
+    const [logs, total] = await Promise.all([
+      AutomationLog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      AutomationLog.countDocuments(query)
+    ]);
+
+    res.json({
+      success: true,
+      data: logs,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/automation-logs/clear', async (req, res, next) => {
+  try {
+    require('./automationLog.model');
+    const AutomationLog = mongoose.model('AutomationLog');
+    await AutomationLog.deleteMany({});
+    res.json({ success: true, message: 'Automation logs successfully cleared!' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
