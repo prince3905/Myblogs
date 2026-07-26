@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+require('./post.model');
+require('./webstory.model');
+
 const WebStory = mongoose.model('WebStory');
 const BlogPost = mongoose.model('BlogPost');
 
