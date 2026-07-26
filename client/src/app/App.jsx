@@ -97,11 +97,25 @@ const ToolsPageSuspense = withPublicSuspense(ToolsPage);
 const GamesPageSuspense = withPublicSuspense(GamesPage);
 const PublicLiveAlertsPageSuspense = withPublicSuspense(PublicLiveAlertsPage);
 
+function WebStoryRedirect() {
+  const { slug } = useParams();
+  const location = useLocation();
+  useEffect(() => {
+    window.location.href = `/web-stories/${slug}${location.search}`;
+  }, [slug, location.search]);
+  return (
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#0f172a', color: 'white' }}>
+      <Typography variant="h6" sx={{ fontWeight: 700 }}>Opening Web Story...</Typography>
+    </Box>
+  );
+}
+
 export default function App() {
   return (
     <ToastProvider>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/web-stories/:slug" element={<WebStoryRedirect />} />
         <Route path="/blog" element={<BlogListPageSuspense />} />
         <Route path="/blog/:category/:slug" element={<PostPageSuspense />} />
         <Route path="/blog/:slug" element={<BlogRedirectPageSuspense />} />
