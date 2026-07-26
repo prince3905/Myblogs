@@ -240,11 +240,11 @@ export default function AdminWebStoriesPage() {
                       )}
                       <IconButton 
                         component="a" 
-                        href={`/web-stories/${story.slug}`} 
+                        href={`/web-stories/${story.slug || story._id}${story.status === 'draft' ? '?preview=true' : ''}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         sx={{ color: '#2563EB' }}
-                        title="Preview Story"
+                        title={story.status === 'draft' ? "Preview Draft Story" : "View Live Story"}
                       >
                         <OpenInNew fontSize="small" />
                       </IconButton>

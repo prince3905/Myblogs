@@ -11,16 +11,22 @@ function catUrlSlug(category) {
 async function renderWebStory(req, res, next) {
   try {
     const { slug } = req.params;
-    const story = await WebStory.findOne({ slug }).populate('post').lean();
+    const isObjectId = mongoose.isValidObjectId(slug);
+    const story = await WebStory.findOne({
+      $or: [
+        { slug: slug },
+        ...(isObjectId ? [{ _id: slug }] : [])
+      ]
+    }).populate('post').lean();
 
     if (!story) {
-      return res.status(404).send('Web Story not found');
+      return res.status(404).send('Web Story not found. Please verify the URL or slug in Admin.');
     }
 
     // Direct preview for admins, or block drafted stories from indexing
     const isAdminPreview = req.query.preview === 'true';
     if (story.status !== 'published' && !isAdminPreview) {
-      return res.status(404).send('Web Story is currently a draft');
+      return res.status(404).send('Web Story is currently a draft. Please publish it or use ?preview=true to view.');
     }
 
     // Increment view count in background
