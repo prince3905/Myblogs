@@ -212,10 +212,28 @@ Each slide MUST contain a descriptive 'imageQuery' to fetch the background.
 
     await newStory.save();
     console.log(`[WebStory Sourcing] Web Story successfully drafted for: "${post.title}" [Slug: ${post.slug}]`);
+
+    const { logAutomation } = require('../../shared/utils/automationLogger');
+    logAutomation({
+      service: 'WEB_STORY',
+      level: 'SUCCESS',
+      action: 'Google Discover WebStory Created',
+      message: `Generated 5-Slide Visual WebStory for "${post.title}"`,
+      metadata: { title: post.title, slug: post.slug, slides: finalSlides.length, storyId: newStory._id }
+    });
+
     return newStory._id;
 
   } catch (err) {
     console.error('[WebStory Sourcing] Story generator failed:', err.message);
+    const { logAutomation } = require('../../shared/utils/automationLogger');
+    logAutomation({
+      service: 'WEB_STORY',
+      level: 'ERROR',
+      action: 'WebStory Generator Failed',
+      message: err.message,
+      metadata: { title: post?.title }
+    });
     return null;
   }
 }
