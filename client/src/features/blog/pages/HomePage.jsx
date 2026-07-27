@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Typography, Button, Box, Chip, Avatar, IconButton } from '@mui/material';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import { ChevronLeft, ChevronRight, WhatsApp } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -719,39 +719,69 @@ export default function HomePage() {
               </Box>
               <Box>
                 <Typography variant="h6" component="h3" sx={{ fontWeight: 800, fontSize: { xs: '1.1rem', md: '1.35rem' }, lineHeight: 1.3 }}>
-                  Join Official Telegram Channel ✈️
+                  Join Official WhatsApp & Telegram Channels 🚀
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#e0f2fe', fontWeight: 500, mt: 0.5, fontSize: { xs: '0.85rem', md: '0.95rem' } }}>
-                  Sarkari Result, Admit Card, Answer Key aur Instant Job Alerts direct apne Telegram par paayein!
+                  Sarkari Result, Admit Card, Answer Key aur Instant Job Alerts direct apne WhatsApp & Telegram par paayein!
                 </Typography>
               </Box>
             </Box>
 
-            <Button
-              component="a"
-              href="https://t.me/SarkariJob_DigitalHome"
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="contained"
-              sx={{
-                bgcolor: '#ffffff',
-                color: '#0f172a',
-                fontWeight: 900,
-                fontSize: { xs: '0.85rem', md: '0.95rem' },
-                py: 1.3,
-                px: 3.5,
-                borderRadius: '12px',
-                textTransform: 'none',
-                boxShadow: '0 4px 14px rgba(255, 255, 255, 0.4)',
-                whiteSpace: 'nowrap',
-                '&:hover': {
-                  bgcolor: '#f8fafc',
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', width: { xs: '100%', md: 'auto' } }}>
+              <Button
+                component="a"
+                href="https://whatsapp.com/channel/0029Va9Z29c5a243aZ04523G"
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="contained"
+                startIcon={<WhatsApp />}
+                sx={{
+                  bgcolor: '#25D366',
+                  color: '#ffffff',
+                  fontWeight: 900,
+                  fontSize: { xs: '0.85rem', md: '0.95rem' },
+                  py: 1.3,
+                  px: 3,
+                  flexGrow: { xs: 1, sm: 0 },
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)',
+                  whiteSpace: 'nowrap',
+                  '&:hover': {
+                    bgcolor: '#128C7E',
+                  }
+                }}
+              >
+                Join WhatsApp 💬
+              </Button>
+
+              <Button
+                component="a"
+                href="https://t.me/SarkariJob_DigitalHome"
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="contained"
+                sx={{
+                  bgcolor: '#ffffff',
                   color: '#0369a1',
-                }
-              }}
-            >
-              Join Telegram Channel Now 🚀
-            </Button>
+                  fontWeight: 900,
+                  fontSize: { xs: '0.85rem', md: '0.95rem' },
+                  py: 1.3,
+                  px: 3,
+                  flexGrow: { xs: 1, sm: 0 },
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  boxShadow: '0 4px 14px rgba(255, 255, 255, 0.4)',
+                  whiteSpace: 'nowrap',
+                  '&:hover': {
+                    bgcolor: '#f8fafc',
+                    color: '#0284c7',
+                  }
+                }}
+              >
+                Join Telegram ✈️
+              </Button>
+            </Box>
           </Box>
         </Container>
       </Box>
