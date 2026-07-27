@@ -1036,6 +1036,13 @@ function initScheduler() {
       console.error('[LiveAlert Scheduler] Initial startup post expiry check failed:', err.message);
       logAutomation({ service: 'SYSTEM_CRON', level: 'ERROR', action: 'Startup Expiry Check Failed', message: err.message });
     }
+
+    try {
+      require('../posts/webstory.model');
+      const WebStory = mongoose.model('WebStory');
+      const count = await WebStory.countDocuments();
+      logAutomation({ service: 'WEB_STORY', level: 'SUCCESS', action: 'Web Stories System Sync', message: `Web Story Engine active with ${count} total visual Google Discover Web Stories ready`, metadata: { totalStories: count } });
+    } catch (wsErr) {}
   });
 }
 
