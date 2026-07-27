@@ -680,60 +680,97 @@ export default function PostPage() {
           })()}
         />
       
-       <Box sx={{ 
-          width: '100%', 
-          height: { xs: '40vh', md: '60vh' },
-          minHeight: { xs: 280, md: 400 },
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-end',
-          mb: 4,
-          borderRadius: '32px',
-          overflow: 'hidden',
-        }}>
-          <Box
-            component="img"
-            src={heroImage}
-            alt={post.title}
-            width="1200"
-            height="675"
-            loading="eager"
-            fetchPriority="high"
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center',
-              aspectRatio: '16/9',
-              zIndex: 0,
+      {/* 1. Clean Editorial Post Header */}
+      <Container maxWidth="md" sx={{ pt: { xs: 2, md: 4 }, pb: 1 }}>
+        <Box sx={{ mb: 2 }}>
+          {/* Category & Badges */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Chip 
+              label={post.category} 
+              component={Link} 
+              to={`/category/${post.category}`} 
+              clickable 
+              color="primary"
+              variant="filled"
+              sx={{ fontWeight: 700, borderRadius: '8px', fontSize: '0.82rem' }} 
+            />
+            {post.sponsored && (
+              <Chip icon={<MonetizationOn />} label="Sponsored" size="small" color="warning" sx={{ fontWeight: 700 }} />
+            )}
+          </Box>
+
+          {/* Clean Main Title */}
+          <Typography 
+            variant="h3" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 850, 
+              color: 'text.primary', 
+              fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
+              lineHeight: 1.3,
+              letterSpacing: '-0.02em',
+              mb: 1.5
             }}
-          />
-          <Box sx={{ 
-            position: 'absolute', 
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: 1,
-          }} />
-          <Container maxWidth="md" sx={{ position: 'relative', zIndex: 2, pb: 4 }}>
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <Chip label={post.category} component={Link} to={`/category/${post.category}`} clickable sx={{ bgcolor: 'rgba(255,255,255,0.9)', color: 'primary.main', fontWeight: 600 }} />
-              {post.sponsored && (
-                <Chip icon={<MonetizationOn />} label="Sponsored" size="small" color="warning" sx={{ bgcolor: 'rgba(255,255,255,0.9)', fontWeight: 600 }} />
-              )}
-            </Box>
-            <Typography variant="h2" component="h1" sx={{ color: 'white', fontWeight: 700, mb: 2, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
-              {post.title}
+          >
+            {post.title}
+          </Typography>
+
+          {/* Author & Meta Row */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, color: 'text.secondary', fontSize: '0.85rem', flexWrap: 'wrap', mb: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+              📅 {new Date(post.publishedAt || post.createdAt).toLocaleDateString('hi-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
             </Typography>
-            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)', mb: 2 }}>
-              {new Date(post.publishedAt || post.createdAt).toLocaleDateString()} • {post.readingTime} min read • {post.views || 0} views
+            <Typography variant="body2" sx={{ color: 'text.disabled' }}>•</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+              ⏱️ {post.readingTime || 5} min read
             </Typography>
-           </Container>
+            <Typography variant="body2" sx={{ color: 'text.disabled' }}>•</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+              👁️ {post.views || 0} views
+            </Typography>
+          </Box>
+
+          {post.excerpt && (
+            <Typography variant="h6" color="text.secondary" sx={{ mb: 2.5, fontStyle: 'italic', lineHeight: 1.6, fontSize: { xs: '0.98rem', md: '1.1rem' } }}>
+              {post.excerpt}
+            </Typography>
+          )}
         </Box>
 
-       <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
+        {/* 2. Crisp, Uncropped Featured Image Box */}
+        {heroImage && (
+          <Box 
+            sx={{ 
+              width: '100%', 
+              bgcolor: '#0f172a',
+              borderRadius: { xs: '16px', md: '24px' },
+              overflow: 'hidden',
+              boxShadow: '0 12px 32px rgba(0, 0, 0, 0.12)',
+              border: '1px solid rgba(0, 0, 0, 0.08)',
+              mb: 3,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            <Box
+              component="img"
+              src={heroImage}
+              alt={post.title}
+              loading="eager"
+              fetchPriority="high"
+              sx={{
+                width: '100%',
+                maxHeight: { xs: '380px', sm: '520px', md: '600px' },
+                objectFit: 'contain',
+                display: 'block'
+              }}
+            />
+          </Box>
+        )}
+      </Container>
+
+      <Container maxWidth="md" sx={{ pb: { xs: 2, md: 4 } }}>
          <Button 
             component={Link} 
             to="/blog" 
@@ -742,10 +779,6 @@ export default function PostPage() {
           >
             ← Back to blog
           </Button>
-
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 4, fontStyle: 'italic', lineHeight: 1.7, color: 'text.primary' }}>
-            {post.excerpt}
-          </Typography>
 
           {post.category === 'Sarkari Jobs & Exams' && (
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 4, width: '100%' }}>
