@@ -344,9 +344,14 @@ ${buttonHtmlBlock}
   const { prettifyLinksAndContent } = require('../ai/aiPostProcessor');
   finalContent = prettifyLinksAndContent(finalContent);
 
-  // Autopilot background auto-thumbnail generation is disabled to prevent Cloudinary space waste.
-  // The admin can manually design a perfect, zero-typo banner using the HTML Canvas tool in the editor.
+  // Auto-generate HD Featured Banner Image
   let featuredImage = '';
+  try {
+    const { generateAutoBanner } = require('../../shared/utils/autoBannerGenerator');
+    featuredImage = await generateAutoBanner(processed.title, 'Sarkari Jobs & Exams');
+  } catch (bannerErr) {
+    console.warn('[LiveAlert Sourcing] Auto banner generation notice:', bannerErr.message);
+  }
 
   // Create and save Mongoose BlogPost document
   const newPost = new BlogPost({
