@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Typography, TextField, Select, MenuItem, FormControl, InputLabel, Button, Grid, Alert, Box, Paper, Divider, FormControlLabel, Checkbox, CircularProgress, Chip, Collapse, IconButton, Tooltip, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { ArrowBack, ExpandMore, ExpandLess, ContentCopy } from '@mui/icons-material';
+import { ArrowBack, ExpandMore, ExpandLess, ContentCopy, WhatsApp } from '@mui/icons-material';
 import ImageUpload from '../../../components/ImageUpload';
 import RichTextEditor from '../../../components/RichTextEditor';
 import { useToast } from '../../../components/Toast';
@@ -1867,6 +1867,37 @@ export default function PostEditorPage() {
                   }}
                 >
                   {ytLoading ? <CircularProgress size={20} color="inherit" /> : '⚡ Request Google Indexing'}
+                </Button>
+              )}
+
+              {isEdit && (
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  onClick={() => {
+                    const catSlug = (form.category || 'blog').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'blog';
+                    const postUrl = `https://www.digitalhomeblog.in/blog/${catSlug}/${form.slug}`;
+                    const msg = `📢 *${form.title}*\n\n🔥 *सरकारी जॉब अपडेट व 100% डायरेक्ट लिंक:*\n${postUrl}\n\n✅ पात्रता, तिथियां व ऑफिशियल नोटिफिकेशन PDF डाउनलोड करने के लिए ऊपर दिए गए लिंक पर क्लिक करें!`;
+                    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+                    window.open(waUrl, '_blank');
+                    addToast('WhatsApp opening with pre-filled post text! 💬', 'success');
+                  }}
+                  startIcon={<WhatsApp />}
+                  sx={{
+                    fontWeight: 800,
+                    py: 1.5,
+                    mb: 2,
+                    fontSize: '1rem',
+                    borderRadius: 2,
+                    bgcolor: '#25D366',
+                    color: '#ffffff',
+                    textTransform: 'none',
+                    boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)',
+                    '&:hover': { bgcolor: '#128C7E' }
+                  }}
+                >
+                  💬 Share to WhatsApp Channel
                 </Button>
               )}
 

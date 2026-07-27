@@ -10,6 +10,7 @@ import SocialShare from '../../../components/SocialShare';
 import TableOfContents from '../../../components/TableOfContents';
 import AdSlot from '../../../components/AdSlot';
 import TelegramRedirectModal from '../../../components/TelegramRedirectModal';
+import WhatsappChannelBanner from '../../../components/WhatsappChannelBanner';
 import { MonetizationOn, Info, PictureAsPdf } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import { useToast } from '../../../components/Toast';
@@ -908,6 +909,9 @@ export default function PostPage() {
         onClose={() => setRedirectModalOpen(false)} 
         targetUrl={pendingRedirectUrl} 
       />
+
+      {/* Floating High-Converting WhatsApp Channel Join Banner */}
+      <WhatsappChannelBanner />
     </Layout>
   );
 }
