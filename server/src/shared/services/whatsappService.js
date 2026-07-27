@@ -92,7 +92,15 @@ async function sendWhatsappChannelMessage(post) {
         }
       });
 
+      const { logAutomation } = require('../utils/automationLogger');
       console.log(`[WhatsApp Auto-Share] Successfully pushed via Meta Cloud API template (${templateName})! ID: ${templateResponse.data?.messages?.[0]?.id || 'OK'}`);
+      logAutomation({
+        service: 'WHATSAPP',
+        level: 'SUCCESS',
+        action: 'WhatsApp Broadcast Sent',
+        message: `Successfully broadcasted "${post.title}" via Meta Template (${templateName})`,
+        metadata: { title: post.title, recipient: recipientPhone, template: templateName }
+      });
       return { 
         success: true, 
         message: `WhatsApp Push via template ${templateName} delivered successfully!`, 
@@ -122,6 +130,14 @@ async function sendWhatsappChannelMessage(post) {
           }
         });
         console.log('[WhatsApp Auto-Share] Successfully pushed direct text payload!');
+        const { logAutomation } = require('../utils/automationLogger');
+        logAutomation({
+          service: 'WHATSAPP',
+          level: 'SUCCESS',
+          action: 'WhatsApp Broadcast Sent (Text Fallback)',
+          message: `Successfully broadcasted "${post.title}" via direct text payload`,
+          metadata: { title: post.title, recipient: recipientPhone }
+        });
         return {
           success: true,
           message: 'WhatsApp Push delivered via direct text payload!',
@@ -133,6 +149,14 @@ async function sendWhatsappChannelMessage(post) {
         const textErrorData = textErr.response?.data?.error || {};
         const finalErrorMsg = `Meta API Error [Code ${textErrorData.code || errorCode}]: ${textErrorData.message || errorMsg}`;
         console.error('[WhatsApp Auto-Share] Direct text fallback also failed:', finalErrorMsg);
+        const { logAutomation } = require('../utils/automationLogger');
+        logAutomation({
+          service: 'WHATSAPP',
+          level: 'WARNING',
+          action: 'WhatsApp API Notice',
+          message: finalErrorMsg,
+          metadata: { title: post.title, recipient: recipientPhone, shareUrl: formatted.shareUrl }
+        });
         return {
           success: false,
           error: finalErrorMsg,
