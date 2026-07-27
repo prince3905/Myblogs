@@ -309,6 +309,14 @@ blogPostSchema.post('save', async function (doc) {
     } catch (linkErr) {
       console.error('[Two-Way Linking] Failed in post-save linking builder:', linkErr.message);
     }
+
+    // 3. Meta WhatsApp Cloud API Auto-Broadcast Trigger
+    try {
+      const { sendWhatsappChannelMessage } = require('../../shared/services/whatsappService');
+      sendWhatsappChannelMessage(doc).catch(err => {
+        console.warn('[WhatsApp Auto-Broadcast] Post-save trigger notice:', err.message);
+      });
+    } catch (waErr) {}
   }
 });
 
