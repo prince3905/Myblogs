@@ -49,6 +49,14 @@ blogPostSchema.pre('save', async function (next) {
     if (post.content) {
       let content = post.content || '';
 
+      // Auto-optimize image ALT tags for Google Image Search
+      try {
+        const { fixContentImagesSeo } = require('../../shared/utils/imageSeoFixer');
+        const imgSeo = fixContentImagesSeo(content, post.title);
+        content = imgSeo.content;
+        post.content = content;
+      } catch (imgErr) {}
+
       // Find the matched alert for metadata
       let boardName = 'Official Board';
       let lastDate = 'Check Details';
@@ -310,6 +318,18 @@ blogPostSchema.post('save', async function (doc) {
     } catch (linkErr) {
       console.error('[Two-Way Linking] Failed in post-save linking builder:', linkErr.message);
     }
+
+    // 4. Auto Image ALT SEO Telemetry Log
+    try {
+      const { logAutomation } = require('../../shared/utils/automationLogger');
+      logAutomation({
+        service: 'SEO_INDEXING',
+        level: 'SUCCESS',
+        action: 'Auto Image ALT SEO Fix',
+        message: `Auto-optimized image ALT tags for Google Image Search: "${doc.title}"`,
+        metadata: { title: doc.title }
+      });
+    } catch (logErr) {}
 
     // 3. Meta WhatsApp Cloud API Auto-Broadcast Trigger (Temporarily Disabled by User Request)
     /*
