@@ -3,7 +3,8 @@ import { Box, Typography, Button, IconButton, Slide } from '@mui/material';
 import { WhatsApp, Close } from '@mui/icons-material';
 
 export default function WhatsappChannelBanner() {
-  const [open, setOpen] = useState(false);
+  // Temporarily hidden until user activates WhatsApp
+  return null;
 
   useEffect(() => {
     // Check if dismissed in this session

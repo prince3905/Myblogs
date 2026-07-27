@@ -1870,7 +1870,7 @@ export default function PostEditorPage() {
                 </Button>
               )}
 
-              {isEdit && (
+              {false && isEdit && (
                 <Button
                   variant="contained"
                   fullWidth

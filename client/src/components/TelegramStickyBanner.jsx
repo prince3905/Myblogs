@@ -83,34 +83,36 @@ export default function TelegramStickyBanner() {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.8, sm: 1.5 } }}>
-          {/* WhatsApp Button */}
-          <Button
-            variant="contained"
-            component="a"
-            href="https://whatsapp.com/channel/0029Va9Z29c5a243aZ04523G"
-            target="_blank"
-            rel="noopener noreferrer"
-            startIcon={<WhatsApp sx={{ fontSize: '18px !important' }} />}
-            sx={{
-              bgcolor: '#25D366',
-              color: '#ffffff',
-              fontWeight: 800,
-              px: { xs: 1.5, sm: 2.5 },
-              py: { xs: 0.6, sm: 0.9 },
-              borderRadius: '9999px',
-              fontSize: { xs: '0.75rem', sm: '0.85rem' },
-              textTransform: 'none',
-              animation: `${pulse} 2s infinite ease-in-out`,
-              flexShrink: 0,
-              boxShadow: '0 4px 10px rgba(37, 211, 102, 0.4)',
-              '&:hover': {
-                bgcolor: '#128C7E',
+          {/* WhatsApp Button (Temporarily Hidden) */}
+          {false && (
+            <Button
+              variant="contained"
+              component="a"
+              href="https://whatsapp.com/channel/0029Va9Z29c5a243aZ04523G"
+              target="_blank"
+              rel="noopener noreferrer"
+              startIcon={<WhatsApp sx={{ fontSize: '18px !important' }} />}
+              sx={{
+                bgcolor: '#25D366',
                 color: '#ffffff',
-              },
-            }}
-          >
-            WhatsApp 💬
-          </Button>
+                fontWeight: 800,
+                px: { xs: 1.5, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.9 },
+                borderRadius: '9999px',
+                fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                textTransform: 'none',
+                animation: `${pulse} 2s infinite ease-in-out`,
+                flexShrink: 0,
+                boxShadow: '0 4px 10px rgba(37, 211, 102, 0.4)',
+                '&:hover': {
+                  bgcolor: '#128C7E',
+                  color: '#ffffff',
+                },
+              }}
+            >
+              WhatsApp 💬
+            </Button>
+          )}
 
           {/* Telegram Button */}
           <Button
