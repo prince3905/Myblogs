@@ -23,6 +23,7 @@ const blogPostSchema = new mongoose.Schema(
     readingTime: { type: Number, default: 1 },
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
+    lastGscBoostAt: { type: Date, default: null },
     sponsored: { type: Boolean, default: false },
     affiliateDisclosure: { type: Boolean, default: false },
     rating: { type: Number, min: 1, max: 5, default: null },

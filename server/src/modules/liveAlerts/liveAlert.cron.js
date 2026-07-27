@@ -1001,8 +1001,19 @@ function initScheduler() {
     }
   });
 
-  console.log('[LiveAlert Scheduler] Node-cron initialized: Scraper (15m), Queue (9AM, 6PM) & Expiry (00:00).');
-  logAutomation({ service: 'SYSTEM_CRON', level: 'SUCCESS', action: 'Scheduler Initialized', message: 'Node-cron active for Scraper (15m), Queue (9AM, 6PM) & Expiry (00:00)' });
+  // Auto GSC Traffic Booster Daemon: Runs every 6 hours
+  cron.schedule('0 */6 * * *', async () => {
+    try {
+      console.log('[LiveAlert Scheduler] Running Auto GSC Traffic Booster Daemon...');
+      const { runAutoGscBoost } = require('../../shared/utils/gscAutoBooster');
+      await runAutoGscBoost();
+    } catch (err) {
+      console.error('[LiveAlert Scheduler] Auto GSC Booster Daemon error:', err.message);
+    }
+  });
+
+  console.log('[LiveAlert Scheduler] Node-cron initialized: Scraper (15m), Queue (9AM, 6PM), Auto-GSC Boost (6h) & Expiry (00:00).');
+  logAutomation({ service: 'SYSTEM_CRON', level: 'SUCCESS', action: 'Scheduler Initialized', message: 'Node-cron active for Scraper (15m), Queue (9AM, 6PM), Auto-GSC Boost (6h) & Expiry (00:00)' });
 
   // Run initial startup tasks immediately (asynchronously in the background)
   Promise.resolve().then(async () => {
@@ -1043,6 +1054,15 @@ function initScheduler() {
       const count = await WebStory.countDocuments();
       logAutomation({ service: 'WEB_STORY', level: 'SUCCESS', action: 'Web Stories System Sync', message: `Web Story Engine active with ${count} total visual Google Discover Web Stories ready`, metadata: { totalStories: count } });
     } catch (wsErr) {}
+
+    // Initial Startup Auto-GSC Traffic Boost
+    try {
+      console.log('[LiveAlert Scheduler] Running startup Auto GSC Traffic Booster...');
+      const { runAutoGscBoost } = require('../../shared/utils/gscAutoBooster');
+      await runAutoGscBoost();
+    } catch (gscErr) {
+      console.error('[LiveAlert Scheduler] Startup Auto GSC Traffic Booster notice:', gscErr.message);
+    }
   });
 }
 
