@@ -830,6 +830,17 @@ async function processAIOutput(data) {
   const highCtrTitle = optimizeHighCtrTitle(data.seoTitle || processedTitle, category);
   const highCtrDesc = optimizeHighCtrMetaDescription(processedTitle, processedContent, focusKeyword);
 
+  try {
+    const { logAutomation } = require('../../shared/utils/automationLogger');
+    logAutomation({
+      service: 'AI_WRITER',
+      level: 'SUCCESS',
+      action: 'Auto-SEO Post Optimization',
+      message: `Optimized High-CTR title & Indian search intent for "${processedTitle}"`,
+      metadata: { title: processedTitle, seoTitle: highCtrTitle, focusKeyword }
+    });
+  } catch (logErr) {}
+
   return {
     ...data,
     title: processedTitle,
