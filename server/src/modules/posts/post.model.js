@@ -275,17 +275,22 @@ blogPostSchema.post('save', async function (doc) {
     // 1. Google Indexing Auto-Notification
     try {
       const { notifyUrl } = require('../../shared/utils/google-indexing');
+      const { logAutomation } = require('../../shared/utils/automationLogger');
       const catUrl = (doc.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
       const postUrl = `https://www.digitalhomeblog.in/blog/${catUrl}/${doc.slug}`;
       console.log(`[Google Indexing] Auto-pinging index for published post: ${postUrl}`);
       const result = await notifyUrl(postUrl, 'URL_UPDATED');
       if (result.success) {
         console.log(`[Google Indexing] Successfully auto-indexed published post: "${doc.title}"`);
+        logAutomation({ service: 'SEO_INDEXING', level: 'SUCCESS', action: 'Google Index Ping (Post)', message: `Pinged Google Indexing API for published post "${doc.title}"`, metadata: { title: doc.title, url: postUrl } });
       } else {
         console.warn(`[Google Indexing] Auto-indexing failed for "${doc.title}":`, result.error || result.message);
+        logAutomation({ service: 'SEO_INDEXING', level: 'ERROR', action: 'Google Index Ping Failed (Post)', message: result.error || result.message || 'Auto-indexing failed', metadata: { title: doc.title, url: postUrl } });
       }
     } catch (err) {
       console.error('[Google Indexing] Failed in post-save index notifier:', err.message);
+      const { logAutomation } = require('../../shared/utils/automationLogger');
+      logAutomation({ service: 'SEO_INDEXING', level: 'ERROR', action: 'Google Index Ping Exception (Post)', message: err.message, metadata: { title: doc.title } });
     }
 
     // 2. Two-Way Internal Linking Builder
