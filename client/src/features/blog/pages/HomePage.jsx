@@ -480,12 +480,30 @@ export default function HomePage() {
     }
   };
 
+  const handleAlertsMobileScroll = (e) => {
+    const container = e.target;
+    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 150) {
+      if (hasMoreAlerts && !loadingMoreAlerts) {
+        loadMoreAlerts();
+      }
+    }
+  };
+
+  const handleStoriesScroll = (e) => {
+    const container = e.target;
+    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 150) {
+      if (hasMoreStories && !loadingMoreStories) {
+        loadMoreStories();
+      }
+    }
+  };
+
   const handleNext = () => {
     const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
     if (currentSlide >= maxSlide - 1 && hasMoreAlerts && !loadingMoreAlerts) {
       loadMoreAlerts();
     }
-    if (currentSlide < maxSlide) {
+    if (currentSlide < maxSlide || (hasMoreAlerts && !loadingMoreAlerts)) {
       setCurrentSlide(prev => prev + 1);
     }
   };
@@ -736,7 +754,7 @@ export default function HomePage() {
                   </IconButton>
                 )}
 
-                {currentSlide < desktopPages.length - 1 && (
+                {(currentSlide < desktopPages.length - 1 || hasMoreAlerts) && (
                   <IconButton 
                     onClick={handleNext}
                     aria-label="Next Slide"
@@ -760,9 +778,10 @@ export default function HomePage() {
                 )}
               </Box>
 
-              {/* Mobile Swipeable View (xs, finger scroll, no arrows, 2 rows of cards) */}
+              {/* Mobile Swipeable View */}
               <Box 
                 ref={mobileScrollRef}
+                onScroll={handleAlertsMobileScroll}
                 sx={{
                 display: { xs: 'flex', sm: 'none' },
                 overflowX: 'auto',
@@ -947,6 +966,7 @@ export default function HomePage() {
 
             <Box 
               ref={mobileStoriesScrollRef}
+              onScroll={handleStoriesScroll}
               sx={{ 
                 display: 'flex',
                 gap: 2.5,
