@@ -5,31 +5,65 @@ const env = require('../../config/env');
 const BlogPost = mongoose.model('BlogPost');
 const WebStory = mongoose.model('WebStory');
 
-const HERO_PHOTOS = [
-  'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=720&h=1280&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=720&h=1280&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=720&h=1280&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=720&h=1280&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=720&h=1280&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=720&h=1280&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=720&h=1280&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=720&h=1280&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=720&h=1280&fit=crop&q=80',
+const UNSPLASH_PORTRAIT_PHOTOS = [
+  'photo-1542831371-29b0f74f9713',
+  'photo-1499750310107-5fef28a66643',
+  'photo-1498050108023-c5249f4df085',
+  'photo-1517694712202-14dd9538aa97',
+  'photo-1461749280684-dccba630e2f6',
+  'photo-1504384308090-c894fdcc538d',
+  'photo-1486312338219-ce68d2c6f44d',
+  'photo-1526374965328-7f61d4dc18c5',
+  'photo-1497366216548-37526070297c',
+  'photo-1504639725590-34d0984388bd',
+  'photo-1507003211169-0a1dd7228f2d',
+  'photo-1517245386807-bb43f82c33c4',
+  'photo-1559526324-593bc073d938',
+  'photo-1522071820081-009f0129c71c',
+  'photo-1516321497487-e288fb19713f',
+  'photo-1454165804606-c3d57bc86b40',
+  'photo-1513258496099-48168024aec0',
+  'photo-1434030216411-0b793f4b4173',
+  'photo-1427504494785-3a9ca7044f45',
+  'photo-1523240795612-9a054b0db644',
+  'photo-1524178232363-1fb2b075b655',
+  'photo-1580582932707-520aed937b7b',
+  'photo-1577896851231-70ef18881754',
+  'photo-1509062522246-3755977927d7',
+  'photo-1531482615713-2afd69097998',
+  'photo-1521791136064-7986c2920216',
+  'photo-1556761175-5973dc0f32e7',
+  'photo-1551836022-d5d88e9218df',
+  'photo-1573496359142-b8d87734a5a2',
+  'photo-1573497019940-1c28c88b4f3e',
+  'photo-1507679799987-c73779587ccf',
+  'photo-1519085360753-af0119f7cbe7',
+  'photo-1486406146926-c627a92ad1ab',
+  'photo-1497215728101-856f4ea42174',
+  'photo-1541888946425-d0fbb186a5b3',
+  'photo-1516321318423-f06f85e504b3',
+  'photo-1526948128573-703ee1aeb6fa',
+  'photo-1557804506-669a67965ba0',
+  'photo-1517048676732-d65bc937f952',
+  'photo-1531403009284-440f080d1e12',
+  'photo-1553877522-43269d4ea984',
+  'photo-1522202176988-66273c2fd55f',
+  'photo-1450133064473-71024230f91b',
+  'photo-1501504905252-473c47e087f8',
+  'photo-1497633762265-9d179a990aa6',
+  'photo-1513542789411-b6a5d4f31634',
+  'photo-1456513080510-7bf3a84b82f8',
+  'photo-1495446815901-a7297e633e8d'
 ];
 
-function generateUniqueAiImage(query = '', title = '', slideIdx = 0) {
-  const seedString = `${title}_slide_${slideIdx}_${query}`;
+function getUniqueUnsplashImage(title = '', slideIdx = 0) {
+  const str = `${title}_slide_${slideIdx}`;
   let hash = 0;
-  for (let i = 0; i < seedString.length; i++) {
-    hash = (hash * 31 + seedString.charCodeAt(i)) % 1000000;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) % UNSPLASH_PORTRAIT_PHOTOS.length;
   }
-  const seed = Math.abs(hash) + (slideIdx + 1) * 999;
-  
-  const cleanTitle = (title || query || 'Job Recruitment Notice').replace(/[^a-zA-Z0-9\s]/g, '').trim();
-  const prompt = `${cleanTitle}, ${query}, professional official recruitment notification poster, vertical portrait wallpaper, 8k resolution, photorealistic`;
-  const encodedPrompt = encodeURIComponent(prompt.slice(0, 140));
-
-  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=720&height=1280&nologo=true&seed=${seed}`;
+  const photoId = UNSPLASH_PORTRAIT_PHOTOS[Math.abs(hash)];
+  return `https://images.unsplash.com/${photoId}?w=720&h=1280&fit=crop&q=80`;
 }
 
 async function fetchPortraitImage(query, title = '', slideIdx = 0) {
@@ -55,7 +89,7 @@ async function fetchPortraitImage(query, title = '', slideIdx = 0) {
     }
   }
 
-  return generateUniqueAiImage(cleanQuery, title, slideIdx);
+  return getUniqueUnsplashImage(title || cleanQuery, slideIdx);
 }
 
 async function callAiJson(prompt) {
