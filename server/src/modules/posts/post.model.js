@@ -293,8 +293,9 @@ blogPostSchema.post('save', async function (doc) {
         console.log(`[Google Indexing] Successfully auto-indexed published post: "${doc.title}"`);
         logAutomation({ service: 'SEO_INDEXING', level: 'SUCCESS', action: 'Google Index Ping (Post)', message: `Pinged Google Indexing API for published post "${doc.title}"`, metadata: { title: doc.title, url: postUrl } });
       } else {
-        console.warn(`[Google Indexing] Auto-indexing failed for "${doc.title}":`, result.error || result.message);
-        logAutomation({ service: 'SEO_INDEXING', level: 'ERROR', action: 'Google Index Ping Failed (Post)', message: result.error || result.message || 'Auto-indexing failed', metadata: { title: doc.title, url: postUrl } });
+        const errMsg = typeof result.error === 'string' ? result.error : (result.error?.message || result.message || 'Auto-indexing quota limit reached');
+        console.warn(`[Google Indexing] Auto-indexing notice for "${doc.title}":`, errMsg);
+        logAutomation({ service: 'SEO_INDEXING', level: 'WARNING', action: 'Google Index Ping Quota Notice (Post)', message: String(errMsg), metadata: { title: doc.title, url: postUrl } });
       }
     } catch (err) {
       console.error('[Google Indexing] Failed in post-save index notifier:', err.message);
