@@ -566,6 +566,17 @@ async function scrapeDetailedUrls(pageUrl) {
       });
       detailsText += '\n';
     });
+
+    if (!detailsText || detailsText.trim().length < 100) {
+      const container = $('.entry-content, #content, .post, article, main, body');
+      container.find('h1, h2, h3, h4, h5, p, li, tr, div').each((i, el) => {
+        const text = $(el).text().replace(/\s+/g, ' ').trim();
+        if (text && text.length > 20 && !detailsText.includes(text)) {
+          detailsText += text + '\n';
+        }
+      });
+    }
+
     detailsText = detailsText.trim();
     detailsText = cleanDetailsText(detailsText);
 
