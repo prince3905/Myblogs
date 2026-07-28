@@ -46,6 +46,33 @@ blogPostSchema.pre('save', async function (next) {
   try {
     const post = this;
 
+    // Mandatory Competitor Sanitizer: Scrub all competitor text & hidden links before ANY post is saved or published
+    function purgeCompetitorTrace(str = '') {
+      if (!str || typeof str !== 'string') return str;
+      let cleaned = str;
+      cleaned = cleaned.replace(/href=["']https?:\/\/(?:www\.)?sarkariresult\.com[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+      cleaned = cleaned.replace(/href=["']https?:\/\/[^"']*sarkariresult[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+      cleaned = cleaned
+        .replace(/sarkari\s*result\s*official\s*(?:website|app|portal|tools?)/gi, 'Digital Home Official Portal')
+        .replace(/sarkari\s*result\s*(?:tools?|resizer|cropper|compressor)/gi, 'Student Utility Tools')
+        .replace(/sarkari\s*result/gi, 'Digital Home Portal')
+        .replace(/sarkariresult/gi, 'Digital Home')
+        .replace(/sarkari\s*resut/gi, 'Digital Home')
+        .replace(/sarkari\s*reult/gi, 'Digital Home');
+      cleaned = cleaned.replace(/www\.sarkariresult\.com/gi, 'www.digitalhomeblog.in');
+      cleaned = cleaned.replace(/sarkariresult\.com/gi, 'digitalhomeblog.in');
+      return cleaned;
+    }
+
+    if (post.title) post.title = purgeCompetitorTrace(post.title);
+    if (post.excerpt) post.excerpt = purgeCompetitorTrace(post.excerpt);
+    if (post.content) post.content = purgeCompetitorTrace(post.content);
+    if (post.seoTitle) post.seoTitle = purgeCompetitorTrace(post.seoTitle);
+    if (post.seoDescription) post.seoDescription = purgeCompetitorTrace(post.seoDescription);
+    if (Array.isArray(post.tags)) {
+      post.tags = post.tags.map(t => purgeCompetitorTrace(t));
+    }
+
     if (post.content) {
       let content = post.content || '';
 
