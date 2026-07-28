@@ -801,11 +801,17 @@ async function scrapeFeeds() {
         }
       }
 
-      // Skip inserting if detailsText is empty/too short (e.g. homepage redirects or list pages)
-      if (!details.detailsText || details.detailsText.trim().length < 100) {
-        console.log(`[LiveAlert Scraper] Skipping saving alert: "${title}" (detailsText is empty or too short)`);
-        continue;
+      // Fallback detailsText generator if scraping yields short text so NO job alert is ever skipped
+      let finalDetailsText = details.detailsText ? details.detailsText.trim() : '';
+      if (finalDetailsText.length < 50) {
+        console.log(`[LiveAlert Scraper] Applying fallback detailsText for alert: "${title}"`);
+        finalDetailsText = `Official Notification Alert: ${title}\nBoard/Organisation: ${boardName}\nState: ${state}\nCategory: ${detectCategory(title, href)}\nSource Link: ${href}\n\nKey Highlights:\n- Official recruitment announcement for ${title}.\n- Online application form and official notification links are active.\n- Interested candidates should check eligibility details and apply via the official link below.`;
       }
+
+      const finalLastDate = details.lastDate || lastDate || 'Check Official Notice';
+      const finalOfficialUrl = details.officialUrl || href;
+      const finalOfficialPdfUrl = details.officialPdfUrl || href;
+      const finalOfficialApplyUrl = details.officialApplyUrl || href;
 
       // Save or update to DB
       await LiveAlert.updateOne(
@@ -814,16 +820,16 @@ async function scrapeFeeds() {
           $set: {
             title,
             boardName,
-            lastDate: details.lastDate || lastDate, // prefer detail date if found, fallback to parsed link lastDate
-            postDate: details.postDate,
-            parsedPostDate: parsedDate || fallbackDate, // fallback to year fallback date if parsing failed
-            officialUrl: details.officialUrl,
-            officialPdfUrl: details.officialPdfUrl,
-            officialApplyUrl: details.officialApplyUrl,
+            lastDate: finalLastDate,
+            postDate: details.postDate || new Date().toLocaleDateString('en-IN'),
+            parsedPostDate: parsedDate || fallbackDate,
+            officialUrl: finalOfficialUrl,
+            officialPdfUrl: finalOfficialPdfUrl,
+            officialApplyUrl: finalOfficialApplyUrl,
             source: 'SarkariResult',
             state,
             category: detectCategory(title, href),
-            detailsText: details.detailsText
+            detailsText: finalDetailsText
           },
           $setOnInsert: {
             status: 'active'
