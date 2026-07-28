@@ -182,11 +182,11 @@ Each slide MUST contain a descriptive 'imageQuery' to fetch the background.
     console.log('[WebStory Sourcing] Sourcing portrait background images...');
     const slidePromises = result.slides.map(async (slide, idx) => {
       let imageUrl;
-      if (idx === 0 && post.featuredImage) {
+      if (idx === 0 && post.featuredImage && post.featuredImage.startsWith('http') && !post.featuredImage.includes('data:image') && !post.featuredImage.includes('pollinations')) {
         imageUrl = post.featuredImage;
         console.log(`[WebStory Sourcing] Using post featured image for Cover Slide: ${imageUrl}`);
       } else {
-        imageUrl = await fetchPortraitImage(slide.imageQuery);
+        imageUrl = await fetchPortraitImage(slide.imageQuery || post.title);
       }
       return {
         heading: slide.heading,
@@ -238,4 +238,4 @@ Each slide MUST contain a descriptive 'imageQuery' to fetch the background.
   }
 }
 
-module.exports = { generateWebStoryForPost, callAiJson };
+module.exports = { generateWebStoryForPost, callAiJson, fetchPortraitImage };
