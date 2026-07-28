@@ -465,7 +465,17 @@ ${buttonHtmlBlock}
 
   // Remove any existing post with the same slug to prevent unique slug index violations
   await BlogPost.deleteMany({ slug: processed.slug });
-  await newPost.save();
+  try {
+    await newPost.save();
+  } catch (saveErr) {
+    if (saveErr.code === 'DUPLICATE_TOPIC_REJECTED' || saveErr.code === 11000) {
+      console.log(`[De-duplication Protection] Mongoose Pre-Save Interceptor caught duplicate post for "${processed.title}". Handled safely.`);
+      alert.status = 'published';
+      await alert.save();
+      return null;
+    }
+    throw saveErr;
+  }
 
   // 1. Trigger Instant Telegram Public Channel Broadcast
   try {

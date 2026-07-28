@@ -73,6 +73,40 @@ blogPostSchema.pre('save', async function (next) {
       post.tags = post.tags.map(t => purgeCompetitorTrace(t));
     }
 
+    // Water-Tight Pre-Save De-Duplication Interceptor: Prevent duplicate topic posts from EVER entering DB
+    if (post.isNew) {
+      const stopWords = [
+        'online', 'form', 'recruitment', 'bharti', 'barti', 'apply', '2024', '2025', '2026', '2027',
+        'various', 'post', 'posts', 'vacancies', 'vacancy', 'direct', 'link', 'step', 'process',
+        'full', 'latest', 'news', 'admit', 'card', 'result', 'extended', 'notice', 'exam', 'now',
+        'official', 'portal', 'website', 'notification', 'pdf', 'update', 'updates'
+      ];
+      const cleanTitle = (post.title || '').toLowerCase().replace(/[^a-z0-9\s]+/g, '');
+      const titleWords = cleanTitle.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
+      const topicKey = titleWords.slice(0, 2).join(' ');
+
+      if (topicKey && topicKey.length >= 3) {
+        const fourteenDaysAgo = new Date();
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+        const existingDup = await mongoose.model('BlogPost').findOne({
+          _id: { $ne: post._id },
+          publishedAt: { $gte: fourteenDaysAgo },
+          $or: [
+            { slug: new RegExp(topicKey.replace(/\s+/g, '-'), 'i') },
+            { title: new RegExp(topicKey.replace(/\s+/g, '.*'), 'i') }
+          ]
+        });
+
+        if (existingDup) {
+          console.warn(`[Pre-Save De-Duplication Interceptor] Intercepted & Blocked duplicate DB save for topic "${topicKey}" (Existing Post ID: ${existingDup._id})`);
+          const dupErr = new Error(`[Pre-Save De-Duplication Interceptor] Aborting DB Save: Post for topic "${topicKey}" already exists.`);
+          dupErr.code = 'DUPLICATE_TOPIC_REJECTED';
+          return next(dupErr);
+        }
+      }
+    }
+
     if (post.content) {
       let content = post.content || '';
 
