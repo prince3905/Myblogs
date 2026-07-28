@@ -1,4 +1,4 @@
-export function optimizeImage(url, width = 380, height = null) {
+export function optimizeImage(url, width = 400, height = null) {
   if (!url) return url;
 
   const isCloudinary = url.includes('res.cloudinary.com') || url.includes('/myblogs/') || url.includes('myblogs/');
@@ -28,15 +28,14 @@ export function optimizeImage(url, width = 380, height = null) {
   if (url.includes('images.unsplash.com')) {
     const h = height || Math.round(width * 9 / 16);
     let base = url.split('?')[0];
-    return `${base}?w=${width}&h=${h}&fit=crop&q=45&fm=webp&auto=format`;
+    return `${base}?w=${width}&h=${h}&fit=crop&q=75&fm=webp&auto=format,compress`;
   }
 
   if (url.includes('images.pexels.com')) {
     const base = url.split('?')[0];
     const h = height || Math.round(width * 9 / 16);
-    return `${base}?auto=compress&cs=tinysrgb&fm=webp&q=45&w=${width}&h=${h}&fit=crop`;
+    return `${base}?auto=format,compress&q=75&w=${width}&h=${h}&fit=crop`;
   }
 
   return url;
 }
-

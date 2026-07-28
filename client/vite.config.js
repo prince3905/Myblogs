@@ -7,7 +7,7 @@ function nonBlockingCssPlugin() {
     transformIndexHtml(html) {
       // 1. Strip modulepreload tags for heavy non-homepage vendor chunks
       let cleaned = html.replace(
-        /<link rel="modulepreload"[^>]+href="[^"]*(vendor-pdf-tools|vendor-editor|vendor-date-pickers)[^"]*"[^>]*>/g,
+        /<link rel="modulepreload"[^>]+href="[^"]*(vendor-pdf-tools|vendor-html2canvas|vendor-editor|vendor-date-pickers)[^"]*"[^>]*>/g,
         ''
       );
 
@@ -40,6 +40,12 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
     modulePreload: {
       polyfill: false,
+      filter(viteModule) {
+        return !viteModule.includes('vendor-pdf-tools') &&
+               !viteModule.includes('vendor-html2canvas') &&
+               !viteModule.includes('vendor-editor') &&
+               !viteModule.includes('vendor-date-pickers');
+      }
     },
     rollupOptions: {
       output: {
@@ -51,8 +57,11 @@ export default defineConfig({
             if (id.includes('@mui/x-date-pickers') || id.includes('date-fns')) {
               return 'vendor-date-pickers';
             }
-            if (id.includes('jspdf') || id.includes('pdfjs-dist') || id.includes('pdf-lib') || id.includes('html2canvas')) {
+            if (id.includes('jspdf') || id.includes('pdfjs-dist') || id.includes('pdf-lib')) {
               return 'vendor-pdf-tools';
+            }
+            if (id.includes('html2canvas')) {
+              return 'vendor-html2canvas';
             }
             if (id.includes('react-quill') || id.includes('prismjs')) {
               return 'vendor-editor';
