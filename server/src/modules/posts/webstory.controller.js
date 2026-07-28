@@ -275,12 +275,17 @@ async function renderWebStory(req, res, next) {
 // REST Controllers for Admin/API
 async function getPublishedWebStories(req, res) {
   try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 8;
+    const skip = (page - 1) * limit;
+
     const stories = await WebStory.find({ status: 'published' })
       .sort({ createdAt: -1 })
-      .limit(30)
+      .skip(skip)
+      .limit(limit)
       .populate('post', 'title slug category')
       .lean();
-    res.json({ success: true, data: stories });
+    res.json({ success: true, data: stories, page, hasMore: stories.length === limit });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

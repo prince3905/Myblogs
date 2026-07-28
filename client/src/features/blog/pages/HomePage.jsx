@@ -123,12 +123,48 @@ const AlertCard = ({ alert, idx }) => {
   );
 };
 
-const CategoryRowSlider = ({ categoryName, posts, loading }) => {
+const CategoryRowSlider = ({ categoryName, posts: initialPosts = [], loading: initialLoading }) => {
+  const [catPosts, setCatPosts] = useState(initialPosts);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const mobileScrollRef = useRef(null);
   const sliderRef = useRef(null);
   const [isIntersecting, setIsIntersecting] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
+
+  useEffect(() => {
+    if (initialPosts && initialPosts.length > 0) {
+      setCatPosts(initialPosts);
+    }
+  }, [initialPosts]);
+
+  const loadMoreChunk = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const res = await request(`/api/posts?category=${encodeURIComponent(categoryName)}&page=${nextPage}&limit=6`);
+      const newPosts = res.posts || [];
+      if (newPosts.length > 0) {
+        setCatPosts(prev => {
+          const existingIds = new Set(prev.map(p => p._id));
+          const filtered = newPosts.filter(p => !existingIds.has(p._id));
+          return [...prev, ...filtered];
+        });
+        setPage(nextPage);
+      }
+      if (newPosts.length < 6) {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   // Setup Intersection Observer for lazy autoplay with browser compatibility fallback
   useEffect(() => {
@@ -148,19 +184,16 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
 
   // Split posts into pages of 4 items for desktop
   const desktopPages = [];
-  for (let i = 0; i < posts.length; i += 4) {
-    desktopPages.push(posts.slice(i, i + 4));
-  }
-
-  // Split posts into pages of 2 items for mobile
-  const mobilePages = [];
-  for (let i = 0; i < posts.length; i += 2) {
-    mobilePages.push(posts.slice(i, i + 2));
+  for (let i = 0; i < catPosts.length; i += 4) {
+    desktopPages.push(catPosts.slice(i, i + 4));
   }
 
   const maxSlide = Math.max(0, desktopPages.length - 1);
 
   const handleNext = () => {
+    if (currentSlide >= maxSlide - 1 && hasMore && !loadingMore) {
+      loadMoreChunk();
+    }
     if (currentSlide < maxSlide) {
       setCurrentSlide(prev => prev + 1);
       setLastInteraction(Date.now());
@@ -174,14 +207,28 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
     }
   };
 
+  const handleMobileScroll = (e) => {
+    const container = e.target;
+    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 150) {
+      if (hasMore && !loadingMore) {
+        loadMoreChunk();
+      }
+    }
+  };
+
   // Autoplay slideshow timer (only active when category section is visible in the viewport)
   useEffect(() => {
-    if (loading || posts.length === 0 || !isIntersecting) return;
+    if (initialLoading || catPosts.length === 0 || !isIntersecting) return;
 
     const timer = setInterval(() => {
       // 1. Desktop Autoplay
       if (maxSlide > 0) {
-        setCurrentSlide(prev => (prev < maxSlide ? prev + 1 : 0));
+        setCurrentSlide(prev => {
+          if (prev >= maxSlide - 1 && hasMore && !loadingMore) {
+            loadMoreChunk();
+          }
+          return prev < maxSlide ? prev + 1 : 0;
+        });
       }
 
       // 2. Mobile Autoplay
@@ -193,7 +240,11 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
 
         let nextScrollLeft = currentScrollLeft + clientWidth;
         if (nextScrollLeft + clientWidth >= scrollWidth - 10) {
-          nextScrollLeft = 0;
+          if (hasMore && !loadingMore) {
+            loadMoreChunk();
+          } else {
+            nextScrollLeft = 0;
+          }
         }
 
         container.scrollTo({
@@ -204,9 +255,9 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
     }, 6000); // Autoplay every 6 seconds
 
     return () => clearInterval(timer);
-  }, [posts, loading, isIntersecting, maxSlide, currentSlide, lastInteraction]);
+  }, [catPosts, initialLoading, isIntersecting, maxSlide, currentSlide, lastInteraction, hasMore, loadingMore]);
 
-  if (loading || posts.length === 0) {
+  if (initialLoading || catPosts.length === 0) {
     return (
       <Box component="section" sx={{ mb: 6, minHeight: { xs: '360px', md: '420px' } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
@@ -305,7 +356,7 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
           </IconButton>
         )}
 
-        {currentSlide < maxSlide && (
+        {(currentSlide < maxSlide || hasMore) && (
           <IconButton
             onClick={handleNext}
             aria-label="Next Slide"
@@ -329,9 +380,10 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
         )}
       </Box>
 
-      {/* Mobile Swipeable View (xs, finger scroll, 1 prominent wide card view with peek next) */}
+      {/* Mobile Swipeable View */}
       <Box
         ref={mobileScrollRef}
+        onScroll={handleMobileScroll}
         onTouchStart={() => setLastInteraction(Date.now())}
         sx={{
           display: { xs: 'flex', sm: 'none' },
@@ -343,7 +395,7 @@ const CategoryRowSlider = ({ categoryName, posts, loading }) => {
           '&::-webkit-scrollbar': { display: 'none' }
         }}
       >
-        {posts.map((post) => (
+        {catPosts.map((post) => (
           <Box key={post._id} component="article" sx={{ flex: '0 0 82%', width: '82%', scrollSnapAlign: 'start' }}>
             <PostCard post={post} headingLevel="h4" />
           </Box>
@@ -370,8 +422,69 @@ export default function HomePage() {
   const [stories, setStories] = useState([]);
   const [loadingStories, setLoadingStories] = useState(true);
 
+  const [alertsPage, setAlertsPage] = useState(1);
+  const [hasMoreAlerts, setHasMoreAlerts] = useState(true);
+  const [loadingMoreAlerts, setLoadingMoreAlerts] = useState(false);
+
+  const [storiesPage, setStoriesPage] = useState(1);
+  const [hasMoreStories, setHasMoreStories] = useState(true);
+  const [loadingMoreStories, setLoadingMoreStories] = useState(false);
+
+  const loadMoreAlerts = async () => {
+    if (loadingMoreAlerts || !hasMoreAlerts) return;
+    setLoadingMoreAlerts(true);
+    try {
+      const nextPage = alertsPage + 1;
+      const res = await request(`/api/public/live-alerts?status=active&page=${nextPage}&limit=16`);
+      const newAlerts = res.data || [];
+      if (newAlerts.length > 0) {
+        setAlerts(prev => {
+          const existingIds = new Set(prev.map(a => a._id));
+          const filtered = newAlerts.filter(a => !existingIds.has(a._id));
+          return [...prev, ...filtered];
+        });
+        setAlertsPage(nextPage);
+      }
+      if (newAlerts.length < 16) {
+        setHasMoreAlerts(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMoreAlerts(false);
+    }
+  };
+
+  const loadMoreStories = async () => {
+    if (loadingMoreStories || !hasMoreStories) return;
+    setLoadingMoreStories(true);
+    try {
+      const nextPage = storiesPage + 1;
+      const res = await request(`/api/public/web-stories?page=${nextPage}&limit=8`);
+      const list = Array.isArray(res) ? res : (res?.data || []);
+      if (list.length > 0) {
+        setStories(prev => {
+          const existingIds = new Set(prev.map(s => s._id));
+          const filtered = list.filter(s => !existingIds.has(s._id));
+          return [...prev, ...filtered];
+        });
+        setStoriesPage(nextPage);
+      }
+      if (list.length < 8) {
+        setHasMoreStories(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMoreStories(false);
+    }
+  };
+
   const handleNext = () => {
     const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
+    if (currentSlide >= maxSlide - 1 && hasMoreAlerts && !loadingMoreAlerts) {
+      loadMoreAlerts();
+    }
     if (currentSlide < maxSlide) {
       setCurrentSlide(prev => prev + 1);
     }
