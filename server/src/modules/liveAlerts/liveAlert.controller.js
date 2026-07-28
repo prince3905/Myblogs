@@ -291,18 +291,18 @@ async function draftAlertToPostDoc(alert) {
     buttonHtmls.push(`<a href="${url}" class="btn-link-action ${btnClass}" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">${label}</a>`);
   });
 
-  // Enforce default fallback search buttons if the main 3 fields were not in details
+  // Enforce default fallback action buttons if the main 3 fields were not in details
   if (!allLinksMap.has('apply online')) {
-    const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' apply online');
+    const fallbackUrl = 'https://www.digitalhomeblog.in/job-alerts';
     buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Apply Online (यहाँ क्लिक करें)</a>`);
   }
   if (!allLinksMap.has('download notification')) {
-    const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' recruitment notification pdf');
+    const fallbackUrl = 'https://www.digitalhomeblog.in/job-alerts';
     buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Download Official Notification (देखें अभी)</a>`);
   }
   if (!allLinksMap.has('official website')) {
-    const fallbackUrl = 'https://www.google.com/search?q=' + encodeURIComponent(alert.boardName + ' official website');
-    buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Official Website (विजिट करें)</a>`);
+    const fallbackUrl = 'https://www.digitalhomeblog.in/job-alerts';
+    buttonHtmls.push(`<a href="${fallbackUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex;">Official Board Website (विजिट करें)</a>`);
   }
 
   const buttonHtmlBlock = `<div class="ql-table-embed">\n<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>\n</div>`;
