@@ -154,6 +154,47 @@ function sanitizeUrlValue(url, boardName) {
 async function draftAlertToPostDoc(alert) {
   console.log(`[LiveAlert Sourcing] Drafting blog post from alert: "${alert.title}"`);
 
+  // 0. Strict De-duplication Protection: Check if a post for this alert or topic already exists
+  const existingPostByAlert = await BlogPost.findOne({
+    $or: [
+      { canonicalUrl: alert.sourceUrl },
+      { sourceAlert: alert._id }
+    ]
+  });
+
+  if (existingPostByAlert) {
+    console.log(`[De-duplication Protection] Post already exists for alert: "${alert.title}" [Slug: ${existingPostByAlert.slug}]. Skipping duplicate creation.`);
+    alert.status = 'published';
+    await alert.save();
+    return existingPostByAlert._id;
+  }
+
+  // Also check normalized board/title match in posts created within the last 7 days
+  const extractCoreKeyword = (t = '') => {
+    const clean = t.toLowerCase().replace(/[^a-z0-9\s]+/g, '');
+    const words = clean.split(/\s+/).filter(w => w.length > 3 && !['online', 'form', 'recruitment', 'bharti', 'apply', '2026', '2025', 'various', 'post'].includes(w));
+    return words.slice(0, 3).join(' ');
+  };
+
+  const alertCoreKey = extractCoreKeyword(alert.title);
+  if (alertCoreKey) {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentPosts = await BlogPost.find({ createdAt: { $gte: sevenDaysAgo } }, { title: 1, slug: 1 }).lean();
+    const isTopicDuplicate = recentPosts.some(p => {
+      const pKey = extractCoreKeyword(p.title);
+      return pKey && (pKey === alertCoreKey || (pKey.includes(alertCoreKey) || alertCoreKey.includes(pKey)));
+    });
+
+    if (isTopicDuplicate) {
+      console.log(`[De-duplication Protection] Topic duplicate detected for key "${alertCoreKey}" in recent posts. Skipping duplicate creation for "${alert.title}".`);
+      alert.status = 'published';
+      await alert.save();
+      return null;
+    }
+  }
+
   // Dynamic professional title for the blog post
   const cleanTitle = alert.title
     .replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2') // e.g. "Answer2026" -> "Answer 2026"
