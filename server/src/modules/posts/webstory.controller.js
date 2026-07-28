@@ -11,6 +11,40 @@ function catUrlSlug(category) {
   return category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'blog';
 }
 
+function escapeXml(str = '') {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatAmpUrl(urlStr) {
+  if (!urlStr || typeof urlStr !== 'string') {
+    return 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=720&amp;h=1280&amp;fit=crop&amp;q=80';
+  }
+
+  let cleaned = urlStr.trim();
+
+  // Enforce https:// protocol for AMP compliance
+  if (cleaned.startsWith('http://')) {
+    cleaned = 'https://' + cleaned.slice(7);
+  } else if (cleaned.startsWith('//')) {
+    cleaned = 'https:' + cleaned;
+  } else if (!cleaned.startsWith('https://')) {
+    cleaned = 'https://www.digitalhomeblog.in' + (cleaned.startsWith('/') ? cleaned : '/' + cleaned);
+  }
+
+  // Escape HTML entities in XML/AMP attribute values
+  return cleaned
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 async function renderWebStory(req, res, next) {
   try {
     const { slug } = req.params;
@@ -42,27 +76,33 @@ async function renderWebStory(req, res, next) {
     const postUrl = `https://www.digitalhomeblog.in/blog/${categorySlug}/${story.slug}`;
     const canonicalUrl = `https://www.digitalhomeblog.in/web-stories/${story.slug}`;
 
+    const coverImage = formatAmpUrl(story.slides?.[0]?.image);
+    const publisherLogo = 'https://www.digitalhomeblog.in/logo.png';
+
+    const escapedTitle = escapeXml(story.title);
+    const escapedDesc = escapeXml(story.slides?.[0]?.text || story.title);
+
     const ampHtml = `<!doctype html>
 <html amp lang="hi">
   <head>
     <meta charset="utf-8">
-    <title>${story.title}</title>
+    <title>${escapedTitle}</title>
     <link rel="canonical" href="${canonicalUrl}">
     <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
     <meta name="robots" content="max-image-preview:large, index, follow">
     
     <!-- Open Graph Tags -->
-    <meta property="og:title" content="${story.title}" />
-    <meta property="og:description" content="${story.slides[0].text}" />
+    <meta property="og:title" content="${escapedTitle}" />
+    <meta property="og:description" content="${escapedDesc}" />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="${canonicalUrl}" />
-    <meta property="og:image" content="${story.slides[0].image}" />
+    <meta property="og:image" content="${coverImage}" />
     
     <!-- Twitter Tags -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${story.title}" />
-    <meta name="twitter:description" content="${story.slides[0].text}" />
-    <meta name="twitter:image" content="${story.slides[0].image}" />
+    <meta name="twitter:title" content="${escapedTitle}" />
+    <meta name="twitter:description" content="${escapedDesc}" />
+    <meta name="twitter:image" content="${coverImage}" />
 
     <!-- AMP Script Boilerplate -->
     <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
@@ -122,25 +162,27 @@ async function renderWebStory(req, res, next) {
   </head>
   <body>
     <amp-story standalone
-               title="${story.title}"
+               title="${escapedTitle}"
                publisher="Digital Home"
-               publisher-logo-src="https://www.digitalhomeblog.in/logo.png"
-               poster-portrait-src="${story.slides[0].image}">
+               publisher-logo-src="${publisherLogo}"
+               poster-portrait-src="${coverImage}"
+               poster-square-src="${coverImage}"
+               poster-landscape-src="${coverImage}">
                
       <!-- Slide 1: Cover/Hook -->
       <amp-story-page id="slide1">
         <amp-story-grid-layer template="fill">
-          <amp-img src="${story.slides[0].image}"
+          <amp-img src="${formatAmpUrl(story.slides?.[0]?.image)}"
                    width="720" height="1280"
                    layout="responsive"
-                   alt="${story.slides[0].heading}">
+                   alt="${escapeXml(story.slides?.[0]?.heading)}">
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
             <span class="badge">Vacancy Alert</span>
-            <h1 class="slide-title" animate-in="fade-in" animate-in-duration="0.6s">${story.slides[0].heading}</h1>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.6s">${story.slides[0].text}</p>
+            <h1 class="slide-title" animate-in="fade-in" animate-in-duration="0.6s">${escapeXml(story.slides?.[0]?.heading)}</h1>
+            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.6s">${escapeXml(story.slides?.[0]?.text)}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
@@ -148,17 +190,17 @@ async function renderWebStory(req, res, next) {
       <!-- Slide 2: Eligibility -->
       <amp-story-page id="slide2">
         <amp-story-grid-layer template="fill">
-          <amp-img src="${story.slides[1].image}"
+          <amp-img src="${formatAmpUrl(story.slides?.[1]?.image)}"
                    width="720" height="1280"
                    layout="responsive"
-                   alt="${story.slides[1].heading}">
+                   alt="${escapeXml(story.slides?.[1]?.heading)}">
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
             <span class="badge">Qualification</span>
-            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${story.slides[1].heading}</h2>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${story.slides[1].text}</p>
+            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[1]?.heading)}</h2>
+            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${escapeXml(story.slides?.[1]?.text)}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
@@ -166,214 +208,115 @@ async function renderWebStory(req, res, next) {
       <!-- Slide 3: Dates & Fees -->
       <amp-story-page id="slide3">
         <amp-story-grid-layer template="fill">
-          <amp-img src="${story.slides[2].image}"
+          <amp-img src="${formatAmpUrl(story.slides?.[2]?.image)}"
                    width="720" height="1280"
                    layout="responsive"
-                   alt="${story.slides[2].heading}">
+                   alt="${escapeXml(story.slides?.[2]?.heading)}">
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
             <span class="badge">Important Dates</span>
-            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${story.slides[2].heading}</h2>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${story.slides[2].text}</p>
+            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[2]?.heading)}</h2>
+            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${escapeXml(story.slides?.[2]?.text)}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
 
-      <!-- Slide 4: Warning Tip -->
+      <!-- Slide 4: Selection Process -->
       <amp-story-page id="slide4">
         <amp-story-grid-layer template="fill">
-          <amp-img src="${story.slides[3].image}"
+          <amp-img src="${formatAmpUrl(story.slides?.[3]?.image)}"
                    width="720" height="1280"
                    layout="responsive"
-                   alt="${story.slides[3].heading}">
+                   alt="${escapeXml(story.slides?.[3]?.heading)}">
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
-            <span class="badge">Alert Warning</span>
-            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${story.slides[3].heading}</h2>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${story.slides[3].text}</p>
+            <span class="badge">Selection Process</span>
+            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[3]?.heading)}</h2>
+            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${escapeXml(story.slides?.[3]?.text)}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
 
-      <!-- Slide 5: Funnel CTA -->
+      <!-- Slide 5: Call to Action -->
       <amp-story-page id="slide5">
         <amp-story-grid-layer template="fill">
-          <amp-img src="${story.slides[4].image}"
+          <amp-img src="${formatAmpUrl(story.slides?.[4]?.image)}"
                    width="720" height="1280"
                    layout="responsive"
-                   alt="${story.slides[4].heading}">
+                   alt="${escapeXml(story.slides?.[4]?.heading)}">
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
-          <div class="text-layer">
-            <span class="badge">Official Links</span>
-            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${story.slides[4].heading}</h2>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${story.slides[4].text}</p>
+          <div class="text-layer" style="align-items: center; text-align: center;">
+            <span class="badge" style="align-self: center;">Direct Link Active</span>
+            <h2 class="slide-title" animate-in="bounce-in" animate-in-duration="0.6s">${escapeXml(story.slides?.[4]?.heading)}</h2>
+            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s" style="margin-bottom: 24px;">${escapeXml(story.slides?.[4]?.text)}</p>
+            <a href="${postUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 14px 28px; border-radius: 9999px; font-weight: 800; font-size: 16px; text-decoration: none; box-shadow: 0 4px 14px rgba(37,99,235,0.6);" animate-in="pulse" animate-in-duration="1s">👉 Read Full Article & Apply</a>
           </div>
         </amp-story-grid-layer>
-        <amp-story-page-outlink layout="nodisplay">
-          <a href="${postUrl}">Apply Online Now (यहाँ क्लिक करें)</a>
-        </amp-story-page-outlink>
       </amp-story-page>
-      
     </amp-story>
   </body>
 </html>`;
 
-    res.type('text/html');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400');
     return res.send(ampHtml);
-
   } catch (err) {
-    next(err);
+    console.error('[WebStory Render] Error rendering AMP Story:', err);
+    return next(err);
   }
 }
 
-async function getPublishedWebStories(req, res, next) {
+// REST Controllers for Admin/API
+async function getWebStories(req, res) {
   try {
-    const limit = parseInt(req.query.limit) || 12;
-    const stories = await WebStory.find({ status: 'published' })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .populate('post', 'category')
-      .lean();
-      
-    return res.json({
-      success: true,
-      data: stories
-    });
+    const stories = await WebStory.find({}).sort({ createdAt: -1 }).populate('post', 'title slug category').lean();
+    res.json(stories);
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message });
   }
 }
 
-async function listAdminWebStories(req, res, next) {
+async function createWebStory(req, res) {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const query = {};
-    if (req.query.search) {
-      query.title = new RegExp(req.query.search.trim(), 'i');
-    }
-
-    const stories = await WebStory.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('post', 'title category')
-      .lean();
-
-    const total = await WebStory.countDocuments(query);
-
-    return res.json({
-      success: true,
-      data: stories,
-      stories: stories,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit)
-      }
-    });
+    const { title, slug, postId, slides } = req.body;
+    const newStory = new WebStory({ title, slug, post: postId, slides, status: 'published' });
+    await newStory.save();
+    res.status(201).json(newStory);
   } catch (err) {
-    next(err);
+    res.status(400).json({ error: err.message });
   }
 }
 
-async function getAdminWebStoryById(req, res, next) {
+async function updateWebStory(req, res) {
   try {
-    const story = await WebStory.findById(req.params.id).populate('post', 'title').lean();
-    if (!story) {
-      return res.status(404).json({ success: false, message: 'Web Story not found' });
-    }
-    return res.json({
-      success: true,
-      data: story
-    });
+    const { id } = req.params;
+    const updated = await WebStory.findByIdAndUpdate(id, req.body, { new: true });
+    res.json(updated);
   } catch (err) {
-    next(err);
+    res.status(400).json({ error: err.message });
   }
 }
 
-async function updateAdminWebStory(req, res, next) {
+async function deleteWebStory(req, res) {
   try {
-    const { title, status, slides } = req.body;
-    const story = await WebStory.findById(req.params.id);
-    if (!story) {
-      return res.status(404).json({ success: false, message: 'Web Story not found' });
-    }
-
-    if (title !== undefined) story.title = title;
-    if (status !== undefined) story.status = status;
-    if (slides !== undefined) story.slides = slides;
-
-    await story.save();
-    return res.json({
-      success: true,
-      message: 'Web Story successfully updated!',
-      data: story
-    });
+    const { id } = req.params;
+    await WebStory.findByIdAndDelete(id);
+    res.json({ message: 'Web Story deleted successfully' });
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message });
   }
 }
 
-async function deleteAdminWebStory(req, res, next) {
-  try {
-    const story = await WebStory.findByIdAndDelete(req.params.id);
-    if (!story) {
-      return res.status(404).json({ success: false, message: 'Web Story not found' });
-    }
-    return res.json({
-      success: true,
-      message: 'Web Story successfully deleted!'
-    });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function pingWebStoryIndexing(req, res, next) {
-  try {
-    const story = await WebStory.findById(req.params.id);
-    if (!story) {
-      return res.status(404).json({ success: false, message: 'Web Story not found' });
-    }
-
-    if (story.status !== 'published') {
-      return res.status(400).json({ success: false, message: 'Web Story must be published to notify Google Indexing API.' });
-    }
-
-    const { notifyUrl } = require('../../shared/utils/google-indexing');
-    const { logAutomation } = require('../../shared/utils/automationLogger');
-    const env = require('../../config/env');
-    const storyUrl = `${env.siteUrl}/web-stories/${story.slug}`;
-    const result = await notifyUrl(storyUrl, 'URL_UPDATED');
-
-    if (result && result.success) {
-      logAutomation({ service: 'SEO_INDEXING', level: 'SUCCESS', action: 'Google Index Ping (WebStory)', message: `Pinged Google Indexing API for WebStory "${story.title}"`, metadata: { title: story.title, url: storyUrl } });
-      return res.json({ success: true, message: 'Google Indexing request sent successfully for Web Story!', data: result.data });
-    } else {
-      logAutomation({ service: 'SEO_INDEXING', level: 'ERROR', action: 'Google Index Ping Failed (WebStory)', message: result?.message || 'Google Indexing ping failed.', metadata: { title: story.title } });
-      return res.status(500).json({ success: false, message: result?.message || 'Google Indexing ping failed.', error: result?.error });
-    }
-  } catch (err) {
-    next(err);
-  }
-}
-
-module.exports = { 
-  renderWebStory, 
-  getPublishedWebStories,
-  listAdminWebStories,
-  getAdminWebStoryById,
-  updateAdminWebStory,
-  deleteAdminWebStory,
-  pingWebStoryIndexing
+module.exports = {
+  renderWebStory,
+  getWebStories,
+  createWebStory,
+  updateWebStory,
+  deleteWebStory
 };
