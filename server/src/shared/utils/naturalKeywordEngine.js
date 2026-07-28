@@ -21,7 +21,7 @@ function generateIndianSearchVariants(title = '', focusKeyword = '') {
     },
     {
       type: 'Official Portal Query',
-      phrase: `${base} sarkari result official website link check`,
+      phrase: `${base} official website link check digital home portal`,
       tag: '🎯 Trust Intent'
     },
     {

@@ -587,6 +587,31 @@ async function scrapeDetailedUrls(pageUrl) {
   }
 }
 
+function stripSarkariResultMentionsAndLinks(str = '') {
+  if (!str || typeof str !== 'string') return str;
+
+  let cleaned = str;
+
+  // 1. Replace outbound links
+  cleaned = cleaned.replace(/href=["']https?:\/\/(?:www\.)?sarkariresult\.com[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+  cleaned = cleaned.replace(/href=["']https?:\/\/[^"']*sarkariresult[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+
+  // 2. Remove/replace text mentions & praises
+  cleaned = cleaned
+    .replace(/sarkari\s*result\s*official\s*(?:website|app|portal|tools?)/gi, 'Digital Home Official Portal')
+    .replace(/sarkari\s*result\s*(?:tools?|resizer|cropper|compressor)/gi, 'Student Utility Tools')
+    .replace(/sarkari\s*result/gi, 'Digital Home Portal')
+    .replace(/sarkariresult/gi, 'Digital Home')
+    .replace(/sarkari\s*resut/gi, 'Digital Home')
+    .replace(/sarkari\s*reult/gi, 'Digital Home');
+
+  // 3. Remove raw URLs
+  cleaned = cleaned.replace(/www\.sarkariresult\.com/gi, 'www.digitalhomeblog.in');
+  cleaned = cleaned.replace(/sarkariresult\.com/gi, 'digitalhomeblog.in');
+
+  return cleaned;
+}
+
 function cleanDetailsText(text) {
   if (!text) return '';
   const lines = text.split('\n');
@@ -643,6 +668,16 @@ function cleanDetailsText(text) {
       if (sanitized.length === 0) return '';
       return `(Link: ${sanitized.join(', ')})`;
     });
+
+    cleanedLine = stripSarkariResultMentionsAndLinks(cleanedLine);
+
+    if (cleanedLine) {
+      cleanedLines.push(cleanedLine);
+    }
+  }
+
+  return stripSarkariResultMentionsAndLinks(cleanedLines.join('\n'));
+}
 
     cleanedLine = cleanedLine.replace(/\s*\(Link:\s*\)/gi, '').trim();
 

@@ -150,6 +150,31 @@ function sanitizeUrlValue(url, boardName) {
   return url;
 }
 
+function stripSarkariResultMentionsAndLinks(str = '') {
+  if (!str || typeof str !== 'string') return str;
+
+  let cleaned = str;
+
+  // 1. Replace outbound links
+  cleaned = cleaned.replace(/href=["']https?:\/\/(?:www\.)?sarkariresult\.com[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+  cleaned = cleaned.replace(/href=["']https?:\/\/[^"']*sarkariresult[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+
+  // 2. Remove/replace text mentions & praises
+  cleaned = cleaned
+    .replace(/sarkari\s*result\s*official\s*(?:website|app|portal|tools?)/gi, 'Digital Home Official Portal')
+    .replace(/sarkari\s*result\s*(?:tools?|resizer|cropper|compressor)/gi, 'Student Utility Tools')
+    .replace(/sarkari\s*result/gi, 'Digital Home Portal')
+    .replace(/sarkariresult/gi, 'Digital Home')
+    .replace(/sarkari\s*resut/gi, 'Digital Home')
+    .replace(/sarkari\s*reult/gi, 'Digital Home');
+
+  // 3. Remove raw URLs
+  cleaned = cleaned.replace(/www\.sarkariresult\.com/gi, 'www.digitalhomeblog.in');
+  cleaned = cleaned.replace(/sarkariresult\.com/gi, 'digitalhomeblog.in');
+
+  return cleaned;
+}
+
 // Core service to draft a blog post from an alert document
 async function draftAlertToPostDoc(alert) {
   console.log(`[LiveAlert Sourcing] Drafting blog post from alert: "${alert.title}"`);
@@ -401,20 +426,28 @@ ${buttonHtmlBlock}
     finalContent = imgFix.content;
   } catch (imgFixErr) {}
 
+  // Scrub all mentions and links of SarkariResult from all post fields
+  const cleanPostTitle = stripSarkariResultMentionsAndLinks(processed.title);
+  const cleanPostExcerpt = stripSarkariResultMentionsAndLinks(processed.seoDescription || generatedData.summary.slice(0, 320));
+  const cleanPostContent = stripSarkariResultMentionsAndLinks(finalContent);
+  const cleanPostSeoTitle = stripSarkariResultMentionsAndLinks(processed.seoTitle);
+  const cleanPostSeoDesc = stripSarkariResultMentionsAndLinks(processed.seoDescription);
+  const cleanPostTags = (processed.tags || []).map(t => stripSarkariResultMentionsAndLinks(t));
+
   // Create and save Mongoose BlogPost document directly as PUBLISHED
   const newPost = new BlogPost({
-    title: processed.title,
+    title: cleanPostTitle,
     slug: processed.slug,
-    excerpt: processed.seoDescription || generatedData.summary.slice(0, 320),
-    content: finalContent,
+    excerpt: cleanPostExcerpt,
+    content: cleanPostContent,
     featuredImage: featuredImage,
     category: 'Sarkari Jobs & Exams',
-    tags: processed.tags || [],
+    tags: cleanPostTags,
     status: 'published',
     publishedAt: new Date(),
-    seoTitle: processed.seoTitle,
-    seoDescription: processed.seoDescription,
-    seoKeywords: processed.tags || [],
+    seoTitle: cleanPostSeoTitle,
+    seoDescription: cleanPostSeoDesc,
+    seoKeywords: cleanPostTags,
     focusKeyword: processed.focusKeyword || '',
     canonicalUrl: generatedData.permalink,
     author: 'Harry Prince'
