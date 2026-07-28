@@ -142,7 +142,7 @@ const CategoryRowSlider = ({ categoryName, posts: initialPosts = [], loading: in
   }, [initialPosts]);
 
   const loadMoreChunk = async () => {
-    if (loadingMore || !hasMore) return;
+    if (loadingMore || !hasMore) return 0;
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
@@ -159,8 +159,10 @@ const CategoryRowSlider = ({ categoryName, posts: initialPosts = [], loading: in
       if (newPosts.length < 6) {
         setHasMore(false);
       }
+      return newPosts.length;
     } catch (err) {
       console.error(err);
+      return 0;
     } finally {
       setLoadingMore(false);
     }
@@ -190,13 +192,19 @@ const CategoryRowSlider = ({ categoryName, posts: initialPosts = [], loading: in
 
   const maxSlide = Math.max(0, desktopPages.length - 1);
 
-  const handleNext = () => {
-    if (currentSlide >= maxSlide - 1 && hasMore && !loadingMore) {
-      loadMoreChunk();
-    }
+  const handleNext = async () => {
     if (currentSlide < maxSlide) {
       setCurrentSlide(prev => prev + 1);
       setLastInteraction(Date.now());
+      if (currentSlide >= maxSlide - 1 && hasMore && !loadingMore) {
+        loadMoreChunk();
+      }
+    } else if (hasMore && !loadingMore) {
+      const added = await loadMoreChunk();
+      if (added > 0) {
+        setCurrentSlide(prev => prev + 1);
+        setLastInteraction(Date.now());
+      }
     }
   };
 
@@ -431,7 +439,7 @@ export default function HomePage() {
   const [loadingMoreStories, setLoadingMoreStories] = useState(false);
 
   const loadMoreAlerts = async () => {
-    if (loadingMoreAlerts || !hasMoreAlerts) return;
+    if (loadingMoreAlerts || !hasMoreAlerts) return 0;
     setLoadingMoreAlerts(true);
     try {
       const nextPage = alertsPage + 1;
@@ -448,15 +456,17 @@ export default function HomePage() {
       if (newAlerts.length < 16) {
         setHasMoreAlerts(false);
       }
+      return newAlerts.length;
     } catch (err) {
       console.error(err);
+      return 0;
     } finally {
       setLoadingMoreAlerts(false);
     }
   };
 
   const loadMoreStories = async () => {
-    if (loadingMoreStories || !hasMoreStories) return;
+    if (loadingMoreStories || !hasMoreStories) return 0;
     setLoadingMoreStories(true);
     try {
       const nextPage = storiesPage + 1;
@@ -473,8 +483,10 @@ export default function HomePage() {
       if (list.length < 8) {
         setHasMoreStories(false);
       }
+      return list.length;
     } catch (err) {
       console.error(err);
+      return 0;
     } finally {
       setLoadingMoreStories(false);
     }
@@ -498,13 +510,18 @@ export default function HomePage() {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
-    if (currentSlide >= maxSlide - 1 && hasMoreAlerts && !loadingMoreAlerts) {
-      loadMoreAlerts();
-    }
-    if (currentSlide < maxSlide || (hasMoreAlerts && !loadingMoreAlerts)) {
+    if (currentSlide < maxSlide) {
       setCurrentSlide(prev => prev + 1);
+      if (currentSlide >= maxSlide - 1 && hasMoreAlerts && !loadingMoreAlerts) {
+        loadMoreAlerts();
+      }
+    } else if (hasMoreAlerts && !loadingMoreAlerts) {
+      const added = await loadMoreAlerts();
+      if (added > 0) {
+        setCurrentSlide(prev => prev + 1);
+      }
     }
   };
 
