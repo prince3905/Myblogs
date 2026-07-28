@@ -273,10 +273,34 @@ async function renderWebStory(req, res, next) {
 }
 
 // REST Controllers for Admin/API
+async function getPublishedWebStories(req, res) {
+  try {
+    const stories = await WebStory.find({ status: 'published' })
+      .sort({ createdAt: -1 })
+      .limit(30)
+      .populate('post', 'title slug category')
+      .lean();
+    res.json(stories);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 async function getWebStories(req, res) {
   try {
     const stories = await WebStory.find({}).sort({ createdAt: -1 }).populate('post', 'title slug category').lean();
     res.json(stories);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function getAdminWebStoryById(req, res) {
+  try {
+    const { id } = req.params;
+    const story = await WebStory.findById(id).populate('post').lean();
+    if (!story) return res.status(404).json({ error: 'Web Story not found' });
+    res.json(story);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -313,10 +337,40 @@ async function deleteWebStory(req, res) {
   }
 }
 
+async function pingWebStoryIndexing(req, res) {
+  try {
+    const { id } = req.params;
+    const story = await WebStory.findById(id).lean();
+    if (!story) return res.status(404).json({ error: 'Web Story not found' });
+
+    const { pingGoogleIndexing } = require('../../shared/utils/googleIndexing');
+    const storyUrl = `https://www.digitalhomeblog.in/web-stories/${story.slug}`;
+    const result = await pingGoogleIndexing(storyUrl, 'URL_UPDATED');
+
+    const { logAutomation } = require('../../shared/utils/automationLogger');
+    logAutomation({
+      service: 'SEO_INDEXING',
+      level: 'SUCCESS',
+      action: 'Google Index Ping (WebStory)',
+      message: `Pinged Google Indexing API for WebStory "${story.title}"`
+    });
+
+    res.json({ success: true, url: storyUrl, result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   renderWebStory,
+  getPublishedWebStories,
   getWebStories,
+  listAdminWebStories: getWebStories,
+  getAdminWebStoryById,
   createWebStory,
   updateWebStory,
-  deleteWebStory
+  updateAdminWebStory: updateWebStory,
+  deleteWebStory,
+  deleteAdminWebStory: deleteWebStory,
+  pingWebStoryIndexing
 };
