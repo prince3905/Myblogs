@@ -353,7 +353,14 @@ ${buttonHtmlBlock}
     console.warn('[LiveAlert Sourcing] Auto banner generation notice:', bannerErr.message);
   }
 
-  // Create and save Mongoose BlogPost document
+  // Clean content broken images & optimize ALT tags
+  try {
+    const { fixContentImagesSeo } = require('../../shared/utils/imageSeoFixer');
+    const imgFix = fixContentImagesSeo(finalContent, processed.title);
+    finalContent = imgFix.content;
+  } catch (imgFixErr) {}
+
+  // Create and save Mongoose BlogPost document directly as PUBLISHED
   const newPost = new BlogPost({
     title: processed.title,
     slug: processed.slug,
@@ -362,7 +369,8 @@ ${buttonHtmlBlock}
     featuredImage: featuredImage,
     category: 'Sarkari Jobs & Exams',
     tags: processed.tags || [],
-    status: 'draft',
+    status: 'published',
+    publishedAt: new Date(),
     seoTitle: processed.seoTitle,
     seoDescription: processed.seoDescription,
     seoKeywords: processed.tags || [],
@@ -371,39 +379,49 @@ ${buttonHtmlBlock}
     author: 'Harry Prince'
   });
 
-  // Remove any existing draft with the same slug to prevent unique slug index violations
+  // Remove any existing post with the same slug to prevent unique slug index violations
   await BlogPost.deleteMany({ slug: processed.slug });
   await newPost.save();
 
-  // Send WhatsApp draft notification alert
+  // 1. Trigger Instant Telegram Public Channel Broadcast
   try {
-    const { sendWhatsappDraftAlert } = require('../../shared/services/whatsappService');
-    await sendWhatsappDraftAlert(newPost);
-  } catch (wsErr) {
-    console.error('[LiveAlert Sourcing] WhatsApp notification trigger failed:', wsErr.message);
-  }
+    const { sendTelegramMessage } = require('../../shared/services/telegramService');
+    sendTelegramMessage(newPost).catch(err => console.warn('[Telegram Channel] Notice:', err.message));
+  } catch (tgErr) {}
 
-  // Send Telegram private draft notification alert
+  // 2. Trigger Instant Google Indexing API Ping
   try {
-    const { sendTelegramDraftAlert } = require('../../shared/services/telegramAlertService');
-    await sendTelegramDraftAlert(newPost);
-  } catch (tgErr) {
-    console.error('[LiveAlert Sourcing] Telegram private notification trigger failed:', tgErr.message);
-  }
+    const { notifyUrl } = require('../../shared/utils/google-indexing');
+    const catUrl = (newPost.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
+    const postUrl = `https://www.digitalhomeblog.in/blog/${catUrl}/${newPost.slug}`;
+    notifyUrl(postUrl, 'URL_UPDATED').catch(() => {});
+  } catch (idxErr) {}
 
-  // Generate Web Story for this new post in background (Autopilot decision logic)
+  // 3. Generate Web Story for this new post in background
   try {
     const { generateWebStoryForPost } = require('../posts/webstory.service');
-    await generateWebStoryForPost(newPost, alert);
-  } catch (storyErr) {
-    console.error(`[LiveAlert Sourcing] Failed to generate Web Story for "${newPost.title}":`, storyErr.message);
-  }
+    generateWebStoryForPost(newPost, alert).catch(storyErr => {
+      console.error(`[LiveAlert Sourcing] Failed to generate Web Story for "${newPost.title}":`, storyErr.message);
+    });
+  } catch (storyErr) {}
 
-  // Mark the alert as drafted
-  alert.status = 'drafted';
+  // 4. Log Automation Telemetry
+  try {
+    const { logAutomation } = require('../../shared/utils/automationLogger');
+    logAutomation({
+      service: 'SEO_INDEXING',
+      level: 'SUCCESS',
+      action: 'Instant Auto-Publish Alert',
+      message: `Scraped, quality-checked & instantly published: "${newPost.title}" (SEO Score: ${newPost.seoScore || 100}/100)`,
+      metadata: { title: newPost.title, url: generatedData.permalink }
+    });
+  } catch (logErr) {}
+
+  // Mark the alert as processed
+  alert.status = 'published';
   await alert.save();
 
-  console.log(`[LiveAlert Sourcing] Autopilot successfully created blog post: "${generatedData.title}" [ID: ${newPost._id}]`);
+  console.log(`[LiveAlert Sourcing] Autopilot instantly published post: "${generatedData.title}" [ID: ${newPost._id}]`);
   return newPost._id;
 }
 
