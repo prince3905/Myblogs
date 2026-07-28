@@ -408,9 +408,8 @@ export default function HomePage() {
     setTimeout(() => {
       request('/api/public/web-stories?limit=8')
         .then(res => {
-          if (res.success) {
-            setStories(res.data || []);
-          }
+          const list = Array.isArray(res) ? res : (res?.data || []);
+          setStories(list);
         })
         .catch(err => console.error(err))
         .finally(() => setLoadingStories(false));
