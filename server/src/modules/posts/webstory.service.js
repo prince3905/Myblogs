@@ -17,36 +17,45 @@ const HERO_PHOTOS = [
   'https://images.unsplash.com/photo-1497366216548-37526070297c?w=720&h=1280&fit=crop&q=80',
 ];
 
-function pickFallbackImage(query) {
-  const hash = query ? query.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : 0;
-  return HERO_PHOTOS[Math.abs(hash) % HERO_PHOTOS.length];
+function generateUniqueAiImage(query = '', title = '', slideIdx = 0) {
+  const seedString = `${title}_slide_${slideIdx}_${query}`;
+  let hash = 0;
+  for (let i = 0; i < seedString.length; i++) {
+    hash = (hash * 31 + seedString.charCodeAt(i)) % 1000000;
+  }
+  const seed = Math.abs(hash) + (slideIdx + 1) * 999;
+  
+  const cleanTitle = (title || query || 'Job Recruitment Notice').replace(/[^a-zA-Z0-9\s]/g, '').trim();
+  const prompt = `${cleanTitle}, ${query}, professional official recruitment notification poster, vertical portrait wallpaper, 8k resolution, photorealistic`;
+  const encodedPrompt = encodeURIComponent(prompt.slice(0, 140));
+
+  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=720&height=1280&nologo=true&seed=${seed}`;
 }
 
-async function fetchPortraitImage(query) {
+async function fetchPortraitImage(query, title = '', slideIdx = 0) {
   const apiKey = process.env.PEXELS_API_KEY;
-  if (!apiKey || !query || !query.trim()) {
-    return pickFallbackImage(query || 'blog');
-  }
+  const cleanQuery = (query || title || 'job').trim();
 
-  try {
-    const response = await axios.get('https://api.pexels.com/v1/search', {
-      params: { query: query.trim(), per_page: 5, orientation: 'portrait' },
-      headers: { Authorization: apiKey },
-      timeout: 6000
-    });
+  if (apiKey) {
+    try {
+      const response = await axios.get('https://api.pexels.com/v1/search', {
+        params: { query: cleanQuery, per_page: 10, orientation: 'portrait' },
+        headers: { Authorization: apiKey },
+        timeout: 6000
+      });
 
-    const photos = response.data?.photos;
-    if (photos && photos.length > 0) {
-      // Pick the first portrait photo and request a vertical cropped version suitable for mobile AMP Stories
-      const photo = photos[0];
-      return (photo.src.portrait || photo.src.large || photo.src.medium)
-        .split('?')[0] + '?w=720&h=1280&fit=crop&q=80';
+      const photos = response.data?.photos;
+      if (photos && photos.length > 0) {
+        const photo = photos[slideIdx % photos.length] || photos[0];
+        return (photo.src.portrait || photo.src.large || photo.src.medium)
+          .split('?')[0] + '?w=720&h=1280&fit=crop&q=80';
+      }
+    } catch (err) {
+      console.warn(`[WebStory Sourcing] Pexels API image fetch failed for "${cleanQuery}":`, err.message);
     }
-  } catch (err) {
-    console.warn(`[WebStory Sourcing] Pexels API image fetch failed for "${query}":`, err.message);
   }
 
-  return pickFallbackImage(query);
+  return generateUniqueAiImage(cleanQuery, title, slideIdx);
 }
 
 async function callAiJson(prompt) {
@@ -186,7 +195,7 @@ Each slide MUST contain a descriptive 'imageQuery' to fetch the background.
         imageUrl = post.featuredImage;
         console.log(`[WebStory Sourcing] Using post featured image for Cover Slide: ${imageUrl}`);
       } else {
-        imageUrl = await fetchPortraitImage(slide.imageQuery || post.title);
+        imageUrl = await fetchPortraitImage(slide.imageQuery || post.title, post.title, idx);
       }
       return {
         heading: slide.heading,
