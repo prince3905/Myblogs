@@ -61,6 +61,23 @@ blogPostSchema.pre('save', async function (next) {
         .replace(/sarkari\s*reult/gi, 'Digital Home');
       cleaned = cleaned.replace(/www\.sarkariresult\.com/gi, 'www.digitalhomeblog.in');
       cleaned = cleaned.replace(/sarkariresult\.com/gi, 'digitalhomeblog.in');
+
+      // Prettify Whitespace & Remove Faltu Symbols (#||:||, ||, ::, (Link: ), empty tags)
+      cleaned = cleaned
+        .replace(/#\|\|:\|\|/gi, '')
+        .replace(/\|\|+/g, ' ')
+        .replace(/::+/g, ':')
+        .replace(/\s*\(Link:\s*\)/gi, '')
+        .replace(/\s*\(Link:\s*([^\)]+)\)/gi, (match, p1) => {
+          const uniqueLinks = Array.from(new Set(p1.split(',').map(l => l.trim()))).filter(Boolean);
+          if (uniqueLinks.length === 0) return '';
+          return ` (Link: ${uniqueLinks.join(', ')})`;
+        })
+        .replace(/<p>\s*(?:&nbsp;|<br\s*\/?>)?\s*<\/p>/gi, '')
+        .replace(/<p>\s*:\s*<\/p>/gi, '')
+        .replace(/<p>\s*\|+\s*<\/p>/gi, '')
+        .replace(/\n{3,}/g, '\n\n');
+
       return cleaned;
     }
 
@@ -201,6 +218,30 @@ blogPostSchema.pre('save', async function (next) {
       content = content.replace(/(?:<p><br\s*\/?>\s*<\/p>\s*){2,}/gi, '<p><br></p>');
       content = content.replace(/(?:<br\s*\/?>\s*){2,}/gi, '<br>');
       content = content.replace(/[ \t]{3,}/g, ' '); // Normalize spaces but keep line breaks
+
+      // F. Auto Interlink Engine: Ensure every post contains links to other relevant published posts
+      if (!content.includes('related-posts-box')) {
+        try {
+          const recentOtherPosts = await mongoose.model('BlogPost').find({
+            _id: { $ne: post._id },
+            status: 'published'
+          }).sort({ publishedAt: -1 }).limit(3).lean();
+
+          if (recentOtherPosts && recentOtherPosts.length > 0) {
+            const linksHtml = recentOtherPosts.map(p => {
+              const catSlug = (p.category || 'sarkari-jobs-exams').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+              const postUrl = `https://www.digitalhomeblog.in/blog/${catSlug}/${p.slug}`;
+              return `<li style="margin-bottom: 6px;"><a href="${postUrl}" style="color: #2563eb; text-decoration: underline; font-weight: 600;" target="_blank" rel="noopener noreferrer">${p.title}</a></li>`;
+            }).join('\n');
+
+            const relatedBox = `\n<div class="ql-table-embed">\n<div class="related-posts-box" style="margin: 25px 0; padding: 15px 20px; background: #f8fafc; border-left: 4px solid #2563eb; border-radius: 8px;">\n  <strong style="color: #1e293b; font-size: 1rem; display: block; margin-bottom: 8px;">📢 यह भी पढ़ें (Related Job Updates & News):</strong>\n  <ul style="margin: 0; padding-left: 20px; color: #2563eb;">\n${linksHtml}\n  </ul>\n</div>\n</div>\n`;
+
+            content = content + relatedBox;
+          }
+        } catch (relErr) {
+          console.error('Failed to append related posts interlinks:', relErr.message);
+        }
+      }
 
       content = content.replace(/<p>If you found this helpful, also check out our guide on[^]*?for more details.<\/p>\s*/gi, '');
       content = content.replace(/<p>For more information, read our article on[^]*?\.<\/p>\s*/gi, '');
