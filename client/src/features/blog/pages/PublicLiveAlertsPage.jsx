@@ -259,7 +259,19 @@ function parseDetails(text, alert) {
     sections: []
   };
 
-  if (!text) return parsed;
+  const lowerText = (text || '').toLowerCase();
+  if (
+    !text || 
+    text.length < 30 ||
+    lowerText.includes('menu home latest job') || 
+    lowerText.includes('powered by wordpress') || 
+    lowerText.includes('username or email address') ||
+    lowerText.includes('wp_attempt_focus') ||
+    lowerText.includes('lost your password')
+  ) {
+    parsed.shortInfo = `Official notification details and key updates for ${alert.title}. Use the direct buttons below to access the official notification PDF, application portal, or board website.`;
+    return parsed;
+  }
 
   const lines = text.split('\n')
     .map(l => l.trim())

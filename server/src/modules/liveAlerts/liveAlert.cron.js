@@ -614,6 +614,17 @@ function stripSarkariResultMentionsAndLinks(str = '') {
 
 function cleanDetailsText(text) {
   if (!text) return '';
+  const lowerAll = text.toLowerCase();
+  if (
+    lowerAll.includes('menu home latest job') ||
+    lowerAll.includes('powered by wordpress') ||
+    lowerAll.includes('username or email address') ||
+    lowerAll.includes('wp_attempt_focus') ||
+    lowerAll.includes('lost your password')
+  ) {
+    return '';
+  }
+
   const lines = text.split('\n');
   const cleanedLines = [];
 
