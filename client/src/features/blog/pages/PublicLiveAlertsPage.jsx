@@ -89,6 +89,20 @@ function isRowMatch(cell1, cell2, alertTitle = '') {
   return false;
 }
 
+function sanitizeClientUrl(url) {
+  if (!url || typeof url !== 'string') return '/job-alerts';
+  const lower = url.toLowerCase();
+  if (
+    lower.includes('sarkariresult') ||
+    lower.includes('sarkariresults') ||
+    lower.includes('freejobalert') ||
+    lower.includes('sarkari-result')
+  ) {
+    return '/job-alerts';
+  }
+  return url;
+}
+
 function getDynamicActions(alert) {
   const parsedLinks = [];
   if (alert.detailsText) {
@@ -104,7 +118,7 @@ function getDynamicActions(alert) {
           if (match) {
             const urlMatches = match[1].match(/(?:https?:\/\/|\/)[^\s,]+/gi);
             if (urlMatches && urlMatches.length > 0) {
-              parsedLinks.push({ name, url: urlMatches[0] });
+              parsedLinks.push({ name, url: sanitizeClientUrl(urlMatches[0]) });
             }
           }
         }
@@ -116,13 +130,13 @@ function getDynamicActions(alert) {
     const found = parsedLinks.find(link => 
       keywords.some(kw => link.name.toLowerCase().includes(kw.toLowerCase()))
     );
-    return found ? found.url : null;
+    return found ? sanitizeClientUrl(found.url) : null;
   }
 
   const actions = [];
 
   // 1. PDF Link
-  const pdfUrl = alert.officialPdfUrl || findParsedLink(['notification', 'pdf', 'advertisement', 'notice']);
+  const pdfUrl = sanitizeClientUrl(alert.officialPdfUrl || findParsedLink(['notification', 'pdf', 'advertisement', 'notice']));
   actions.push({
     label: 'Download Notification PDF',
     url: pdfUrl,
@@ -133,7 +147,7 @@ function getDynamicActions(alert) {
   });
 
   // 2. Apply URL
-  const applyUrl = alert.officialApplyUrl || findParsedLink(['apply online', 'online form', 'apply', 'admit card', 'hall ticket', 'result', 'score card', 'answer key', 'key']);
+  const applyUrl = sanitizeClientUrl(alert.officialApplyUrl || findParsedLink(['apply online', 'online form', 'apply', 'admit card', 'hall ticket', 'result', 'score card', 'answer key', 'key']));
   actions.push({
     label: 'Apply Online Now',
     url: applyUrl,
@@ -144,7 +158,7 @@ function getDynamicActions(alert) {
   });
 
   // 3. Official Web URL
-  const webUrl = alert.officialUrl || findParsedLink(['official website', 'homepage', 'website']);
+  const webUrl = sanitizeClientUrl(alert.officialUrl || findParsedLink(['official website', 'homepage', 'website']));
   actions.push({
     label: 'Official Board Website',
     url: webUrl,
@@ -162,7 +176,7 @@ function getDynamicActions(alert) {
     if (!isMain && link.url) {
       actions.push({
         label: label,
-        url: link.url,
+        url: sanitizeClientUrl(link.url),
         icon: <WebIcon />,
         color: '#4B5563',
         hoverBg: '#F3F4F6',
