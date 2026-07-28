@@ -657,39 +657,7 @@ function cleanDetailsText(text) {
     }
 
     // Otherwise, clean any remaining bad urls inside the line
-    let cleanedLine = trimmed.replace(/\(Link:\s*([^\)]+)\)/gi, (match, linksStr) => {
-      const links = linksStr.split(',').map(l => l.trim());
-      const sanitized = links.map(link => {
-        const lowerLink = link.toLowerCase();
-        if (
-          (lowerLink.includes('sarkariresult') || lowerLink.includes('freejobalert') || lowerLink.includes('ilovepdf') || lowerLink.includes('imageresizer') || lowerLink.includes('pdfresizer')) &&
-          (lowerLink.includes('tool') || lowerLink.includes('resize') || lowerLink.includes('compress') || lowerLink.includes('crop') || lowerLink.includes('convert') || lowerLink.includes('age') || lowerLink.includes('portal'))
-        ) {
-          return '/tools';
-        }
-        // Remove direct homepage links or portal tools domains
-        if (lowerLink.includes('sarkariresult.com') || lowerLink.includes('sarkariresult.info') || lowerLink.includes('sarkariresult.tools') || lowerLink.includes('sarkariresultportal.com')) {
-          if (lowerLink === 'https://www.sarkariresult.com' || lowerLink === 'https://www.sarkariresult.com/' || lowerLink.includes('sarkariresultportal')) {
-            return '';
-          }
-        }
-        return link;
-      }).filter(Boolean);
-
-      if (sanitized.length === 0) return '';
-      return `(Link: ${sanitized.join(', ')})`;
-    });
-
     cleanedLine = stripSarkariResultMentionsAndLinks(cleanedLine);
-
-    if (cleanedLine) {
-      cleanedLines.push(cleanedLine);
-    }
-  }
-
-  return stripSarkariResultMentionsAndLinks(cleanedLines.join('\n'));
-}
-
     cleanedLine = cleanedLine.replace(/\s*\(Link:\s*\)/gi, '').trim();
 
     if (cleanedLine) {
@@ -697,7 +665,7 @@ function cleanDetailsText(text) {
     }
   }
 
-  return cleanedLines.join('\n');
+  return stripSarkariResultMentionsAndLinks(cleanedLines.join('\n'));
 }
 
 async function scrapeFeeds() {
