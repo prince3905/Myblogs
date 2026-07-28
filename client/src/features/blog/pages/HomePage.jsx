@@ -413,8 +413,318 @@ const CategoryRowSlider = ({ categoryName, posts: initialPosts = [], loading: in
   );
 };
 
+const HeroSectionSlider = ({ initialPosts = [], loading: initialLoading }) => {
+  const [heroPosts, setHeroPosts] = useState(initialPosts);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  useEffect(() => {
+    if (initialPosts && initialPosts.length > 0) {
+      setHeroPosts(initialPosts);
+    }
+  }, [initialPosts]);
+
+  const loadMoreHeroChunk = async () => {
+    if (loadingMore || !hasMore) return 0;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const res = await request(`/api/posts?page=${nextPage}&limit=6`);
+      const newPosts = res.posts || [];
+      if (newPosts.length > 0) {
+        setHeroPosts(prev => {
+          const existingIds = new Set(prev.map(p => p._id));
+          const filtered = newPosts.filter(p => !existingIds.has(p._id));
+          return [...prev, ...filtered];
+        });
+        setPage(nextPage);
+      }
+      if (newPosts.length < 6) {
+        setHasMore(false);
+      }
+      return newPosts.length;
+    } catch (err) {
+      console.error(err);
+      return 0;
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleNext = async () => {
+    if (currentSlide < heroPosts.length - 1) {
+      setCurrentSlide(prev => prev + 1);
+      if (currentSlide >= heroPosts.length - 2 && hasMore && !loadingMore) {
+        loadMoreHeroChunk();
+      }
+    } else if (hasMore && !loadingMore) {
+      const added = await loadMoreHeroChunk();
+      if (added > 0) {
+        setCurrentSlide(prev => prev + 1);
+      }
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(prev => prev - 1);
+    }
+  };
+
+  // Touch Swipe handlers for Mobile
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    const distance = touchStartX.current - touchEndX.current;
+    if (distance > 50) {
+      handleNext();
+    } else if (distance < -50) {
+      handlePrev();
+    }
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
+
+  // Autoplay hero slideshow every 6 seconds
+  useEffect(() => {
+    if (initialLoading || heroPosts.length === 0) return;
+    const timer = setInterval(() => {
+      handleNext();
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [heroPosts, currentSlide, hasMore, loadingMore, initialLoading]);
+
+  if (initialLoading || heroPosts.length === 0) {
+    return (
+      <Box component="section" sx={{ pt: { xs: 2.5, md: 4 }, pb: { xs: 2, md: 4 } }}>
+        <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 3, md: 5 } }}>
+            <Box sx={{ flex: { md: '0 0 55%' }, aspectRatio: '16/9', bgcolor: '#e2e8f0', borderRadius: '24px', animation: 'pulse 1.5s infinite ease-in-out' }} />
+            <Box sx={{ flex: { md: '0 0 40%' }, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ height: 26, width: 120, bgcolor: '#ECECEC', borderRadius: '8px' }} />
+              <Box sx={{ height: 70, bgcolor: '#ECECEC', borderRadius: '8px' }} />
+              <Box sx={{ height: 40, bgcolor: '#ECECEC', borderRadius: '8px' }} />
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  return (
+    <Box component="section" sx={{ pt: { xs: 2.5, md: 4 }, pb: { xs: 2, md: 4 }, position: 'relative' }}>
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+        <Box 
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          sx={{ position: 'relative', overflow: 'hidden', width: '100%', borderRadius: '24px' }}
+        >
+          <Box sx={{
+            display: 'flex',
+            transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: `translate3d(-${currentSlide * 100}%, 0, 0)`,
+            width: '100%'
+          }}>
+            {heroPosts.map((post, idx) => (
+              <Box key={post._id || idx} sx={{ flex: '0 0 100%', width: '100%', boxSizing: 'border-box' }}>
+                <Box sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', md: 'row' },
+                  gap: { xs: 3, md: 5 },
+                  alignItems: { md: 'center' }
+                }}>
+                  {/* Image (left side) */}
+                  <Box 
+                    component={Link} 
+                    to={postUrl(post)}
+                    sx={{ textDecoration: 'none', flex: { md: '0 0 55%' }, display: 'block', width: '100%' }}
+                  >
+                    <Box sx={{ 
+                      position: 'relative', 
+                      borderRadius: '24px', 
+                      overflow: 'hidden', 
+                      boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
+                      aspectRatio: '16/9',
+                      width: '100%',
+                      bgcolor: '#f1f5f9'
+                    }}>
+                      {post.featuredImage ? (
+                        <Box
+                          component="img"
+                          src={optimizeImage(post.featuredImage, 550)}
+                          srcSet={`${optimizeImage(post.featuredImage, 360)} 360w, ${optimizeImage(post.featuredImage, 550)} 550w`}
+                          sizes="(max-width: 600px) 100vw, 550px"
+                          alt={post.title}
+                          width="550"
+                          height="310"
+                          loading={idx === 0 ? 'eager' : 'lazy'}
+                          fetchPriority={idx === 0 ? 'high' : 'auto'}
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block',
+                            transition: 'transform 0.4s ease',
+                            '&:hover': { transform: 'scale(1.02)' },
+                          }}
+                        />
+                      ) : (
+                        <Box sx={{ width: '100%', height: '100%', bgcolor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>{post.category}</Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+    
+                  {/* Content (right side) */}
+                  <Box 
+                    sx={{ 
+                      flex: { md: '0 0 40%' }, 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      justifyContent: 'center',
+                      minHeight: { xs: '210px', md: '260px' },
+                      width: '100%'
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                      <Chip
+                        label={post.category}
+                        size="small"
+                        sx={{
+                          bgcolor: 'primary.main',
+                          color: 'white',
+                          fontWeight: 800,
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase',
+                          borderRadius: '8px',
+                          px: 1,
+                          height: 28,
+                        }}
+                      />
+                      <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 800, fontSize: '0.75rem' }}>
+                        🔥 Featured #{idx + 1}
+                      </Typography>
+                    </Box>
+                    <Link to={postUrl(post)} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <Typography
+                        variant="h1"
+                        sx={{
+                          fontWeight: 900,
+                          mb: 1.5,
+                          minHeight: { xs: '58px', md: '80px' },
+                          fontSize: { xs: '1.35rem', sm: '1.75rem', md: '2.15rem' },
+                          lineHeight: 1.25,
+                          color: '#0f172a',
+                          letterSpacing: '-0.035em',
+                          transition: 'color 0.2s ease-in-out',
+                          '&:hover': { color: 'primary.main' }
+                        }}
+                      >
+                        {post.title}
+                      </Typography>
+                    </Link>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        mb: 2.5,
+                        color: '#4B5563',
+                        fontSize: { xs: '0.85rem', md: '0.95rem' },
+                        lineHeight: 1.6,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {post.excerpt}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', minHeight: '42px' }}>
+                      <Avatar sx={{ width: 40, height: 40, bgcolor: '#4F46E5', fontSize: '0.9rem', fontWeight: 600 }}>
+                        {post.author?.charAt(0) || 'H'}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827', fontSize: '0.9rem' }}>
+                          {post.author || 'Harry Prince'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#4B5563', fontWeight: 500, fontSize: '0.75rem' }}>
+                          {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {' · '}{post.readingTime || 5} min read
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Desktop & Mobile Chevron Floating Navigation Arrows */}
+          {currentSlide > 0 && (
+            <IconButton 
+              onClick={handlePrev}
+              aria-label="Previous Featured Slide"
+              sx={{
+                position: 'absolute',
+                left: { xs: 4, md: 10 },
+                top: '40%',
+                transform: 'translateY(-50%)',
+                bgcolor: 'rgba(255,255,255,0.95)',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+                border: '1px solid #E5E7EB',
+                color: '#111827',
+                zIndex: 10,
+                width: { xs: 36, md: 44 },
+                height: { xs: 36, md: 44 },
+                '&:hover': { bgcolor: 'white' }
+              }}
+            >
+              <ChevronLeft />
+            </IconButton>
+          )}
+
+          {(currentSlide < heroPosts.length - 1 || hasMore) && (
+            <IconButton 
+              onClick={handleNext}
+              aria-label="Next Featured Slide"
+              sx={{
+                position: 'absolute',
+                right: { xs: 4, md: 10 },
+                top: '40%',
+                transform: 'translateY(-50%)',
+                bgcolor: 'rgba(255,255,255,0.95)',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+                border: '1px solid #E5E7EB',
+                color: '#111827',
+                zIndex: 10,
+                width: { xs: 36, md: 44 },
+                height: { xs: 36, md: 44 },
+                '&:hover': { bgcolor: 'white' }
+              }}
+            >
+              <ChevronRight />
+            </IconButton>
+          )}
+        </Box>
+      </Container>
+    </Box>
+  );
+};
+
 export default function HomePage() {
-  const { posts, loading, error } = usePosts({ limit: 1 });
+  const { posts, loading, error } = usePosts({ limit: 6 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = [];
 
@@ -1093,177 +1403,8 @@ export default function HomePage() {
         </Box>
       )}
 
-      {/* Hero Section - Featured Article (H1) or Loading Skeleton (Unified to prevent CLS) */}
-      <Box component="section" sx={{ pt: { xs: 2.5, md: 4 }, pb: { xs: 2, md: 4 } }}>
-        <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-          <Box sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
-            gap: { xs: 3, md: 5 },
-            alignItems: { md: 'center' }
-          }}>
-            {/* Image (left side) */}
-            <Box 
-              component={!loading && featuredPost ? Link : Box} 
-              {...(!loading && featuredPost ? { to: postUrl(featuredPost) } : {})}
-              sx={{ 
-                textDecoration: 'none', 
-                flex: { md: '0 0 55%' }, 
-                display: 'block',
-                width: '100%'
-              }}
-            >
-              <Box sx={{ 
-                position: 'relative', 
-                borderRadius: '24px', 
-                overflow: 'hidden', 
-                boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
-                aspectRatio: '16/9',
-                width: '100%',
-                bgcolor: '#f1f5f9'
-              }}>
-                {loading ? (
-                  <Box sx={{
-                    width: '100%',
-                    height: '100%',
-                    bgcolor: '#e2e8f0',
-                    animation: 'pulse 1.5s infinite ease-in-out'
-                  }} />
-                ) : featuredPost?.featuredImage ? (
-                  <Box
-                    component="img"
-                    src={optimizeImage(featuredPost.featuredImage, 550)}
-                    srcSet={`${optimizeImage(featuredPost.featuredImage, 360)} 360w, ${optimizeImage(featuredPost.featuredImage, 550)} 550w`}
-                    sizes="(max-width: 600px) 100vw, 550px"
-                    alt={featuredPost.title}
-                    width="550"
-                    height="310"
-                    loading="eager"
-                    fetchPriority="high"
-                    fetchpriority="high"
-                    sx={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                      transition: 'transform 0.4s ease',
-                      '&:hover': { transform: 'scale(1.02)' },
-                    }}
-                  />
-                ) : featuredPost ? (
-                  <Box sx={{ width: '100%', height: '100%', bgcolor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Typography variant="h4" sx={{ color: 'white', fontWeight: 700 }}>{featuredPost.category}</Typography>
-                  </Box>
-                ) : null}
-              </Box>
-            </Box>
- 
-            {/* Content (right side) */}
-            <Box 
-              sx={{ 
-                flex: { md: '0 0 40%' }, 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'center',
-                minHeight: { xs: '235px', md: '260px' },
-                width: '100%'
-              }}
-            >
-              {loading ? (
-                <>
-                  <Box sx={{ height: 26, width: 120, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1.5, animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ height: { xs: 66, md: 80 }, bgcolor: '#ECECEC', borderRadius: '8px', mb: 1.5, width: '95%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ height: 18, bgcolor: '#ECECEC', borderRadius: '6px', mb: 0.8, width: '100%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ height: 18, bgcolor: '#ECECEC', borderRadius: '6px', mb: 2, width: '85%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', minHeight: '42px' }}>
-                    <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: '#ECECEC', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                    <Box sx={{ flex: 1 }}>
-                      <Box sx={{ height: 14, bgcolor: '#ECECEC', borderRadius: '4px', mb: 0.5, width: '35%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                      <Box sx={{ height: 12, bgcolor: '#ECECEC', borderRadius: '4px', width: '25%', animation: 'pulse 1.5s infinite ease-in-out' }} />
-                    </Box>
-                  </Box>
-                </>
-              ) : featuredPost ? (
-                <>
-                  <Box sx={{ mb: 1.5 }}>
-                    <Chip
-                      label={featuredPost.category}
-                      size="small"
-                      sx={{
-                        bgcolor: 'primary.main',
-                        color: 'white',
-                        fontWeight: 800,
-                        fontSize: '0.75rem',
-                        letterSpacing: '0.04em',
-                        textTransform: 'uppercase',
-                        borderRadius: '8px',
-                        px: 1,
-                        height: 28,
-                      }}
-                    />
-                  </Box>
-                  <Link to={postUrl(featuredPost)} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <Typography
-                      variant="h1"
-                      sx={{
-                        fontWeight: 900,
-                        mb: 1.5,
-                        minHeight: { xs: '66px', md: '80px' },
-                        fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
-                        lineHeight: 1.25,
-                        color: '#0f172a',
-                        letterSpacing: '-0.035em',
-                        transition: 'color 0.2s ease-in-out',
-                        '&:hover': { color: 'primary.main' }
-                      }}
-                    >
-                      {featuredPost.title}
-                    </Typography>
-                  </Link>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      mb: 2.5,
-                      color: '#4B5563',
-                      fontSize: { xs: '0.85rem', md: '0.95rem' },
-                      lineHeight: 1.6,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {featuredPost.excerpt}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', minHeight: '42px' }}>
-                    <Avatar sx={{ width: 40, height: 40, bgcolor: '#4F46E5', fontSize: '0.9rem', fontWeight: 600 }}>
-                      {featuredPost.author?.charAt(0) || 'H'}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827', fontSize: '0.9rem' }}>
-                        {featuredPost.author || 'Harry Prince'}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#4B5563', fontWeight: 500, fontSize: '0.75rem' }}>
-                        {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        {' · '}{featuredPost.readingTime || 5} min read
-                      </Typography>
-                    </Box>
-                  </Box>
-                </>
-              ) : null}
-            </Box>
-          </Box>
-        </Container>
-        {loading && (
-          <style>{`
-            @keyframes pulse {
-              0% { opacity: 0.6; }
-              50% { opacity: 1; }
-              100% { opacity: 0.6; }
-            }
-          `}</style>
-        )}
-      </Box>
+      {/* Hero Section Slider */}
+      <HeroSectionSlider initialPosts={posts} loading={loading} />
 
       {/* Latest Insights Section (H2) */}
       <Box component="section" sx={{ py: { xs: 4, md: 6 }, bgcolor: '#F9FAFB' }}>
