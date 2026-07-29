@@ -1,0 +1,4 @@
+# 1-Step Direct 301 Redirect Rules (Prevents 2-step Redirect Chains)
+http://digitalhomeblog.in/* https://www.digitalhomeblog.in/:splat 301!
+https://digitalhomeblog.in/* https://www.digitalhomeblog.in/:splat 301!
+http://www.digitalhomeblog.in/* https://www.digitalhomeblog.in/:splat 301!

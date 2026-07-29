@@ -32,13 +32,24 @@ const publicPath = path.join(__dirname, '../public');
 // Static asset HTTP Cache-Control header injection (max-age 1 year for static assets)
 app.use(serverCacheService.staticAssetCacheMiddleware());
 
-// Force HTTPS and Canonical WWW Domain Redirect in Production (Prevents redirect loops/chains)
+// 1-Step 301 Direct Canonical HTTPS & WWW Domain Redirect (Eliminates 2-step redirect chains)
 app.use((req, res, next) => {
   if (env.nodeEnv === 'production' && !req.path.startsWith('/api')) {
-    const isNotHttps = req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https';
-    const isNotCanonicalHost = req.headers.host && req.headers.host !== 'www.digitalhomeblog.in';
+    const host = (req.headers.host || '').toLowerCase();
+    const proto = (req.headers['x-forwarded-proto'] || '').toLowerCase();
     
-    if (isNotHttps || isNotCanonicalHost) {
+    let cfProto = '';
+    if (req.headers['cf-visitor']) {
+      try {
+        cfProto = (JSON.parse(req.headers['cf-visitor']).scheme || '').toLowerCase();
+      } catch (e) {}
+    }
+
+    const isHttps = proto === 'https' || cfProto === 'https';
+    const isCanonicalHost = host === 'www.digitalhomeblog.in';
+
+    // Single 1-step 301 direct redirect for HTTP non-www, HTTPS non-www, and HTTP www
+    if (!isHttps || !isCanonicalHost) {
       return res.redirect(301, `https://www.digitalhomeblog.in${req.originalUrl}`);
     }
   }
