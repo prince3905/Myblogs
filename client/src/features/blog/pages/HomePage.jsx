@@ -224,46 +224,7 @@ const CategoryRowSlider = ({ categoryName, posts: initialPosts = [], loading: in
     }
   };
 
-  // Autoplay slideshow timer (only active when category section is visible in the viewport)
-  useEffect(() => {
-    if (initialLoading || catPosts.length === 0 || !isIntersecting) return;
-
-    const timer = setInterval(() => {
-      // 1. Desktop Autoplay
-      if (maxSlide > 0) {
-        setCurrentSlide(prev => {
-          if (prev >= maxSlide - 1 && hasMore && !loadingMore) {
-            loadMoreChunk();
-          }
-          return prev < maxSlide ? prev + 1 : 0;
-        });
-      }
-
-      // 2. Mobile Autoplay
-      if (mobileScrollRef.current) {
-        const container = mobileScrollRef.current;
-        const scrollWidth = container.scrollWidth;
-        const clientWidth = container.clientWidth;
-        const currentScrollLeft = container.scrollLeft;
-
-        let nextScrollLeft = currentScrollLeft + clientWidth;
-        if (nextScrollLeft + clientWidth >= scrollWidth - 10) {
-          if (hasMore && !loadingMore) {
-            loadMoreChunk();
-          } else {
-            nextScrollLeft = 0;
-          }
-        }
-
-        container.scrollTo({
-          left: nextScrollLeft,
-          behavior: 'smooth'
-        });
-      }
-    }, 6000); // Autoplay every 6 seconds
-
-    return () => clearInterval(timer);
-  }, [catPosts, initialLoading, isIntersecting, maxSlide, currentSlide, lastInteraction, hasMore, loadingMore]);
+  // Category sliders are manually slided by user with unlimited chunk fetching
 
   if (initialLoading || catPosts.length === 0) {
     return (
@@ -495,14 +456,7 @@ const HeroSectionSlider = ({ initialPosts = [], loading: initialLoading }) => {
     touchEndX.current = 0;
   };
 
-  // Autoplay hero slideshow every 6 seconds
-  useEffect(() => {
-    if (initialLoading || heroPosts.length === 0) return;
-    const timer = setInterval(() => {
-      handleNext();
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [heroPosts, currentSlide, hasMore, loadingMore, initialLoading]);
+  // Hero section slider is manually slided by user with unlimited chunk fetching
 
   if (initialLoading || heroPosts.length === 0) {
     return (
@@ -900,29 +854,32 @@ export default function HomePage() {
       setLoadingCategories(false);
     });
   }, []);
-  // Autoplay slideshow timer (advances every 5 seconds, manual arrow click resets the timer)
+  // Autoplay slideshow timer only for Live Job Alerts & Web Stories (Calm 8s interval)
+  // Pauses automatically when tab is inactive/hidden to eliminate background CPU load!
   useEffect(() => {
     if (loadingAlerts || alerts.length === 0) return;
     
     const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
 
     const timer = setInterval(() => {
-      // 1. Desktop Slider Autoplay
+      // Pause slideshow if document/tab is not visible to user
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return;
+      }
+
+      // 1. Desktop Live Job Alerts Autoplay
       if (maxSlide > 0) {
         setCurrentSlide(prev => (prev < maxSlide ? prev + 1 : 0));
       }
 
-      // 2. Mobile Slider Autoplay
+      // 2. Mobile Live Job Alerts Autoplay
       if (mobileScrollRef.current) {
         const container = mobileScrollRef.current;
         const scrollWidth = container.scrollWidth;
         const clientWidth = container.clientWidth;
         const currentScrollLeft = container.scrollLeft;
 
-        // Advance by one full page/screen width
         let nextScrollLeft = currentScrollLeft + clientWidth;
-
-        // If we have reached near the end of scrollable content, wrap back to 0
         if (nextScrollLeft + clientWidth >= scrollWidth - 10) {
           nextScrollLeft = 0;
         }
@@ -940,7 +897,6 @@ export default function HomePage() {
         const clientWidth = container.clientWidth;
         const currentScrollLeft = container.scrollLeft;
 
-        // Slide by half of the screen size (roughly 1 card + gap spacing)
         let nextScrollLeft = currentScrollLeft + (clientWidth / 2 + 10);
         if (nextScrollLeft >= scrollWidth - clientWidth - 10) {
           nextScrollLeft = 0;
@@ -951,7 +907,7 @@ export default function HomePage() {
           behavior: 'smooth'
         });
       }
-    }, 5000);
+    }, 8000); // Calm 8-second slide interval focused on New Vacancy / Job Posts & Stories
 
     return () => clearInterval(timer);
   }, [alerts, loadingAlerts, currentSlide, stories, loadingStories]);
