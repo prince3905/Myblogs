@@ -383,26 +383,29 @@ blogPostSchema.post('save', async function (doc) {
   }
 
   if (doc.status === 'published') {
-    // 1. Google Indexing Auto-Notification
+    // 1. 360° Universal Auto-Indexing Notification (Google Indexing API + IndexNow + Sitemap Pings)
     try {
-      const { notifyUrl } = require('../../shared/utils/google-indexing');
+      const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
       const { logAutomation } = require('../../shared/utils/automationLogger');
       const catUrl = (doc.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
       const postUrl = `https://www.digitalhomeblog.in/blog/${catUrl}/${doc.slug}`;
-      console.log(`[Google Indexing] Auto-pinging index for published post: ${postUrl}`);
-      const result = await notifyUrl(postUrl, 'URL_UPDATED');
-      if (result.success) {
-        console.log(`[Google Indexing] Successfully auto-indexed published post: "${doc.title}"`);
-        logAutomation({ service: 'SEO_INDEXING', level: 'SUCCESS', action: 'Google Index Ping (Post)', message: `Pinged Google Indexing API for published post "${doc.title}"`, metadata: { title: doc.title, url: postUrl } });
-      } else {
-        const errMsg = typeof result.error === 'string' ? result.error : (result.error?.message || result.message || 'Auto-indexing quota limit reached');
-        console.warn(`[Google Indexing] Auto-indexing notice for "${doc.title}":`, errMsg);
-        logAutomation({ service: 'SEO_INDEXING', level: 'WARNING', action: 'Google Index Ping Quota Notice (Post)', message: String(errMsg), metadata: { title: doc.title, url: postUrl } });
-      }
+      console.log(`[Auto-Indexing Pipeline] Triggering 360° pings for published post: ${postUrl}`);
+      
+      notifyAllIndexing(postUrl, 'URL_UPDATED')
+        .then(({ google, indexNow }) => {
+          logAutomation({
+            service: 'SEO_INDEXING',
+            level: 'SUCCESS',
+            action: '360° Auto-Index Dispatch',
+            message: `Dispatched instant index pings (Google & IndexNow) for published post "${doc.title}"`,
+            metadata: { title: doc.title, url: postUrl, google: google?.success, indexNow: indexNow?.success }
+          });
+        })
+        .catch(err => {
+          console.warn('[Auto-Indexing Pipeline] Notice:', err.message);
+        });
     } catch (err) {
-      console.error('[Google Indexing] Failed in post-save index notifier:', err.message);
-      const { logAutomation } = require('../../shared/utils/automationLogger');
-      logAutomation({ service: 'SEO_INDEXING', level: 'ERROR', action: 'Google Index Ping Exception (Post)', message: err.message, metadata: { title: doc.title } });
+      console.error('[Auto-Indexing Pipeline] Failed in post-save index notifier:', err.message);
     }
 
     // 2. Two-Way Internal Linking Builder

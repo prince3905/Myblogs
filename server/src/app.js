@@ -109,6 +109,14 @@ app.get('/ads.txt', (req, res) => {
   res.type('text/plain');
   res.send('google.com, pub-7044184444698366, DIRECT, f08c47fec0942fa0');
 });
+app.get('/:key.txt', (req, res, next) => {
+  const key = req.params.key;
+  if (/^[a-f0-9]{32}$/i.test(key)) {
+    res.type('text/plain');
+    return res.send(key);
+  }
+  next();
+});
 
 // Handle root path / specially to inject initial posts data to avoid client API waterfall
 app.get('/', async (req, res, next) => {

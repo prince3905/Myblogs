@@ -132,4 +132,72 @@ async function notifyUrl(url, type = 'URL_UPDATED') {
   }
 }
 
-module.exports = { notifyUrl };
+/**
+ * Instant IndexNow Auto-Ping (Notifies Bing, Yandex, Seznam, Naver & DuckDuckGo in 1 second)
+ */
+async function notifyIndexNow(url) {
+  const indexNowKey = process.env.INDEXNOW_KEY || '8f7e2a9b3c4d5e6f7a8b9c0d1e2f3a4b';
+  const host = 'www.digitalhomeblog.in';
+  const keyLocation = `https://${host}/${indexNowKey}.txt`;
+
+  try {
+    const payload = {
+      host: host,
+      key: indexNowKey,
+      keyLocation: keyLocation,
+      urlList: [url]
+    };
+
+    console.log(`[IndexNow Protocol] Instant auto-pinging URL: ${url}`);
+    const response = await axios.post('https://api.indexnow.org/indexnow', payload, {
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      timeout: 10000
+    });
+
+    console.log(`[IndexNow Protocol] Ping success for ${url} (Status: ${response.status})`);
+    return { success: true, status: response.status };
+  } catch (err) {
+    console.warn(`[IndexNow Protocol] Notice for ${url}:`, err.response?.data || err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Auto-Ping Google & Bing Search Engines with updated Sitemap
+ */
+async function pingSitemapEngines() {
+  const sitemapUrl = 'https://www.digitalhomeblog.in/sitemap.xml';
+  try {
+    console.log(`[Sitemap Ping] Auto-notifying Google and Bing of sitemap updates...`);
+    await Promise.allSettled([
+      axios.get(`https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`, { timeout: 8000 }),
+      axios.get(`https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`, { timeout: 8000 })
+    ]);
+    console.log(`[Sitemap Ping] Search engine pings dispatched successfully.`);
+  } catch (err) {
+    console.warn(`[Sitemap Ping] Notice:`, err.message);
+  }
+}
+
+/**
+ * Universal Auto-Indexing Orchestrator (Google API + IndexNow Protocol + Sitemap Pings)
+ */
+async function notifyAllIndexing(url, type = 'URL_UPDATED') {
+  console.log(`[Universal Auto-Indexing] Triggering 360° index pings for: ${url}`);
+  const results = await Promise.allSettled([
+    notifyUrl(url, type),
+    notifyIndexNow(url),
+    pingSitemapEngines()
+  ]);
+  return {
+    google: results[0]?.value || null,
+    indexNow: results[1]?.value || null
+  };
+}
+
+module.exports = { 
+  notifyUrl,
+  notifyIndexNow,
+  pingSitemapEngines,
+  notifyAllIndexing
+};
