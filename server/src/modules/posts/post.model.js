@@ -341,6 +341,19 @@ blogPostSchema.pre('save', async function (next) {
         }
       });
 
+      // 7. Auto-Enrich Content Images with Keyword-Rich ALT Tags for Google Image Search
+      $('img').each((i, img) => {
+        if (!$(img).attr('alt') || $(img).attr('alt').trim() === '') {
+          $(img).attr('alt', `${post.title} - Image ${i + 1}`);
+        }
+        if (!$(img).attr('title')) {
+          $(img).attr('title', post.title);
+        }
+        if (!$(img).attr('loading')) {
+          $(img).attr('loading', 'lazy');
+        }
+      });
+
       post.content = $.html();
     }
 
