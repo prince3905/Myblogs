@@ -21,11 +21,17 @@ function escapeXml(str = '') {
 }
 
 function formatAmpUrl(urlStr) {
+  const fallback = 'https://www.digitalhomeblog.in/logo-og.webp';
   if (!urlStr || typeof urlStr !== 'string') {
-    return 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=720&amp;h=1280&amp;fit=crop&amp;q=80';
+    return fallback;
   }
 
   let cleaned = urlStr.trim();
+
+  // If input is data: URI, blob:, or raw SVG string, fallback to absolute HTTPS URL
+  if (cleaned.startsWith('data:') || cleaned.startsWith('blob:') || cleaned.includes('<svg')) {
+    return fallback;
+  }
 
   // Enforce https:// protocol for AMP compliance
   if (cleaned.startsWith('http://')) {
@@ -210,14 +216,14 @@ async function renderWebStory(req, res, next) {
           <amp-img src="${formatAmpUrl(story.slides?.[0]?.image)}"
                    width="720" height="1280"
                    layout="responsive"
-                   alt="${escapeXml(story.slides?.[0]?.heading)}">
+                   alt="${escapeXml(story.slides?.[0]?.heading || story.title)}">
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
             <span class="badge">Vacancy Alert</span>
-            <h1 class="slide-title" animate-in="fade-in" animate-in-duration="0.6s">${escapeXml(story.slides?.[0]?.heading)}</h1>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.6s">${escapeXml(story.slides?.[0]?.text)}</p>
+            <h1 class="slide-title">${escapeXml(story.slides?.[0]?.heading || story.title)}</h1>
+            <p class="slide-desc">${escapeXml(story.slides?.[0]?.text || story.title)}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
@@ -228,14 +234,14 @@ async function renderWebStory(req, res, next) {
           <amp-img src="${formatAmpUrl(story.slides?.[1]?.image)}"
                    width="720" height="1280"
                    layout="responsive"
-                   alt="${escapeXml(story.slides?.[1]?.heading)}">
+                   alt="${escapeXml(story.slides?.[1]?.heading || story.title)}">
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
             <span class="badge">Qualification</span>
-            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[1]?.heading)}</h2>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${escapeXml(story.slides?.[1]?.text)}</p>
+            <h2 class="slide-title">${escapeXml(story.slides?.[1]?.heading || 'Eligibility & Rules')}</h2>
+            <p class="slide-desc">${escapeXml(story.slides?.[1]?.text || 'Check qualification details in full article.')}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
@@ -246,14 +252,14 @@ async function renderWebStory(req, res, next) {
           <amp-img src="${formatAmpUrl(story.slides?.[2]?.image)}"
                    width="720" height="1280"
                    layout="responsive"
-                   alt="${escapeXml(story.slides?.[2]?.heading)}">
+                   alt="${escapeXml(story.slides?.[2]?.heading || story.title)}">
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
             <span class="badge">Important Dates</span>
-            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[2]?.heading)}</h2>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${escapeXml(story.slides?.[2]?.text)}</p>
+            <h2 class="slide-title">${escapeXml(story.slides?.[2]?.heading || 'Dates & Fees')}</h2>
+            <p class="slide-desc">${escapeXml(story.slides?.[2]?.text || 'Important application dates & fee details.')}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
@@ -264,14 +270,14 @@ async function renderWebStory(req, res, next) {
           <amp-img src="${formatAmpUrl(story.slides?.[3]?.image)}"
                    width="720" height="1280"
                    layout="responsive"
-                   alt="${escapeXml(story.slides?.[3]?.heading)}">
+                   alt="${escapeXml(story.slides?.[3]?.heading || story.title)}">
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
             <span class="badge">Selection Process</span>
-            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[3]?.heading)}</h2>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${escapeXml(story.slides?.[3]?.text)}</p>
+            <h2 class="slide-title">${escapeXml(story.slides?.[3]?.heading || 'Selection Procedure')}</h2>
+            <p class="slide-desc">${escapeXml(story.slides?.[3]?.text || 'Written test & physical merit selection process.')}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
@@ -282,18 +288,18 @@ async function renderWebStory(req, res, next) {
           <amp-img src="${formatAmpUrl(story.slides?.[4]?.image)}"
                    width="720" height="1280"
                    layout="responsive"
-                   alt="${escapeXml(story.slides?.[4]?.heading)}">
+                   alt="${escapeXml(story.slides?.[4]?.heading || story.title)}">
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer" style="align-items: center; text-align: center; justify-content: center;">
             <span class="badge" style="align-self: center;">Direct Link Active</span>
-            <h2 class="slide-title" animate-in="bounce-in" animate-in-duration="0.6s">${escapeXml(story.slides?.[4]?.heading)}</h2>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${escapeXml(story.slides?.[4]?.text)}</p>
+            <h2 class="slide-title">${escapeXml(story.slides?.[4]?.heading || 'Apply Online Now')}</h2>
+            <p class="slide-desc">${escapeXml(story.slides?.[4]?.text || 'Click below to read full guide and apply.')}</p>
           </div>
         </amp-story-grid-layer>
         <amp-story-cta-layer>
-          <a href="${postUrl}" class="cta-button" animate-in="pulse" animate-in-duration="1s">👉 Read Full Article & Apply</a>
+          <a href="${postUrl}" class="cta-button">👉 Read Full Article & Apply</a>
         </amp-story-cta-layer>
       </amp-story-page>
     </amp-story>
