@@ -104,6 +104,29 @@ async function renderWebStory(req, res, next) {
     <meta name="twitter:description" content="${escapedDesc}" />
     <meta name="twitter:image" content="${coverImage}" />
 
+    <!-- Google Discover Indian Desi SEO JSON-LD Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      "mainEntityOfPage": "${canonicalUrl}",
+      "headline": "${escapedTitle}",
+      "description": "${escapedDesc}",
+      "image": ["${coverImage}"],
+      "datePublished": "${new Date(story.createdAt || Date.now()).toISOString()}",
+      "dateModified": "${new Date(story.updatedAt || Date.now()).toISOString()}",
+      "inLanguage": "hi-IN",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Digital Home",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://www.digitalhomeblog.in/logo.png"
+        }
+      }
+    }
+    </script>
+
     <!-- AMP Script Boilerplate -->
     <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
     
