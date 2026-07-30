@@ -154,6 +154,18 @@ async function renderWebStory(req, res, next) {
         letter-spacing: 0.08em;
         box-shadow: 0 3px 6px rgba(37,99,235,0.4);
       }
+      .cta-button {
+        display: inline-block;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff;
+        padding: 14px 28px;
+        border-radius: 9999px;
+        font-weight: 800;
+        font-size: 15px;
+        text-decoration: none;
+        box-shadow: 0 4px 16px rgba(37,99,235,0.6);
+        letter-spacing: 0.02em;
+      }
       amp-img img {
         object-fit: cover;
       }
@@ -251,13 +263,15 @@ async function renderWebStory(req, res, next) {
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
-          <div class="text-layer" style="align-items: center; text-align: center;">
+          <div class="text-layer" style="align-items: center; text-align: center; justify-content: center;">
             <span class="badge" style="align-self: center;">Direct Link Active</span>
             <h2 class="slide-title" animate-in="bounce-in" animate-in-duration="0.6s">${escapeXml(story.slides?.[4]?.heading)}</h2>
-            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s" style="margin-bottom: 24px;">${escapeXml(story.slides?.[4]?.text)}</p>
-            <a href="${postUrl}" style="display: inline-block; background: #2563eb; color: #fff; padding: 14px 28px; border-radius: 9999px; font-weight: 800; font-size: 16px; text-decoration: none; box-shadow: 0 4px 14px rgba(37,99,235,0.6);" animate-in="pulse" animate-in-duration="1s">👉 Read Full Article & Apply</a>
+            <p class="slide-desc" animate-in="fade-in" animate-in-delay="0.2s" animate-in-duration="0.5s">${escapeXml(story.slides?.[4]?.text)}</p>
           </div>
         </amp-story-grid-layer>
+        <amp-story-cta-layer>
+          <a href="${postUrl}" class="cta-button" animate-in="pulse" animate-in-duration="1s">👉 Read Full Article & Apply</a>
+        </amp-story-cta-layer>
       </amp-story-page>
     </amp-story>
   </body>
