@@ -79,7 +79,8 @@ async function getAlerts(req, res) {
         { title: searchRegex },
         { boardName: searchRegex },
         { category: searchRegex },
-        { state: searchRegex }
+        { state: searchRegex },
+        { detailsText: searchRegex }
       ];
     }
 
