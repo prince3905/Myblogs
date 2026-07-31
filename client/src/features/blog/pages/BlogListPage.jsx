@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Chip, Divider, Grid, Collapse } from '@mui/material';
+import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Chip, Divider, Grid, Collapse, Pagination } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
