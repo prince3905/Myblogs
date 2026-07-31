@@ -27,6 +27,7 @@ const { sitemap, robots, rssFeed, getHomepageData } = require('./modules/posts/p
 const serverCacheService = require('./shared/services/serverCacheService');
 
 const app = express();
+app.set('trust proxy', true);
 const publicPath = path.join(__dirname, '../public');
 
 // Static asset HTTP Cache-Control header injection (max-age 1 year for static assets)
