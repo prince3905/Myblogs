@@ -775,8 +775,10 @@ const getCardStyles = (item, index) => {
 };
 
 export default function PublicLiveAlertsPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const alertIdParam = searchParams.get('alert');
+  const openedAlertIdRef = useRef(null);
+
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -791,10 +793,19 @@ export default function PublicLiveAlertsPage() {
   const setSelectedAlert = async (alert) => {
     if (!alert) {
       setSelectedAlertState(null);
+      openedAlertIdRef.current = null;
+      if (searchParams && searchParams.has('alert')) {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('alert');
+        setSearchParams(newParams, { replace: true });
+      }
       return;
     }
     
     setSelectedAlertState(alert);
+    if (alert._id) {
+      openedAlertIdRef.current = alert._id;
+    }
     
     if (!alert.detailsText) {
       setDetailsLoading(true);
@@ -803,9 +814,6 @@ export default function PublicLiveAlertsPage() {
         const res = await request(`/api/public/live-alerts/${alert._id}`);
         if (res.success && res.data) {
           setSelectedAlertState(res.data);
-          setAlerts(prevAlerts => prevAlerts.map(a => 
-            a._id === alert._id ? { ...a, ...res.data } : a
-          ));
         } else {
           setErrorLoadingDetails(res.message || 'Failed to fetch details from server');
         }
@@ -880,21 +888,18 @@ export default function PublicLiveAlertsPage() {
   }, [searchQuery]);
 
   useEffect(() => {
-    if (alerts.length > 0 && alertIdParam) {
-      const matched = alerts.find(a => a._id === alertIdParam);
-      if (matched) {
-        setSelectedAlert(matched);
-      } else {
-        request(`/api/public/live-alerts/${alertIdParam}`)
-          .then(res => {
-            if (res.success && res.data) {
-              setSelectedAlert(res.data);
-            }
-          })
-          .catch(err => console.error('Failed to auto-load alert details:', err.message));
-      }
-    }
-  }, [alerts, alertIdParam]);
+    if (!alertIdParam || openedAlertIdRef.current === alertIdParam) return;
+
+    openedAlertIdRef.current = alertIdParam;
+
+    request(`/api/public/live-alerts/${alertIdParam}`)
+      .then(res => {
+        if (res.success && res.data) {
+          setSelectedAlertState(res.data);
+        }
+      })
+      .catch(err => console.error('Failed to auto-load alert details:', err.message));
+  }, [alertIdParam]);
 
   const uniqueStates = useMemo(() => {
     return ['All States', ...new Set(alerts.map(a => a.state || 'Central/All India'))].sort();
