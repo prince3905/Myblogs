@@ -324,44 +324,26 @@ export default function BlogListPage() {
                 </Box>
 
                 {pages > 1 && (
-                  <Box sx={{ display: 'flex', gap: { xs: 0.5, md: 1 }, justifyContent: 'center', mt: 4, mb: 3, flexWrap: 'wrap' }}>
-                    <Button
-                      variant="outlined"
-                      disabled={page <= 1}
-                      onClick={() => setPage(page - 1)}
-                      size="small"
-                      sx={{ borderRadius: 2, fontSize: { xs: '0.75rem', md: '0.875rem' }, px: { xs: 1, md: 2 } }}
-                    >
-                      ← Prev
-                    </Button>
-                    
-                    {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
-                      <Button
-                        key={p}
-                        variant={p === page ? 'contained' : 'outlined'}
-                        size="small"
-                        onClick={() => setPage(p)}
-                        sx={{ 
-                          minWidth: { xs: 32, md: 40 }, 
-                          fontWeight: p === page ? 700 : 400,
-                          borderRadius: 2,
-                          fontSize: { xs: '0.75rem', md: '0.875rem' },
-                          display: { xs: p === page || p === 1 || p === pages || Math.abs(p - page) <= 1 ? 'inline-flex' : 'none', md: 'inline-flex' },
-                        }}
-                      >
-                        {p}
-                      </Button>
-                    ))}
-                    
-                    <Button
-                      variant="outlined"
-                      disabled={page >= pages}
-                      onClick={() => setPage(page + 1)}
-                      size="small"
-                      sx={{ borderRadius: 2, fontSize: { xs: '0.75rem', md: '0.875rem' }, px: { xs: 1, md: 2 } }}
-                    >
-                      Next →
-                    </Button>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5, mb: 3 }}>
+                    <Pagination
+                      count={pages}
+                      page={page}
+                      onChange={(e, value) => {
+                        setPage(value);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      color="primary"
+                      size="medium"
+                      shape="rounded"
+                      showFirstButton
+                      showLastButton
+                      sx={{
+                        '& .MuiPaginationItem-root': {
+                          fontWeight: 700,
+                          borderRadius: '10px'
+                        }
+                      }}
+                    />
                   </Box>
                 )}
               </>

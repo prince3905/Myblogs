@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Typography, Box, CircularProgress, Alert, TextField, Chip, Paper, InputAdornment, IconButton } from '@mui/material';
+import { Typography, Box, CircularProgress, Alert, TextField, Chip, Paper, InputAdornment, IconButton, Pagination } from '@mui/material';
 import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
@@ -132,11 +132,26 @@ export default function SearchPage() {
             </Box>
 
             {pages > 1 && (
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 4 }}>
-                {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
-                  <Chip key={p} label={p} clickable color={p === page ? 'primary' : 'default'}
-                    onClick={() => setPage(p)} sx={{ fontWeight: p === page ? 700 : 400 }} />
-                ))}
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5, mb: 3 }}>
+                <Pagination
+                  count={pages}
+                  page={page}
+                  onChange={(e, value) => {
+                    setPage(value);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  color="primary"
+                  size="medium"
+                  shape="rounded"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      fontWeight: 700,
+                      borderRadius: '10px'
+                    }
+                  }}
+                />
               </Box>
             )}
           </>

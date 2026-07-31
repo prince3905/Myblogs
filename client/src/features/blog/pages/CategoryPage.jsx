@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { Container, Typography, Box, Chip, CircularProgress, Alert, Button, FormControl, InputLabel, Select, MenuItem, Paper } from '@mui/material';
+import { Container, Typography, Box, Chip, CircularProgress, Alert, Button, FormControl, InputLabel, Select, MenuItem, Paper, Pagination } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -89,36 +89,26 @@ export default function CategoryPage() {
             </Box>
 
             {pages > 1 && (
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 4 }}>
-                <Button
-                  variant="outlined"
-                  disabled={page <= 1}
-                  onClick={() => setPage(page - 1)}
-                  size="small"
-                  sx={{ borderRadius: 2 }}
-                >
-                  ← Prev
-                </Button>
-                {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
-                  <Button
-                    key={p}
-                    variant={p === page ? 'contained' : 'outlined'}
-                    size="small"
-                    onClick={() => setPage(p)}
-                    sx={{ minWidth: 32, borderRadius: 2, fontWeight: p === page ? 700 : 400 }}
-                  >
-                    {p}
-                  </Button>
-                ))}
-                <Button
-                  variant="outlined"
-                  disabled={page >= pages}
-                  onClick={() => setPage(page + 1)}
-                  size="small"
-                  sx={{ borderRadius: 2 }}
-                >
-                  Next →
-                </Button>
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5, mb: 3 }}>
+                <Pagination
+                  count={pages}
+                  page={page}
+                  onChange={(e, value) => {
+                    setPage(value);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  color="primary"
+                  size="medium"
+                  shape="rounded"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      fontWeight: 700,
+                      borderRadius: '10px'
+                    }
+                  }}
+                />
               </Box>
             )}
           </>
