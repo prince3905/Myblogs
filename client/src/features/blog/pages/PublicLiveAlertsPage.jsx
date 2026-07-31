@@ -1,4 +1,4 @@
-import { useEffect, useState, Fragment, useMemo } from 'react';
+import { useEffect, useState, Fragment, useMemo, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Typography, Button, Table, TableBody, TableCell, TableContainer,
@@ -104,6 +104,7 @@ function sanitizeClientUrl(url) {
 }
 
 function getDynamicActions(alert) {
+  if (!alert) return [];
   const parsedLinks = [];
   if (alert.detailsText) {
     const lines = alert.detailsText.split('\n');
@@ -266,9 +267,10 @@ function renderTextWithLinks(text) {
 }
 
 function parseDetails(text, alert) {
+  if (!alert) return { postName: '', postDate: '', shortInfo: '', sections: [] };
   const parsed = {
-    postName: alert.title,
-    postDate: alert.postDate || new Date(alert.createdAt).toLocaleDateString(),
+    postName: alert.title || '',
+    postDate: alert.postDate || (alert.createdAt ? new Date(alert.createdAt).toLocaleDateString() : ''),
     shortInfo: '',
     sections: []
   };
