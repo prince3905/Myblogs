@@ -227,8 +227,13 @@ export default function AdminWebStoriesPage() {
                       </Box>
                     </TableCell>
                     <TableCell sx={{ fontWeight: 700, color: '#111827' }}>{story.views}</TableCell>
-                    <TableCell sx={{ color: '#6B7280' }}>
-                      {new Date(story.createdAt).toLocaleDateString()}
+                    <TableCell sx={{ color: '#4B5563', whiteSpace: 'nowrap' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#111827', fontSize: '0.825rem' }}>
+                        {story.createdAt ? new Date(story.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#6B7280', display: 'block', fontWeight: 500 }}>
+                        {story.createdAt ? new Date(story.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
+                      </Typography>
                     </TableCell>
                     <TableCell align="right">
                       {story.status === 'published' && (
