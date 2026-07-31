@@ -148,13 +148,26 @@ blogPostSchema.pre('save', async function (next) {
 
       try {
         const LiveAlert = mongoose.model('LiveAlert');
-        const cleanTitle = post.title.split(/[:|]/)[0].trim();
-        alertObj = await LiveAlert.findOne({ title: cleanTitle });
-        if (!alertObj) {
-          alertObj = await LiveAlert.findOne({
-            title: new RegExp(cleanTitle.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i')
-          });
-        }
+        const getCleanAlertTitle = (rawTitle = '') => {
+          return rawTitle
+            .replace(/\([^)]*\)/g, '')
+            .replace(/\b(Direct Link|Apply Online Now|Step by Step|Check Now|Download Now|Online Form|Notification)\b/gi, '')
+            .split(/[:|-]/)[0]
+            .replace(/\s+/g, ' ')
+            .trim();
+        };
+
+        const cleanTitle = getCleanAlertTitle(post.title);
+        const searchRegex = new RegExp(cleanTitle.slice(0, Math.min(cleanTitle.length, 25)).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+        const firstWord = cleanTitle.split(' ')[0] || '';
+
+        alertObj = await LiveAlert.findOne({
+          $or: [
+            { title: cleanTitle },
+            { title: { $regex: searchRegex } },
+            ...(firstWord.length > 3 ? [{ title: { $regex: new RegExp(firstWord, 'i') } }] : [])
+          ]
+        });
 
         if (alertObj) {
           if (alertObj.boardName) boardName = alertObj.boardName.trim();
@@ -291,18 +304,27 @@ blogPostSchema.pre('save', async function (next) {
         const anchors = $('a');
         const buttonHtmls = [];
 
+        const defaultApplyUrl = alertObj?.officialApplyUrl || alertObj?.sourceUrl || post.sourceUrl || 'https://www.sarkariresult.com';
+        const defaultPdfUrl = alertObj?.officialPdfUrl || alertObj?.officialUrl || alertObj?.sourceUrl || post.sourceUrl || 'https://www.sarkariresult.com';
+        const defaultWebUrl = alertObj?.officialUrl || alertObj?.sourceUrl || post.sourceUrl || 'https://www.sarkariresult.com';
+
         if (anchors.length > 0) {
           anchors.each((i, el) => {
             let href = $(el).attr('href') || '#';
             const text = $(el).text().trim();
-            if (href === '#' || href === '/job-alerts') {
-              if (alertObj?.officialApplyUrl) href = alertObj.officialApplyUrl;
-              else if (alertObj?.officialPdfUrl) href = alertObj.officialPdfUrl;
-              else if (alertObj?.officialUrl) href = alertObj.officialUrl;
-            }
-            let btnClass = 'btn-website';
             const lowerText = text.toLowerCase();
-            
+
+            if (href === '#' || href === '/job-alerts' || href.includes('digitalhomeblog.in/job-alerts')) {
+              if (lowerText.includes('apply') || lowerText.includes('आवेदन') || lowerText.includes('यहाँ क्लिक')) {
+                href = defaultApplyUrl;
+              } else if (lowerText.includes('notification') || lowerText.includes('अधिसूचना') || lowerText.includes('pdf')) {
+                href = defaultPdfUrl;
+              } else {
+                href = defaultWebUrl;
+              }
+            }
+
+            let btnClass = 'btn-website';
             if (lowerText.includes('apply') || lowerText.includes('आवेदन') || lowerText.includes('यहाँ क्लिक')) {
               btnClass = 'btn-apply';
             } else if (lowerText.includes('notification') || lowerText.includes('अधिसूचना') || lowerText.includes('pdf')) {
@@ -318,14 +340,10 @@ blogPostSchema.pre('save', async function (next) {
             buttonHtmls.push(`<a href="${href}" class="btn-link-action ${btnClass}" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">${text}</a>`);
           });
         } else {
-          // If plain text was outputted without anchors, automatically generate action buttons
-          const applyHref = alertObj?.officialApplyUrl || alertObj?.officialUrl || '/job-alerts';
-          const pdfHref = alertObj?.officialPdfUrl || alertObj?.officialUrl || '/job-alerts';
-          const webHref = alertObj?.officialUrl || 'https://www.digitalhomeblog.in';
-
-          buttonHtmls.push(`<a href="${applyHref}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Apply Online (यहाँ क्लिक करें)</a>`);
-          buttonHtmls.push(`<a href="${pdfHref}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Download Official Notification (देखें अभी)</a>`);
-          buttonHtmls.push(`<a href="${webHref}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Official Website (विजिट करें)</a>`);
+          // If plain text was outputted without anchors, automatically generate action buttons with real URLs
+          buttonHtmls.push(`<a href="${defaultApplyUrl}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Apply Online (यहाँ क्लिक करें)</a>`);
+          buttonHtmls.push(`<a href="${defaultPdfUrl}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Download Official Notification (देखें अभी)</a>`);
+          buttonHtmls.push(`<a href="${defaultWebUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Official Website (विजिट करें)</a>`);
         }
 
         const newButtonsBlock = `\n<div class="ql-table-embed">\n<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>\n</div>\n`;
