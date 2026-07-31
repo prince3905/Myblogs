@@ -20,15 +20,46 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Google Tag Manager (gtag.js) & AdSense -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8F13NDY5QS"></script>
+    <!-- Deferred High-Performance Google Tag Manager & AdSense Loader -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-8F13NDY5QS');
+      (function() {
+        var loaded = false;
+        function loadThirdPartyScripts() {
+          if (loaded) return;
+          loaded = true;
+          
+          // Google Analytics (gtag.js)
+          var gtm = document.createElement('script');
+          gtm.async = true;
+          gtm.src = 'https://www.googletagmanager.com/gtag/js?id=G-8F13NDY5QS';
+          document.head.appendChild(gtm);
+
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-8F13NDY5QS');
+
+          // Google AdSense
+          var ads = document.createElement('script');
+          ads.async = true;
+          ads.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7044184444698366';
+          ads.crossOrigin = 'anonymous';
+          document.head.appendChild(ads);
+        }
+
+        // Defer script execution until user interaction or idle callback (3s)
+        var events = ['touchstart', 'scroll', 'mousemove', 'keydown'];
+        events.forEach(function(evt) {
+          window.addEventListener(evt, loadThirdPartyScripts, { passive: true, once: true });
+        });
+
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(function() { setTimeout(loadThirdPartyScripts, 3000); });
+        } else {
+          setTimeout(loadThirdPartyScripts, 3500);
+        }
+      })();
     </script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7044184444698366" crossorigin="anonymous"></script>
     <title>Digital Home — Your Daily Dose of Information & Insights</title>
     <meta name="description" content="Get the latest updates on Sarkari jobs, admit cards, exam results, and trending tech news on Digital Home Blog." />
     
