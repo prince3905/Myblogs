@@ -195,6 +195,14 @@ async function renderWebStory(req, res, next) {
         box-shadow: 0 4px 16px rgba(37,99,235,0.6);
         letter-spacing: 0.02em;
       }
+      .text-layer-center {
+        align-items: center;
+        text-align: center;
+        justify-content: center;
+      }
+      .badge-center {
+        align-self: center;
+      }
       amp-img img {
         object-fit: cover;
       }
@@ -292,8 +300,8 @@ async function renderWebStory(req, res, next) {
           </amp-img>
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
-          <div class="text-layer" style="align-items: center; text-align: center; justify-content: center;">
-            <span class="badge" style="align-self: center;">Direct Link Active</span>
+          <div class="text-layer text-layer-center">
+            <span class="badge badge-center">Direct Link Active</span>
             <h2 class="slide-title">${escapeXml(story.slides?.[4]?.heading || 'Apply Online Now')}</h2>
             <p class="slide-desc">${escapeXml(story.slides?.[4]?.text || 'Click below to read full guide and apply.')}</p>
           </div>
