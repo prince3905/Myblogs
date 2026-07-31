@@ -36,7 +36,8 @@ async function addTwoWayInternalLink(newPost) {
     const cleanOldTitle = oldPost.title.split(/[:|]/)[0].trim();
 
     // 1. LINK OLD POST -> NEW POST (if not already linked)
-    if (!oldPost.content.toLowerCase().includes(cleanNewSlug)) {
+    const oldHasNewLink = oldPost.content.toLowerCase().includes(cleanNewSlug) || oldPost.content.includes('नवीनतम भर्ती अपडेट');
+    if (!oldHasNewLink) {
       console.log(`[SEO Silo Engine] Linking Authority Post "${oldPost.title}" -> New Post "${newPost.title}"`);
       
       const $old = cheerio.load(oldPost.content || '', null, false);
@@ -55,9 +56,8 @@ async function addTwoWayInternalLink(newPost) {
         $old.root().append(linkToNewHtml);
       }
 
-      oldPost.content = $old.html();
-      oldPost.markModified('content');
-      await oldPost.save();
+      const updatedOldContent = $old.html();
+      await BlogPost.updateOne({ _id: oldPost._id }, { $set: { content: updatedOldContent } });
 
       // Re-ping Google Indexing API for the authority post so Google bot re-crawls it immediately
       const fullOldUrl = `https://www.digitalhomeblog.in/blog/${catUrl}/${oldPost.slug}`;
@@ -66,7 +66,8 @@ async function addTwoWayInternalLink(newPost) {
     }
 
     // 2. LINK NEW POST -> OLD POST (if not already linked)
-    if (!newPost.content.toLowerCase().includes(cleanOldSlug)) {
+    const newHasOldLink = newPost.content.toLowerCase().includes(cleanOldSlug) || newPost.content.includes('संबंधित मुख्य गाइड');
+    if (!newHasOldLink) {
       console.log(`[SEO Silo Engine] Linking New Post "${newPost.title}" -> Authority Post "${oldPost.title}"`);
 
       const $new = cheerio.load(newPost.content || '', null, false);
@@ -85,9 +86,8 @@ async function addTwoWayInternalLink(newPost) {
         $new.root().append(linkToOldHtml);
       }
 
-      newPost.content = $new.html();
-      newPost.markModified('content');
-      await newPost.save();
+      const updatedNewContent = $new.html();
+      await BlogPost.updateOne({ _id: newPost._id }, { $set: { content: updatedNewContent } });
 
       console.log(`[SEO Silo Engine] Successfully linked New Post to Authority Post: "${cleanOldTitle}"`);
     }

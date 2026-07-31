@@ -285,6 +285,21 @@ blogPostSchema.pre('save', async function (next) {
       content = content.replace(/<div[^>]*brand-authority-block[^]*?<\/div>/gi, '');
       content = content.replace(/<div[^>]*class=["']ql-table-embed["']>\s*<div[^>]*class=["']brand-authority-block["'][^]*?<\/div>\s*<\/div>/gi, '');
 
+      // Clean all repeated interlinking paragraphs (keep max 1 per post)
+      const guideMatches = content.match(/<p[^>]*>[^]*?📌\s*<strong>संबंधित मुख्य गाइड:<\/strong>[^]*?<\/p>/gi);
+      if (guideMatches && guideMatches.length > 1) {
+        const firstGuide = guideMatches[0];
+        content = content.replace(/<p[^>]*>[^]*?📌\s*<strong>संबंधित मुख्य गाइड:<\/strong>[^]*?<\/p>\s*/gi, '');
+        content += '\n' + firstGuide + '\n';
+      }
+
+      const updateMatches = content.match(/<p[^>]*>[^]*?👉\s*<strong>नवीनतम भर्ती अपडेट:<\/strong>[^]*?<\/p>/gi);
+      if (updateMatches && updateMatches.length > 1) {
+        const firstUpdate = updateMatches[0];
+        content = content.replace(/<p[^>]*>[^]*?👉\s*<strong>नवीनतम भर्ती अपडेट:<\/strong>[^]*?<\/p>\s*/gi, '');
+        content += '\n' + firstUpdate + '\n';
+      }
+
       // 1. Inject the highlights box ONLY for Sarkari Job Posts after the first paragraph
       if (isJobPost) {
         const firstPEnd = content.indexOf('</p>');
