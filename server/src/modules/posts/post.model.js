@@ -367,7 +367,7 @@ blogPostSchema.pre('save', async function (next) {
       // 5. Create fresh brand authority block
       const brandPromo = `\n<div class="ql-table-embed">
 <div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; font-family: inherit;'>
-<p>यह महत्वपूर्ण जानकारी <strong><a href="/" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Digital Home Blog</a></strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong><a href="/" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Government Job Vacancy & Result 2026</a></strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong><a href="/" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Home</a></strong> aur <strong><a href="/blog" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>
+<p>यह महत्वपूर्ण जानकारी <strong><a href="/blog" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Digital Home Blog</a></strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong><a href="/category/sarkari-jobs-exams" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Government Job Vacancy & Result 2026</a></strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong><a href="/" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Home</a></strong> aur <strong><a href="/blog" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>
 </div>\n</div>\n`;
 
       content += gamesPromo + brandPromo;
@@ -375,12 +375,22 @@ blogPostSchema.pre('save', async function (next) {
       // 6. Format and wrap tables cleanly using Cheerio
       const cheerio = require('cheerio');
       const $ = cheerio.load(content, null, false);
+      const defaultPdfUrl = alertObj?.officialPdfUrl || alertObj?.officialUrl || alertObj?.sourceUrl || post.sourceUrl || 'https://www.sarkariresult.com';
+
       $('table').each((i, table) => {
         $(table).addClass('comparison-table');
         $(table).attr('style', "width: 100%; border-collapse: collapse; margin: 20px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color: #374151; background-color: #ffffff; border: 1px solid #E5E7EB; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden;");
         $(table).find('th').attr('style', "border: 1px solid #E5E7EB; padding: 12px 16px; text-align: left; font-weight: 600; color: #111827; background-color: #F9FAFB;");
         $(table).find('td').attr('style', "border: 1px solid #E5E7EB; padding: 12px 16px; color: #374151;");
         
+        // Auto-fix plain text "Check Detail Page" in table cells into active, clickable links!
+        $(table).find('td').each((tdIdx, tdEl) => {
+          const cellText = $(tdEl).text().trim();
+          if (/check\s*(detail|official|page)/i.test(cellText)) {
+            $(tdEl).html(`<a href="${defaultPdfUrl}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: 700; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">अधिसूचना देखें (Notice Out 📄)</a>`);
+          }
+        });
+
         if (!$(table).parent().hasClass('ql-table-embed')) {
           $(table).wrap('<div class="ql-table-embed"></div>');
         }
