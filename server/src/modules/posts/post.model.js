@@ -310,9 +310,8 @@ blogPostSchema.pre('save', async function (next) {
         }
       }
 
-      // Strip any previous action buttons, games promos, or brand authority blocks to prevent duplicates
-      content = content.replace(/<div[^>]*class=["'](?:ql-table-embed\s+)?action-buttons-group["'][^]*?<\/div>\s*(?:<\/div>)?/gi, '');
-      content = content.replace(/<a[^>]*class=["'][^"']*btn-link-action[^"']*["'][^]*?<\/a>/gi, '');
+      // Strip old search intent box so it upgrades to the new High-CTR clickable button layout
+      content = content.replace(/<div[^>]*class=["']search-intent-box["'][^]*?<\/div>/gi, '');
 
       // Resolve 100% real official board URLs and purge competitor links
       const { resolveOfficialUrls, isSarkariResultUrl } = require('../../shared/utils/officialDomainResolver');
@@ -321,6 +320,14 @@ blogPostSchema.pre('save', async function (next) {
       const defaultApplyUrl = resolvedUrls.apply;
       const defaultPdfUrl = resolvedUrls.pdf;
       const defaultWebUrl = resolvedUrls.web;
+
+      // Auto-inject Hinglish Long-Tail Keyword Intent Box for Rank 1 Google Search with High-CTR Action Buttons
+      const { injectNaturalKeywordBox } = require('../../shared/utils/naturalKeywordEngine');
+      content = injectNaturalKeywordBox(content, post.title, post.focusKeyword, {
+        apply: defaultApplyUrl,
+        pdf: defaultPdfUrl,
+        web: defaultWebUrl
+      });
 
       // 2. Prettify and fix the "महत्वपूर्ण लिंक्स" (Important Links) buttons section
       const linksMatch = content.match(/<h2>महत्वपूर्ण लिंक्स<\/h2>([^]*?)(?=<h[23]>|$)/i);

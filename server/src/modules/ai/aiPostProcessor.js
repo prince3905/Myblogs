@@ -801,9 +801,13 @@ async function processAIOutput(data) {
   // Prettify links and layout structure before saving
   processedContent = prettifyLinksAndContent(processedContent);
 
-  // Auto-inject Hinglish Long-Tail Keyword Intent Box for Rank 1 Google Search
+  // Auto-inject Hinglish Long-Tail Keyword Intent Box for Rank 1 Google Search with High-CTR Action Buttons
   const { injectNaturalKeywordBox } = require('../../shared/utils/naturalKeywordEngine');
-  processedContent = injectNaturalKeywordBox(processedContent, processedTitle, focusKeyword);
+  processedContent = injectNaturalKeywordBox(processedContent, processedTitle, focusKeyword, {
+    apply: rawData.officialApplyUrl,
+    pdf: rawData.officialPdfUrl,
+    web: rawData.officialUrl
+  });
 
   const tags = generateTags(processedTitle, processedContent, keywords, category);
 
