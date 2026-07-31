@@ -329,56 +329,16 @@ blogPostSchema.pre('save', async function (next) {
         web: defaultWebUrl
       });
 
-      // 2. Prettify and fix the "महत्वपूर्ण लिंक्स" (Important Links) buttons section
+      // 2. Prettify and fix the "महत्वपूर्ण लिंक्स" (Important Links) buttons section with Smart Post-Intent Awareness
+      const { generateSmartActionButtons } = require('../../shared/utils/smartButtonGenerator');
       const linksMatch = content.match(/<h2>महत्वपूर्ण लिंक्स<\/h2>([^]*?)(?=<h[23]>|$)/i);
 
+      const newSmartButtonsBlock = generateSmartActionButtons(post.title, resolvedUrls);
+
       if (linksMatch) {
-        const originalSection = linksMatch[1];
-        const cheerio = require('cheerio');
-        const $ = cheerio.load(originalSection, null, false);
-        const anchors = $('a');
-        const buttonHtmls = [];
-
-        if (anchors.length > 0) {
-          anchors.each((i, el) => {
-            let href = $(el).attr('href') || '#';
-            const text = $(el).text().trim();
-            const lowerText = text.toLowerCase();
-
-            if (href === '#' || href === '/job-alerts' || href.includes('digitalhomeblog.in/job-alerts') || isSarkariResultUrl(href)) {
-              if (lowerText.includes('apply') || lowerText.includes('आवेदन') || lowerText.includes('यहाँ क्लिक')) {
-                href = defaultApplyUrl;
-              } else if (lowerText.includes('notification') || lowerText.includes('अधिसूचना') || lowerText.includes('pdf')) {
-                href = defaultPdfUrl;
-              } else {
-                href = defaultWebUrl;
-              }
-            }
-
-            let btnClass = 'btn-website';
-            if (lowerText.includes('apply') || lowerText.includes('आवेदन') || lowerText.includes('यहाँ क्लिक')) {
-              btnClass = 'btn-apply';
-            } else if (lowerText.includes('notification') || lowerText.includes('अधिसूचना') || lowerText.includes('pdf')) {
-              btnClass = 'btn-notification';
-            } else if (lowerText.includes('website') || lowerText.includes('वेबसाइट') || lowerText.includes('विजिट')) {
-              btnClass = 'btn-website';
-            } else if (lowerText.includes('syllabus') || lowerText.includes('पाठ्यक्रम')) {
-              btnClass = 'btn-notification';
-            } else if (lowerText.includes('resizer') || lowerText.includes('tool')) {
-              btnClass = 'btn-website';
-            }
-
-            buttonHtmls.push(`<a href="${href}" class="btn-link-action ${btnClass}" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">${text}</a>`);
-          });
-        } else {
-          // If plain text was outputted without anchors, automatically generate action buttons with real URLs
-          buttonHtmls.push(`<a href="${defaultApplyUrl}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Apply Online (यहाँ क्लिक करें)</a>`);
-          buttonHtmls.push(`<a href="${defaultPdfUrl}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Download Official Notification (देखें अभी)</a>`);
-          buttonHtmls.push(`<a href="${defaultWebUrl}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Official Website (विजिट करें)</a>`);
-        }
-
-        const newButtonsBlock = `\n<div class="ql-table-embed">\n<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>\n</div>\n`;
-        content = content.replace(originalSection, newButtonsBlock);
+        content = content.replace(linksMatch[1], newSmartButtonsBlock);
+      } else {
+        content += `\n<h2>महत्वपूर्ण लिंक्स</h2>${newSmartButtonsBlock}`;
       }
 
       // 3. Create fresh games promotion block
