@@ -853,8 +853,8 @@ export default function PublicLiveAlertsPage() {
     setLoading(true);
     setError('');
     const url = query.trim() 
-      ? `/api/public/live-alerts?status=active&search=${encodeURIComponent(query.trim())}&limit=100`
-      : '/api/public/live-alerts?status=active&limit=100';
+      ? `/api/public/live-alerts?status=all&search=${encodeURIComponent(query.trim())}&limit=100`
+      : '/api/public/live-alerts?status=all&limit=100';
 
     request(url)
       .then(res => {

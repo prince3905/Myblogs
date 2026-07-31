@@ -66,8 +66,10 @@ async function getAlerts(req, res) {
   try {
     const { status, limit, page, search, q } = req.query;
     const filter = {};
-    if (status) {
+    if (status && status !== 'all') {
       filter.status = status;
+    } else {
+      filter.status = { $in: ['active', 'published'] };
     }
 
     const searchQuery = (search || q || '').trim();
