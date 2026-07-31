@@ -310,6 +310,10 @@ blogPostSchema.pre('save', async function (next) {
         }
       }
 
+      // Strip any previous action buttons, games promos, or brand authority blocks to prevent duplicates
+      content = content.replace(/<div[^>]*class=["'](?:ql-table-embed\s+)?action-buttons-group["'][^]*?<\/div>\s*(?:<\/div>)?/gi, '');
+      content = content.replace(/<a[^>]*class=["'][^"']*btn-link-action[^"']*["'][^]*?<\/a>/gi, '');
+
       // Resolve 100% real official board URLs and purge competitor links
       const { resolveOfficialUrls, isSarkariResultUrl } = require('../../shared/utils/officialDomainResolver');
       const resolvedUrls = resolveOfficialUrls(post.title, alertObj, post.sourceUrl);
@@ -402,11 +406,11 @@ blogPostSchema.pre('save', async function (next) {
         $(table).find('th').attr('style', "border: 1px solid #E5E7EB; padding: 12px 16px; text-align: left; font-weight: 600; color: #111827; background-color: #F9FAFB;");
         $(table).find('td').attr('style', "border: 1px solid #E5E7EB; padding: 12px 16px; color: #374151;");
         
-        // Auto-fix plain text "Check Detail Page" or any stray sarkariresult links in table cells into active, clickable official links!
+        // Auto-fix plain text "Check Detail Page" or Hindi "चेक डिटेल पेज" or any stray sarkariresult links in table cells into active, clickable official links!
         $(table).find('td').each((tdIdx, tdEl) => {
           const cellText = $(tdEl).text().trim();
           const cellHtml = $(tdEl).html() || '';
-          if (/check\s*(detail|official|page)/i.test(cellText) || isSarkariResultUrl(cellHtml)) {
+          if (/(check|चेक)\s*(detail|official|page|डिटेल|पेज)/i.test(cellText) || cellText.includes('चेक डिटेल') || isSarkariResultUrl(cellHtml)) {
             $(tdEl).html(`<a href="${defaultPdfUrl}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: 700; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">अधिसूचना देखें (Notice Out 📄)</a>`);
           }
         });
