@@ -39,43 +39,16 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
       const statusCode = fallbackErr.response?.status || primaryErr.response?.status;
       let userMsg = fallbackErr.response?.data?.error?.message || primaryErr.response?.data?.error?.message || fallbackErr.message;
       
-      // Smart Fallback for Google API Quota Exceeded or NO_FCP transient errors
+      // Handle Google API Quota Exceeded or transient errors accurately
       if (userMsg.includes('Quota exceeded') || userMsg.includes('quota') || userMsg.includes('NO_FCP') || userMsg.includes('disabled')) {
-        console.warn('[PageSpeed Service] Google API quota limit reached. Serving Smart Fallback Diagnostic Report.');
+        console.warn('[PageSpeed Service] Google API quota limit reached.');
         return {
-          success: true,
-          isOfflineFallback: true,
+          success: false,
+          isQuotaExceeded: true,
           timestamp: new Date().toISOString(),
           strategy,
           targetUrl,
-          score: strategy === 'mobile' ? 91 : 98,
-          scores: {
-            performance: strategy === 'mobile' ? 91 : 98,
-            accessibility: 96,
-            bestPractices: 95,
-            seo: 100
-          },
-          metrics: {
-            cls: 0,
-            lcp: strategy === 'mobile' ? '1.4 s' : '0.6 s',
-            tbt: strategy === 'mobile' ? '40 ms' : '0 ms',
-            fcp: strategy === 'mobile' ? '0.9 s' : '0.4 s',
-            speedIndex: strategy === 'mobile' ? '1.5 s' : '0.7 s',
-            domCount: 450
-          },
-          insights: [],
-          diagnostics: {
-            clsElements: [],
-            renderBlocking: [],
-            unusedJs: [],
-            unusedCss: [],
-            oversizedImages: [],
-            bootupTime: [],
-            mainThreadWork: [],
-            failedAudits: []
-          },
-          accessibility: { score: 96, contrastIssues: [], imageAltIssues: [], tapTargetIssues: [] },
-          passedAudits: [{ id: 'cumulative-layout-shift', title: 'Avoid large layout shifts', description: '' }]
+          message: 'Google PageSpeed API Daily Quota Exceeded. Please run audit directly on Google PageSpeed Insights website (https://pagespeed.web.dev/) or configure PAGESPEED_API_KEY in server/.env.'
         };
       }
 
