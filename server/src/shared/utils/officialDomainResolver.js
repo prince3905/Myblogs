@@ -5,8 +5,16 @@
  */
 
 const BOARD_URL_MAP = [
+  { keywords: ['jee advanced', 'iit jee advanced'], apply: 'https://jeeadv.ac.in/', pdf: 'https://jeeadv.ac.in/', web: 'https://jeeadv.ac.in/' },
+  { keywords: ['jee main', 'jeemain', 'iit jee main', 'iit jee'], apply: 'https://jeemain.nta.nic.in/', pdf: 'https://jeemain.nta.nic.in/', web: 'https://jeemain.nta.nic.in/' },
+  { keywords: ['neet ug', 'neet pg', 'neet'], apply: 'https://neet.nta.nic.in/', pdf: 'https://nbe.edu.in/', web: 'https://neet.nta.nic.in/' },
+  { keywords: ['cuet ug', 'cuet pg', 'cuet'], apply: 'https://cuetug.ntaonline.in/', pdf: 'https://cuet.nta.nic.in/', web: 'https://cuet.nta.nic.in/' },
+  { keywords: ['gate', 'iit gate'], apply: 'https://gate.iisc.ac.in/', pdf: 'https://gate.iisc.ac.in/', web: 'https://gate.iisc.ac.in/' },
+  { keywords: ['cat admission', 'iim cat', 'cat 202'], apply: 'https://iimcat.ac.in/', pdf: 'https://iimcat.ac.in/', web: 'https://iimcat.ac.in/' },
+  { keywords: ['cmat'], apply: 'https://cmat.nta.ac.in/', pdf: 'https://cmat.nta.ac.in/', web: 'https://cmat.nta.ac.in/' },
+  { keywords: ['jipmat'], apply: 'https://jipmat.nta.ac.in/', pdf: 'https://jipmat.nta.ac.in/', web: 'https://jipmat.nta.ac.in/' },
   { keywords: ['bhu', 'banaras hindu'], apply: 'https://bhuonline.in/', pdf: 'https://bhuonline.in/', web: 'https://www.bhu.ac.in/' },
-  { keywords: ['nta', 'cuet', 'jee main', 'neet', 'cmat', 'aissee'], apply: 'https://nta.ac.in/', pdf: 'https://nta.ac.in/', web: 'https://nta.ac.in/' },
+  { keywords: ['nta', 'aissee'], apply: 'https://nta.ac.in/', pdf: 'https://nta.ac.in/', web: 'https://nta.ac.in/' },
   { keywords: ['iit jam', 'jam 2023', 'jam 2024', 'jam 2025', 'jam 2026'], apply: 'https://jam.iitm.ac.in/', pdf: 'https://jam.iitm.ac.in/', web: 'https://jam.iitm.ac.in/' },
   { keywords: ['ssc', 'staff selection'], apply: 'https://ssc.gov.in/', pdf: 'https://ssc.gov.in/', web: 'https://ssc.gov.in/' },
   { keywords: ['upsc'], apply: 'https://upsconline.nic.in/', pdf: 'https://upsc.gov.in/', web: 'https://upsc.gov.in/' },
