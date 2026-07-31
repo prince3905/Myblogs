@@ -74,25 +74,112 @@ async function getAlerts(req, res) {
 
     const searchQuery = (search || q || '').trim();
     if (searchQuery) {
-      const searchRegex = new RegExp(searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-      filter.$or = [
-        { title: searchRegex },
-        { boardName: searchRegex },
-        { category: searchRegex },
-        { state: searchRegex },
-        { detailsText: searchRegex }
-      ];
+      const synonymMap = {
+        'rrb': ['railway', 'rrc', 'rail'],
+        'railway': ['rrb', 'rrc', 'rail'],
+        'rail': ['railway', 'rrc', 'rrb'],
+        'up': ['uttar pradesh', 'uttarpradesh'],
+        'mp': ['madhya pradesh', 'madhyapradesh'],
+        'uk': ['uttarakhand', 'uttaranchal'],
+        'hp': ['himachal pradesh'],
+        'delhi': ['dcb'],
+        'dcb': ['delhi', 'cantonment'],
+        'mts': ['multi tasking staff', 'multitasking'],
+        'deo': ['data entry operator'],
+        'je': ['junior engineer'],
+        'ae': ['assistant engineer'],
+        'si': ['sub inspector'],
+        'constable': ['police'],
+        'police': ['constable', 'si'],
+        'bed': ['b.ed', 'b-ed', 'b ed', 'teacher', 'shikshak'],
+        'b.ed': ['bed', 'b-ed', 'b ed', 'teacher', 'shikshak'],
+        'teacher': ['shikshak', 'bed', 'b.ed', 'ecce', 'educator'],
+        'ecce': ['educator', 'nursery', 'balvatika', 'teacher'],
+        'educator': ['ecce', 'nursery', 'teacher'],
+        'apprentice': ['app'],
+        'app': ['apprentice', 'apply']
+      };
+
+      const fields = ['title', 'boardName', 'category', 'state', 'detailsText'];
+      const words = searchQuery.split(/[\s,\-\/]+/).filter(Boolean);
+
+      if (words.length > 0) {
+        const andConditions = words.map(word => {
+          const lowerWord = word.toLowerCase();
+          const synonyms = synonymMap[lowerWord] || [];
+          const searchTerms = [word, ...synonyms];
+          const escapedTerms = searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+          const regex = new RegExp(escapedTerms.join('|'), 'i');
+          return {
+            $or: fields.map(f => ({ [f]: { $regex: regex } }))
+          };
+        });
+
+        filter.$and = andConditions;
+      }
     }
 
     const queryLimit = limit ? parseInt(limit, 10) : 100;
     const pageNum = page ? parseInt(page, 10) : 1;
     const skip = (pageNum - 1) * queryLimit;
 
-    const alerts = await LiveAlert.find(filter)
+    let alerts = await LiveAlert.find(filter)
       .select('-detailsText')
       .sort({ parsedPostDate: -1, createdAt: -1 })
       .skip(skip)
       .limit(queryLimit);
+
+    // Fallback if $and search produced 0 results: try $or search across tokens
+    if (alerts.length === 0 && searchQuery && filter.$and) {
+      const words = searchQuery.split(/[\s,\-\/]+/).filter(Boolean);
+      const orConditions = [];
+      const synonymMap = {
+        'rrb': ['railway', 'rrc', 'rail'],
+        'railway': ['rrb', 'rrc', 'rail'],
+        'rail': ['railway', 'rrc', 'rrb'],
+        'up': ['uttar pradesh', 'uttarpradesh'],
+        'mp': ['madhya pradesh', 'madhyapradesh'],
+        'uk': ['uttarakhand', 'uttaranchal'],
+        'hp': ['himachal pradesh'],
+        'delhi': ['dcb'],
+        'dcb': ['delhi', 'cantonment'],
+        'mts': ['multi tasking staff', 'multitasking'],
+        'deo': ['data entry operator'],
+        'je': ['junior engineer'],
+        'ae': ['assistant engineer'],
+        'si': ['sub inspector'],
+        'constable': ['police'],
+        'police': ['constable', 'si'],
+        'bed': ['b.ed', 'b-ed', 'b ed', 'teacher', 'shikshak'],
+        'b.ed': ['bed', 'b-ed', 'b ed', 'teacher', 'shikshak'],
+        'teacher': ['shikshak', 'bed', 'b.ed', 'ecce', 'educator'],
+        'ecce': ['educator', 'nursery', 'balvatika', 'teacher'],
+        'educator': ['ecce', 'nursery', 'teacher'],
+        'apprentice': ['app'],
+        'app': ['apprentice', 'apply']
+      };
+
+      words.forEach(word => {
+        const lowerWord = word.toLowerCase();
+        const synonyms = synonymMap[lowerWord] || [];
+        const searchTerms = [word, ...synonyms];
+        const escapedTerms = searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+        const regex = new RegExp(escapedTerms.join('|'), 'i');
+        ['title', 'boardName', 'category', 'state', 'detailsText'].forEach(f => {
+          orConditions.push({ [f]: { $regex: regex } });
+        });
+      });
+
+      const fallbackFilter = { ...filter };
+      delete fallbackFilter.$and;
+      fallbackFilter.$or = orConditions;
+
+      alerts = await LiveAlert.find(fallbackFilter)
+        .select('-detailsText')
+        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(queryLimit);
+    }
 
     res.json({ success: true, count: alerts.length, data: alerts, page: pageNum, hasMore: alerts.length === queryLimit });
   } catch (err) {

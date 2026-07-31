@@ -118,7 +118,7 @@ async function listPublishedPosts(req, res) {
     const synonymMap = {
       'rrb': ['railway', 'rrc', 'rail'],
       'railway': ['rrb', 'rrc', 'rail'],
-      'rail': ['railway', 'rrb', 'rrc'],
+      'rail': ['railway', 'rrc', 'rrb'],
       'up': ['uttar pradesh', 'uttarpradesh'],
       'mp': ['madhya pradesh', 'madhyapradesh'],
       'uk': ['uttarakhand', 'uttaranchal'],
@@ -131,19 +131,23 @@ async function listPublishedPosts(req, res) {
       'ae': ['assistant engineer'],
       'si': ['sub inspector'],
       'constable': ['police'],
-      'police': ['constable', 'si']
+      'police': ['constable', 'si'],
+      'bed': ['b.ed', 'b-ed', 'b ed', 'teacher', 'shikshak'],
+      'b.ed': ['bed', 'b-ed', 'b ed', 'teacher', 'shikshak'],
+      'teacher': ['shikshak', 'bed', 'b.ed', 'ecce', 'educator'],
+      'ecce': ['educator', 'nursery', 'balvatika', 'teacher'],
+      'educator': ['ecce', 'nursery', 'teacher'],
+      'apprentice': ['app'],
+      'app': ['apprentice', 'apply']
     };
 
-    const words = search.trim().split(/\s+/).filter(Boolean);
+    const words = search.trim().split(/[\s,\-\/]+/).filter(Boolean);
     if (words.length > 0) {
       const conditions = words.map(word => {
         const lowerWord = word.toLowerCase();
         const synonyms = synonymMap[lowerWord] || [];
         const searchTerms = [word, ...synonyms];
-        const escapedTerms = searchTerms.map(term => {
-          const escaped = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-          return term.length <= 3 ? `\\b${escaped}\\b` : `\\b${escaped}`;
-        });
+        const escapedTerms = searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
         const regex = new RegExp(escapedTerms.join('|'), 'i');
         
         return {
@@ -161,10 +165,7 @@ async function listPublishedPosts(req, res) {
         const lowerWord = word.toLowerCase();
         const synonyms = synonymMap[lowerWord] || [];
         const searchTerms = [word, ...synonyms];
-        return searchTerms.map(term => {
-          const escaped = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-          return term.length <= 3 ? `\\b${escaped}\\b` : `\\b${escaped}`;
-        }).join('|');
+        return searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|');
       });
       titleRegexPattern = allPatterns.map(p => `(${p})`).join('|');
     }
@@ -644,10 +645,17 @@ async function searchPosts(req, res, next) {
       'ae': ['assistant engineer'],
       'si': ['sub inspector'],
       'constable': ['police'],
-      'police': ['constable', 'si']
+      'police': ['constable', 'si'],
+      'bed': ['b.ed', 'b-ed', 'b ed', 'teacher', 'shikshak'],
+      'b.ed': ['bed', 'b-ed', 'b ed', 'teacher', 'shikshak'],
+      'teacher': ['shikshak', 'bed', 'b.ed', 'ecce', 'educator'],
+      'ecce': ['educator', 'nursery', 'balvatika', 'teacher'],
+      'educator': ['ecce', 'nursery', 'teacher'],
+      'apprentice': ['app'],
+      'app': ['apprentice', 'apply']
     };
 
-    const words = trimmed.split(/\s+/).filter(Boolean);
+    const words = trimmed.split(/[\s,\-\/]+/).filter(Boolean);
     let query = { status: 'published' };
     let titleRegexPattern = '';
 
@@ -656,10 +664,7 @@ async function searchPosts(req, res, next) {
         const lowerWord = word.toLowerCase();
         const synonyms = synonymMap[lowerWord] || [];
         const searchTerms = [word, ...synonyms];
-        const escapedTerms = searchTerms.map(term => {
-          const escaped = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-          return term.length <= 3 ? `\\b${escaped}\\b` : `\\b${escaped}`;
-        });
+        const escapedTerms = searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
         const regex = new RegExp(escapedTerms.join('|'), 'i');
         
         return {
@@ -677,10 +682,7 @@ async function searchPosts(req, res, next) {
         const lowerWord = word.toLowerCase();
         const synonyms = synonymMap[lowerWord] || [];
         const searchTerms = [word, ...synonyms];
-        return searchTerms.map(term => {
-          const escaped = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-          return term.length <= 3 ? `\\b${escaped}\\b` : `\\b${escaped}`;
-        }).join('|');
+        return searchTerms.map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|');
       });
       titleRegexPattern = allPatterns.map(p => `(${p})`).join('|');
     }
