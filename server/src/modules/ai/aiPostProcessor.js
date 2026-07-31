@@ -600,7 +600,7 @@ function prettifyLinksAndContent(content) {
 }
 
 async function processAIOutput(data) {
-  const { title, content, keywords, category, length } = data;
+  const { title, content, keywords, category, length, rawData = {} } = data;
 
   if (!content) return data;
   if (content.trim().startsWith('{') || content.trim().startsWith('[')) {
@@ -804,9 +804,9 @@ async function processAIOutput(data) {
   // Auto-inject Hinglish Long-Tail Keyword Intent Box for Rank 1 Google Search with High-CTR Action Buttons
   const { injectNaturalKeywordBox } = require('../../shared/utils/naturalKeywordEngine');
   processedContent = injectNaturalKeywordBox(processedContent, processedTitle, focusKeyword, {
-    apply: rawData.officialApplyUrl,
-    pdf: rawData.officialPdfUrl,
-    web: rawData.officialUrl
+    apply: rawData ? (rawData.officialApplyUrl || rawData.officialApplyLink) : undefined,
+    pdf: rawData ? (rawData.officialPdfUrl || rawData.officialPdfLink) : undefined,
+    web: rawData ? (rawData.officialUrl || rawData.officialWeb) : undefined
   });
 
   const tags = generateTags(processedTitle, processedContent, keywords, category);
