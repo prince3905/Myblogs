@@ -1203,50 +1203,66 @@ export default function HomePage() {
       </Box>
 
       {/* Web Stories Section */}
-      {!loadingStories && stories.length > 0 && (
-        <Box 
-          component="section" 
-          sx={{ 
-            py: { xs: 3, md: 4 }, 
-            bgcolor: '#F9FAFB', 
-            borderBottom: '1px solid #ECECEC'
-          }}
-        >
-          <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Box 
-                  sx={{ 
-                    px: 1.5, py: 0.5,
-                    bgcolor: '#2563EB',
-                    borderRadius: '4px',
-                    color: '#fff',
-                    fontSize: '0.75rem',
-                    fontWeight: 900,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    animation: 'pulseGlow 2s infinite ease-in-out',
-                    '@keyframes pulseGlow': {
-                      '0%': { transform: 'scale(1)', opacity: 0.9 },
-                      '50%': { transform: 'scale(1.05)', opacity: 1 },
-                      '100%': { transform: 'scale(1)', opacity: 0.9 }
-                    }
-                  }}
-                >
-                  Stories
-                </Box>
-                <Typography
-                  variant="h2"
-                  sx={{
-                    fontWeight: 800, color: '#111827', letterSpacing: '-0.02em',
-                    fontSize: { xs: '1.4rem', md: '1.8rem' }
-                  }}
-                >
-                  Visual Web Stories
-                </Typography>
+      <Box 
+        component="section" 
+        sx={{ 
+          py: { xs: 3, md: 4 }, 
+          bgcolor: '#F9FAFB', 
+          borderBottom: '1px solid #ECECEC',
+          minHeight: { xs: '320px', md: '360px' }
+        }}
+      >
+        <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box 
+                sx={{ 
+                  px: 1.5, py: 0.5,
+                  bgcolor: '#2563EB',
+                  borderRadius: '4px',
+                  color: '#fff',
+                  fontSize: '0.75rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  animation: 'pulseGlow 2s infinite ease-in-out',
+                  '@keyframes pulseGlow': {
+                    '0%': { transform: 'scale(1)', opacity: 0.9 },
+                    '50%': { transform: 'scale(1.05)', opacity: 1 },
+                    '100%': { transform: 'scale(1)', opacity: 0.9 }
+                  }
+                }}
+              >
+                Stories
               </Box>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontWeight: 800, color: '#111827', letterSpacing: '-0.02em',
+                  fontSize: { xs: '1.4rem', md: '1.8rem' }
+                }}
+              >
+                Visual Web Stories
+              </Typography>
             </Box>
+          </Box>
 
+          {loadingStories ? (
+            <Box sx={{ display: 'flex', gap: 2.5, overflowX: 'hidden', pb: 2 }}>
+              {[1, 2, 3, 4, 5].map(i => (
+                <Box 
+                  key={i} 
+                  sx={{ 
+                    flex: { xs: '0 0 160px', sm: '0 0 200px', md: '0 0 220px' }, 
+                    aspectRatio: '9/16', 
+                    borderRadius: '16px', 
+                    bgcolor: '#E5E7EB', 
+                    animation: 'pulse 1.5s infinite ease-in-out' 
+                  }} 
+                />
+              ))}
+            </Box>
+          ) : stories.length > 0 && (
             <Box 
               ref={mobileStoriesScrollRef}
               onScroll={handleStoriesScroll}
@@ -1355,9 +1371,9 @@ export default function HomePage() {
                 </Box>
               ))}
             </Box>
-          </Container>
-        </Box>
-      )}
+          )}
+        </Container>
+      </Box>
 
       {/* Hero Section Slider */}
       <HeroSectionSlider initialPosts={posts} loading={loading} />
