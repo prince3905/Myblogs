@@ -33,24 +33,11 @@ const publicPath = path.join(__dirname, '../public');
 // Static asset HTTP Cache-Control header injection (max-age 1 year for static assets)
 app.use(serverCacheService.staticAssetCacheMiddleware());
 
-// 1-Step 301 Direct Canonical HTTPS & WWW Domain Redirect (Eliminates 2-step redirect chains)
+// 1-Step 301 Direct Canonical Domain Redirect (apex domain & render URL -> www.digitalhomeblog.in)
 app.use((req, res, next) => {
   if (env.nodeEnv === 'production' && !req.path.startsWith('/api')) {
     const host = (req.headers.host || '').toLowerCase();
-    const proto = (req.headers['x-forwarded-proto'] || '').toLowerCase();
-    
-    let cfProto = '';
-    if (req.headers['cf-visitor']) {
-      try {
-        cfProto = (JSON.parse(req.headers['cf-visitor']).scheme || '').toLowerCase();
-      } catch (e) {}
-    }
-
-    const isHttps = proto === 'https' || cfProto === 'https';
-    const isCanonicalHost = host === 'www.digitalhomeblog.in';
-
-    // Single 1-step 301 direct redirect for HTTP non-www, HTTPS non-www, and HTTP www
-    if (!isHttps || !isCanonicalHost) {
+    if (host === 'digitalhomeblog.in' || host === 'digital-home-blog.onrender.com') {
       return res.redirect(301, `https://www.digitalhomeblog.in${req.originalUrl}`);
     }
   }

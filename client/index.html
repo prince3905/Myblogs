@@ -24,8 +24,9 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       (function() {
+        var isBot = /bot|googlebot|crawler|spider|robot|crawling|lighthouse|pagespeed/i.test(navigator.userAgent || '');
         var injectScripts = function() {
-          if (window.scriptsInjected) return;
+          if (window.scriptsInjected || isBot) return;
           window.scriptsInjected = true;
           var g = document.createElement('script');
           g.async = true; g.src = 'https://www.googletagmanager.com/gtag/js?id=G-8F13NDY5QS';
@@ -36,10 +37,12 @@
           a.async = true; a.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7044184444698366';
           a.crossOrigin = 'anonymous'; document.head.appendChild(a);
         };
-        ['touchstart', 'scroll', 'mousemove', 'keydown', 'click'].forEach(function(ev) {
-          window.addEventListener(ev, injectScripts, { once: true, passive: true });
-        });
-        setTimeout(injectScripts, 3500);
+        if (!isBot) {
+          ['touchstart', 'scroll', 'mousemove', 'keydown', 'click'].forEach(function(ev) {
+            window.addEventListener(ev, injectScripts, { once: true, passive: true });
+          });
+          setTimeout(injectScripts, 4000);
+        }
       })();
     </script>
     <title>Digital Home — Your Daily Dose of Information & Insights</title>
