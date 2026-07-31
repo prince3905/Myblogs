@@ -135,31 +135,37 @@ blogPostSchema.pre('save', async function (next) {
         post.content = content;
       } catch (imgErr) {}
 
+      // Check if post is a Sarkari Job / Exam post
+      const isJobCategory = (post.category || '').toLowerCase().includes('sarkari') || (post.category || '').toLowerCase().includes('job');
+      const isJobTitle = /(recruitment|vacancy|vacancies|online form|admit card|answer key|result|cutoff|merit list|पद|भर्ती|परीक्षा|अधिसूचना|sarkari)/i.test(post.title || '');
+      const isJobPost = isJobCategory || isJobTitle;
+
       // Find the matched alert for metadata
       let boardName = 'Official Board';
-      let lastDate = 'Check Details';
+      let lastDate = 'अधिसूचना देखें';
       let totalVacancy = 'विभिन्न पद (Various Posts)';
+      let alertObj = null;
 
       try {
         const LiveAlert = mongoose.model('LiveAlert');
         const cleanTitle = post.title.split(/[:|]/)[0].trim();
-        let alert = await LiveAlert.findOne({ title: cleanTitle });
-        if (!alert) {
-          alert = await LiveAlert.findOne({
+        alertObj = await LiveAlert.findOne({ title: cleanTitle });
+        if (!alertObj) {
+          alertObj = await LiveAlert.findOne({
             title: new RegExp(cleanTitle.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i')
           });
         }
 
-        if (alert) {
-          if (alert.boardName) boardName = alert.boardName.trim();
-          if (alert.lastDate) lastDate = alert.lastDate.trim();
+        if (alertObj) {
+          if (alertObj.boardName) boardName = alertObj.boardName.trim();
+          if (alertObj.lastDate) lastDate = alertObj.lastDate.trim();
           
           const vacancyMatch = post.title.match(/(\d+)\s*(?:Post|Vacancy|Vacancy|पद|भर्ती)/i) || 
-                               alert.title.match(/(\d+)\s*(?:Post|Vacancy|Vacancy|पद|भर्ती)/i);
+                               alertObj.title.match(/(\d+)\s*(?:Post|Vacancy|Vacancy|पद|भर्ती)/i);
           if (vacancyMatch) {
             totalVacancy = vacancyMatch[1] + ' पद';
           } else {
-            const detailsMatch = alert.detailsText && alert.detailsText.match(/(?:Total Post|Total Vacancy|Total Vacancies|कुल पद)[:\s]*(\d+)/i);
+            const detailsMatch = alertObj.detailsText && alertObj.detailsText.match(/(?:Total Post|Total Vacancy|Total Vacancies|कुल पद)[:\s]*(\d+)/i);
             if (detailsMatch) {
               totalVacancy = detailsMatch[1] + ' पद';
             }
@@ -167,6 +173,10 @@ blogPostSchema.pre('save', async function (next) {
         }
       } catch (alertErr) {
         console.error('Failed to query LiveAlert for Highlights Box:', alertErr.message);
+      }
+
+      if (!lastDate || lastDate.toLowerCase().includes('check detail') || lastDate.toLowerCase().includes('check official')) {
+        lastDate = 'अधिसूचना देखें (See Notice)';
       }
 
       // Highlights Box HTML block
@@ -262,12 +272,14 @@ blogPostSchema.pre('save', async function (next) {
       content = content.replace(/<div[^>]*brand-authority-block[^]*?<\/div>/gi, '');
       content = content.replace(/<div[^>]*class=["']ql-table-embed["']>\s*<div[^>]*class=["']brand-authority-block["'][^]*?<\/div>\s*<\/div>/gi, '');
 
-      // 1. Inject the highlights box after the first paragraph
-      const firstPEnd = content.indexOf('</p>');
-      if (firstPEnd !== -1) {
-        content = content.slice(0, firstPEnd + 4) + '\n' + highlightsBoxHtml + '\n' + content.slice(firstPEnd + 4);
-      } else {
-        content = highlightsBoxHtml + '\n' + content;
+      // 1. Inject the highlights box ONLY for Sarkari Job Posts after the first paragraph
+      if (isJobPost) {
+        const firstPEnd = content.indexOf('</p>');
+        if (firstPEnd !== -1) {
+          content = content.slice(0, firstPEnd + 4) + '\n' + highlightsBoxHtml + '\n' + content.slice(firstPEnd + 4);
+        } else {
+          content = highlightsBoxHtml + '\n' + content;
+        }
       }
 
       // 2. Prettify and fix the "महत्वपूर्ण लिंक्स" (Important Links) buttons section
@@ -277,11 +289,17 @@ blogPostSchema.pre('save', async function (next) {
         const cheerio = require('cheerio');
         const $ = cheerio.load(originalSection, null, false);
         const anchors = $('a');
+        const buttonHtmls = [];
+
         if (anchors.length > 0) {
-          const buttonHtmls = [];
           anchors.each((i, el) => {
-            const href = $(el).attr('href') || '#';
+            let href = $(el).attr('href') || '#';
             const text = $(el).text().trim();
+            if (href === '#' || href === '/job-alerts') {
+              if (alertObj?.officialApplyUrl) href = alertObj.officialApplyUrl;
+              else if (alertObj?.officialPdfUrl) href = alertObj.officialPdfUrl;
+              else if (alertObj?.officialUrl) href = alertObj.officialUrl;
+            }
             let btnClass = 'btn-website';
             const lowerText = text.toLowerCase();
             
@@ -299,10 +317,19 @@ blogPostSchema.pre('save', async function (next) {
 
             buttonHtmls.push(`<a href="${href}" class="btn-link-action ${btnClass}" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">${text}</a>`);
           });
+        } else {
+          // If plain text was outputted without anchors, automatically generate action buttons
+          const applyHref = alertObj?.officialApplyUrl || alertObj?.officialUrl || '/job-alerts';
+          const pdfHref = alertObj?.officialPdfUrl || alertObj?.officialUrl || '/job-alerts';
+          const webHref = alertObj?.officialUrl || 'https://www.digitalhomeblog.in';
 
-          const newButtonsBlock = `\n<div class="ql-table-embed">\n<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>\n</div>\n`;
-          content = content.replace(originalSection, newButtonsBlock);
+          buttonHtmls.push(`<a href="${applyHref}" class="btn-link-action btn-apply" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Apply Online (यहाँ क्लिक करें)</a>`);
+          buttonHtmls.push(`<a href="${pdfHref}" class="btn-link-action btn-notification" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Download Official Notification (देखें अभी)</a>`);
+          buttonHtmls.push(`<a href="${webHref}" class="btn-link-action btn-website" target="_blank" rel="noopener noreferrer" style="margin: 5px 0; width: 100%; max-width: 400px; justify-content: center; display: inline-flex; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); cursor: pointer;">Official Website (विजिट करें)</a>`);
         }
+
+        const newButtonsBlock = `\n<div class="ql-table-embed">\n<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>\n</div>\n`;
+        content = content.replace(originalSection, newButtonsBlock);
       }
 
       // 3. Create fresh games promotion block

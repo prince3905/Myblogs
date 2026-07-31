@@ -188,7 +188,7 @@ function detectCategory(title, href) {
 
 function parseLinkText(text) {
   let title = text;
-  let lastDate = 'Check Detail Page';
+  let lastDate = 'अधिसूचना देखें';
 
   const parts = text.split('|');
   if (parts.length > 1) {
@@ -215,6 +215,10 @@ function parseLinkText(text) {
   // Clean trailing/leading dashes, colons from title
   title = title.replace(/^[\s\-:|]+|[\s\-:|]+$/g, '').trim();
   
+  if (lastDate.toLowerCase().includes('check detail') || lastDate.toLowerCase().includes('check official')) {
+    lastDate = 'अधिसूचना देखें';
+  }
+
   return { title, lastDate };
 }
 
