@@ -20,31 +20,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Google Tag Manager (gtag.js) & AdSense -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8F13NDY5QS"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      (function() {
-        var isBot = /bot|googlebot|crawler|spider|robot|crawling|lighthouse|pagespeed/i.test(navigator.userAgent || '');
-        var injectScripts = function() {
-          if (window.scriptsInjected || isBot) return;
-          window.scriptsInjected = true;
-          var g = document.createElement('script');
-          g.async = true; g.src = 'https://www.googletagmanager.com/gtag/js?id=G-8F13NDY5QS';
-          document.head.appendChild(g);
-          gtag('js', new Date());
-          gtag('config', 'G-8F13NDY5QS');
-          var a = document.createElement('script');
-          a.async = true; a.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7044184444698366';
-          a.crossOrigin = 'anonymous'; document.head.appendChild(a);
-        };
-        if (!isBot) {
-          ['touchstart', 'scroll', 'mousemove', 'keydown', 'click'].forEach(function(ev) {
-            window.addEventListener(ev, injectScripts, { once: true, passive: true });
-          });
-          setTimeout(injectScripts, 4000);
-        }
-      })();
+      gtag('js', new Date());
+      gtag('config', 'G-8F13NDY5QS');
     </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7044184444698366" crossorigin="anonymous"></script>
     <title>Digital Home — Your Daily Dose of Information & Insights</title>
     <meta name="description" content="Get the latest updates on Sarkari jobs, admit cards, exam results, and trending tech news on Digital Home Blog." />
     
