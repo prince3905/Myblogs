@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, CircularProgress, Alert, Button, Paper, useTheme, Chip, Divider, Grid, Collapse } from '@mui/material';
 import Layout from '../components/Layout';
@@ -14,10 +14,13 @@ import CalendarToday from '@mui/icons-material/CalendarToday';
 import TrendingUp from '@mui/icons-material/TrendingUp';
 import Mail from '@mui/icons-material/Mail';
 import FilterList from '@mui/icons-material/FilterList';
+import SearchIcon from '@mui/icons-material/Search';
+import ResetIcon from '@mui/icons-material/RestartAlt';
 import AdSlot from '../../../components/AdSlot';
 
 export default function BlogListPage() {
-  const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [category, setCategory] = useState('');
   const [tags, setTags] = useState('');
   const [dateFrom, setDateFrom] = useState(null);
@@ -25,12 +28,19 @@ export default function BlogListPage() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [sortOption, setSortOption] = useState('date-desc');
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const [sortBy, order] = useMemo(() => {
     const parts = sortOption.split('-');
     return [parts[0], parts[1]];
   }, [sortOption]);
   
-  const { posts, loading: postsLoading, error: postsError, total, page, pages, setPage } = usePosts({ search, category, tags, dateFrom, dateTo, sortBy, order, limit: 9 });
+  const { posts, loading: postsLoading, error: postsError, total, page, pages, setPage } = usePosts({ search: debouncedSearch, category, tags, dateFrom, dateTo, sortBy, order, limit: 9 });
   const { categories } = useCategories();
   const theme = useTheme();
 
@@ -38,94 +48,180 @@ export default function BlogListPage() {
 
   return (
     <Layout>
-      <Seo title="All Insights | Digital Home" description="Browse our latest AI consulting insights and articles." />
+      <Seo title="All Insights & Articles | Digital Home" description="Browse our latest Sarkari jobs, admit cards, tech guides, and health articles." />
       
-      {/* Filter Section */}
-      <Paper elevation={0} sx={{ py: { xs: 1.5, md: 2 }, mb: { xs: 1.5, md: 2 }, bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2 }}>
-            <Box>
-              <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: 'text.primary', letterSpacing: '-0.02em', fontSize: { xs: '1.35rem', md: '1.65rem' } }}>
-                All Insights
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap', flex: { md: '0 1 auto' }, minWidth: { md: 700 } }}>
-              <TextField
-                size="small"
-                label="Search articles"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                sx={{ 
-                  flex: 2,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
-                }}
-              />
-              <FormControl 
-                size="small" 
-                sx={{ 
-                  flex: 1.2, 
-                  minWidth: 140,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
-                }}
-              >
-                <InputLabel>Category</InputLabel>
-                <Select
-                  value={category}
-                  label="Category"
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  <MenuItem value="">All categories</MenuItem>
-                  {categories.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
-                </Select>
-              </FormControl>
-
-              <FormControl 
-                size="small" 
-                sx={{ 
-                  flex: 1.2, 
-                  minWidth: 150,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  }
-                }}
-              >
-                <InputLabel>Sort By</InputLabel>
-                <Select
-                  value={sortOption}
-                  label="Sort By"
-                  onChange={(e) => setSortOption(e.target.value)}
-                >
-                  <MenuItem value="date-desc">Newest First</MenuItem>
-                  <MenuItem value="date-asc">Oldest First</MenuItem>
-                  <MenuItem value="views-desc">Most Views</MenuItem>
-                  <MenuItem value="title-asc">Title (A-Z)</MenuItem>
-                  <MenuItem value="title-desc">Title (Z-A)</MenuItem>
-                </Select>
-              </FormControl>
-
-              <Button
-                variant={showAdvanced ? "contained" : "outlined"}
-                size="small"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                startIcon={<FilterList />}
-                sx={{ 
-                  borderRadius: '10px',
-                  height: 40,
-                  px: 2,
-                  fontSize: '0.8rem',
-                  minWidth: 'fit-content',
-                  borderWidth: showAdvanced ? 0 : 1.5
-                }}
-              >
-                Filters
-              </Button>
-            </Box>
+      <Box sx={{ pt: { xs: 2, md: 3 }, pb: { xs: 4, md: 6 } }}>
+        <Container maxWidth="xl">
+          {/* Header Title Section */}
+          <Box sx={{ mb: 3, textAlign: 'center' }}>
+            <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 800, letterSpacing: 1.5, fontSize: '0.65rem' }}>
+              Comprehensive Knowledge Base
+            </Typography>
+            <Typography 
+              variant="h4" 
+              component="h1"
+              sx={{ 
+                fontWeight: 800, 
+                mt: 0.5, 
+                letterSpacing: '-0.02em', 
+                color: '#111827', 
+                fontSize: { xs: '1.35rem', md: '1.65rem' } 
+              }}
+            >
+              All Articles & Insights 🚀
+            </Typography>
+            <Typography 
+              variant="body2" 
+              color="text.secondary" 
+              sx={{ mt: 0.5, maxWidth: 600, mx: 'auto', fontSize: '0.82rem' }}
+            >
+              Browse, search, and filter latest Sarkari Jobs, Admit Cards, Results, Tech Guides, and Health Updates.
+            </Typography>
           </Box>
+
+          {/* Sleek Centered 30px Pill Search & Filter Bar matching Live Job Alerts */}
+          <Paper 
+            elevation={0} 
+            id="search-filter-section"
+            sx={{ 
+              p: 1.5, 
+              borderRadius: '30px', 
+              border: '1px solid #ECECEC', 
+              bgcolor: 'background.paper',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.03)',
+              mb: 4,
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 1.5,
+              alignItems: 'center',
+              maxWidth: '960px',
+              mx: 'auto'
+            }}
+          >
+            <TextField
+              fullWidth
+              placeholder="Search articles by Keyword, Title, Topic..."
+              size="small"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <SearchIcon sx={{ color: '#9CA3AF', mr: 1, fontSize: '1.2rem' }} />
+                )
+              }}
+              sx={{
+                flex: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '30px',
+                  bgcolor: '#F9FAFB',
+                  pl: 2,
+                  '& fieldset': { borderColor: '#E5E7EB' },
+                  '&:hover fieldset': { borderColor: '#CBD5E1' },
+                  '&.Mui-focused fieldset': { borderColor: 'primary.main' }
+                }
+              }}
+            />
+
+            <FormControl sx={{ flex: 1.2, minWidth: { xs: '100%', sm: 180 } }} size="small">
+              <Select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                displayEmpty
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#9CA3AF', fontSize: '0.85rem' }}>
+                        <FilterList sx={{ fontSize: 16 }} /> Filter Category
+                      </Box>
+                    );
+                  }
+                  return (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700, fontSize: '0.85rem', color: 'primary.main' }}>
+                       <FilterList sx={{ fontSize: 16 }} /> {selected}
+                    </Box>
+                  );
+                }}
+                sx={{ 
+                  borderRadius: '30px', 
+                  bgcolor: '#F9FAFB',
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E5E7EB' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#CBD5E1' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
+                }}
+              >
+                <MenuItem value="">All Categories</MenuItem>
+                {categories.map((item) => (
+                  <MenuItem key={item} value={item}>{item}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl sx={{ flex: 1, minWidth: { xs: '100%', sm: 150 } }} size="small">
+              <Select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                sx={{ 
+                  borderRadius: '30px', 
+                  bgcolor: '#F9FAFB',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E5E7EB' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#CBD5E1' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
+                }}
+              >
+                <MenuItem value="date-desc">Newest First</MenuItem>
+                <MenuItem value="date-asc">Oldest First</MenuItem>
+                <MenuItem value="views-desc">Most Views</MenuItem>
+                <MenuItem value="title-asc">Title (A-Z)</MenuItem>
+                <MenuItem value="title-desc">Title (Z-A)</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Button
+              variant={showAdvanced ? "contained" : "outlined"}
+              size="small"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              startIcon={<FilterList />}
+              sx={{ 
+                borderRadius: '30px',
+                height: 40,
+                px: 2,
+                fontSize: '0.8rem',
+                whiteSpace: 'nowrap',
+                width: { xs: '100%', sm: 'auto' }
+              }}
+            >
+              More
+            </Button>
+
+            {(searchQuery || category || tags || dateFrom || dateTo) && (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => {
+                  setSearchQuery('');
+                  setCategory('');
+                  setTags('');
+                  setDateFrom(null);
+                  setDateTo(null);
+                }}
+                startIcon={<ResetIcon />}
+                sx={{ 
+                  borderRadius: '30px', 
+                  fontWeight: 700, 
+                  textTransform: 'none', 
+                  py: 0.8, 
+                  px: 2.5, 
+                  fontSize: '0.8rem',
+                  whiteSpace: 'nowrap',
+                  width: { xs: '100%', sm: 'auto' }
+                }}
+              >
+                Reset
+              </Button>
+            )}
+          </Paper>
 
           <Collapse in={showAdvanced} timeout="auto" unmountOnExit>
             <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
@@ -201,8 +297,6 @@ export default function BlogListPage() {
               </LocalizationProvider>
             </Box>
           </Collapse>
-        </Container>
-      </Paper>
 
       {/* Main Content + Sidebar */}
       <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
@@ -458,6 +552,8 @@ export default function BlogListPage() {
           </Box>
         </Box>
       </Container>
-    </Layout>
+    </Container>
+  </Box>
+</Layout>
   );
 }
