@@ -61,15 +61,27 @@ async function autoFetchFeaturedImage(query) {
 
 
 
-// Fetch alerts sorted by date descending (without detailsText payload)
+// Fetch alerts sorted by date descending (without detailsText payload) with full search support
 async function getAlerts(req, res) {
   try {
-    const { status, limit, page } = req.query;
+    const { status, limit, page, search, q } = req.query;
     const filter = {};
     if (status) {
       filter.status = status;
     }
-    const queryLimit = limit ? parseInt(limit, 10) : 50;
+
+    const searchQuery = (search || q || '').trim();
+    if (searchQuery) {
+      const searchRegex = new RegExp(searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [
+        { title: searchRegex },
+        { boardName: searchRegex },
+        { category: searchRegex },
+        { state: searchRegex }
+      ];
+    }
+
+    const queryLimit = limit ? parseInt(limit, 10) : 100;
     const pageNum = page ? parseInt(page, 10) : 1;
     const skip = (pageNum - 1) * queryLimit;
 
@@ -78,6 +90,7 @@ async function getAlerts(req, res) {
       .sort({ parsedPostDate: -1, createdAt: -1 })
       .skip(skip)
       .limit(queryLimit);
+
     res.json({ success: true, count: alerts.length, data: alerts, page: pageNum, hasMore: alerts.length === queryLimit });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

@@ -849,10 +849,14 @@ export default function PublicLiveAlertsPage() {
     }
   };
 
-  function loadAlerts() {
+  function loadAlerts(query = '') {
     setLoading(true);
     setError('');
-    request('/api/public/live-alerts?status=active')
+    const url = query.trim() 
+      ? `/api/public/live-alerts?status=active&search=${encodeURIComponent(query.trim())}&limit=100`
+      : '/api/public/live-alerts?status=active&limit=100';
+
+    request(url)
       .then(res => {
         if (res.success) {
           setAlerts(res.data || []);
@@ -869,8 +873,11 @@ export default function PublicLiveAlertsPage() {
   }
 
   useEffect(() => {
-    loadAlerts();
-  }, []);
+    const timer = setTimeout(() => {
+      loadAlerts(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (alerts.length > 0 && alertIdParam) {
