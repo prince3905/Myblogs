@@ -295,8 +295,17 @@ blogPostSchema.pre('save', async function (next) {
         }
       }
 
+      // Resolve 100% real official board URLs and purge competitor links
+      const { resolveOfficialUrls, isSarkariResultUrl } = require('../../shared/utils/officialDomainResolver');
+      const resolvedUrls = resolveOfficialUrls(post.title, alertObj, post.sourceUrl);
+
+      const defaultApplyUrl = resolvedUrls.apply;
+      const defaultPdfUrl = resolvedUrls.pdf;
+      const defaultWebUrl = resolvedUrls.web;
+
       // 2. Prettify and fix the "महत्वपूर्ण लिंक्स" (Important Links) buttons section
       const linksMatch = content.match(/<h2>महत्वपूर्ण लिंक्स<\/h2>([^]*?)(?=<h[23]>|$)/i);
+
       if (linksMatch) {
         const originalSection = linksMatch[1];
         const cheerio = require('cheerio');
@@ -304,17 +313,13 @@ blogPostSchema.pre('save', async function (next) {
         const anchors = $('a');
         const buttonHtmls = [];
 
-        const defaultApplyUrl = alertObj?.officialApplyUrl || alertObj?.sourceUrl || post.sourceUrl || 'https://www.sarkariresult.com';
-        const defaultPdfUrl = alertObj?.officialPdfUrl || alertObj?.officialUrl || alertObj?.sourceUrl || post.sourceUrl || 'https://www.sarkariresult.com';
-        const defaultWebUrl = alertObj?.officialUrl || alertObj?.sourceUrl || post.sourceUrl || 'https://www.sarkariresult.com';
-
         if (anchors.length > 0) {
           anchors.each((i, el) => {
             let href = $(el).attr('href') || '#';
             const text = $(el).text().trim();
             const lowerText = text.toLowerCase();
 
-            if (href === '#' || href === '/job-alerts' || href.includes('digitalhomeblog.in/job-alerts')) {
+            if (href === '#' || href === '/job-alerts' || href.includes('digitalhomeblog.in/job-alerts') || isSarkariResultUrl(href)) {
               if (lowerText.includes('apply') || lowerText.includes('आवेदन') || lowerText.includes('यहाँ क्लिक')) {
                 href = defaultApplyUrl;
               } else if (lowerText.includes('notification') || lowerText.includes('अधिसूचना') || lowerText.includes('pdf')) {
@@ -375,7 +380,6 @@ blogPostSchema.pre('save', async function (next) {
       // 6. Format and wrap tables cleanly using Cheerio
       const cheerio = require('cheerio');
       const $ = cheerio.load(content, null, false);
-      const defaultPdfUrl = alertObj?.officialPdfUrl || alertObj?.officialUrl || alertObj?.sourceUrl || post.sourceUrl || 'https://www.sarkariresult.com';
 
       $('table').each((i, table) => {
         $(table).addClass('comparison-table');
@@ -383,16 +387,36 @@ blogPostSchema.pre('save', async function (next) {
         $(table).find('th').attr('style', "border: 1px solid #E5E7EB; padding: 12px 16px; text-align: left; font-weight: 600; color: #111827; background-color: #F9FAFB;");
         $(table).find('td').attr('style', "border: 1px solid #E5E7EB; padding: 12px 16px; color: #374151;");
         
-        // Auto-fix plain text "Check Detail Page" in table cells into active, clickable links!
+        // Auto-fix plain text "Check Detail Page" or any stray sarkariresult links in table cells into active, clickable official links!
         $(table).find('td').each((tdIdx, tdEl) => {
           const cellText = $(tdEl).text().trim();
-          if (/check\s*(detail|official|page)/i.test(cellText)) {
+          const cellHtml = $(tdEl).html() || '';
+          if (/check\s*(detail|official|page)/i.test(cellText) || isSarkariResultUrl(cellHtml)) {
             $(tdEl).html(`<a href="${defaultPdfUrl}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: 700; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">अधिसूचना देखें (Notice Out 📄)</a>`);
           }
         });
 
         if (!$(table).parent().hasClass('ql-table-embed')) {
           $(table).wrap('<div class="ql-table-embed"></div>');
+        }
+      });
+
+      // Scrub ANY remaining sarkariresult links in the entire DOM!
+      $('a').each((_, aEl) => {
+        let href = $(aEl).attr('href') || '';
+        const text = $(aEl).text().trim().toLowerCase();
+
+        if (isSarkariResultUrl(href) || href === '#' || href === '/job-alerts' || href.includes('digitalhomeblog.in/job-alerts')) {
+          if (text.includes('apply') || text.includes('आवेदन') || text.includes('ऑनलाइन')) {
+            href = defaultApplyUrl;
+          } else if (text.includes('notification') || text.includes('अधिसूचना') || text.includes('pdf') || text.includes('notice')) {
+            href = defaultPdfUrl;
+          } else {
+            href = defaultWebUrl;
+          }
+          $(aEl).attr('href', href);
+          $(aEl).attr('target', '_blank');
+          $(aEl).attr('rel', 'noopener noreferrer');
         }
       });
 
