@@ -44,6 +44,46 @@ app.use((req, res, next) => {
   next();
 });
 
+// 301 Permanent Redirect Cleaner for Malformed/Duplicate Nested URLs
+app.use((req, res, next) => {
+  const rawUrl = req.originalUrl || req.url;
+  
+  if (!req.path.startsWith('/api') && !req.path.startsWith('/assets') && !req.path.startsWith('/static')) {
+    let cleaned = rawUrl;
+    let needsRedirect = false;
+
+    // 1. Handle nested domain duplication e.g., /digitalhomeblog.in/
+    if (cleaned.includes('digitalhomeblog.in')) {
+      needsRedirect = true;
+      cleaned = cleaned.replace(/\/digitalhomeblog\.in\/?/gi, '/');
+      cleaned = cleaned.replace(/digitalhomeblog\.in\/?/gi, '');
+    }
+
+    // 2. Handle ampersand in category e.g., sarkari-jobs-&-exams or %26
+    if (cleaned.includes('sarkari-jobs-&-exams') || cleaned.includes('sarkari-jobs-%26-exams')) {
+      needsRedirect = true;
+      cleaned = cleaned.replace(/sarkari-jobs-(&|%26)-exams/gi, 'sarkari-jobs-exams');
+    }
+
+    // 3. Handle double nested path e.g., /blog/sarkari-jobs-exams/blog/...
+    if (/\/(blog|category)\/.*\/(blog|category)\//i.test(cleaned)) {
+      needsRedirect = true;
+      const parts = cleaned.split('/').filter(Boolean);
+      const lastSlug = parts[parts.length - 1];
+      cleaned = `/blog/sarkari-jobs-exams/${lastSlug}`;
+    }
+
+    // 4. Clean multiple consecutive slashes
+    cleaned = cleaned.replace(/\/{2,}/g, '/');
+
+    if (needsRedirect && cleaned !== rawUrl) {
+      console.log(`[301 URL Fixer Redirect] ${rawUrl} -> ${cleaned}`);
+      return res.redirect(301, `https://www.digitalhomeblog.in${cleaned.startsWith('/') ? cleaned : '/' + cleaned}`);
+    }
+  }
+  next();
+});
+
 // Middleware
 app.use(compression());
 app.use(cors({

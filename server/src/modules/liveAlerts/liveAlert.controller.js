@@ -566,7 +566,7 @@ ${buttonHtmlBlock}
     seoDescription: cleanPostSeoDesc,
     seoKeywords: cleanPostTags,
     focusKeyword: processed.focusKeyword || '',
-    canonicalUrl: generatedData.permalink,
+    canonicalUrl: `https://www.digitalhomeblog.in/blog/sarkari-jobs-exams/${processed.slug}`,
     author: 'Harry Prince'
   });
 

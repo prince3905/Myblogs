@@ -1214,7 +1214,8 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
   });
 
   const finalCategory = processed.category || detectedCategory;
-  const permalink = 'digitalhomeblog.in/' + finalCategory.toLowerCase().replace(/\s+/g, '-') + '/' + slug;
+  const catSlugClean = (finalCategory || 'Sarkari Jobs & Exams').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sarkari-jobs-exams';
+  const permalink = `https://www.digitalhomeblog.in/blog/${catSlugClean}/${slug}`;
 
   if (!resolvedFocusKeyword && title) {
     resolvedFocusKeyword = title.replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2');
