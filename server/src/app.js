@@ -220,12 +220,14 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
     }
 
     if (post) {
-      const { generateFaqSchema, optimizeHighCtrTitle } = require('./shared/utils/ctrBoosterEngine');
+      const { generateFaqSchema } = require('./shared/utils/ctrBoosterEngine');
+      const { normalizeCanonicalUrl } = require('./shared/utils/urlUtils');
       const siteName = 'Digital Home Sarkari Result';
       const cleanTitle = (post.title || '').replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '');
       const fullTitle = `${cleanTitle} | ${siteName}`;
       const desc = post.excerpt || post.seoDescription || 'Read the latest updates on Sarkari jobs, admit cards, and results.';
       const pageUrl = `https://www.digitalhomeblog.in/blog/${req.params.category}/${req.params.slug}`;
+      const canonicalUrl = normalizeCanonicalUrl(post.canonicalUrl || pageUrl);
       const imageUrl = post.featuredImage || 'https://www.digitalhomeblog.in/logo.png';
 
       // Generate Google FAQPage Accordion Schema for 60% Higher CTR
@@ -235,11 +237,12 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       // SEO Social Metadata Block
       const metaTags = `
     <title>${fullTitle}</title>
+    <link rel="canonical" href="${canonicalUrl}" />
     <meta name="description" content="${desc}" />
     <meta property="og:title" content="${fullTitle}" />
     <meta property="og:description" content="${desc}" />
     <meta property="og:type" content="article" />
-    <meta property="og:url" content="${pageUrl}" />
+    <meta property="og:url" content="${canonicalUrl}" />
     <meta property="og:site_name" content="${siteName}" />
     <meta property="og:image" content="${imageUrl}" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -253,10 +256,21 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       html = html.replace(/<title>.*?<\/title>/, '');
       html = html.replace(/<meta name="description" .*?\/>/, '');
       html = html.replace('</head>', `${metaTags}\n</head>`);
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(200).send(html);
+    } else {
+      // 404 HTTP Status Code for missing/draft/deleted posts (Prevents Soft 404s!)
+      const noindexMeta = `
+    <title>404 Page Not Found | Digital Home Sarkari Result</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="description" content="The requested article was not found or has been removed." />
+      `;
+      html = html.replace(/<title>.*?<\/title>/, '');
+      html = html.replace(/<meta name="description" .*?\/>/, '');
+      html = html.replace('</head>', `${noindexMeta}\n</head>`);
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(404).send(html);
     }
-
-    res.setHeader('Content-Type', 'text/html');
-    return res.send(html);
   } catch (err) {
     next(err);
   }

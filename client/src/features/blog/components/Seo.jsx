@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { normalizeCanonicalUrl } from '../../../shared/lib/urlUtils';
 
 export default function Seo({ title, description, image, url, canonical, keywords, jsonLd, noindex }) {
   const siteName = 'Digital Home Sarkari Result';
@@ -9,8 +10,10 @@ export default function Seo({ title, description, image, url, canonical, keyword
 
   const fullTitle = cleanTitle ? `${cleanTitle} | ${siteName}` : siteName;
   const desc = description || 'Sarkari Result, Admit Card, Latest Jobs, Vacancies, Sarkari Result Tools, Kids Games (बचो का गेम), Health, Education, Tech, and Career Insights from Digital Home Blog.';
-  const pageUrl = url || window.location.href;
-  const canonicalUrl = canonical || pageUrl;
+  
+  const currentHref = typeof window !== 'undefined' ? window.location.href : 'https://www.digitalhomeblog.in';
+  const pageUrl = normalizeCanonicalUrl(url || currentHref);
+  const canonicalUrl = normalizeCanonicalUrl(canonical || url || currentHref);
   const keys = keywords || 'Sarkari Result, Admit Card, Latest Jobs, Govt Vacancies, Sarkari Result Tools, Kids Games, Bacho Ka Game, Health Tips, Education, Tech Insights, All Insights Blog, Digital Home';
 
   const enhanceSingle = (schema) => {
