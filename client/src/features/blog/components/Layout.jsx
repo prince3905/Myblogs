@@ -17,12 +17,12 @@ export default function Layout({ children }) {
   const [catAnchor, setCatAnchor] = useState(null);
 
   const categories = [
-    { label: 'Sarkari Jobs & Exams', path: '/category/Sarkari Jobs & Exams' },
-    { label: 'Health & Wellness', path: '/category/Health & Wellness' },
-    { label: 'Tech & Tutorials', path: '/category/Tech & Tutorials' },
-    { label: 'AI & Web Tools', path: '/category/AI & Web Tools' },
-    { label: 'News & Trends', path: '/category/News & Trends' },
-    { label: 'Finance & Business', path: '/category/Finance & Business' },
+    { label: 'Sarkari Jobs & Exams', path: '/category/sarkari-jobs-exams' },
+    { label: 'Health & Wellness', path: '/category/health-wellness' },
+    { label: 'Tech & Tutorials', path: '/category/tech-tutorials' },
+    { label: 'AI & Web Tools', path: '/category/ai-web-tools' },
+    { label: 'News & Trends', path: '/category/news-trends' },
+    { label: 'Finance & Business', path: '/category/finance-business' },
   ];
 
   const navItems = [

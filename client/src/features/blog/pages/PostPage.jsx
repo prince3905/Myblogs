@@ -21,7 +21,7 @@ import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-jsx';
 import { usePost } from '../../../hooks/usePost';
-import { postUrl } from '../../../shared/lib/category';
+import { postUrl, catSlug } from '../../../shared/lib/category';
 
 const HERO_PHOTOS = [
   'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=700&q=80',
@@ -688,7 +688,7 @@ export default function PostPage() {
             <Chip 
               label={post.category} 
               component={Link} 
-              to={`/category/${post.category}`} 
+              to={`/category/${catSlug(post.category)}`} 
               clickable 
               color="primary"
               variant="filled"

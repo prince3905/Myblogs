@@ -6,7 +6,7 @@ import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
 import { usePosts } from '../../../hooks/usePosts';
-import { postUrl } from '../../../shared/lib/category';
+import { postUrl, catSlug } from '../../../shared/lib/category';
 import { optimizeImage } from '../../../shared/lib/images';
 import { request } from '../../../shared/lib/api';
 
@@ -265,7 +265,7 @@ const CategoryRowSlider = ({ categoryName, posts: initialPosts = [], loading: in
         </Box>
         <Button
           component={Link}
-          to={`/category/${encodeURIComponent(categoryName)}`}
+          to={`/category/${catSlug(categoryName)}`}
           sx={{
             fontWeight: 700, 
             fontSize: { xs: '0.85rem', md: '0.92rem' },
