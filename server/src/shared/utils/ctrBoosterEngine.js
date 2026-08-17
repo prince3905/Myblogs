@@ -54,25 +54,80 @@ function optimizeHighCtrTitle(title = '', category = '') {
   return clean.slice(0, 72);
 }
 
-/**
- * 2. Synthesizes a 100% Natural Indian Meta Description (120-155 characters)
- */
-function optimizeHighCtrMetaDescription(title = '', content = '', focusKeyword = '') {
-  const keyword = (focusKeyword || title).replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
+function extractCleanSnippet(content = '', maxLength = 155) {
+  if (!content) return '';
+  let plain = String(content)
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-  let naturalDesc = `${keyword} का आधिकारिक नोटिफिकेशन व डायरेक्ट लिंक जारी हो चुका है। ऑनलाइन फॉर्म भरने की तिथि, पात्रता, आयु सीमा व जरूरी दस्तावेज यहाँ तुरंत चेक करें!`;
-
-  if (naturalDesc.length > 158) {
-    naturalDesc = `${keyword}: आधिकारिक नोटिफिकेशन जारी। पात्रता, तिथियां व डायरेक्ट अप्लाई लिंक यहाँ देखें!`;
+  if (plain.length <= maxLength) return plain;
+  let truncated = plain.slice(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  if (lastSpace > 100) {
+    truncated = truncated.slice(0, lastSpace);
   }
+  return `${truncated}...`;
+}
 
-  return naturalDesc;
+function isJobCategory(category = '', title = '') {
+  const catLower = String(category).toLowerCase();
+  const titleLower = String(title).toLowerCase();
+  if (catLower.includes('sarkari') || catLower.includes('job') || catLower.includes('exam')) return true;
+  if (
+    titleLower.includes('recruitment') || titleLower.includes('online form') ||
+    titleLower.includes('admit card') || titleLower.includes('bharti') ||
+    titleLower.includes('vacancy') || titleLower.includes('answer key') ||
+    titleLower.includes('cutoff') || titleLower.includes('result 202')
+  ) return true;
+  return false;
 }
 
 /**
- * 3. Generates 100% Natural Indian FAQ Schema (Google Accordion)
+ * 2. Synthesizes a 100% Natural Meta Description (120-155 characters)
+ * Category-aware: Sarkari recruitment fallback ONLY for Sarkari Jobs & Exams.
+ * For Tech, Health, AI, Finance, News: Extracts clean text snippet from content body.
  */
-function generateFaqSchema(title = '', content = '') {
+function optimizeHighCtrMetaDescription(title = '', content = '', focusKeyword = '', category = '') {
+  const isJob = isJobCategory(category, title);
+
+  if (isJob) {
+    const keyword = (focusKeyword || title).replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
+    let naturalDesc = `${keyword} का आधिकारिक नोटिफिकेशन व डायरेक्ट लिंक जारी हो चुका है। ऑनलाइन फॉर्म भरने की तिथि, पात्रता, आयु सीमा व जरूरी दस्तावेज यहाँ तुरंत चेक करें!`;
+    if (naturalDesc.length > 158) {
+      naturalDesc = `${keyword}: आधिकारिक नोटिफिकेशन जारी। पात्रता, तिथियां व डायरेक्ट अप्लाई लिंक यहाँ देखें!`;
+    }
+    return naturalDesc;
+  }
+
+  // Non-Job categories (Tech, Health, AI, Finance, News, etc.)
+  const snippet = extractCleanSnippet(content, 155);
+  if (snippet && snippet.length >= 30) {
+    return snippet;
+  }
+
+  // Neutral non-job fallback summary based on title
+  const cleanTitle = title.replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
+  return `${cleanTitle}: जानिए इस विषय की पूरी जानकारी, मुख्य तथ्य और विस्तृत गाइड डिजिटल होम ब्लॉग पर।`;
+}
+
+/**
+ * 3. Generates 100% Natural FAQ Schema (Google Accordion) for Job Posts
+ */
+function generateFaqSchema(title = '', content = '', category = '') {
+  const isJob = isJobCategory(category, title);
+  if (!isJob) {
+    return null;
+  }
+
   const cleanTitle = title.replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
 
   const questions = [
@@ -120,5 +175,7 @@ function hashString(str) {
 module.exports = {
   optimizeHighCtrTitle,
   optimizeHighCtrMetaDescription,
-  generateFaqSchema
+  generateFaqSchema,
+  extractCleanSnippet,
+  isJobCategory
 };
