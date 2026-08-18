@@ -230,9 +230,38 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       const canonicalUrl = normalizeCanonicalUrl(post.canonicalUrl || pageUrl);
       const imageUrl = post.featuredImage || 'https://www.digitalhomeblog.in/logo.png';
 
-      // Generate Google FAQPage Accordion Schema for 60% Higher CTR
-      const faqSchema = generateFaqSchema(cleanTitle, post.content);
-      const faqScript = `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>`;
+      // Guaranteed Valid Article Schema (BlogPosting) for Google Rich Results
+      const articleSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        'headline': cleanTitle,
+        'description': desc,
+        'image': [imageUrl],
+        'datePublished': post.publishedAt ? new Date(post.publishedAt).toISOString() : (post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString()),
+        'dateModified': post.updatedAt ? new Date(post.updatedAt).toISOString() : new Date().toISOString(),
+        'author': {
+          '@type': 'Person',
+          'name': post.author || 'Digital Home Team'
+        },
+        'publisher': {
+          '@type': 'Organization',
+          'name': siteName,
+          'logo': {
+            '@type': 'ImageObject',
+            'url': 'https://www.digitalhomeblog.in/logo.webp',
+            'width': 190,
+            'height': 60
+          }
+        },
+        'mainEntityOfPage': canonicalUrl
+      };
+      const articleScript = `<script type="application/ld+json">${JSON.stringify(articleSchema)}</script>`;
+
+      // Optional FAQ Schema — ONLY IF non-null & contains valid schema content
+      const faqSchema = generateFaqSchema(cleanTitle, post.content, post.category);
+      const faqScript = (faqSchema && typeof faqSchema === 'object' && Object.keys(faqSchema).length > 0)
+        ? `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>`
+        : '';
 
       // SEO Social Metadata Block
       const metaTags = `
@@ -249,6 +278,7 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
     <meta name="twitter:title" content="${fullTitle}" />
     <meta name="twitter:description" content="${desc}" />
     <meta name="twitter:image" content="${imageUrl}" />
+    ${articleScript}
     ${faqScript}
       `;
 

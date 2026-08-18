@@ -16,8 +16,12 @@ export default function Seo({ title, description, image, url, canonical, keyword
   const canonicalUrl = normalizeCanonicalUrl(canonical || url || currentHref);
   const keys = keywords || 'Sarkari Result, Admit Card, Latest Jobs, Govt Vacancies, Sarkari Result Tools, Kids Games, Bacho Ka Game, Health Tips, Education, Tech Insights, All Insights Blog, Digital Home';
 
+  const isValidSchema = (s) => {
+    return s && typeof s === 'object' && !Array.isArray(s) && Object.keys(s).length > 0 && !!s['@type'];
+  };
+
   const enhanceSingle = (schema) => {
-    if (!schema) return null;
+    if (!isValidSchema(schema)) return null;
     if (schema.publisher) {
       return {
         ...schema,
@@ -25,7 +29,7 @@ export default function Seo({ title, description, image, url, canonical, keyword
           ...schema.publisher,
           logo: schema.publisher.logo || {
             '@type': 'ImageObject',
-            url: `${window.location.origin}/logo.webp`,
+            url: `${typeof window !== 'undefined' ? window.location.origin : 'https://www.digitalhomeblog.in'}/logo.webp`,
             width: 190,
             height: 60
           }
@@ -35,9 +39,9 @@ export default function Seo({ title, description, image, url, canonical, keyword
     return schema;
   };
 
-  const enhancedJsonLd = Array.isArray(jsonLd)
-    ? jsonLd.map(enhanceSingle).filter(Boolean)
-    : enhanceSingle(jsonLd);
+  const validSchemas = (Array.isArray(jsonLd) ? jsonLd : [jsonLd])
+    .map(enhanceSingle)
+    .filter(isValidSchema);
 
   return (
     <Helmet>
@@ -90,15 +94,9 @@ export default function Seo({ title, description, image, url, canonical, keyword
         })}
       </script>
 
-      {enhancedJsonLd && (
-        Array.isArray(enhancedJsonLd) ? (
-          enhancedJsonLd.map((schema, idx) => (
-            <script key={idx} type="application/ld+json">{JSON.stringify(schema)}</script>
-          ))
-        ) : (
-          <script type="application/ld+json">{JSON.stringify(enhancedJsonLd)}</script>
-        )
-      )}
+      {validSchemas.map((schema, idx) => (
+        <script key={idx} type="application/ld+json">{JSON.stringify(schema)}</script>
+      ))}
     </Helmet>
   );
 }
