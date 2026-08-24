@@ -764,6 +764,40 @@ async function scrapeFeeds() {
           }
         }
 
+const OFFICIAL_GOVT_MAP = [
+  { keywords: ['aadhar', 'uidai'], url: 'https://uidai.gov.in' },
+  { keywords: ['voter', 'election', 'eci'], url: 'https://voters.eci.gov.in' },
+  { keywords: ['pan', 'nsdl', 'uti'], url: 'https://eportal.incometax.gov.in' },
+  { keywords: ['licence', 'license', 'parivahan', 'rc', 'driving', 'vehicle'], url: 'https://parivahan.gov.in' },
+  { keywords: ['upsc'], url: 'https://upsc.gov.in' },
+  { keywords: ['ssc'], url: 'https://ssc.gov.in' },
+  { keywords: ['ibps'], url: 'https://ibps.in' },
+  { keywords: ['rrb', 'railway'], url: 'https://indianrailways.gov.in' },
+  { keywords: ['nta', 'neet', 'jee', 'cuet'], url: 'https://nta.ac.in' },
+  { keywords: ['cbse'], url: 'https://cbse.gov.in' },
+  { keywords: ['uppsc', 'up police', 'upssssc'], url: 'https://uppsc.up.nic.in' },
+  { keywords: ['bpsc'], url: 'https://bpsc.bih.nic.in' },
+  { keywords: ['mppsc', 'mpesb'], url: 'https://mppsc.mp.gov.in' }
+];
+
+function sanitizeScrapedGovtUrl(targetUrl = '', title = '') {
+  if (!targetUrl || typeof targetUrl !== 'string') return 'https://www.digitalhomeblog.in/job-alerts';
+  
+  const lower = targetUrl.toLowerCase();
+  if (lower.includes('sarkariresult') || lower.includes('freejobalert') || lower.includes('sarkari-result')) {
+    const combined = `${title} ${targetUrl}`.toLowerCase();
+    for (const item of OFFICIAL_GOVT_MAP) {
+      if (item.keywords.some(kw => combined.includes(kw))) {
+        return item.url;
+      }
+    }
+    return 'https://www.digitalhomeblog.in/job-alerts';
+  }
+  return targetUrl;
+}
+
+        const safeGovtUrl = sanitizeScrapedGovtUrl(href, text);
+
         await LiveAlert.updateOne(
           { sourceUrl: href },
           {
@@ -773,10 +807,10 @@ async function scrapeFeeds() {
               lastDate: 'Check PDF Notice',
               postDate: '',
               parsedPostDate: pdfFallbackDate,
-              officialUrl: 'https://www.sarkariresult.com',
-              officialPdfUrl: href,
-              officialApplyUrl: 'https://www.sarkariresult.com',
-              source: 'SarkariResult',
+              officialUrl: safeGovtUrl,
+              officialPdfUrl: safeGovtUrl,
+              officialApplyUrl: safeGovtUrl,
+              source: 'Official Portal',
               state: detectState(text, href),
               category: detectCategory(text, href),
               detailsText: 'Direct PDF notification link'

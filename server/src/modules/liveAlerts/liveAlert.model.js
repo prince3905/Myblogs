@@ -23,4 +23,28 @@ const liveAlertSchema = new mongoose.Schema(
 liveAlertSchema.index({ status: 1, parsedPostDate: -1, createdAt: -1 });
 liveAlertSchema.index({ parsedPostDate: -1, createdAt: -1 });
 
+// Pre-save hook to guarantee 100% zero sarkariresult.com links in DB
+liveAlertSchema.pre('save', function (next) {
+  const isSarkari = (url) => url && typeof url === 'string' && (url.includes('sarkariresult') || url.includes('freejobalert') || url.includes('sarkari-result'));
+
+  const safeUrl = `https://www.digitalhomeblog.in/job-alerts?alert=${this._id}`;
+
+  if (isSarkari(this.sourceUrl)) {
+    this.sourceUrl = safeUrl;
+  }
+  if (isSarkari(this.officialUrl)) {
+    this.officialUrl = this.sourceUrl;
+  }
+  if (isSarkari(this.officialApplyUrl)) {
+    this.officialApplyUrl = this.sourceUrl;
+  }
+  if (isSarkari(this.officialPdfUrl)) {
+    this.officialPdfUrl = this.sourceUrl;
+  }
+  if (this.detailsText && isSarkari(this.detailsText)) {
+    this.detailsText = this.detailsText.replace(/https?:\/\/(?:www\.)?(?:sarkariresult|freejobalert)\.com[^\s,)\'\"]*/gi, safeUrl);
+  }
+  next();
+});
+
 module.exports = mongoose.model('LiveAlert', liveAlertSchema);
