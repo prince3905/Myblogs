@@ -163,6 +163,49 @@ function generateFaqSchema(title = '', content = '', category = '') {
   };
 }
 
+function generateJobPostingSchema(post = {}) {
+  if (!post || !isJobCategory(post.category, post.title)) {
+    return null;
+  }
+
+  const cleanTitle = (post.title || '').replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '').trim();
+  const desc = post.excerpt || post.seoDescription || post.title;
+
+  const datePosted = post.publishedAt 
+    ? new Date(post.publishedAt).toISOString() 
+    : (post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString());
+
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + 60);
+  const validThrough = post.applicationDeadline ? new Date(post.applicationDeadline).toISOString() : futureDate.toISOString();
+
+  const boardName = post.author && post.author !== 'Harry Prince' && post.author !== 'Digital Home Team' ? post.author : 'Sarkari Recruitment Board';
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": cleanTitle,
+    "description": desc,
+    "datePosted": datePosted,
+    "validThrough": validThrough,
+    "employmentType": "FULL_TIME",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": boardName,
+      "sameAs": "https://www.digitalhomeblog.in"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "India",
+        "addressRegion": "IN",
+        "addressCountry": "IN"
+      }
+    }
+  };
+}
+
 function hashString(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -176,6 +219,7 @@ module.exports = {
   optimizeHighCtrTitle,
   optimizeHighCtrMetaDescription,
   generateFaqSchema,
+  generateJobPostingSchema,
   extractCleanSnippet,
   isJobCategory
 };

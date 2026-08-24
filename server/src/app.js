@@ -220,7 +220,7 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
     }
 
     if (post) {
-      const { generateFaqSchema } = require('./shared/utils/ctrBoosterEngine');
+      const { generateFaqSchema, generateJobPostingSchema } = require('./shared/utils/ctrBoosterEngine');
       const { normalizeCanonicalUrl } = require('./shared/utils/urlUtils');
       const siteName = 'Digital Home Sarkari Result';
       const cleanTitle = (post.title || '').replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '');
@@ -257,6 +257,12 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       };
       const articleScript = `<script type="application/ld+json">${JSON.stringify(articleSchema)}</script>`;
 
+      // Optional JobPosting Schema — ONLY IF Sarkari Job post
+      const jobSchema = generateJobPostingSchema(post);
+      const jobPostingScript = (jobSchema && typeof jobSchema === 'object' && Object.keys(jobSchema).length > 0)
+        ? `<script type="application/ld+json">${JSON.stringify(jobSchema)}</script>`
+        : '';
+
       // Optional FAQ Schema — ONLY IF non-null & contains valid schema content
       const faqSchema = generateFaqSchema(cleanTitle, post.content, post.category);
       const faqScript = (faqSchema && typeof faqSchema === 'object' && Object.keys(faqSchema).length > 0)
@@ -279,6 +285,7 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
     <meta name="twitter:description" content="${desc}" />
     <meta name="twitter:image" content="${imageUrl}" />
     ${articleScript}
+    ${jobPostingScript}
     ${faqScript}
       `;
 
