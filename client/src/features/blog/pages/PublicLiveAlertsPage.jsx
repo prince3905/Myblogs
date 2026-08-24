@@ -20,6 +20,7 @@ import Layout from '../components/Layout';
 import Seo from '../components/Seo';
 import { request } from '../../../shared/lib/api';
 import TelegramRedirectModal from '../../../components/TelegramRedirectModal';
+import { resolveOfficialGovtPortal } from '../../../shared/lib/govtPortalMap';
 
 const keyKeywords = [
   'Application Begin',
@@ -89,22 +90,29 @@ function isRowMatch(cell1, cell2, alertTitle = '') {
   return false;
 }
 
-function sanitizeClientUrl(url) {
-  if (!url || typeof url !== 'string') return '/job-alerts';
+function sanitizeClientUrl(url, alertTitle = '', alertBoard = '') {
+  if (!url || typeof url !== 'string') {
+    return resolveOfficialGovtPortal(alertTitle, alertBoard, '');
+  }
   const lower = url.toLowerCase();
   if (
     lower.includes('sarkariresult') ||
     lower.includes('sarkariresults') ||
     lower.includes('freejobalert') ||
-    lower.includes('sarkari-result')
+    lower.includes('sarkari-result') ||
+    lower.includes('/job-alerts') ||
+    lower.includes('digitalhomeblog.in')
   ) {
-    return '/job-alerts';
+    return resolveOfficialGovtPortal(alertTitle, alertBoard, url);
   }
   return url;
 }
 
 function getDynamicActions(alert) {
   if (!alert) return [];
+  const alertTitle = alert.title || '';
+  const alertBoard = alert.boardName || '';
+
   const parsedLinks = [];
   if (alert.detailsText) {
     const lines = alert.detailsText.split('\n');
@@ -119,7 +127,7 @@ function getDynamicActions(alert) {
           if (match) {
             const urlMatches = match[1].match(/(?:https?:\/\/|\/)[^\s,]+/gi);
             if (urlMatches && urlMatches.length > 0) {
-              parsedLinks.push({ name, url: sanitizeClientUrl(urlMatches[0]) });
+              parsedLinks.push({ name, url: sanitizeClientUrl(urlMatches[0], alertTitle, alertBoard) });
             }
           }
         }
@@ -131,13 +139,13 @@ function getDynamicActions(alert) {
     const found = parsedLinks.find(link => 
       keywords.some(kw => link.name.toLowerCase().includes(kw.toLowerCase()))
     );
-    return found ? sanitizeClientUrl(found.url) : null;
+    return found ? sanitizeClientUrl(found.url, alertTitle, alertBoard) : null;
   }
 
   const actions = [];
 
   // 1. PDF Link
-  const pdfUrl = sanitizeClientUrl(alert.officialPdfUrl || findParsedLink(['notification', 'pdf', 'advertisement', 'notice']));
+  const pdfUrl = sanitizeClientUrl(alert.officialPdfUrl || findParsedLink(['notification', 'pdf', 'advertisement', 'notice']), alertTitle, alertBoard);
   actions.push({
     label: 'Download Notification PDF',
     url: pdfUrl,
@@ -148,7 +156,7 @@ function getDynamicActions(alert) {
   });
 
   // 2. Apply URL
-  const applyUrl = sanitizeClientUrl(alert.officialApplyUrl || findParsedLink(['apply online', 'online form', 'apply', 'admit card', 'hall ticket', 'result', 'score card', 'answer key', 'key']));
+  const applyUrl = sanitizeClientUrl(alert.officialApplyUrl || findParsedLink(['apply online', 'online form', 'apply', 'admit card', 'hall ticket', 'result', 'score card', 'answer key', 'key']), alertTitle, alertBoard);
   actions.push({
     label: 'Apply Online Now',
     url: applyUrl,
@@ -159,7 +167,7 @@ function getDynamicActions(alert) {
   });
 
   // 3. Official Web URL
-  const webUrl = sanitizeClientUrl(alert.officialUrl || findParsedLink(['official website', 'homepage', 'website']));
+  const webUrl = sanitizeClientUrl(alert.officialUrl || findParsedLink(['official website', 'homepage', 'website']), alertTitle, alertBoard);
   actions.push({
     label: 'Official Board Website',
     url: webUrl,
