@@ -41,7 +41,12 @@ class ServerCacheService {
       // Intercept res.json to store response in memory
       const originalJson = res.json.bind(res);
       res.json = (body) => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
+        const isEmpty = (Array.isArray(body?.posts) && body.posts.length === 0) ||
+                        (Array.isArray(body?.data) && body.data.length === 0) ||
+                        (body?.total === 0) ||
+                        (body?.count === 0);
+
+        if (res.statusCode >= 200 && res.statusCode < 300 && !isEmpty) {
           this.cache.set(cacheKey, {
             status: res.statusCode,
             data: body,

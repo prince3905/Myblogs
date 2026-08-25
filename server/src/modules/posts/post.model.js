@@ -161,11 +161,12 @@ blogPostSchema.pre('save', async function (next) {
         const searchRegex = new RegExp(cleanTitle.slice(0, Math.min(cleanTitle.length, 25)).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
         const firstWord = cleanTitle.split(' ')[0] || '';
 
+        const escapedFirstWord = firstWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
         alertObj = await LiveAlert.findOne({
           $or: [
             { title: cleanTitle },
             { title: { $regex: searchRegex } },
-            ...(firstWord.length > 3 ? [{ title: { $regex: new RegExp(firstWord, 'i') } }] : [])
+            ...(firstWord.length > 3 ? [{ title: { $regex: new RegExp(escapedFirstWord, 'i') } }] : [])
           ]
         });
 
