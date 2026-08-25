@@ -20,8 +20,8 @@ class ServerCacheService {
         return next();
       }
 
-      // Do not cache authenticated admin requests
-      if (req.headers.authorization || req.path.startsWith('/api/admin')) {
+      // Do not cache authenticated admin requests or live alerts endpoint (needs instant real-time freshness)
+      if (req.headers.authorization || req.path.startsWith('/api/admin') || req.path.includes('/live-alerts')) {
         return next();
       }
 

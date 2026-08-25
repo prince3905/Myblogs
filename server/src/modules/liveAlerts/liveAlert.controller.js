@@ -119,15 +119,74 @@ async function getAlerts(req, res) {
       }
     }
 
-    const queryLimit = limit ? parseInt(limit, 10) : 100;
+    const queryLimit = limit ? parseInt(limit, 10) : 300;
     const pageNum = page ? parseInt(page, 10) : 1;
     const skip = (pageNum - 1) * queryLimit;
 
-    let alerts = await LiveAlert.find(filter)
-      .select('-detailsText')
-      .sort({ parsedPostDate: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(queryLimit);
+    console.log(`[LiveAlert API] getAlerts called: searchQuery="${searchQuery}", pageNum=${pageNum}, limit=${queryLimit}`);
+
+    let alerts = [];
+
+    // If default feed with no search query: fetch balanced items across all categories so every column is 100% full
+    if (!searchQuery && pageNum === 1) {
+      const [jobs, admitCards, results, answerKeys, admissions, syllabus] = await Promise.all([
+        LiveAlert.find({
+          ...filter,
+          $and: [
+            { title: { $not: /admit card|hall ticket|call letter|exam city|result|score card|merit list|answer key|objection|syllabus/i } },
+            { category: { $not: /Admit Card|Result|Answer Key|Syllabus/i } }
+          ]
+        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(100).lean(),
+
+        LiveAlert.find({
+          ...filter,
+          $or: [
+            { category: 'Admit Card' },
+            { title: { $regex: /admit card|hall ticket|call letter|exam city/i } }
+          ]
+        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(100).lean(),
+
+        LiveAlert.find({
+          ...filter,
+          $or: [
+            { category: 'Result' },
+            { title: { $regex: /result|score card|merit list/i } }
+          ]
+        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(100).lean(),
+
+        LiveAlert.find({
+          ...filter,
+          $or: [
+            { category: 'Answer Key' },
+            { title: { $regex: /answer key|answer-key|objection tracker/i } }
+          ]
+        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(50).lean(),
+
+        LiveAlert.find({
+          ...filter,
+          $or: [
+            { category: 'Admission' },
+            { title: { $regex: /admission|counselling|seat allotment/i } }
+          ]
+        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(50).lean(),
+
+        LiveAlert.find({
+          ...filter,
+          $or: [
+            { category: 'Syllabus' },
+            { title: { $regex: /syllabus|exam pattern|curriculum/i } }
+          ]
+        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(50).lean()
+      ]);
+
+      alerts = [...jobs, ...admitCards, ...results, ...answerKeys, ...admissions, ...syllabus];
+    } else {
+      alerts = await LiveAlert.find(filter)
+        .select('-detailsText')
+        .sort({ createdAt: -1, parsedPostDate: -1 })
+        .skip(skip)
+        .limit(queryLimit);
+    }
 
     // Fallback if $and search produced 0 results: try $or search across tokens
     if (alerts.length === 0 && searchQuery && filter.$and) {

@@ -329,17 +329,16 @@ blogPostSchema.pre('save', async function (next) {
         web: defaultWebUrl
       });
 
-      // 2. Prettify and fix the "महत्वपूर्ण लिंक्स" (Important Links) buttons section with Smart Post-Intent Awareness
+      // 2. Prettify and place the "महत्वपूर्ण लिंक्स" (Important Links) buttons section strictly at the VERY BOTTOM of article
       const { generateSmartActionButtons } = require('../../shared/utils/smartButtonGenerator');
-      const linksMatch = content.match(/<h2>महत्वपूर्ण लिंक्स<\/h2>([^]*?)(?=<h[23]>|$)/i);
-
       const newSmartButtonsBlock = generateSmartActionButtons(post.title, resolvedUrls);
 
-      if (linksMatch) {
-        content = content.replace(linksMatch[1], newSmartButtonsBlock);
-      } else {
-        content += `\n<h2>महत्वपूर्ण लिंक्स</h2>${newSmartButtonsBlock}`;
-      }
+      // Strip any existing "महत्वपूर्ण लिंक्स" / "Important Links" sections from content to avoid duplication
+      content = content.replace(/<h[23][^>]*>[^<]*?(?:महत्वपूर्ण|Important|Useful)[^<]*?लिंक्स?[^<]*?<\/h[23]>([^]*?)(?=<h[23]|<div class=["'](?:search-intent-box|games-promo-block|brand-authority-block)["']|$)/gi, '');
+      content = content.replace(/<h2>(?:महत्वपूर्ण लिंक्स?|Important Links?|Useful Links?|Some Useful Important Links|महत्वपूर्ण लिंक्स \(Important Direct Links\))<\/h2>([^]*?)(?=<h[23]|<div class=["'](?:search-intent-box|games-promo-block|brand-authority-block)["']|$)/gi, '');
+
+      // Append "महत्वपूर्ण लिंक्स" section strictly at the bottom
+      content += `\n<h2>महत्वपूर्ण लिंक्स (Important Direct Links)</h2>${newSmartButtonsBlock}`;
 
       // 3. Create fresh games promotion block
       const gamesPromo = `\n<div class="ql-table-embed">\n<div class="games-promo-block" style="margin: 30px 0; padding: 24px; border-radius: 16px; border: 1px solid #e5e7eb; background: linear-gradient(135deg, #fef08a 0%, #fef9c3 100%); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); text-align: left; position: relative; overflow: hidden;">

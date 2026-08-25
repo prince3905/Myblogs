@@ -80,16 +80,8 @@ function injectNaturalKeywordBox(content = '', title = '', focusKeyword = '', ur
 </div>
 `;
 
-  // Inject after the first H2 tag or first table or paragraph
-  if (content.includes('</h2>')) {
-    return content.replace('</h2>', `</h2>\n${boxHtml}`);
-  } else if (content.includes('</table>')) {
-    return content.replace('</table>', `</table>\n${boxHtml}`);
-  } else if (content.includes('</p>')) {
-    return content.replace('</p>', `</p>\n${boxHtml}`);
-  }
-
-  return content + boxHtml;
+  // Always append Search Intent CTA box to the VERY BOTTOM of article content
+  return content + '\n' + boxHtml;
 }
 
 module.exports = {

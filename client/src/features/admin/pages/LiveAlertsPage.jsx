@@ -315,18 +315,23 @@ export default function LiveAlertsPage() {
           if (parts.length >= 2) {
             const name = parts[0];
             const restText = parts.slice(1).join(' | ');
-            const linkRegex = /\((?:Link|link):\s*([^)]+)\)/gi;
-            const match = linkRegex.exec(restText);
-            let url = '';
-            if (match) {
-              const urlsStr = match[1];
-              const urlMatches = urlsStr.match(/(?:https?:\/\/|\/)[^\s,]+/gi);
+            const linkRegex = /([^|()]+)?\s*\((?:Link|link):\s*([^)]+)\)/gi;
+            let match;
+            let foundAny = false;
+            while ((match = linkRegex.exec(restText)) !== null) {
+              const subLabel = (match[1] || '').trim();
+              const rawUrl = (match[2] || '').trim();
+              const urlMatches = rawUrl.match(/(?:https?:\/\/|\/)[^\s,]+/gi);
               if (urlMatches && urlMatches.length > 0) {
-                url = urlMatches[0];
+                const actionText = subLabel && subLabel.toLowerCase() !== 'link' ? subLabel : 'Click Here';
+                currentSection.links.push({ name, actionText, url: urlMatches[0] });
+                foundAny = true;
               }
             }
-            const cleanActionText = restText.replace(/\((?:Link|link):\s*([^)]+)\)/gi, '').trim();
-            currentSection.links.push({ name, actionText: cleanActionText || 'Click Here', url });
+            if (!foundAny) {
+              const cleanActionText = restText.replace(/\((?:Link|link):\s*([^)]+)\)/gi, '').trim();
+              currentSection.links.push({ name, actionText: cleanActionText || 'Click Here', url: '' });
+            }
           }
         } else if (isLayoutLine) {
           if (!currentSection || currentSection.type !== 'key_value_columns') {

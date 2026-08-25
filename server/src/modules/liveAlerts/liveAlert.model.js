@@ -20,29 +20,30 @@ const liveAlertSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const { resolveOfficialGovtPortal } = require('../../shared/utils/govtPortalMap');
+
 liveAlertSchema.index({ status: 1, parsedPostDate: -1, createdAt: -1 });
 liveAlertSchema.index({ parsedPostDate: -1, createdAt: -1 });
 
-// Pre-save hook to guarantee 100% zero sarkariresult.com links in DB
+// Pre-save hook to guarantee 100% real government portal URLs in DB
 liveAlertSchema.pre('save', function (next) {
-  const isSarkari = (url) => url && typeof url === 'string' && (url.includes('sarkariresult') || url.includes('freejobalert') || url.includes('sarkari-result'));
+  const isBadUrl = (url) => !url || typeof url !== 'string' || url.includes('sarkariresult') || url.includes('freejobalert') || url.includes('sarkari-result') || url.includes('/job-alerts');
 
-  const safeUrl = `https://www.digitalhomeblog.in/job-alerts?alert=${this._id}`;
+  const realGovtUrl = resolveOfficialGovtPortal(this.title, this.boardName, this.sourceUrl);
 
-  if (isSarkari(this.sourceUrl)) {
-    this.sourceUrl = safeUrl;
+  if (isBadUrl(this.officialUrl)) {
+    this.officialUrl = realGovtUrl;
   }
-  if (isSarkari(this.officialUrl)) {
-    this.officialUrl = this.sourceUrl;
+  if (isBadUrl(this.officialApplyUrl)) {
+    this.officialApplyUrl = realGovtUrl;
   }
-  if (isSarkari(this.officialApplyUrl)) {
-    this.officialApplyUrl = this.sourceUrl;
+  if (isBadUrl(this.officialPdfUrl)) {
+    this.officialPdfUrl = realGovtUrl;
   }
-  if (isSarkari(this.officialPdfUrl)) {
-    this.officialPdfUrl = this.sourceUrl;
-  }
-  if (this.detailsText && isSarkari(this.detailsText)) {
-    this.detailsText = this.detailsText.replace(/https?:\/\/(?:www\.)?(?:sarkariresult|freejobalert)\.com[^\s,)\'\"]*/gi, safeUrl);
+  if (this.detailsText && (this.detailsText.includes('sarkariresult') || this.detailsText.includes('digitalhomeblog.in/job-alerts'))) {
+    this.detailsText = this.detailsText
+      .replace(/(?:https?:\/\/)?(?:www\.)?(?:sarkariresult|freejobalert|sarkari-result)\.com[^\s,)\'\"]*/gi, realGovtUrl)
+      .replace(/https?:\/\/www\.digitalhomeblog\.in\/job-alerts\?alert=[^\s,)\'\"]*/gi, realGovtUrl);
   }
   next();
 });

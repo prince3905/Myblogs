@@ -122,12 +122,19 @@ function getDynamicActions(alert) {
         if (parts.length >= 2) {
           const name = parts[0];
           const restText = parts.slice(1).join(' | ');
-          const linkRegex = /\((?:Link|link):\s*([^)]+)\)/gi;
-          const match = linkRegex.exec(restText);
-          if (match) {
-            const urlMatches = match[1].match(/(?:https?:\/\/|\/)[^\s,]+/gi);
+          
+          // Loop through all (Link: ...) occurrences in restText to catch Hindi, English, Server 1, Server 2 links!
+          const linkRegex = /([^|()]+)?\s*\((?:Link|link):\s*([^)]+)\)/gi;
+          let match;
+          while ((match = linkRegex.exec(restText)) !== null) {
+            const subLabel = (match[1] || '').trim();
+            const rawUrl = (match[2] || '').trim();
+            const urlMatches = rawUrl.match(/(?:https?:\/\/|\/)[^\s,]+/gi);
             if (urlMatches && urlMatches.length > 0) {
-              parsedLinks.push({ name, url: sanitizeClientUrl(urlMatches[0], alertTitle, alertBoard) });
+              const fullLabel = subLabel && subLabel.toLowerCase() !== 'link' 
+                ? `${name} (${subLabel})` 
+                : name;
+              parsedLinks.push({ name: fullLabel, url: sanitizeClientUrl(urlMatches[0], alertTitle, alertBoard) });
             }
           }
         }
@@ -871,8 +878,8 @@ export default function PublicLiveAlertsPage() {
     setLoading(true);
     setError('');
     const url = query.trim() 
-      ? `/api/public/live-alerts?status=all&search=${encodeURIComponent(query.trim())}&limit=100`
-      : '/api/public/live-alerts?status=all&limit=100';
+      ? `/api/public/live-alerts?status=all&search=${encodeURIComponent(query.trim())}&limit=300`
+      : '/api/public/live-alerts?status=all&limit=300';
 
     request(url)
       .then(res => {
@@ -933,18 +940,19 @@ export default function PublicLiveAlertsPage() {
     const admissions = [];
 
     filteredAlerts.forEach(alert => {
-      const cat = (alert.category || '').toLowerCase();
-      if (cat.includes('job') || cat.includes('recruit')) {
-        jobs.push(alert);
-      } else if (cat.includes('admit') || cat.includes('exam') || cat.includes('city')) {
-        admitCards.push(alert);
-      } else if (cat.includes('result') || cat.includes('score')) {
-        results.push(alert);
-      } else if (cat.includes('key') || cat.includes('solution') || cat.includes('objection')) {
+      const titleLower = (alert.title || '').toLowerCase();
+      const catLower = (alert.category || '').toLowerCase();
+      const combinedText = `${titleLower} ${catLower}`;
+
+      if (combinedText.includes('key') || combinedText.includes('objection') || combinedText.includes('answer')) {
         answerKeys.push(alert);
-      } else if (cat.includes('syllabus') || cat.includes('pattern')) {
+      } else if (combinedText.includes('admit') || combinedText.includes('hall ticket') || combinedText.includes('call letter') || combinedText.includes('exam city')) {
+        admitCards.push(alert);
+      } else if (combinedText.includes('result') || combinedText.includes('score') || combinedText.includes('merit')) {
+        results.push(alert);
+      } else if (combinedText.includes('syllabus') || combinedText.includes('pattern')) {
         syllabus.push(alert);
-      } else if (cat.includes('admission')) {
+      } else if (combinedText.includes('admission') || combinedText.includes('counselling')) {
         admissions.push(alert);
       } else {
         jobs.push(alert);
