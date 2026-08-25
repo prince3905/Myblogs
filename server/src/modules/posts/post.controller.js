@@ -100,13 +100,47 @@ async function warmUpCache() {
 }
 setTimeout(warmUpCache, 5000);
 
+function resolveCategoryName(catParam) {
+  if (!catParam) return '';
+  const slug = catParam.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const categoryMap = {
+    'sarkari-jobs-exams': 'Sarkari Jobs & Exams',
+    'sarkari-jobs-and-exams': 'Sarkari Jobs & Exams',
+    'sarkari-jobs': 'Sarkari Jobs & Exams',
+    'sarkari': 'Sarkari Jobs & Exams',
+    'health-wellness': 'Health & Wellness',
+    'health-and-wellness': 'Health & Wellness',
+    'health': 'Health & Wellness',
+    'tech-tutorials': 'Tech & Tutorials',
+    'tech-and-tutorials': 'Tech & Tutorials',
+    'tech': 'Tech & Tutorials',
+    'ai-web-tools': 'AI & Web Tools',
+    'ai-and-web-tools': 'AI & Web Tools',
+    'ai-tools': 'AI & Web Tools',
+    'news-trends': 'News & Trends',
+    'news-and-trends': 'News & Trends',
+    'news': 'News & Trends',
+    'finance-business': 'Finance & Business',
+    'finance-and-business': 'Finance & Business',
+    'finance': 'Finance & Business',
+    'technology': 'Technology'
+  };
+
+  return categoryMap[slug] || catParam;
+}
+
 async function listPublishedPosts(req, res) {
   const { search = '', category = '', tags = '', dateFrom = '', dateTo = '', page = 1, limit = 10, sortBy = 'date', order = 'desc' } = req.query;
   const query = { status: 'published' };
   let titleRegexPattern = '';
 
   if (category) {
-    query.category = category;
+    const resolvedCat = resolveCategoryName(category);
+    query.$or = [
+      { category: resolvedCat },
+      { category: category },
+      { category: { $regex: new RegExp(`^${resolvedCat.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') } }
+    ];
   }
 
   if (tags) {
