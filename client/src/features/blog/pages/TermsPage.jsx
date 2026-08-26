@@ -76,7 +76,7 @@ export default function TermsPage() {
           <Section title="10. Contact Us">
             If you have any questions about these Terms & Conditions, please contact us at{' '}
             <Typography component="span" sx={{ color: 'primary.main', fontWeight: 600 }}>
-              hello@digitalhome.blog
+              contact@digitalhomeblog.in
             </Typography>.
           </Section>
         </Paper>

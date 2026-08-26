@@ -111,7 +111,7 @@ export default function ContactPage() {
                 </Avatar>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Email</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>coolfire.prince0+blogs@gmail.com</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>contact@digitalhomeblog.in</Typography>
                 </Box>
               </Paper>
 
