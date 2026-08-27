@@ -312,7 +312,7 @@ Do not include any thinking, markdown, backticks, or other text outside the JSON
   // 1. Try Gemini Primary Key
   if (primaryKey) {
     try {
-      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${primaryKey}`, {
+      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${primaryKey}`, {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.2,
@@ -333,7 +333,7 @@ Do not include any thinking, markdown, backticks, or other text outside the JSON
   if (!text && fallbackKey && fallbackKey !== primaryKey) {
     try {
       console.log('[SEO] Trying fallback Gemini key...');
-      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${fallbackKey}`, {
+      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${fallbackKey}`, {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.2,
@@ -355,7 +355,7 @@ Do not include any thinking, markdown, backticks, or other text outside the JSON
     try {
       console.log('[SEO] Trying Groq Llama 3.3 70B...');
       const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-        model: 'llama-3.3-70b-versatile',
+        model: 'qwen/qwen3.8-27b',
         messages: [
           { role: 'system', content: 'You are a professional SEO Specialist. Return only raw JSON array.' },
           { role: 'user', content: prompt }

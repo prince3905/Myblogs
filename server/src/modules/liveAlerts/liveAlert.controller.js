@@ -516,7 +516,7 @@ async function draftAlertToPostDoc(alert) {
 
   const aiParams = {
     title: cleanTitle,
-    model: 'gemini-2.5-pro',
+    model: 'gemini-2.5-flash',
     length: 'long',
     tone: 'informative',
     language: 'hinglish',

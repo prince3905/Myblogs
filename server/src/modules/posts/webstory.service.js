@@ -94,7 +94,7 @@ async function fetchPortraitImage(query, title = '', slideIdx = 0) {
 
 async function callAiJson(prompt) {
   const keys = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY_2].filter(Boolean);
-  const models = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+  const models = ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro'];
   
   // 1. Try Gemini
   for (const key of keys) {
@@ -120,23 +120,26 @@ async function callAiJson(prompt) {
   // 2. Try Groq Fallback
   const groqKey = process.env.GROQ_API_KEY;
   if (groqKey) {
-    try {
-      console.log('[WebStory AI] Requesting Groq Llama-3.3-70b...');
-      const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-        model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        response_format: { type: "json_object" }
-      }, {
-        headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-        timeout: 15000
-      });
-      const text = res.data?.choices?.[0]?.message?.content;
-      if (text) {
-        return JSON.parse(text);
+    const groqModels = ['qwen/qwen3.8-27b', 'openai/gpt-oss-120b', 'groq/compound-mini'];
+    for (const gModel of groqModels) {
+      try {
+        console.log(`[WebStory AI] Requesting Groq ${gModel}...`);
+        const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+          model: gModel,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          response_format: { type: "json_object" }
+        }, {
+          headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+          timeout: 15000
+        });
+        const text = res.data?.choices?.[0]?.message?.content;
+        if (text) {
+          return JSON.parse(text);
+        }
+      } catch (err) {
+        console.warn(`[WebStory AI] Groq ${gModel} fallback failed:`, err.message);
       }
-    } catch (err) {
-      console.warn('[WebStory AI] Groq fallback failed:', err.message);
     }
   }
 

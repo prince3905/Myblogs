@@ -12,7 +12,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_KEY_2 = process.env.GEMINI_API_KEY_2;
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const VALID_CATEGORIES = ['Sarkari Jobs & Exams', 'Health & Wellness', 'Tech & Tutorials', 'AI & Web Tools', 'News & Trends', 'Finance & Business'];
-const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+const GROQ_MODELS = ['qwen/qwen3.8-27b', 'openai/gpt-oss-120b', 'groq/compound-mini'];
 
 const CATEGORY_FRAMEWORKS = {
   'Sarkari Jobs & Exams': {
@@ -668,7 +668,7 @@ function robustJsonParse(text) {
 }
 
 async function generateBlogContentCore({ title, model, length, tone, language, command, category }) {
-  const aiModel = model || 'gemini-2.5-pro';
+  const aiModel = model || 'gemini-2.5-flash';
   const isGroq = GROQ_MODELS.includes(aiModel);
   const toneMap = {
     informative: 'Informative and educational. Explain concepts with examples.',
@@ -957,7 +957,7 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
       if (GROQ_API_KEY) {
         try {
           const groqFallback = await axios.post(GROQ_CHAT_URL, {
-            model: 'llama-3.3-70b-versatile',
+            model: 'qwen/qwen3.8-27b',
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt }

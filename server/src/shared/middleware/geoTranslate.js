@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const GEMINI_MODEL = 'gemini-2.5-pro';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 function needsTranslation(ip, headers = {}) {
   // Skip translation for visitors from India (e.g. via Cloudflare or other country headers)
