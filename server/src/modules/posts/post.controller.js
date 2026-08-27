@@ -376,6 +376,7 @@ async function getPostBySlug(req, res) {
 
   // Increment views (fire-and-forget, no await needed for response)
   BlogPost.updateOne({ _id: post._id }, { $inc: { views: 1 } }).catch(() => {});
+  post.views = (post.views || 0) + 1;
 
   const relatedPosts = await BlogPost.find({
     _id: { $ne: post._id },
