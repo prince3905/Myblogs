@@ -683,24 +683,38 @@ function renderAlertListItem(alert, setSelectedAlert, themeColor) {
         {alert.title}
       </Typography>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
-        <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: 0.3 }}>
-          <CalendarIcon sx={{ fontSize: 12 }} />
-          Sourced: {new Date(alert.createdAt).toLocaleDateString()}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.8, pt: 0.5, borderTop: '1px dashed #F1F5F9' }}>
+        <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.68rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.4 }}>
+          <CalendarIcon sx={{ fontSize: 13, color: themeColor }} />
+          📅 Post: {new Date(alert.parsedPostDate || alert.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
         </Typography>
-        {hasValidDate && (
+        {hasValidDate ? (
           <Chip
-            label={`End: ${alert.lastDate}`}
+            label={`⏳ Last Date: ${alert.lastDate}`}
+            size="small"
+            sx={{
+              height: 20,
+              fontSize: '0.63rem',
+              fontWeight: 800,
+              bgcolor: '#FEE2E2',
+              color: '#DC2626',
+              borderRadius: '6px',
+              border: '1px solid #FCA5A5',
+              '& .MuiChip-label': { px: 0.8 }
+            }}
+          />
+        ) : (
+          <Chip
+            label="✅ Active"
             size="small"
             sx={{
               height: 18,
-              fontSize: '0.62rem',
+              fontSize: '0.6rem',
               fontWeight: 800,
-              bgcolor: alert.lastDate.includes('-') || alert.lastDate.includes('/') ? '#FEE2E2' : '#F3F4F6',
-              color: alert.lastDate.includes('-') || alert.lastDate.includes('/') ? '#DC2626' : '#4B5563',
+              bgcolor: '#DCFCE7',
+              color: '#15803D',
               borderRadius: '4px',
-              border: 'none',
-              '& .MuiChip-label': { px: 0.8 }
+              '& .MuiChip-label': { px: 0.6 }
             }}
           />
         )}

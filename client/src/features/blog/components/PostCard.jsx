@@ -163,8 +163,8 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
             <Box sx={{ display: 'flex', gap: { xs: 1, md: 1.5 }, alignItems: 'center' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
                 <CalendarToday sx={{ fontSize: { xs: 12, md: 14 }, color: 'text.secondary' }} />
-                <Typography variant="caption" sx={{ color: '#64748b', fontSize: { xs: '0.72rem', md: '0.8rem' }, fontWeight: 600 }}>
-                  {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                <Typography variant="caption" sx={{ color: '#334155', fontSize: { xs: '0.74rem', md: '0.82rem' }, fontWeight: 700 }}>
+                  {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>

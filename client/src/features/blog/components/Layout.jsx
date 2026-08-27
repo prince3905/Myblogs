@@ -9,6 +9,7 @@ import NewsletterWidget from '../../../components/NewsletterWidget';
 import DarkModeToggle from '../../../components/DarkModeToggle';
 import BreadcrumbsNav from '../../../components/Breadcrumbs';
 import TelegramStickyBanner from '../../../components/TelegramStickyBanner';
+import FloatingQuickShare from '../../../components/FloatingQuickShare';
 
 
 export default function Layout({ children }) {
@@ -274,6 +275,9 @@ export default function Layout({ children }) {
 
       {/* Telegram Sticky Banner */}
       <TelegramStickyBanner />
+
+      {/* Fixed Floating Quick Share Button (Mobile, Tablet & Desktop) */}
+      <FloatingQuickShare />
     </Box>
   );
 }

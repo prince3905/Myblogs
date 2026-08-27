@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Container, Typography, Box, Button, Chip, CircularProgress, Alert, Divider, Paper, Avatar } from '@mui/material';
+import { Container, Typography, Box, Button, Chip, CircularProgress, Alert, Divider, Paper, Avatar, Grid } from '@mui/material';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
@@ -11,7 +11,7 @@ import TableOfContents from '../../../components/TableOfContents';
 import AdSlot from '../../../components/AdSlot';
 import TelegramRedirectModal from '../../../components/TelegramRedirectModal';
 import WhatsappChannelBanner from '../../../components/WhatsappChannelBanner';
-import { MonetizationOn, Info, PictureAsPdf } from '@mui/icons-material';
+import { MonetizationOn, Info, PictureAsPdf, CalendarToday, AccessTime } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import { useToast } from '../../../components/Toast';
 import Prism from 'prismjs';
@@ -731,10 +731,62 @@ export default function PostPage() {
           </Box>
 
           {post.excerpt && (
-            <Typography variant="h6" color="text.secondary" sx={{ mb: 2.5, fontStyle: 'italic', lineHeight: 1.6, fontSize: { xs: '0.98rem', md: '1.1rem' } }}>
+            <Typography variant="h6" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic', lineHeight: 1.6, fontSize: { xs: '0.98rem', md: '1.1rem' } }}>
               {post.excerpt}
             </Typography>
           )}
+
+          {/* Quick Dates & Facts Summary Highlight Box for Students */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2.2,
+              mb: 3,
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)',
+              border: '1.5px solid #CBD5E1',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <Box sx={{ bgcolor: '#2563EB', color: 'white', px: 1, py: 0.2, borderRadius: '6px', fontSize: '0.68rem', fontWeight: 900, letterSpacing: 0.5 }}>
+                QUICK HIGHLIGHTS
+              </Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 850, color: '#1E293B', fontSize: '0.85rem' }}>
+                💡 त्वरित महत्वपूर्ण तिथियां एवं अपडेट (Key Dates)
+              </Typography>
+            </Box>
+
+            <Grid container spacing={1.5}>
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ p: 1.5, bgcolor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', height: '100%', display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                  <CalendarToday sx={{ color: '#2563EB', fontSize: '1.3rem' }} />
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.62rem', display: 'block' }}>
+                      📅 पोस्ट / विज्ञप्ति जारी तिथि (Post Date)
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 850, color: '#0F172A', fontSize: '0.92rem' }}>
+                      {new Date(post.publishedAt || post.createdAt).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Box sx={{ p: 1.5, bgcolor: '#FEF2F2', borderRadius: '10px', border: '1px solid #FECACA', height: '100%', display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                  <AccessTime sx={{ color: '#DC2626', fontSize: '1.3rem' }} />
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#991B1B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.62rem', display: 'block' }}>
+                      ⏳ आवेदन की अंतिम तिथि (Last Date)
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 850, color: '#DC2626', fontSize: '0.92rem' }}>
+                      {post.lastDate || "नीचे दी गई तालिका (Important Dates) देखें"}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+            </Grid>
+          </Paper>
         </Box>
 
         {/* 2. Crisp, Uncropped Featured Image Box */}

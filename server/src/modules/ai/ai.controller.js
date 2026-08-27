@@ -973,7 +973,26 @@ Return ONLY valid JSON with fields: title (the creative, professional copywritin
           text = groqFallback.data?.choices?.[0]?.message?.content || '';
         } catch (groqErr) {
           console.error('[AI Controller] Groq fallback failed:', groqErr.message);
-          if (OPENAI_API_KEY) {
+          const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+          if (OPENROUTER_API_KEY) {
+            try {
+              console.log('[AI Controller] Trying OpenRouter Free AI fallback (DeepSeek/Llama)...');
+              const openrouterRes = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+                model: 'meta-llama/llama-3.3-70b-instruct:free',
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  { role: 'user', content: userPrompt }
+                ]
+              }, {
+                headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
+                timeout: 60000
+              });
+              text = openrouterRes.data?.choices?.[0]?.message?.content || '';
+            } catch (orErr) {
+              console.error('[AI Controller] OpenRouter fallback failed:', orErr.message);
+            }
+          }
+          if (!text && OPENAI_API_KEY) {
             try {
               console.log('[AI Controller] Trying OpenAI fallback...');
               const openaiResponse = await axios.post(OPENAI_CHAT_URL, {

@@ -66,7 +66,7 @@ async function getAlerts(req, res) {
   try {
     const { status, limit, page, search, q } = req.query;
     const filter = {
-      title: { $not: /\b(201[5-9]|202[0-4])\b/i }
+      title: { $not: /\b(19\d\d|200\d|201\d|202[0-4])\b/i }
     };
     if (status && status !== 'all') {
       filter.status = status;

@@ -110,13 +110,19 @@ const AlertCard = ({ alert, idx }) => {
         >
           {alert.title}
         </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
-          <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.58rem' }}>
-            {new Date(alert.createdAt).toLocaleDateString()}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto', pt: 0.4, borderTop: '1px dashed rgba(0,0,0,0.08)' }}>
+          <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.62rem', fontWeight: 700 }}>
+            📅 {new Date(alert.parsedPostDate || alert.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
           </Typography>
-          <Typography variant="caption" sx={{ color: textCol, fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
-            Apply ↗
-          </Typography>
+          {alert.lastDate && alert.lastDate !== 'N/A' && alert.lastDate !== 'Check Detail Page' ? (
+            <Typography variant="caption" sx={{ color: '#DC2626', fontSize: '0.62rem', fontWeight: 800, bgcolor: '#FEE2E2', px: 0.6, py: 0.1, borderRadius: '4px' }}>
+              ⏳ {alert.lastDate}
+            </Typography>
+          ) : (
+            <Typography variant="caption" sx={{ color: textCol, fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
+              Apply ↗
+            </Typography>
+          )}
         </Box>
       </Box>
     </Link>
