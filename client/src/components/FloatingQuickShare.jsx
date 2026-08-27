@@ -1,28 +1,42 @@
-import React, { useState } from 'react';
-import { Box, Fab, Tooltip, Dialog, DialogTitle, DialogContent, Typography, IconButton, Button, Snackbar, Alert } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Tooltip, Dialog, DialogTitle, DialogContent, Typography, IconButton, Button, Snackbar, Alert, Paper, InputBase } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import TwitterIcon from '@mui/icons-material/Twitter';
+import LinkIcon from '@mui/icons-material/Link';
 
 export default function FloatingQuickShare() {
   const [openDialog, setOpenDialog] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('');
+  const [currentTitle, setCurrentTitle] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUrl(window.location.href);
+      setCurrentTitle(document.title || 'Digital Home - Job Alerts & News');
+    }
+  }, [openDialog]);
 
   const handleShareClick = () => {
-    const shareData = {
-      title: document.title || 'Digital Home - Job Alerts & Blog',
-      text: 'Check out this useful vacancy / post on Digital Home!',
-      url: window.location.href
-    };
+    const url = window.location.href;
+    const title = document.title || 'Digital Home - Job Alerts & News';
+    setCurrentUrl(url);
+    setCurrentTitle(title);
 
-    // Try native Web Share API first on Mobile devices
+    // Use native Web Share API on mobile devices if supported
     if (navigator.share && typeof navigator.share === 'function') {
-      navigator.share(shareData).catch(() => {
-        // Fallback to custom dialog if user cancelled or native share failed
+      navigator.share({
+        title: title,
+        text: `📍 ${title}\n\nदेखें पूरी जानकारी Digital Home पर:`,
+        url: url
+      }).catch(() => {
+        // Fallback to custom modal if user cancels native share or fails
         setOpenDialog(true);
       });
     } else {
@@ -30,89 +44,105 @@ export default function FloatingQuickShare() {
     }
   };
 
-  const getShareLinks = () => {
-    const currentUrl = encodeURIComponent(window.location.href);
-    const currentTitle = encodeURIComponent(document.title || 'Digital Home');
-    
-    return [
-      {
-        name: 'WhatsApp',
-        icon: <WhatsAppIcon />,
-        color: '#25D366',
-        bg: '#DCFCE7',
-        url: `https://api.whatsapp.com/send?text=${currentTitle}%20-%20${currentUrl}`
-      },
-      {
-        name: 'Telegram',
-        icon: <TelegramIcon />,
-        color: '#0088cc',
-        bg: '#E0F2FE',
-        url: `https://t.me/share/url?url=${currentUrl}&text=${currentTitle}`
-      },
-      {
-        name: 'Facebook',
-        icon: <FacebookIcon />,
-        color: '#1877F2',
-        bg: '#EFF6FF',
-        url: `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`
-      },
-      {
-        name: 'Twitter / X',
-        icon: <TwitterIcon />,
-        color: '#1DA1F2',
-        bg: '#F0F9FF',
-        url: `https://twitter.com/intent/tweet?url=${currentUrl}&text=${currentTitle}`
-      }
-    ];
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    }
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-  };
+  const sharePlatforms = [
+    {
+      name: 'WhatsApp',
+      subtitle: 'दोस्तों व ग्रुप्स को भेजें',
+      icon: <WhatsAppIcon sx={{ fontSize: '1.6rem' }} />,
+      color: '#ffffff',
+      bgColor: '#25D366',
+      hoverBg: '#1EBE5D',
+      getUrl: () => `https://api.whatsapp.com/send?text=${encodeURIComponent(`📍 *${currentTitle}*\n\nयहाँ से देखें पूरी जानकारी 👇\n${currentUrl}`)}`
+    },
+    {
+      name: 'Telegram',
+      subtitle: 'टेलीग्राम चैनल में शेयर करें',
+      icon: <TelegramIcon sx={{ fontSize: '1.6rem' }} />,
+      color: '#ffffff',
+      bgColor: '#0088cc',
+      hoverBg: '#0077b5',
+      getUrl: () => `https://t.me/share/url?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(`📍 ${currentTitle}`)}`
+    },
+    {
+      name: 'Facebook',
+      subtitle: 'फ़ेसबुक फ़ीड पर पोस्ट करें',
+      icon: <FacebookIcon sx={{ fontSize: '1.6rem' }} />,
+      color: '#ffffff',
+      bgColor: '#1877F2',
+      hoverBg: '#1565C0',
+      getUrl: () => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`
+    },
+    {
+      name: 'Twitter / X',
+      subtitle: 'ट्विटर पर ट्वीट करें',
+      icon: <TwitterIcon sx={{ fontSize: '1.6rem' }} />,
+      color: '#ffffff',
+      bgColor: '#0F1419',
+      hoverBg: '#000000',
+      getUrl: () => `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(`📍 ${currentTitle}`)}`
+    }
+  ];
 
   return (
     <>
-      {/* Floating Quick Share Button */}
-      <Tooltip title="Quick Share with Friends & Family 🚀" placement="left" arrow>
-        <Fab
-          color="primary"
-          aria-label="Quick Share"
+      {/* Sleek Floating Glassmorphic Quick Share Dock Button */}
+      <Tooltip title="दोस्तों व परिवार को तुरंत शेयर करें 🚀" placement="left" arrow>
+        <Box
           onClick={handleShareClick}
           sx={{
             position: 'fixed',
-            bottom: { xs: 75, sm: 85, md: 30 },
-            right: { xs: 16, sm: 24, md: 30 },
+            bottom: { xs: 75, sm: 85, md: 32 },
+            right: { xs: 16, sm: 24, md: 32 },
             zIndex: 1150,
-            background: 'linear-gradient(135deg, #25D366 0%, #059669 100%)',
-            color: 'white',
-            fontWeight: 800,
-            boxShadow: '0 8px 24px rgba(5, 150, 105, 0.4)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            px: { xs: 1.8, md: 2.2 },
-            height: { xs: 46, md: 50 },
-            borderRadius: '25px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: 2,
+            py: 1.1,
+            borderRadius: '50px',
+            background: 'linear-gradient(135deg, #25D366 0%, #16A34A 100%)',
+            color: '#FFFFFF',
+            cursor: 'pointer',
+            boxShadow: '0 8px 25px rgba(37, 211, 102, 0.45), 0 2px 10px rgba(0, 0, 0, 0.1)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            backdropFilter: 'blur(10px)',
+            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            userSelect: 'none',
             '&:hover': {
-              background: 'linear-gradient(135deg, #16A34A 0%, #047857 100%)',
-              transform: 'scale(1.08) translateY(-3px)',
-              boxShadow: '0 12px 30px rgba(5, 150, 105, 0.5)'
+              transform: 'scale(1.08) translateY(-4px)',
+              background: 'linear-gradient(135deg, #1EBE5D 0%, #15803D 100%)',
+              boxShadow: '0 12px 35px rgba(37, 211, 102, 0.6)'
             },
-            animation: 'pulseShare 2.5s infinite ease-in-out',
-            '@keyframes pulseShare': {
-              '0%': { boxShadow: '0 0 0 0 rgba(37, 211, 102, 0.6)' },
-              '70%': { boxShadow: '0 0 0 14px rgba(37, 211, 102, 0)' },
-              '100%': { boxShadow: '0 0 0 0 rgba(37, 211, 102, 0)' }
+            '&:active': {
+              transform: 'scale(0.96)'
             }
           }}
         >
-          <ShareIcon sx={{ mr: 0.8, fontSize: { xs: '1.2rem', md: '1.4rem' } }} />
-          <Typography variant="button" sx={{ fontWeight: 850, fontSize: { xs: '0.78rem', md: '0.85rem' }, letterSpacing: 0.3, textTransform: 'none' }}>
-            Share 📲
+          <ShareIcon sx={{ fontSize: { xs: '1.25rem', md: '1.4rem' } }} />
+          <Typography
+            variant="button"
+            sx={{
+              fontWeight: 850,
+              fontSize: { xs: '0.82rem', md: '0.9rem' },
+              letterSpacing: 0.4,
+              textTransform: 'none',
+              fontFamily: 'Inter, system-ui, sans-serif'
+            }}
+          >
+            Quick Share 🚀
           </Typography>
-        </Fab>
+        </Box>
       </Tooltip>
 
-      {/* Desktop / Fallback Share Dialog */}
+      {/* Ultra-Professional Share Modal */}
       <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
@@ -120,112 +150,185 @@ export default function FloatingQuickShare() {
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: '20px',
-            p: 1,
-            boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
+            borderRadius: '24px',
+            p: 1.5,
+            background: '#FFFFFF',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            overflow: 'hidden'
           }
         }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 850, color: '#1E293B', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: 1 }}>
-            🚀 Quick Share
-          </Typography>
-          <IconButton size="small" onClick={() => setOpenDialog(false)} sx={{ color: '#64748B' }}>
+        {/* Header */}
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, px: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ p: 0.8, bgcolor: '#DCFCE7', color: '#16A34A', borderRadius: '12px', display: 'flex' }}>
+              <ShareIcon sx={{ fontSize: '1.2rem' }} />
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 850, color: '#0F172A', fontSize: '1.1rem' }}>
+              पोस्ट शेयर करें (Quick Share)
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setOpenDialog(false)} sx={{ bgcolor: '#F1F5F9', color: '#64748B', '&:hover': { bgcolor: '#E2E8F0' } }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent dividers sx={{ borderBottom: 'none', pt: 2, pb: 3 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, fontWeight: 500 }}>
-            Share this vacancy / post instantly with your friends & study groups!
+        <DialogContent sx={{ px: 1, pt: 1, pb: 2 }}>
+          {/* Post Link Preview Card */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 1.8,
+              mb: 2.5,
+              borderRadius: '16px',
+              bgcolor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 1.5
+            }}
+          >
+            <LinkIcon sx={{ color: '#2563EB', fontSize: '1.4rem', mt: 0.2 }} />
+            <Box sx={{ overflow: 'hidden' }}>
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  fontWeight: 800,
+                  color: '#1E293B',
+                  fontSize: '0.88rem',
+                  lineHeight: 1.35,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  mb: 0.5
+                }}
+              >
+                {currentTitle}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: '#2563EB',
+                  fontWeight: 600,
+                  fontSize: '0.72rem',
+                  display: 'block',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+              >
+                {currentUrl}
+              </Typography>
+            </Box>
+          </Paper>
+
+          {/* Social Platform Action Grid */}
+          <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase', fontSize: '0.68rem', mb: 1.5, display: 'block', px: 0.5 }}>
+            सोशल मीडिया पर भेजें (Choose Platform)
           </Typography>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2.5 }}>
-            {getShareLinks().map((item) => (
+            {sharePlatforms.map((platform) => (
               <Button
-                key={item.name}
+                key={platform.name}
                 component="a"
-                href={item.url}
+                href={platform.getUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                startIcon={item.icon}
+                onClick={() => setOpenDialog(false)}
+                startIcon={platform.icon}
                 sx={{
-                  bgcolor: item.bg,
-                  color: item.color,
+                  bgcolor: platform.bgColor,
+                  color: platform.color,
                   fontWeight: 800,
-                  fontSize: '0.82rem',
+                  fontSize: '0.85rem',
                   py: 1.2,
-                  px: 1.5,
-                  borderRadius: '12px',
+                  px: 1.8,
+                  borderRadius: '14px',
                   textTransform: 'none',
-                  border: `1px solid ${item.color}30`,
+                  boxShadow: `0 4px 14px ${platform.bgColor}40`,
                   justifyContent: 'flex-start',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    bgcolor: `${item.color}20`,
-                    transform: 'translateY(-2px)'
+                    bgcolor: platform.hoverBg,
+                    transform: 'translateY(-2px)',
+                    boxShadow: `0 6px 20px ${platform.bgColor}60`
                   }
                 }}
               >
-                {item.name}
+                <Box sx={{ textAlign: 'left' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 850, lineHeight: 1.1 }}>
+                    {platform.name}
+                  </Typography>
+                </Box>
               </Button>
             ))}
           </Box>
 
-          {/* Copy Link Row */}
-          <Box
+          {/* Copy Direct Link Section */}
+          <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase', fontSize: '0.68rem', mb: 1, display: 'block', px: 0.5 }}>
+            डायरेक्ट लिंक कॉपी करें (Copy Direct Link)
+          </Typography>
+
+          <Paper
+            elevation={0}
             sx={{
+              p: '4px 6px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 1.2,
-              bgcolor: '#F8FAFC',
-              borderRadius: '12px',
-              border: '1px solid #E2E8F0'
+              borderRadius: '14px',
+              border: '1.5px solid #CBD5E1',
+              bgcolor: '#FFFFFF',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
             }}
           >
-            <Typography
-              variant="caption"
+            <InputBase
+              value={currentUrl}
+              readOnly
               sx={{
-                color: '#64748B',
+                ml: 1.5,
+                flex: 1,
+                fontSize: '0.8rem',
                 fontWeight: 600,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                maxWidth: '70%'
+                color: '#334155'
               }}
-            >
-              {typeof window !== 'undefined' ? window.location.href : ''}
-            </Typography>
+            />
             <Button
-              size="small"
               variant="contained"
               onClick={handleCopyLink}
-              startIcon={<ContentCopyIcon sx={{ fontSize: '0.9rem' }} />}
+              startIcon={copied ? <CheckCircleIcon sx={{ fontSize: '1rem' }} /> : <ContentCopyIcon sx={{ fontSize: '1rem' }} />}
               sx={{
-                bgcolor: '#4F46E5',
-                fontWeight: 800,
-                fontSize: '0.72rem',
-                borderRadius: '8px',
+                bgcolor: copied ? '#16A34A' : '#2563EB',
+                color: 'white',
+                fontWeight: 850,
+                fontSize: '0.78rem',
+                borderRadius: '10px',
                 textTransform: 'none',
-                px: 1.5,
-                '&:hover': { bgcolor: '#4338CA' }
+                px: 2,
+                py: 1,
+                boxShadow: copied ? '0 4px 12px rgba(22, 163, 74, 0.3)' : '0 4px 12px rgba(37, 99, 235, 0.3)',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  bgcolor: copied ? '#15803D' : '#1D4ED8'
+                }
               }}
             >
-              Copy Link
+              {copied ? 'Copied! ✅' : 'Copy'}
             </Button>
-          </Box>
+          </Paper>
         </DialogContent>
       </Dialog>
 
-      {/* Snackbar feedback for Copy Link */}
+      {/* Success Notification Toast */}
       <Snackbar
         open={copied}
         autoHideDuration={3000}
         onClose={() => setCopied(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={() => setCopied(false)} severity="success" sx={{ width: '100%', fontWeight: 700, borderRadius: '10px' }}>
-          ✅ Link copied to clipboard! Share it anywhere!
+        <Alert onClose={() => setCopied(false)} severity="success" sx={{ width: '100%', fontWeight: 800, borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
+          ✅ लिंक कॉपी हो गया! अब किसी भी ऐप पर शेयर करें!
         </Alert>
       </Snackbar>
     </>

@@ -22,6 +22,7 @@ import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-jsx';
 import { usePost } from '../../../hooks/usePost';
 import { postUrl, catSlug } from '../../../shared/lib/category';
+import PostInlineShare from '../../../components/PostInlineShare';
 
 const HERO_PHOTOS = [
   'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=700&q=80',
@@ -787,6 +788,9 @@ export default function PostPage() {
               </Grid>
             </Grid>
           </Paper>
+
+          {/* Dedicated Inline Share Box */}
+          <PostInlineShare title={post.title} url={`${window.location.origin}${postUrl(post)}`} />
         </Box>
 
         {/* 2. Crisp, Uncropped Featured Image Box */}
