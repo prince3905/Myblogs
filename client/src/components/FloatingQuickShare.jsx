@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Box, Tooltip, Dialog, DialogTitle, DialogContent, Typography, IconButton, Button, Snackbar, Alert, Paper, InputBase } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
 import CloseIcon from '@mui/icons-material/Close';
@@ -10,37 +10,35 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import LinkIcon from '@mui/icons-material/Link';
 
-export default function FloatingQuickShare() {
+// Global Context for Share Modal
+const ShareModalContext = createContext();
+
+export const useShareModal = () => useContext(ShareModalContext);
+
+export function ShareModalProvider({ children }) {
   const [openDialog, setOpenDialog] = useState(false);
   const [copied, setCopied] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
   const [currentTitle, setCurrentTitle] = useState('');
 
-  useEffect(() => {
+  const triggerShare = () => {
     if (typeof window !== 'undefined') {
-      setCurrentUrl(window.location.href);
-      setCurrentTitle(document.title || 'Digital Home - Job Alerts & News');
-    }
-  }, [openDialog]);
+      const url = window.location.href;
+      const title = document.title || 'Digital Home - Job Alerts & News';
+      setCurrentUrl(url);
+      setCurrentTitle(title);
 
-  const handleShareClick = () => {
-    const url = window.location.href;
-    const title = document.title || 'Digital Home - Job Alerts & News';
-    setCurrentUrl(url);
-    setCurrentTitle(title);
-
-    // Use native Web Share API on mobile devices if supported
-    if (navigator.share && typeof navigator.share === 'function') {
-      navigator.share({
-        title: title,
-        text: `📍 ${title}\n\nदेखें पूरी जानकारी Digital Home पर:`,
-        url: url
-      }).catch(() => {
-        // Fallback to custom modal if user cancels native share or fails
+      if (navigator.share && typeof navigator.share === 'function') {
+        navigator.share({
+          title: title,
+          text: `📍 ${title}\n\nदेखें पूरी जानकारी Digital Home पर:`,
+          url: url
+        }).catch(() => {
+          setOpenDialog(true);
+        });
+      } else {
         setOpenDialog(true);
-      });
-    } else {
-      setOpenDialog(true);
+      }
     }
   };
 
@@ -92,57 +90,10 @@ export default function FloatingQuickShare() {
   ];
 
   return (
-    <>
-      {/* Sleek Floating Glassmorphic Quick Share Dock Button */}
-      <Tooltip title="दोस्तों व परिवार को तुरंत शेयर करें 🚀" placement="left" arrow>
-        <Box
-          onClick={handleShareClick}
-          sx={{
-            position: 'fixed',
-            bottom: { xs: 75, sm: 85, md: 32 },
-            right: { xs: 16, sm: 24, md: 32 },
-            zIndex: 1150,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 2,
-            py: 1.1,
-            borderRadius: '50px',
-            background: 'linear-gradient(135deg, #25D366 0%, #16A34A 100%)',
-            color: '#FFFFFF',
-            cursor: 'pointer',
-            boxShadow: '0 8px 25px rgba(37, 211, 102, 0.45), 0 2px 10px rgba(0, 0, 0, 0.1)',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            backdropFilter: 'blur(10px)',
-            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            userSelect: 'none',
-            '&:hover': {
-              transform: 'scale(1.08) translateY(-4px)',
-              background: 'linear-gradient(135deg, #1EBE5D 0%, #15803D 100%)',
-              boxShadow: '0 12px 35px rgba(37, 211, 102, 0.6)'
-            },
-            '&:active': {
-              transform: 'scale(0.96)'
-            }
-          }}
-        >
-          <ShareIcon sx={{ fontSize: { xs: '1.25rem', md: '1.4rem' } }} />
-          <Typography
-            variant="button"
-            sx={{
-              fontWeight: 850,
-              fontSize: { xs: '0.82rem', md: '0.9rem' },
-              letterSpacing: 0.4,
-              textTransform: 'none',
-              fontFamily: 'Inter, system-ui, sans-serif'
-            }}
-          >
-            Quick Share 🚀
-          </Typography>
-        </Box>
-      </Tooltip>
+    <ShareModalContext.Provider value={{ triggerShare }}>
+      {children}
 
-      {/* Ultra-Professional Share Modal */}
+      {/* Shared Ultra-Professional Share Modal */}
       <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
@@ -331,6 +282,75 @@ export default function FloatingQuickShare() {
           ✅ लिंक कॉपी हो गया! अब किसी भी ऐप पर शेयर करें!
         </Alert>
       </Snackbar>
-    </>
+    </ShareModalContext.Provider>
+  );
+}
+
+export default function FloatingQuickShare() {
+  const shareContext = useShareModal();
+
+  const handleShareClick = () => {
+    if (shareContext && shareContext.triggerShare) {
+      shareContext.triggerShare();
+    } else {
+      if (typeof window !== 'undefined') {
+        const url = window.location.href;
+        const title = document.title || 'Digital Home';
+        if (navigator.share) {
+          navigator.share({ title, text: title, url }).catch(() => {});
+        }
+      }
+    }
+  };
+
+  return (
+    <Tooltip title="दोस्तों व परिवार को तुरंत शेयर करें 🚀" placement="left" arrow>
+      <Box
+        onClick={handleShareClick}
+        sx={{
+          position: 'fixed',
+          bottom: 75,
+          right: { xs: 16, sm: 24, md: 32 },
+          zIndex: 1150,
+          // Display floating pill ONLY on mobile (xs), hide on Tablet & Desktop (sm, md) because Tablet & Desktop have it integrated in the bottom Telegram section!
+          display: { xs: 'flex', sm: 'none' },
+          alignItems: 'center',
+          gap: 1,
+          px: 2,
+          py: 1.1,
+          borderRadius: '50px',
+          background: 'linear-gradient(135deg, #25D366 0%, #16A34A 100%)',
+          color: '#FFFFFF',
+          cursor: 'pointer',
+          boxShadow: '0 8px 25px rgba(37, 211, 102, 0.45), 0 2px 10px rgba(0, 0, 0, 0.1)',
+          border: '2px solid rgba(255, 255, 255, 0.3)',
+          backdropFilter: 'blur(10px)',
+          transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          userSelect: 'none',
+          '&:hover': {
+            transform: 'scale(1.08) translateY(-4px)',
+            background: 'linear-gradient(135deg, #1EBE5D 0%, #15803D 100%)',
+            boxShadow: '0 12px 35px rgba(37, 211, 102, 0.6)'
+          },
+          '&:active': {
+            transform: 'scale(0.96)'
+          }
+        }}
+      >
+        <ShareIcon sx={{ fontSize: '1.25rem' }} />
+        <Typography
+          variant="button"
+          sx={{
+            fontWeight: 850,
+            fontSize: '0.82rem',
+            letterSpacing: 0.4,
+            textTransform: 'none',
+            fontFamily: 'Inter, system-ui, sans-serif'
+          }}
+        >
+          Quick Share 🚀
+        </Typography>
+      </Box>
+    </Tooltip>
   );
 }

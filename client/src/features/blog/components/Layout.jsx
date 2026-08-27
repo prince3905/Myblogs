@@ -9,7 +9,7 @@ import NewsletterWidget from '../../../components/NewsletterWidget';
 import DarkModeToggle from '../../../components/DarkModeToggle';
 import BreadcrumbsNav from '../../../components/Breadcrumbs';
 import TelegramStickyBanner from '../../../components/TelegramStickyBanner';
-import FloatingQuickShare from '../../../components/FloatingQuickShare';
+import FloatingQuickShare, { ShareModalProvider } from '../../../components/FloatingQuickShare';
 
 
 export default function Layout({ children }) {
@@ -37,7 +37,8 @@ export default function Layout({ children }) {
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', pb: { xs: 8, sm: 9 } }}>
+    <ShareModalProvider>
+      <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', pb: { xs: 8, sm: 9 } }}>
       {/* Floating pill-shaped navbar */}
       <Box
         sx={{
@@ -272,12 +273,12 @@ export default function Layout({ children }) {
         </Container>
       </Box>
 
-
       {/* Telegram Sticky Banner */}
       <TelegramStickyBanner />
 
-      {/* Fixed Floating Quick Share Button (Mobile, Tablet & Desktop) */}
+      {/* Floating Quick Share Button (Mobile Only) */}
       <FloatingQuickShare />
     </Box>
+  </ShareModalProvider>
   );
 }

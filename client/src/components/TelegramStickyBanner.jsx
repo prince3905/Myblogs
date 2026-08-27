@@ -1,19 +1,32 @@
+import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import WhatsApp from '@mui/icons-material/WhatsApp';
+import ShareIcon from '@mui/icons-material/Share';
 import { keyframes } from '@emotion/react';
+import { useShareModal } from './FloatingQuickShare';
 
 const bounce = keyframes`
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
 `;
 
-const pulse = keyframes`
-  0%, 100% { transform: scale(1); opacity: 0.95; }
-  50% { transform: scale(1.05); opacity: 1; }
-`;
-
 export default function TelegramStickyBanner() {
+  const shareModal = useShareModal();
+
+  const handleShareClick = () => {
+    if (shareModal && shareModal.triggerShare) {
+      shareModal.triggerShare();
+    } else {
+      if (typeof window !== 'undefined') {
+        const url = window.location.href;
+        const title = document.title || 'Digital Home';
+        if (navigator.share) {
+          navigator.share({ title, text: title, url }).catch(() => {});
+        }
+      }
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -40,13 +53,13 @@ export default function TelegramStickyBanner() {
           width: '100%',
           maxWidth: '960px',
           gap: { xs: 1, sm: 2 },
-          flexWrap: { xs: 'nowrap', sm: 'nowrap' },
         }}
       >
+        {/* Left Side: Live Banner Title */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
             sx={{
-              fontSize: { xs: '1.5rem', sm: '2rem' },
+              fontSize: { xs: '1.3rem', sm: '1.8rem' },
               animation: `${bounce} 2s infinite ease-in-out`,
               display: { xs: 'none', sm: 'flex' },
               alignItems: 'center',
@@ -82,37 +95,33 @@ export default function TelegramStickyBanner() {
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.8, sm: 1.5 } }}>
-          {/* WhatsApp Button (Temporarily Hidden) */}
-          {false && (
-            <Button
-              variant="contained"
-              component="a"
-              href="https://whatsapp.com/channel/0029Va9Z29c5a243aZ04523G"
-              target="_blank"
-              rel="noopener noreferrer"
-              startIcon={<WhatsApp sx={{ fontSize: '18px !important' }} />}
-              sx={{
-                bgcolor: '#25D366',
-                color: '#ffffff',
-                fontWeight: 800,
-                px: { xs: 1.5, sm: 2.5 },
-                py: { xs: 0.6, sm: 0.9 },
-                borderRadius: '9999px',
-                fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                textTransform: 'none',
-                animation: `${pulse} 2s infinite ease-in-out`,
-                flexShrink: 0,
-                boxShadow: '0 4px 10px rgba(37, 211, 102, 0.4)',
-                '&:hover': {
-                  bgcolor: '#128C7E',
-                  color: '#ffffff',
-                },
-              }}
-            >
-              WhatsApp 💬
-            </Button>
-          )}
+        {/* Right Side Action Buttons */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.8, sm: 1.2 } }}>
+          {/* Quick Share Button (Integrated into Desktop & Tablet Telegram Bar) */}
+          <Button
+            variant="contained"
+            onClick={handleShareClick}
+            startIcon={<ShareIcon sx={{ fontSize: '18px !important' }} />}
+            sx={{
+              bgcolor: '#25D366',
+              color: '#ffffff',
+              fontWeight: 850,
+              px: { xs: 1.2, sm: 2.2 },
+              py: { xs: 0.6, sm: 0.8 },
+              borderRadius: '9999px',
+              fontSize: { xs: '0.72rem', sm: '0.85rem' },
+              textTransform: 'none',
+              flexShrink: 0,
+              boxShadow: '0 4px 12px rgba(37, 211, 102, 0.4)',
+              display: { xs: 'none', sm: 'inline-flex' }, // Visible on Tablet & Desktop
+              '&:hover': {
+                bgcolor: '#1EBE5D',
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            Quick Share 📲
+          </Button>
 
           {/* Telegram Button */}
           <Button
@@ -127,7 +136,7 @@ export default function TelegramStickyBanner() {
               color: '#ffffff',
               fontWeight: 800,
               px: { xs: 1.5, sm: 2.5 },
-              py: { xs: 0.6, sm: 0.9 },
+              py: { xs: 0.6, sm: 0.8 },
               borderRadius: '9999px',
               fontSize: { xs: '0.75rem', sm: '0.85rem' },
               textTransform: 'none',
