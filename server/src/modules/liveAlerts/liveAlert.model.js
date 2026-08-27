@@ -15,7 +15,7 @@ const liveAlertSchema = new mongoose.Schema(
     state: { type: String, default: 'Central/All India', trim: true },
     category: { type: String, default: 'Latest Job', trim: true },
     detailsText: { type: String, default: '', trim: true },
-    status: { type: String, enum: ['active', 'drafted', 'published'], default: 'active' }
+    status: { type: String, enum: ['active', 'drafted', 'published', 'expired'], default: 'active' }
   },
   { timestamps: true }
 );
@@ -25,8 +25,18 @@ const { resolveOfficialGovtPortal } = require('../../shared/utils/govtPortalMap'
 liveAlertSchema.index({ status: 1, parsedPostDate: -1, createdAt: -1 });
 liveAlertSchema.index({ parsedPostDate: -1, createdAt: -1 });
 
-// Pre-save hook to guarantee 100% real government portal URLs in DB
+// Pre-save hook to guarantee 100% real government portal URLs in DB & auto-expire past-year alerts
 liveAlertSchema.pre('save', function (next) {
+  // Pre-save guard: Automatic expiration of past-year alerts
+  if (this.title) {
+    const titleLower = this.title.toLowerCase();
+    const hasPastYear = /\b(2025|2024|2023|2022|2021|2020)\b/.test(titleLower);
+    const hasCurrentOrFutureYear = /\b(2026|2027)\b/.test(titleLower);
+    if (hasPastYear && !hasCurrentOrFutureYear) {
+      this.status = 'expired';
+    }
+  }
+
   const isBadUrl = (url) => !url || typeof url !== 'string' || url.includes('sarkariresult') || url.includes('freejobalert') || url.includes('sarkari-result') || url.includes('/job-alerts');
 
   const realGovtUrl = resolveOfficialGovtPortal(this.title, this.boardName, this.sourceUrl);

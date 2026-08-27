@@ -38,6 +38,28 @@ function extractBoardName(title) {
   return words || 'Govt Board';
 }
 
+function isOldOrExpiredAlert(title = '', parsedDate = null) {
+  const titleLower = title.toLowerCase();
+
+  // Check past year in title (2025, 2024, 2023, 2022)
+  const hasPastYear = /\b(2025|2024|2023|2022|2021|2020)\b/.test(titleLower);
+  // Check if title mentions current or future year (2026, 2027)
+  const hasCurrentOrFutureYear = /\b(2026|2027)\b/.test(titleLower);
+
+  if (hasPastYear && !hasCurrentOrFutureYear) {
+    return true;
+  }
+
+  if (parsedDate) {
+    const postYear = new Date(parsedDate).getFullYear();
+    if (postYear < 2026 && !hasCurrentOrFutureYear) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function detectState(title, href) {
   const combined = `${title || ''} ${href || ''}`;
 
@@ -754,15 +776,6 @@ async function scrapeFeeds() {
       // Handle direct PDF links
       if (href.toLowerCase().endsWith('.pdf')) {
         let pdfFallbackDate = new Date();
-        const pdfYearMatch = text.match(/\b(20\d{2})\b/);
-        if (pdfYearMatch) {
-          pdfFallbackDate = new Date(parseInt(pdfYearMatch[1], 10), 5, 1);
-        } else {
-          const shortYearMatch = href.match(/(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(\d{2})\b/i);
-          if (shortYearMatch) {
-            pdfFallbackDate = new Date(2000 + parseInt(shortYearMatch[1], 10), 5, 1);
-          }
-        }
 
 const OFFICIAL_GOVT_MAP = [
   { keywords: ['aadhar', 'uidai'], url: 'https://uidai.gov.in' },
@@ -840,18 +853,8 @@ function sanitizeScrapedGovtUrl(targetUrl = '', title = '') {
 
       const parsedDate = parsePostDate(details.postDate);
 
-      // Resolve year fallback date
+      // Fallback date is current timestamp
       let fallbackDate = new Date();
-      const combinedText = `${title} ${href}`;
-      const yearMatch = combinedText.match(/\b(20\d{2})\b/);
-      if (yearMatch) {
-        fallbackDate = new Date(parseInt(yearMatch[1], 10), 5, 1);
-      } else {
-        const shortYearMatch = href.match(/(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(\d{2})\b/i);
-        if (shortYearMatch) {
-          fallbackDate = new Date(2000 + parseInt(shortYearMatch[1], 10), 5, 1);
-        }
-      }
 
       // Fallback detailsText generator if scraping yields short text so NO job alert is ever skipped
       let finalDetailsText = details.detailsText ? details.detailsText.trim() : '';
@@ -864,6 +867,9 @@ function sanitizeScrapedGovtUrl(targetUrl = '', title = '') {
       const finalOfficialUrl = details.officialUrl || href;
       const finalOfficialPdfUrl = details.officialPdfUrl || href;
       const finalOfficialApplyUrl = details.officialApplyUrl || href;
+
+      const isExpired = isOldOrExpiredAlert(title, parsedDate || fallbackDate);
+      const computedStatus = isExpired ? 'expired' : 'active';
 
       // Save or update to DB
       await LiveAlert.updateOne(
@@ -881,10 +887,8 @@ function sanitizeScrapedGovtUrl(targetUrl = '', title = '') {
             source: 'SarkariResult',
             state,
             category: detectCategory(title, href),
-            detailsText: finalDetailsText
-          },
-          $setOnInsert: {
-            status: 'active'
+            detailsText: finalDetailsText,
+            status: computedStatus
           }
         },
         { upsert: true }

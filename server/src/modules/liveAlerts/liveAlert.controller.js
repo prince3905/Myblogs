@@ -65,14 +65,17 @@ async function autoFetchFeaturedImage(query) {
 async function getAlerts(req, res) {
   try {
     const { status, limit, page, search, q } = req.query;
-    const filter = {
-      title: { $not: /\b(19\d\d|200\d|201\d|202[0-4])\b/i }
-    };
+    const filter = {};
     if (status && status !== 'all') {
       filter.status = status;
     } else {
       filter.status = { $in: ['active', 'published'] };
     }
+
+    const cleanYearCondition = [
+      { title: /2026|2027/i },
+      { title: { $not: /\b(2025|2024|2023|2022|2021|2020)\b/i } }
+    ];
 
     const searchQuery = (search || q || '').trim();
     if (searchQuery) {
@@ -135,57 +138,83 @@ async function getAlerts(req, res) {
         LiveAlert.find({
           ...filter,
           $and: [
+            { $or: cleanYearCondition },
             { title: { $not: /admit card|hall ticket|call letter|exam city|result|score card|merit list|answer key|objection|syllabus/i } },
             { category: { $not: /Admit Card|Result|Answer Key|Syllabus/i } }
           ]
-        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(100).lean(),
+        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
 
         LiveAlert.find({
           ...filter,
-          $or: [
-            { category: 'Admit Card' },
-            { title: { $regex: /admit card|hall ticket|call letter|exam city/i } }
+          $and: [
+            { $or: cleanYearCondition },
+            {
+              $or: [
+                { category: 'Admit Card' },
+                { title: { $regex: /admit card|hall ticket|call letter|exam city/i } }
+              ]
+            }
           ]
-        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(100).lean(),
+        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
 
         LiveAlert.find({
           ...filter,
-          $or: [
-            { category: 'Result' },
-            { title: { $regex: /result|score card|merit list/i } }
+          $and: [
+            { $or: cleanYearCondition },
+            {
+              $or: [
+                { category: 'Result' },
+                { title: { $regex: /result|score card|merit list/i } }
+              ]
+            }
           ]
-        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(100).lean(),
+        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
 
         LiveAlert.find({
           ...filter,
-          $or: [
-            { category: 'Answer Key' },
-            { title: { $regex: /answer key|answer-key|objection tracker/i } }
+          $and: [
+            { $or: cleanYearCondition },
+            {
+              $or: [
+                { category: 'Answer Key' },
+                { title: { $regex: /answer key|answer-key|objection tracker/i } }
+              ]
+            }
           ]
-        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(50).lean(),
+        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(50).lean(),
 
         LiveAlert.find({
           ...filter,
-          $or: [
-            { category: 'Admission' },
-            { title: { $regex: /admission|counselling|seat allotment/i } }
+          $and: [
+            { $or: cleanYearCondition },
+            {
+              $or: [
+                { category: 'Admission' },
+                { title: { $regex: /admission|counselling|seat allotment/i } }
+              ]
+            }
           ]
-        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(50).lean(),
+        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(50).lean(),
 
         LiveAlert.find({
           ...filter,
-          $or: [
-            { category: 'Syllabus' },
-            { title: { $regex: /syllabus|exam pattern|curriculum/i } }
+          $and: [
+            { $or: cleanYearCondition },
+            {
+              $or: [
+                { category: 'Syllabus' },
+                { title: { $regex: /syllabus|exam pattern|curriculum/i } }
+              ]
+            }
           ]
-        }).select('-detailsText').sort({ createdAt: -1, parsedPostDate: -1 }).limit(50).lean()
+        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(50).lean()
       ]);
 
       alerts = [...jobs, ...admitCards, ...results, ...answerKeys, ...admissions, ...syllabus];
     } else {
       alerts = await LiveAlert.find(filter)
         .select('-detailsText')
-        .sort({ createdAt: -1, parsedPostDate: -1 })
+        .sort({ parsedPostDate: -1, createdAt: -1 })
         .skip(skip)
         .limit(queryLimit);
     }
