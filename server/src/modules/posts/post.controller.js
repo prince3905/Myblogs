@@ -130,8 +130,9 @@ function resolveCategoryName(catParam) {
 }
 
 async function listPublishedPosts(req, res) {
-  const { search = '', category = '', tags = '', dateFrom = '', dateTo = '', page = 1, limit = 10, sortBy = 'date', order = 'desc' } = req.query;
-  const query = { status: 'published' };
+  try {
+    const { search = '', category = '', tags = '', dateFrom = '', dateTo = '', page = 1, limit = 10, sortBy = 'date', order = 'desc' } = req.query;
+    const query = { status: 'published' };
   let titleRegexPattern = '';
 
   if (category) {
@@ -331,7 +332,11 @@ async function listPublishedPosts(req, res) {
     }
   }
 
-  return res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+    return res.json({ posts, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+  } catch (err) {
+    console.error('[listPublishedPosts] Error:', err.message);
+    return res.status(500).json({ posts: [], total: 0, page: 1, pages: 0, error: err.message });
+  }
 }
 
 async function listAdminPosts(req, res) {
@@ -347,58 +352,84 @@ async function listAdminPosts(req, res) {
 }
 
 async function getPostBySlug(req, res) {
-  let post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' }).lean();
-  if (!post && req.params.slug) {
-    // Fallback fuzzy search by prefix or cleaned slug to prevent 404 on modified/legacy links
-    const cleanSlug = req.params.slug.replace(/-(direct-link|step-by-step|apply-now|online-form|\d+).*$/i, '');
-    const prefix = req.params.slug.slice(0, 20);
-    post = await BlogPost.findOne({
+  try {
+    const slugParam = req.params.slug ? String(req.params.slug).trim() : '';
+    if (!slugParam) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    let post = await BlogPost.findOne({ slug: slugParam, status: 'published' }).lean();
+    if (!post) {
+      // Fallback fuzzy search by prefix or cleaned slug to prevent 404 on modified/legacy links
+      const cleanSlug = slugParam.replace(/-(direct-link|step-by-step|apply-now|online-form|\d+).*$/i, '');
+      const prefix = slugParam.slice(0, 20);
+      const safeClean = cleanSlug.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const safePrefix = prefix.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
+      if (safeClean || safePrefix) {
+        post = await BlogPost.findOne({
+          status: 'published',
+          $or: [
+            ...(safeClean ? [{ slug: new RegExp(safeClean, 'i') }] : []),
+            ...(safePrefix ? [{ slug: new RegExp('^' + safePrefix, 'i') }] : [])
+          ]
+        }).sort({ publishedAt: -1 }).lean();
+      }
+    }
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Expose disablePdfDownload toggle to public post page
+    try {
+      const Settings = require('../settings/settings.model');
+      const pdfSetting = await Settings.findOne({ key: 'disablePdfDownload' });
+      post.disablePdfDownload = pdfSetting ? pdfSetting.value === true : false;
+    } catch (err) {
+      console.error('Failed to get disablePdfDownload setting:', err.message);
+      post.disablePdfDownload = false;
+    }
+
+    // Increment views (fire-and-forget, no await needed for response)
+    BlogPost.updateOne({ _id: post._id }, { $inc: { views: 1 } }).catch(() => {});
+    post.views = (post.views || 0) + 1;
+
+    const postTags = Array.isArray(post.tags) ? post.tags : [];
+    const relatedQueryConditions = [{ category: post.category }];
+    if (postTags.length > 0) {
+      relatedQueryConditions.push({ tags: { $in: postTags } });
+    }
+
+    const relatedPosts = await BlogPost.find({
+      _id: { $ne: post._id },
       status: 'published',
-      $or: [
-        { slug: new RegExp(cleanSlug.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') },
-        { slug: new RegExp('^' + prefix.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') }
-      ]
-    }).sort({ publishedAt: -1 }).lean();
-  }
-  if (!post) {
+      $or: relatedQueryConditions
+    })
+      .sort({ publishedAt: -1 })
+      .limit(3)
+      .select('title slug category featuredImage readingTime publishedAt')
+      .lean();
+
+    // Geo-translate for non-Indian visitors
+    if (req.needsTranslation) {
+      try {
+        const { translatePost } = require('../../shared/middleware/geoTranslate');
+        const [translatedPost, translatedRelated] = await Promise.all([
+          translatePost(post, req),
+          Promise.all(relatedPosts.map(rp => translatePost(rp, req)))
+        ]);
+        return res.json({ post: translatedPost, relatedPosts: translatedRelated });
+      } catch (transErr) {
+        console.error('[GeoTranslate] Translation failed, returning original:', transErr.message);
+      }
+    }
+
+    return res.json({ post, relatedPosts });
+  } catch (err) {
+    console.error('[getPostBySlug] Error:', err.message);
     return res.status(404).json({ message: 'Post not found' });
   }
-
-  // Expose disablePdfDownload toggle to public post page
-  try {
-    const Settings = require('../settings/settings.model');
-    const pdfSetting = await Settings.findOne({ key: 'disablePdfDownload' });
-    post.disablePdfDownload = pdfSetting ? pdfSetting.value === true : false;
-  } catch (err) {
-    console.error('Failed to get disablePdfDownload setting:', err.message);
-    post.disablePdfDownload = false;
-  }
-
-  // Increment views (fire-and-forget, no await needed for response)
-  BlogPost.updateOne({ _id: post._id }, { $inc: { views: 1 } }).catch(() => {});
-  post.views = (post.views || 0) + 1;
-
-  const relatedPosts = await BlogPost.find({
-    _id: { $ne: post._id },
-    status: 'published',
-    $or: [{ category: post.category }, { tags: { $in: post.tags } }]
-  })
-    .sort({ publishedAt: -1 })
-    .limit(3)
-    .select('title slug category featuredImage readingTime publishedAt')
-    .lean();
-
-  // Geo-translate for non-Indian visitors
-  if (req.needsTranslation) {
-    const { translatePost } = require('../../shared/middleware/geoTranslate');
-    const [translatedPost, translatedRelated] = await Promise.all([
-      translatePost(post, req),
-      Promise.all(relatedPosts.map(rp => translatePost(rp, req)))
-    ]);
-    return res.json({ post: translatedPost, relatedPosts: translatedRelated });
-  }
-
-  return res.json({ post, relatedPosts });
 }
 
 async function getAdminPostById(req, res, next) {
@@ -569,8 +600,13 @@ async function deletePost(req, res, next) {
 }
 
 async function listCategories(req, res) {
-  const categories = await BlogPost.distinct('category', { status: 'published' });
-  return res.json(categories.filter(Boolean).sort((a, b) => a.localeCompare(b)));
+  try {
+    const categories = await BlogPost.distinct('category', { status: 'published' });
+    return res.json(categories.filter(Boolean).sort((a, b) => a.localeCompare(b)));
+  } catch (err) {
+    console.error('[listCategories] Error:', err.message);
+    return res.status(500).json([]);
+  }
 }
 
 async function siteMeta(req, res) {
@@ -582,52 +618,58 @@ async function siteMeta(req, res) {
 }
 
 async function sitemap(req, res) {
-  // Prevent CDN and browser caching of sitemap XML to ensure updates show immediately
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-
-  const { normalizeCanonicalUrl } = require('../../shared/utils/urlUtils');
-
-  const posts = await BlogPost.find({ status: 'published' }).sort({ updatedAt: -1 });
-  const urls = posts
-    .map((post) => {
-      const canonical = normalizeCanonicalUrl(post.canonicalUrl || postUrl(post));
-      return `<url><loc>${canonical}</loc><lastmod>${post.updatedAt ? post.updatedAt.toISOString() : new Date().toISOString()}</lastmod></url>`;
-    })
-    .join('');
-
-  const staticPages = ['/about', '/contact', '/privacy', '/search', '/archive', '/tools', '/games', '/terms', '/job-alerts'].map(p =>
-    `<url><loc>${normalizeCanonicalUrl(p)}</loc><priority>0.8</priority></url>`
-  ).join('');
-
-  // Include category pages dynamically
-  const categories = await BlogPost.distinct('category', { status: 'published' });
-  const categoryUrls = categories
-    .filter(Boolean)
-    .map((cat) => `<url><loc>${normalizeCanonicalUrl(`/category/${catUrlSlug(cat)}`)}</loc><priority>0.7</priority></url>`)
-    .join('');
-
-  // Include tag pages dynamically
-  const tags = await BlogPost.distinct('tags', { status: 'published' });
-  const tagUrls = tags
-    .filter(Boolean)
-    .map((tag) => `<url><loc>${normalizeCanonicalUrl(`/tags/${encodeURIComponent(tag.toLowerCase())}`)}</loc><priority>0.6</priority></url>`)
-    .join('');
-
-  // Include published Web Stories dynamically
-  let storyUrls = '';
   try {
-    const WebStory = mongoose.model('WebStory');
-    const stories = await WebStory.find({ status: 'published' }).sort({ updatedAt: -1 });
-    storyUrls = stories
-      .map((story) => `<url><loc>${normalizeCanonicalUrl(`/web-stories/${story.slug}`)}</loc><lastmod>${story.updatedAt ? story.updatedAt.toISOString() : new Date().toISOString()}</lastmod><priority>0.8</priority></url>`)
-      .join('');
-  } catch (storyErr) {
-    console.error('[Sitemap] Failed to append Web Stories:', storyErr.message);
-  }
+    // Prevent CDN and browser caching of sitemap XML to ensure updates show immediately
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><priority>0.9</priority></url>${staticPages}${categoryUrls}${tagUrls}${urls}${storyUrls}</urlset>`;
-  res.type('application/xml');
-  return res.send(xml);
+    const { normalizeCanonicalUrl } = require('../../shared/utils/urlUtils');
+
+    const posts = await BlogPost.find({ status: 'published' }).sort({ updatedAt: -1 });
+    const urls = posts
+      .map((post) => {
+        const canonical = normalizeCanonicalUrl(post.canonicalUrl || postUrl(post));
+        return `<url><loc>${canonical}</loc><lastmod>${post.updatedAt ? post.updatedAt.toISOString() : new Date().toISOString()}</lastmod></url>`;
+      })
+      .join('');
+
+    const staticPages = ['/about', '/contact', '/privacy', '/search', '/archive', '/tools', '/games', '/terms', '/job-alerts'].map(p =>
+      `<url><loc>${normalizeCanonicalUrl(p)}</loc><priority>0.8</priority></url>`
+    ).join('');
+
+    // Include category pages dynamically
+    const categories = await BlogPost.distinct('category', { status: 'published' });
+    const categoryUrls = categories
+      .filter(Boolean)
+      .map((cat) => `<url><loc>${normalizeCanonicalUrl(`/category/${catUrlSlug(cat)}`)}</loc><priority>0.7</priority></url>`)
+      .join('');
+
+    // Include tag pages dynamically
+    const tags = await BlogPost.distinct('tags', { status: 'published' });
+    const tagUrls = tags
+      .filter(Boolean)
+      .map((tag) => `<url><loc>${normalizeCanonicalUrl(`/tags/${encodeURIComponent(tag.toLowerCase())}`)}</loc><priority>0.6</priority></url>`)
+      .join('');
+
+    // Include published Web Stories dynamically
+    let storyUrls = '';
+    try {
+      const WebStory = mongoose.model('WebStory');
+      const stories = await WebStory.find({ status: 'published' }).sort({ updatedAt: -1 });
+      storyUrls = stories
+        .map((story) => `<url><loc>${normalizeCanonicalUrl(`/web-stories/${story.slug}`)}</loc><lastmod>${story.updatedAt ? story.updatedAt.toISOString() : new Date().toISOString()}</lastmod><priority>0.8</priority></url>`)
+        .join('');
+    } catch (storyErr) {
+      console.error('[Sitemap] Failed to append Web Stories:', storyErr.message);
+    }
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><priority>0.9</priority></url>${staticPages}${categoryUrls}${tagUrls}${urls}${storyUrls}</urlset>`;
+    res.type('application/xml');
+    return res.send(xml);
+  } catch (err) {
+    console.error('[Sitemap] Failed to generate XML:', err.message);
+    res.type('application/xml');
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><priority>1.0</priority></url></urlset>`);
+  }
 }
 
 function robots(req, res) {
@@ -636,18 +678,19 @@ function robots(req, res) {
 }
 
 async function rssFeed(req, res) {
-  const posts = await BlogPost.find({ status: 'published' }).sort({ publishedAt: -1 }).limit(20);
-  const items = posts.map(p => `
-    <item>
-      <title>${p.title}</title>
-      <link>${postUrl(p)}</link>
-      <pubDate>${new Date(p.publishedAt || p.createdAt).toUTCString()}</pubDate>
-      <description>${p.excerpt}</description>
-      <guid>${postUrl(p)}</guid>
-    </item>
-  `).join('');
+  try {
+    const posts = await BlogPost.find({ status: 'published' }).sort({ publishedAt: -1 }).limit(20);
+    const items = posts.map(p => `
+      <item>
+        <title>${p.title}</title>
+        <link>${postUrl(p)}</link>
+        <pubDate>${new Date(p.publishedAt || p.createdAt).toUTCString()}</pubDate>
+        <description>${p.excerpt}</description>
+        <guid>${postUrl(p)}</guid>
+      </item>
+    `).join('');
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
     <title>Digital Home</title>
@@ -657,8 +700,13 @@ async function rssFeed(req, res) {
   </channel>
 </rss>`;
 
-  res.type('application/xml');
-  return res.send(xml);
+    res.type('application/xml');
+    return res.send(xml);
+  } catch (err) {
+    console.error('[RSS] Failed to generate RSS feed:', err.message);
+    res.type('application/xml');
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Digital Home</title><link>${env.siteUrl}</link></channel></rss>`);
+  }
 }
 
 async function searchPosts(req, res, next) {

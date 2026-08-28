@@ -33,54 +33,76 @@ const publicPath = path.join(__dirname, '../public');
 // Static asset HTTP Cache-Control header injection (max-age 1 year for static assets)
 app.use(serverCacheService.staticAssetCacheMiddleware());
 
-// 1-Step 301 Direct Canonical Domain Redirect (apex domain & render URL -> www.digitalhomeblog.in)
+// Unified 301 Canonical Redirect Middleware (Eliminates Multi-hop Redirect Chains)
 app.use((req, res, next) => {
-  if (env.nodeEnv === 'production' && !req.path.startsWith('/api')) {
-    const host = (req.headers.host || '').toLowerCase();
-    if (host === 'digitalhomeblog.in' || host === 'digital-home-blog.onrender.com') {
-      return res.redirect(301, `https://www.digitalhomeblog.in${req.originalUrl}`);
-    }
+  if (req.path.startsWith('/api') || req.path.startsWith('/assets') || req.path.startsWith('/static')) {
+    return next();
   }
-  next();
-});
 
-// 301 Permanent Redirect Cleaner for Malformed/Duplicate Nested URLs
-app.use((req, res, next) => {
+  const rawHost = (req.headers.host || '').toLowerCase();
+  const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').toLowerCase();
   const rawUrl = req.originalUrl || req.url;
-  
-  if (!req.path.startsWith('/api') && !req.path.startsWith('/assets') && !req.path.startsWith('/static')) {
-    let cleaned = rawUrl;
-    let needsRedirect = false;
 
-    // 1. Handle nested domain duplication e.g., /digitalhomeblog.in/
-    if (cleaned.includes('digitalhomeblog.in')) {
+  let needsRedirect = false;
+  let targetHost = rawHost;
+  let targetProto = proto;
+  let cleanedPath = rawUrl;
+
+  // 1. Host & Protocol Normalization (Production)
+  if (env.nodeEnv === 'production') {
+    if (rawHost === 'digitalhomeblog.in' || rawHost === 'digital-home-blog.onrender.com') {
       needsRedirect = true;
-      cleaned = cleaned.replace(/\/digitalhomeblog\.in\/?/gi, '/');
-      cleaned = cleaned.replace(/digitalhomeblog\.in\/?/gi, '');
+      targetHost = 'www.digitalhomeblog.in';
     }
-
-    // 2. Handle ampersand in category e.g., sarkari-jobs-&-exams or %26
-    if (cleaned.includes('sarkari-jobs-&-exams') || cleaned.includes('sarkari-jobs-%26-exams')) {
+    if (proto !== 'https') {
       needsRedirect = true;
-      cleaned = cleaned.replace(/sarkari-jobs-(&|%26)-exams/gi, 'sarkari-jobs-exams');
-    }
-
-    // 3. Handle double nested path e.g., /blog/sarkari-jobs-exams/blog/...
-    if (/\/(blog|category)\/.*\/(blog|category)\//i.test(cleaned)) {
-      needsRedirect = true;
-      const parts = cleaned.split('/').filter(Boolean);
-      const lastSlug = parts[parts.length - 1];
-      cleaned = `/blog/sarkari-jobs-exams/${lastSlug}`;
-    }
-
-    // 4. Clean multiple consecutive slashes
-    cleaned = cleaned.replace(/\/{2,}/g, '/');
-
-    if (needsRedirect && cleaned !== rawUrl) {
-      console.log(`[301 URL Fixer Redirect] ${rawUrl} -> ${cleaned}`);
-      return res.redirect(301, `https://www.digitalhomeblog.in${cleaned.startsWith('/') ? cleaned : '/' + cleaned}`);
+      targetProto = 'https';
     }
   }
+
+  // 2. Handle nested domain duplication e.g., /digitalhomeblog.in/
+  if (cleanedPath.includes('digitalhomeblog.in')) {
+    needsRedirect = true;
+    cleanedPath = cleanedPath.replace(/\/digitalhomeblog\.in\/?/gi, '/');
+    cleanedPath = cleanedPath.replace(/digitalhomeblog\.in\/?/gi, '');
+  }
+
+  // 3. Handle ampersand in category e.g., sarkari-jobs-&-exams or %26
+  if (cleanedPath.includes('sarkari-jobs-&-exams') || cleanedPath.includes('sarkari-jobs-%26-exams')) {
+    needsRedirect = true;
+    cleanedPath = cleanedPath.replace(/sarkari-jobs-(&|%26)-exams/gi, 'sarkari-jobs-exams');
+  }
+
+  // 4. Handle double nested path e.g., /blog/sarkari-jobs-exams/blog/...
+  if (/\/(blog|category)\/.*\/(blog|category)\//i.test(cleanedPath)) {
+    needsRedirect = true;
+    const parts = cleanedPath.split('/').filter(Boolean);
+    const lastSlug = parts[parts.length - 1];
+    cleanedPath = `/blog/sarkari-jobs-exams/${lastSlug}`;
+  }
+
+  // 5. Clean multiple consecutive slashes
+  if (/\/{2,}/.test(cleanedPath)) {
+    needsRedirect = true;
+    cleanedPath = cleanedPath.replace(/\/{2,}/g, '/');
+  }
+
+  // 6. Ensure clean leading slash
+  if (!cleanedPath.startsWith('/')) {
+    cleanedPath = '/' + cleanedPath;
+  }
+
+  if (needsRedirect) {
+    const finalTarget = env.nodeEnv === 'production'
+      ? `https://www.digitalhomeblog.in${cleanedPath}`
+      : `http://${targetHost}${cleanedPath}`;
+
+    if (finalTarget !== `${proto}://${rawHost}${rawUrl}`) {
+      console.log(`[Unified 301 Canonical Redirect] ${proto}://${rawHost}${rawUrl} -> ${finalTarget}`);
+      return res.redirect(301, finalTarget);
+    }
+  }
+
   next();
 });
 

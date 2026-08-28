@@ -21,6 +21,7 @@ const SearchPage = lazy(() => import('../features/blog/pages/SearchPage'));
 const ToolsPage = lazy(() => import('../features/tools/pages/ToolsPage'));
 const GamesPage = lazy(() => import('../features/games/pages/GamesPage'));
 const PublicLiveAlertsPage = lazy(() => import('../features/blog/pages/PublicLiveAlertsPage'));
+const NotFoundPage = lazy(() => import('../features/blog/pages/NotFoundPage'));
 
 // Lazy load admin features
 const AdminLayout = lazy(() => import('../features/admin/components/AdminLayout'));
@@ -98,6 +99,7 @@ const SearchPageSuspense = withPublicSuspense(SearchPage);
 const ToolsPageSuspense = withPublicSuspense(ToolsPage);
 const GamesPageSuspense = withPublicSuspense(GamesPage);
 const PublicLiveAlertsPageSuspense = withPublicSuspense(PublicLiveAlertsPage);
+const NotFoundPageSuspense = withPublicSuspense(NotFoundPage);
 
 function WebStoryRedirect() {
   const { slug } = useParams();
@@ -146,7 +148,7 @@ export default function App() {
           <Route path="posts/:id/edit" element={<PostEditorPageSuspense />} />
           <Route path="settings" element={<AdminSettingsPageSuspense />} />
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPageSuspense />} />
       </Routes>
     </ToastProvider>
   );
