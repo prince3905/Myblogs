@@ -438,7 +438,7 @@ function sanitizeThirdPartyLinks(content) {
     const lowerHref = href.toLowerCase();
     const lowerAnchor = anchorText.toLowerCase();
     
-    const isThirdPartyBad = lowerHref.includes('sarkariresult') || lowerHref.includes('freejobalert');
+    const isThirdPartyBad = lowerHref.includes('sarkariresult') || lowerHref.includes('freejobalert') || lowerHref.includes('sarkariexam') || lowerHref.includes('jobalerts');
     const isTool = lowerHref.includes('tool') || lowerHref.includes('resize') || lowerHref.includes('compress') || lowerHref.includes('crop') || lowerHref.includes('convert') || lowerHref.includes('age') || lowerHref.includes('ilovepdf') || lowerHref.includes('imageresizer') || lowerHref.includes('pdfresizer') ||
                    lowerAnchor.includes('tool') || lowerAnchor.includes('resize') || lowerAnchor.includes('compress') || lowerAnchor.includes('crop') || lowerAnchor.includes('signature') || lowerAnchor.includes('age-calculator');
 
@@ -460,7 +460,7 @@ function sanitizeThirdPartyLinks(content) {
   // Replace tool URLs with /tools
   c = c.replace(/(https?:\/\/[^\s<"'`()]+(?:sarkariresult\.com\/tools|sarkariresult\.com\/resizer|sarkariresult\.tools|freejobalert\.com\/tools|ilovepdf\.com|imageresizer\.com)[^\s<"'`()]*)/gi, '/tools');
   // Replace general competitor URLs with /job-alerts
-  c = c.replace(/(https?:\/\/[^\s<"'`()]+(?:sarkariresult|freejobalert)[^\s<"'`()]*)/gi, '/job-alerts');
+  c = c.replace(/(https?:\/\/[^\s<"'`()]+(?:sarkariresult|freejobalert|sarkariexam|jobalerts)[^\s<"'`()]*)/gi, '/job-alerts');
 
   return c;
 }

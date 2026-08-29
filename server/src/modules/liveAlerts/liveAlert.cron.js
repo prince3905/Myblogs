@@ -1,6 +1,8 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const LiveAlert = require('./liveAlert.model');
+const { resolveOfficialGovtPortal, isDisallowedThirdPartyDomain } = require('../../shared/utils/govtPortalMap');
+const { extractDateFromSlugOrText, parseFlexibleDate } = require('../../shared/utils/dateExtractor');
 
 const USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -287,16 +289,17 @@ async function scrapeDetailedUrls(pageUrl) {
     let lastDate = '';
 
     // 1. Extract Post Date
-    $('tr').each((i, el) => {
+    $('tr, li, p, td, div').each((i, el) => {
+      if (postDate) return;
       const text = $(el).text();
-      if (text.includes('Post Date / Update :') || text.includes('Post Date:')) {
+      if (text.includes('Post Date / Update :') || text.includes('Post Date:') || text.includes('Post Date / Update:')) {
         const val = $(el).find('td').last().text().trim();
-        if (val) {
+        if (val && /\d{1,2}/.test(val)) {
           postDate = val;
         } else {
           const parts = text.split(':');
           if (parts.length > 1) {
-            postDate = parts[1].trim();
+            postDate = parts.slice(1).join(':').trim();
           }
         }
       }
@@ -314,45 +317,66 @@ async function scrapeDetailedUrls(pageUrl) {
       postDate = postDate.replace(/[\s\-:|]+/g, ' ').trim();
     }
 
-    // 2. Extract lastDate from the detail page text if possible
-    const dateRegex = /\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/g;
-    const wordDateRegex = /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4}\b/gi;
-    const bodyText = $('body').text();
-    const lastDateMatch = bodyText.match(/(?:last\s+date|apply\s+till|deadline|closing\s+date)[^\n]{0,50}/i);
-    if (lastDateMatch) {
-      const lineText = lastDateMatch[0];
-      const match = dateRegex.exec(lineText);
-      if (match) {
-        lastDate = match[0];
-      } else {
-        const wordMatch = wordDateRegex.exec(lineText);
-        if (wordMatch) {
-          lastDate = wordMatch[0];
+    // 2. Extract authentic lastDate (End Date) from Table / List / Body
+    $('tr, li, p, td').each((i, el) => {
+      if (lastDate) return;
+      const text = $(el).text().trim();
+      const lower = text.toLowerCase();
+      if (
+        lower.includes('last date for apply') ||
+        lower.includes('last date to apply') ||
+        lower.includes('last date apply') ||
+        lower.includes('registration last date') ||
+        lower.includes('application last date') ||
+        lower.includes('apply online last date') ||
+        lower.includes('closing date') ||
+        lower.includes('last date :') ||
+        lower.includes('last date:')
+      ) {
+        const dateMatch = text.match(/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/);
+        if (dateMatch) {
+          lastDate = dateMatch[0];
+        } else {
+          const wordDateMatch = text.match(/\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}\b/i);
+          if (wordDateMatch) {
+            lastDate = wordDateMatch[0];
+          }
+        }
+      }
+    });
+
+    if (!lastDate) {
+      const bodyText = $('body').text();
+      const dateRegex = /\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/g;
+      const wordDateRegex = /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4}\b/gi;
+      const lastDateMatch = bodyText.match(/(?:last\s+date|apply\s+till|deadline|closing\s+date)[^\n]{0,50}/i);
+      if (lastDateMatch) {
+        const lineText = lastDateMatch[0];
+        const match = dateRegex.exec(lineText);
+        if (match) {
+          lastDate = match[0];
+        } else {
+          const wordMatch = wordDateRegex.exec(lineText);
+          if (wordMatch) {
+            lastDate = wordMatch[0];
+          }
         }
       }
     }
 
-    // 3. Extract links from Table or Paragraph structure
-    const cleanAndResolve = (href) => {
-      if (!href) return '';
-      const baseUrl = 'https://www.sarkariresult.com';
-      let resolved = href.trim();
-      if (resolved.startsWith('/') || !resolved.startsWith('http')) {
-        resolved = resolved.startsWith('/') ? `${baseUrl}${resolved}` : `${baseUrl}/${resolved}`;
-      }
-      
-      const lower = resolved.toLowerCase();
-      if (
-        (lower.includes('sarkariresult') || lower.includes('freejobalert') || lower.includes('ilovepdf') || lower.includes('imageresizer') || lower.includes('pdfresizer')) &&
-        (lower.includes('tool') || lower.includes('resize') || lower.includes('compress') || lower.includes('crop') || lower.includes('convert') || lower.includes('age'))
-      ) {
-        return '/tools';
-      }
-      
-      return resolved;
+    // 3. Extract direct official links specifically from the "Important Links" table
+    const isCompetitorDomain = (url = '') => {
+      if (!url) return false;
+      const lower = url.toLowerCase();
+      return (
+        lower.includes('sarkariresult') ||
+        lower.includes('sarkari-result') ||
+        lower.includes('freejobalert') ||
+        lower.includes('sarkariexam') ||
+        lower.includes('jobalerts')
+      );
     };
 
-    // Exclude social media and common static pages
     const excludes = [
       'instagram.com', 'facebook.com', 'twitter.com', 'x.com', 't.me', 'telegram.me',
       'whatsapp.com', 'youtube.com', 'threads.net', 'threads.com', 'play.google.com',
@@ -360,148 +384,81 @@ async function scrapeDetailedUrls(pageUrl) {
       'privacy-policy', 'googlesyndication.com', 'doubleclick.net', 'share.google'
     ];
 
-    const classifyLink = (href, context) => {
-      if (
-        context.includes('apply online') || 
-        context.includes('online apply') || 
-        context.includes('apply link') || 
-        context.includes('registration') || 
-        context.includes('login') || 
-        context.includes('apply now') ||
-        context.includes('admit card') ||
-        context.includes('hall ticket') ||
-        context.includes('admitcard') ||
-        context.includes('result') ||
-        context.includes('score card') ||
-        context.includes('scorecard') ||
-        context.includes('answer key') ||
-        context.includes('answerkey') ||
-        context.includes('solution')
-      ) {
-        if (!officialApplyUrl) {
-          officialApplyUrl = href;
-        }
-      } else if (
-        context.includes('notification') || 
-        context.includes('advertisement') || 
-        context.includes('advt') || 
-        context.includes('download pdf') || 
-        context.includes('circular') || 
-        context.includes('download details')
-      ) {
-        if (!officialPdfUrl) {
-          officialPdfUrl = href;
-        }
-      } else if (
-        context.includes('official website') || 
-        context.includes('website') || 
-        context.includes('home page') || 
-        context.includes('board website') || 
-        context.includes('visit website')
-      ) {
-        if (!officialUrl) {
-          officialUrl = href;
-        }
-      }
-    };
+    $('table').each((i, tbl) => {
+      $(tbl).find('tr').each((rIdx, tr) => {
+        const rowCells = $(tr).find('td, th');
+        if (rowCells.length < 2) return;
 
-    // 3a. Try to find the "Useful Important Links" table
-    let linksContainer = null;
-    $('table').each((i, el) => {
-      const text = $(el).text().toLowerCase();
-      if (text.includes('useful important links') || text.includes('some useful important')) {
-        linksContainer = $(el);
-      }
-    });
+        const labelText = $(rowCells[0]).text().replace(/\s+/g, ' ').trim().toLowerCase();
+        const actionCell = $(rowCells[rowCells.length - 1]);
 
-    if (linksContainer) {
-      const anchors = linksContainer.find('a');
-      anchors.each((i, el) => {
-        const href = $(el).attr('href');
-        if (!href || href.startsWith('javascript:')) return;
-        
-        const resolvedHref = cleanAndResolve(href);
-        const lowerHref = resolvedHref.toLowerCase();
-        if (excludes.some(ex => lowerHref.includes(ex))) return;
-        if (lowerHref === 'https://www.sarkariresult.com' || lowerHref === 'https://www.sarkariresult.com/') return;
+        actionCell.find('a').each((aIdx, a) => {
+          let href = ($(a).attr('href') || '').trim();
+          if (!href || href.startsWith('javascript:') || href === '#') return;
+          if (excludes.some(ex => href.toLowerCase().includes(ex))) return;
 
-        const text = $(el).text().trim();
-        const cell = $(el).closest('td, th');
-        const row = $(el).closest('tr');
+          // Catch tool URLs → redirect to our own tools page
+          if (
+            (href.toLowerCase().includes('tool') || href.toLowerCase().includes('resize') || href.toLowerCase().includes('compress') || href.toLowerCase().includes('crop') || href.toLowerCase().includes('convert') || href.toLowerCase().includes('age')) &&
+            isCompetitorDomain(href)
+          ) {
+            return;
+          }
 
-        const contexts = [text];
-        if (cell.length > 0) {
-          contexts.push(cell.text());
-          const prevCell = cell.prev();
-          if (prevCell.length > 0) {
-            contexts.push(prevCell.text());
-          } else {
-            const allRowCells = row.find('td, th');
-            const cellIndex = allRowCells.index(cell);
-            if (cellIndex > 0) {
-              contexts.push($(allRowCells[cellIndex - 1]).text());
+          // 1. Row: Apply Online / Online Form / Registration
+          if (
+            labelText.includes('apply online') ||
+            labelText.includes('online apply') ||
+            labelText === 'apply online' ||
+            labelText.includes('online form') ||
+            labelText.includes('apply link')
+          ) {
+            if (!officialApplyUrl && !isCompetitorDomain(href)) {
+              officialApplyUrl = href;
             }
           }
-        }
 
-        const contextStr = contexts.join(' | ').toLowerCase().replace(/\s+/g, ' ');
-        classifyLink(resolvedHref, contextStr);
-      });
-    } else {
-      // 3b. If no table is found, find the heading/element containing "Some Useful Important Links"
-      let headerEl = null;
-      $('h1, h2, h3, h4, p, div, td').each((i, el) => {
-        const text = $(el).text().trim().toLowerCase();
-        if (text === 'some useful important links' || text === 'useful important links' || text.includes('useful important links')) {
-          headerEl = $(el);
-        }
-      });
+          // 2. Row: Download Notification / Exam Notice / PDF
+          if (
+            labelText.includes('notification') ||
+            labelText.includes('exam notice') ||
+            labelText.includes('advertisement') ||
+            labelText.includes('download pdf') ||
+            labelText.includes('download details')
+          ) {
+            if (!officialPdfUrl && !isCompetitorDomain(href)) {
+              officialPdfUrl = href;
+            }
+          }
 
-      if (headerEl) {
-        const nextElements = headerEl.nextAll();
-        let currentLabel = '';
-        nextElements.each((i, el) => {
-          const text = $(el).text().trim();
-          const anchors = $(el).find('a');
-          if (anchors.length > 0) {
-            anchors.each((aIdx, aEl) => {
-              const href = $(aEl).attr('href');
-              if (!href || href.startsWith('javascript:')) return;
-              
-              const resolvedHref = cleanAndResolve(href);
-              const lowerHref = resolvedHref.toLowerCase();
-              if (excludes.some(ex => lowerHref.includes(ex))) return;
-              if (lowerHref === 'https://www.sarkariresult.com' || lowerHref === 'https://www.sarkariresult.com/') return;
-
-              const anchorText = $(aEl).text().trim();
-              const contextStr = `${currentLabel} | ${text} | ${anchorText}`.toLowerCase().replace(/\s+/g, ' ');
-              classifyLink(resolvedHref, contextStr);
-            });
-          } else {
-            currentLabel = text;
+          // 3. Row: Official Website / Portal
+          if (
+            labelText.includes('official website') ||
+            labelText.includes('official portal') ||
+            labelText.includes('board website') ||
+            labelText === 'official website'
+          ) {
+            if (!officialUrl && !isCompetitorDomain(href)) {
+              officialUrl = href;
+            }
           }
         });
-      }
-    }
+      });
+    });
 
-    // Fallbacks if not found by the targeted parser
+    // Fallback search across all page anchors for official gov/nic domains (never competitor links)
     if (!officialUrl) {
       $('a').each((i, el) => {
-        const href = $(el).attr('href') || '';
-        const resolvedHref = cleanAndResolve(href);
-        const lowerHref = resolvedHref.toLowerCase();
+        const href = ($(el).attr('href') || '').trim();
+        if (!href || href.startsWith('javascript:') || isCompetitorDomain(href)) return;
+        const lowerHref = href.toLowerCase();
         if (excludes.some(ex => lowerHref.includes(ex))) return;
-        if (lowerHref === 'https://www.sarkariresult.com' || lowerHref === 'https://www.sarkariresult.com/') return;
 
-        if ((lowerHref.includes('.gov.in') || lowerHref.includes('.nic.in')) && !lowerHref.includes('sarkariresult')) {
-          officialUrl = resolvedHref;
+        if ((lowerHref.includes('.gov.in') || lowerHref.includes('.nic.in') || lowerHref.includes('.ac.in') || lowerHref.includes('.edu.in')) && !isCompetitorDomain(href)) {
+          officialUrl = href;
         }
       });
     }
-
-    officialApplyUrl = cleanAndResolve(officialApplyUrl);
-    officialPdfUrl = cleanAndResolve(officialPdfUrl);
-    officialUrl = cleanAndResolve(officialUrl);
 
     // 4. Extract vacancy details tables text
     let detailsText = '';
@@ -564,6 +521,9 @@ async function scrapeDetailedUrls(pageUrl) {
                 (lower.includes('tool') || lower.includes('resize') || lower.includes('compress') || lower.includes('crop') || lower.includes('convert') || lower.includes('age'))
               ) {
                 resolvedHref = '/tools';
+              } else if (lower.includes('sarkariresult') || lower.includes('freejobalert') || lower.includes('sarkari-result') || lower.includes('sarkariexam') || lower.includes('jobalerts')) {
+                // Block ALL competitor links — don't add to cellLinks
+                return;
               }
               
               cellLinks.push(resolvedHref);
@@ -613,27 +573,30 @@ async function scrapeDetailedUrls(pageUrl) {
   }
 }
 
-function stripSarkariResultMentionsAndLinks(str = '') {
+function stripSarkariResultMentionsAndLinks(str = '', title = '', boardName = '') {
   if (!str || typeof str !== 'string') return str;
 
   let cleaned = str;
 
-  // 1. Replace outbound links
-  cleaned = cleaned.replace(/href=["']https?:\/\/(?:www\.)?sarkariresult\.com[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
-  cleaned = cleaned.replace(/href=["']https?:\/\/[^"']*sarkariresult[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+  // 1. Remove Source Link rows entirely
+  cleaned = cleaned.replace(/^.*(?:source\s*link|source\s*url|source\s*:).*$/gim, '');
 
-  // 2. Remove/replace text mentions & praises
+  // 2. Replace raw competitor URLs with authentic government portal or /job-alerts
+  cleaned = cleaned.replace(/https?:\/\/(?:www\.)?(?:sarkariresult|freejobalert|sarkariexam|jobalerts|rojgarresult)\.com[^\s"'\)<>]*/gi, () => {
+    return resolveOfficialGovtPortal(title, boardName, '');
+  });
+
+  // 3. Remove/replace text mentions & brand phrases
   cleaned = cleaned
-    .replace(/sarkari\s*result\s*official\s*(?:website|app|portal|tools?)/gi, 'Digital Home Official Portal')
+    .replace(/sarkari\s*result\s*official\s*(?:website|app|portal|tools?)/gi, 'Official Government Portal')
     .replace(/sarkari\s*result\s*(?:tools?|resizer|cropper|compressor)/gi, 'Student Utility Tools')
-    .replace(/sarkari\s*result/gi, 'Digital Home Portal')
-    .replace(/sarkariresult/gi, 'Digital Home')
-    .replace(/sarkari\s*resut/gi, 'Digital Home')
-    .replace(/sarkari\s*reult/gi, 'Digital Home');
-
-  // 3. Remove raw URLs
-  cleaned = cleaned.replace(/www\.sarkariresult\.com/gi, 'www.digitalhomeblog.in');
-  cleaned = cleaned.replace(/sarkariresult\.com/gi, 'digitalhomeblog.in');
+    .replace(/sarkari\s*result/gi, 'Official Portal')
+    .replace(/sarkariresult/gi, 'Official Portal')
+    .replace(/sarkari\s*resut/gi, 'Official Portal')
+    .replace(/sarkari\s*reult/gi, 'Official Portal')
+    .replace(/freejobalert/gi, 'Official Portal')
+    .replace(/sarkariexam/gi, 'Official Portal')
+    .replace(/rojgarresult/gi, 'Official Portal');
 
   return cleaned;
 }
@@ -660,7 +623,38 @@ function cleanDetailsText(text) {
 
     const lower = trimmed.toLowerCase();
     
-    // Check if this row is a tools row
+    // 1. Drop competitor promotional / social / app rows completely
+    if (
+      lower.includes('join sarkari') ||
+      lower.includes('telegram') ||
+      lower.includes('whatsapp') ||
+      lower.includes('t.me/') ||
+      lower.includes('whatsapp.com/channel') ||
+      lower.includes('android app') ||
+      lower.includes('apple ios app') ||
+      lower.includes('mobile app') ||
+      lower.includes('play.google.com') ||
+      lower.includes('itunes.apple.com') ||
+      lower.includes('registered trademark') ||
+      lower.includes('intellectual property') ||
+      lower.includes('application no. 4531613') ||
+      lower.includes('since 2012') ||
+      lower.includes('welcome to this official website') ||
+      lower.includes('for feedback / advertising') ||
+      lower.includes('support@sarkariresult') ||
+      lower.includes('for the latest updates on sarkari') ||
+      lower.includes('www.sarkariresult.com') || 
+      lower.includes('sarkariresult®') || 
+      lower.includes('sarkariresult.com/') || 
+      lower.includes('sarkari result official') ||
+      lower.includes('visit sarkariresult.com') ||
+      lower.includes('freejobalert.com') ||
+      lower.includes('sarkariexam.com')
+    ) {
+      continue;
+    }
+
+    // 2. Check if this row is a tools row -> convert to our internal /tools
     const isToolsRow = lower.includes('resizer') || lower.includes('compressor') || lower.includes('cropper') || 
                        lower.includes('maker') || lower.includes('age calculator') || lower.includes('pdf tools') || 
                        lower.includes('resume cv') || lower.includes('signature crop') || lower.includes('photo resize') ||
@@ -671,19 +665,8 @@ function cleanDetailsText(text) {
       continue;
     }
 
-    // Check if the line is a generic sarkari result homepage link or logo line
-    if (
-      lower.includes('www.sarkariresult.com') || 
-      lower.includes('sarkariresult®') || 
-      lower.includes('sarkariresult.com/') || 
-      lower.includes('sarkari result official') ||
-      lower.includes('visit sarkariresult.com')
-    ) {
-      continue;
-    }
-
-    // Otherwise, clean any remaining bad urls inside the line
-    cleanedLine = stripSarkariResultMentionsAndLinks(cleanedLine);
+    // 3. Clean any remaining bad strings inside the line
+    let cleanedLine = stripSarkariResultMentionsAndLinks(trimmed);
     cleanedLine = cleanedLine.replace(/\s*\(Link:\s*\)/gi, '').trim();
 
     if (cleanedLine) {
@@ -695,9 +678,9 @@ function cleanDetailsText(text) {
 }
 
 async function scrapeFeeds() {
-  console.log('[LiveAlert Scraper] Starting SarkariResult multi-source DOM scraping...');
-  // Clean up any old listings from other sources (like FreeJobAlert) to keep only SarkariResult
-  await LiveAlert.deleteMany({ source: { $ne: 'SarkariResult' } });
+  console.log('[LiveAlert Scraper] Starting multi-source DOM scraping...');
+  // Clean up any old listings from other sources
+  await LiveAlert.deleteMany({ source: { $nin: ['SarkariResult', 'Official Portal'] } });
 
 
 
@@ -775,41 +758,9 @@ async function scrapeFeeds() {
 
       // Handle direct PDF links
       if (href.toLowerCase().endsWith('.pdf')) {
-        let pdfFallbackDate = new Date();
-
-const OFFICIAL_GOVT_MAP = [
-  { keywords: ['aadhar', 'uidai'], url: 'https://uidai.gov.in' },
-  { keywords: ['voter', 'election', 'eci'], url: 'https://voters.eci.gov.in' },
-  { keywords: ['pan', 'nsdl', 'uti'], url: 'https://eportal.incometax.gov.in' },
-  { keywords: ['licence', 'license', 'parivahan', 'rc', 'driving', 'vehicle'], url: 'https://parivahan.gov.in' },
-  { keywords: ['upsc'], url: 'https://upsc.gov.in' },
-  { keywords: ['ssc'], url: 'https://ssc.gov.in' },
-  { keywords: ['ibps'], url: 'https://ibps.in' },
-  { keywords: ['rrb', 'railway'], url: 'https://indianrailways.gov.in' },
-  { keywords: ['nta', 'neet', 'jee', 'cuet'], url: 'https://nta.ac.in' },
-  { keywords: ['cbse'], url: 'https://cbse.gov.in' },
-  { keywords: ['uppsc', 'up police', 'upssssc'], url: 'https://uppsc.up.nic.in' },
-  { keywords: ['bpsc'], url: 'https://bpsc.bih.nic.in' },
-  { keywords: ['mppsc', 'mpesb'], url: 'https://mppsc.mp.gov.in' }
-];
-
-function sanitizeScrapedGovtUrl(targetUrl = '', title = '') {
-  if (!targetUrl || typeof targetUrl !== 'string') return 'https://www.digitalhomeblog.in/job-alerts';
-  
-  const lower = targetUrl.toLowerCase();
-  if (lower.includes('sarkariresult') || lower.includes('freejobalert') || lower.includes('sarkari-result')) {
-    const combined = `${title} ${targetUrl}`.toLowerCase();
-    for (const item of OFFICIAL_GOVT_MAP) {
-      if (item.keywords.some(kw => combined.includes(kw))) {
-        return item.url;
-      }
-    }
-    return 'https://www.digitalhomeblog.in/job-alerts';
-  }
-  return targetUrl;
-}
-
-        const safeGovtUrl = sanitizeScrapedGovtUrl(href, text);
+        const dateInfo = extractDateFromSlugOrText(href, text, '');
+        const board = extractBoardName(text);
+        const safeGovtUrl = resolveOfficialGovtPortal(text, board, href);
 
         await LiveAlert.updateOne(
           { sourceUrl: href },
@@ -818,8 +769,8 @@ function sanitizeScrapedGovtUrl(targetUrl = '', title = '') {
               title: text,
               boardName: extractBoardName(text),
               lastDate: 'Check PDF Notice',
-              postDate: '',
-              parsedPostDate: pdfFallbackDate,
+              postDate: dateInfo.postDate,
+              parsedPostDate: dateInfo.parsedDate,
               officialUrl: safeGovtUrl,
               officialPdfUrl: safeGovtUrl,
               officialApplyUrl: safeGovtUrl,
@@ -851,24 +802,43 @@ function sanitizeScrapedGovtUrl(targetUrl = '', title = '') {
       const boardName = extractBoardName(title);
       const state = detectState(title, href);
 
-      const parsedDate = parsePostDate(details.postDate);
-
-      // Fallback date is current timestamp
-      let fallbackDate = new Date();
+      const dateInfo = extractDateFromSlugOrText(href, title, details.detailsText);
+      const parsedDate = parseFlexibleDate(details.postDate) || dateInfo.parsedDate;
+      const finalPostDate = details.postDate || dateInfo.postDate;
 
       // Fallback detailsText generator if scraping yields short text so NO job alert is ever skipped
       let finalDetailsText = details.detailsText ? details.detailsText.trim() : '';
+      const safeGovtFallback = resolveOfficialGovtPortal(title, boardName, href);
+
       if (finalDetailsText.length < 50) {
         console.log(`[LiveAlert Scraper] Applying fallback detailsText for alert: "${title}"`);
-        finalDetailsText = `Official Notification Alert: ${title}\nBoard/Organisation: ${boardName}\nState: ${state}\nCategory: ${detectCategory(title, href)}\nSource Link: ${href}\n\nKey Highlights:\n- Official recruitment announcement for ${title}.\n- Online application form and official notification links are active.\n- Interested candidates should check eligibility details and apply via the official link below.`;
+        finalDetailsText = `Official Notification Alert: ${title}\nBoard/Organisation: ${boardName}\nState: ${state}\nCategory: ${detectCategory(title, href)}\nOfficial Portal: ${safeGovtFallback}\n\nKey Highlights:\n- Official recruitment announcement for ${title}.\n- Online application form and official notification links are active.\n- Interested candidates should check eligibility details and apply via the official link below.`;
       }
 
-      const finalLastDate = details.lastDate || lastDate || 'Check Official Notice';
-      const finalOfficialUrl = details.officialUrl || href;
-      const finalOfficialPdfUrl = details.officialPdfUrl || href;
-      const finalOfficialApplyUrl = details.officialApplyUrl || href;
+      // CRITICAL: Preserve exact scraped direct official links (SSO/IBPS/RRB/PDFs), and only use portal map if empty or competitor URL
+      const isCleanDirectUrl = (u) => {
+        if (!u || typeof u !== 'string' || !u.startsWith('http')) return false;
+        return !isDisallowedThirdPartyDomain(u) && !u.includes('digitalhomeblog.in');
+      };
 
-      const isExpired = isOldOrExpiredAlert(title, parsedDate || fallbackDate);
+      const finalLastDate = details.lastDate || lastDate || 'Check Official Notice';
+      const finalOfficialApplyUrl = isCleanDirectUrl(details.officialApplyUrl)
+        ? details.officialApplyUrl
+        : resolveOfficialGovtPortal(title, boardName, safeGovtFallback);
+
+      const finalOfficialPdfUrl = isCleanDirectUrl(details.officialPdfUrl)
+        ? details.officialPdfUrl
+        : resolveOfficialGovtPortal(title, boardName, safeGovtFallback);
+
+      const finalOfficialUrl = isCleanDirectUrl(details.officialUrl)
+        ? details.officialUrl
+        : resolveOfficialGovtPortal(title, boardName, safeGovtFallback);
+
+      // Final text sanitization — strip any remaining competitor mentions
+      const cleanTitle = stripSarkariResultMentionsAndLinks(title);
+      finalDetailsText = stripSarkariResultMentionsAndLinks(finalDetailsText);
+
+      const isExpired = isOldOrExpiredAlert(title, parsedDate);
       const computedStatus = isExpired ? 'expired' : 'active';
 
       // Save or update to DB
@@ -876,15 +846,15 @@ function sanitizeScrapedGovtUrl(targetUrl = '', title = '') {
         { sourceUrl: href },
         {
           $set: {
-            title,
+            title: cleanTitle,
             boardName,
             lastDate: finalLastDate,
-            postDate: details.postDate || new Date().toLocaleDateString('en-IN'),
-            parsedPostDate: parsedDate || fallbackDate,
+            postDate: finalPostDate,
+            parsedPostDate: parsedDate,
             officialUrl: finalOfficialUrl,
             officialPdfUrl: finalOfficialPdfUrl,
             officialApplyUrl: finalOfficialApplyUrl,
-            source: 'SarkariResult',
+            source: 'Official Portal',
             state,
             category: detectCategory(title, href),
             detailsText: finalDetailsText,
@@ -894,7 +864,7 @@ function sanitizeScrapedGovtUrl(targetUrl = '', title = '') {
         { upsert: true }
       );
       
-      console.log(`[LiveAlert Scraper] Saved alert: "${title}" [State: ${state}]`);
+      console.log(`[LiveAlert Scraper] Saved alert: "${cleanTitle}" [State: ${state}]`);
       totalSaved++;
     } catch (err) {
       console.error(`[LiveAlert Scraper] Failed to process listing:`, listing.href, err.message);
@@ -1018,11 +988,21 @@ async function publishNextQueuedPost() {
 function initScheduler() {
   const cron = require('node-cron');
   const { logAutomation } = require('../../shared/utils/automationLogger');
+  const { runCompetitorPurge } = require('../../shared/utils/purgeCompetitorLinksDaemon');
   
+  // 1. Continuous Competitor Link Purge & Official Link Resolver: Runs every 5 minutes
+  cron.schedule('*/5 * * * *', async () => {
+    try {
+      await runCompetitorPurge();
+    } catch (err) {
+      console.error('[LiveAlert Scheduler] 5m Competitor Purge error:', err.message);
+    }
+  });
+
   // Scraper Run: Every 15 minutes
   cron.schedule('*/15 * * * *', async () => {
     try {
-      logAutomation({ service: 'SCRAPER', level: 'INFO', action: '15m Scraper Start', message: 'Cron job initiated SarkariResult multi-source DOM scrape' });
+      logAutomation({ service: 'SCRAPER', level: 'INFO', action: '15m Scraper Start', message: 'Cron job initiated multi-source DOM scrape' });
       const totalSaved = await scrapeFeeds();
       logAutomation({ service: 'SCRAPER', level: 'SUCCESS', action: '15m Scraper Finish', message: `Scraper completed successfully. Processed/Saved ${totalSaved || 0} updates.`, metadata: { totalSaved } });
     } catch (err) {
@@ -1092,7 +1072,7 @@ function initScheduler() {
   Promise.resolve().then(async () => {
     const { logAutomation } = require('../../shared/utils/automationLogger');
     console.log('[LiveAlert Scheduler] Running initial startup scrape...');
-    logAutomation({ service: 'SCRAPER', level: 'INFO', action: 'Startup Scraper Start', message: 'Triggered initial background DOM scrape for SarkariResult feeds' });
+    logAutomation({ service: 'SCRAPER', level: 'INFO', action: 'Startup Scraper Start', message: 'Triggered initial background DOM scrape for job alert feeds' });
     try {
       const totalSaved = await scrapeFeeds();
       console.log('[LiveAlert Scheduler] Initial startup scrape completed successfully.');
@@ -1128,15 +1108,14 @@ function initScheduler() {
       logAutomation({ service: 'WEB_STORY', level: 'SUCCESS', action: 'Web Stories System Sync', message: `Web Story Engine active with ${count} total visual Google Discover Web Stories ready`, metadata: { totalStories: count } });
     } catch (wsErr) {}
 
-    // Initial Startup Auto-GSC Traffic Boost
+    // Initial Startup Competitor Link Purge
     try {
-      console.log('[LiveAlert Scheduler] Running startup Auto GSC Traffic Booster...');
-      const { runAutoGscBoost } = require('../../shared/utils/gscAutoBooster');
-      await runAutoGscBoost();
-    } catch (gscErr) {
-      console.error('[LiveAlert Scheduler] Startup Auto GSC Traffic Booster notice:', gscErr.message);
+      console.log('[LiveAlert Scheduler] Running initial startup Competitor Link Purge...');
+      await runCompetitorPurge();
+    } catch (purgeErr) {
+      console.error('[LiveAlert Scheduler] Startup Competitor Link Purge error:', purgeErr.message);
     }
   });
 }
 
-module.exports = { scrapeFeeds, initScheduler, publishNextQueuedPost };
+module.exports = { scrapeFeeds, initScheduler, publishNextQueuedPost, scrapeDetailedUrls };

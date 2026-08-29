@@ -37,7 +37,7 @@ liveAlertSchema.pre('save', function (next) {
     }
   }
 
-  const isBadUrl = (url) => !url || typeof url !== 'string' || url.includes('sarkariresult') || url.includes('freejobalert') || url.includes('sarkari-result') || url.includes('/job-alerts');
+  const isBadUrl = (url) => !url || typeof url !== 'string' || url.includes('sarkariresult') || url.includes('freejobalert') || url.includes('sarkari-result') || url.includes('sarkariexam') || url.includes('jobalerts') || url.includes('/job-alerts');
 
   const realGovtUrl = resolveOfficialGovtPortal(this.title, this.boardName, this.sourceUrl);
 
@@ -50,10 +50,25 @@ liveAlertSchema.pre('save', function (next) {
   if (isBadUrl(this.officialPdfUrl)) {
     this.officialPdfUrl = realGovtUrl;
   }
-  if (this.detailsText && (this.detailsText.includes('sarkariresult') || this.detailsText.includes('digitalhomeblog.in/job-alerts'))) {
+
+  // Sanitize source field — never store competitor brand name
+  if (this.source && /sarkari/i.test(this.source)) {
+    this.source = 'Official Portal';
+  }
+
+  if (this.detailsText) {
+    // Replace all competitor URLs with real govt portal
     this.detailsText = this.detailsText
-      .replace(/(?:https?:\/\/)?(?:www\.)?(?:sarkariresult|freejobalert|sarkari-result)\.com[^\s,)\'\"]*/gi, realGovtUrl)
-      .replace(/https?:\/\/www\.digitalhomeblog\.in\/job-alerts\?alert=[^\s,)\'\"]*/gi, realGovtUrl);
+      .replace(/(?:https?:\/\/)?(?:www\.)?(?:sarkariresult|freejobalert|sarkari-result|sarkariexam|jobalerts)\.com[^\s,)\'\"]*​/gi, realGovtUrl)
+      .replace(/https?:\/\/www\.digitalhomeblog\.in\/job-alerts\?alert=[^\s,)\'\"]*​/gi, realGovtUrl);
+    // Replace text mentions
+    this.detailsText = this.detailsText
+      .replace(/sarkari\s*result\s*official\s*(?:website|app|portal|tools?)/gi, 'Digital Home Official Portal')
+      .replace(/sarkari\s*result\s*(?:tools?|resizer|cropper|compressor)/gi, 'Student Utility Tools')
+      .replace(/sarkari\s*result/gi, 'Digital Home Portal')
+      .replace(/sarkariresult/gi, 'Digital Home')
+      .replace(/www\.sarkariresult\.com/gi, 'www.digitalhomeblog.in')
+      .replace(/sarkariresult\.com/gi, 'digitalhomeblog.in');
   }
   next();
 });

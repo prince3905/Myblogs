@@ -7,8 +7,8 @@ import { request } from '../../../shared/lib/api';
 const settingOptions = [
   {
     key: 'disableAutopilot',
-    label: 'Autopilot Scraper',
-    description: 'Automatically crawl job boards (SarkariResult) and generate draft job alerts in the background.',
+    label: 'Job Board Autopilot (Crawler & Post Drafter)',
+    description: 'Automatically crawl official job boards and generate draft job alerts in the background.',
     icon: <OfflineBolt sx={{ fontSize: 32, color: '#3b82f6' }} />
   },
   {

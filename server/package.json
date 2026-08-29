@@ -7,7 +7,8 @@
     "dev": "nodemon src/server.js",
     "build": "cd ../client && npm run build",
     "start": "npm run build && nodemon src/server.js",
-    "expand-posts": "node src/shared/utils/expand-posts.js"
+    "expand-posts": "node src/shared/utils/expand-posts.js",
+    "purge-links": "node src/shared/utils/purge-competitor-links.js"
   },
   "dependencies": {
     "axios": "^1.16.0",

@@ -686,7 +686,7 @@ function renderAlertListItem(alert, setSelectedAlert, themeColor) {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.8, pt: 0.5, borderTop: '1px dashed #F1F5F9' }}>
         <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.68rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.4 }}>
           <CalendarIcon sx={{ fontSize: 13, color: themeColor }} />
-          📅 Post: {new Date(alert.parsedPostDate || alert.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+          📅 Post: {alert.postDate && alert.postDate !== 'Latest Update' ? alert.postDate : new Date(alert.parsedPostDate || alert.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
         </Typography>
         {hasValidDate ? (
           <Chip

@@ -50,17 +50,23 @@ blogPostSchema.pre('save', async function (next) {
     function purgeCompetitorTrace(str = '') {
       if (!str || typeof str !== 'string') return str;
       let cleaned = str;
-      cleaned = cleaned.replace(/href=["']https?:\/\/(?:www\.)?sarkariresult\.com[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
-      cleaned = cleaned.replace(/href=["']https?:\/\/[^"']*sarkariresult[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+      // Replace all competitor href links
+      cleaned = cleaned.replace(/href=["']https?:\/\/(?:www\.)?(?:sarkariresult|freejobalert|sarkariexam|jobalerts)\.com[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+      cleaned = cleaned.replace(/href=["']https?:\/\/[^"']*(?:sarkariresult|freejobalert|sarkariexam|jobalerts)[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
       cleaned = cleaned
         .replace(/sarkari\s*result\s*official\s*(?:website|app|portal|tools?)/gi, 'Digital Home Official Portal')
         .replace(/sarkari\s*result\s*(?:tools?|resizer|cropper|compressor)/gi, 'Student Utility Tools')
         .replace(/sarkari\s*result/gi, 'Digital Home Portal')
         .replace(/sarkariresult/gi, 'Digital Home')
         .replace(/sarkari\s*resut/gi, 'Digital Home')
-        .replace(/sarkari\s*reult/gi, 'Digital Home');
+        .replace(/sarkari\s*reult/gi, 'Digital Home')
+        .replace(/freejobalert/gi, 'Digital Home')
+        .replace(/sarkariexam/gi, 'Digital Home')
+        .replace(/jobalerts\.com/gi, 'digitalhomeblog.in');
       cleaned = cleaned.replace(/www\.sarkariresult\.com/gi, 'www.digitalhomeblog.in');
       cleaned = cleaned.replace(/sarkariresult\.com/gi, 'digitalhomeblog.in');
+      cleaned = cleaned.replace(/freejobalert\.com/gi, 'digitalhomeblog.in');
+      cleaned = cleaned.replace(/sarkariexam\.com/gi, 'digitalhomeblog.in');
 
       // Prettify Whitespace & Remove Faltu Symbols (#||:||, ||, ::, (Link: ), empty tags)
       cleaned = cleaned

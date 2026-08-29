@@ -12,6 +12,45 @@ cloudinary.config({
   api_secret: '_J0pP4VbLy-TL5vAVoRpaFjJFxg',
 });
 const axios = require('axios');
+const { resolveOfficialGovtPortal } = require('../../shared/utils/govtPortalMap');
+
+// Universal API Response Sanitizer — last line of defense before data reaches client
+function sanitizeAlertResponse(alert) {
+  if (!alert) return alert;
+  const obj = alert.toObject ? alert.toObject() : { ...alert };
+  const COMPETITOR_PATTERN = /sarkariresult|freejobalert|sarkari-result|sarkariexam|jobalerts/i;
+
+  // Sanitize URL fields
+  ['officialUrl', 'officialApplyUrl', 'officialPdfUrl'].forEach(field => {
+    if (obj[field] && COMPETITOR_PATTERN.test(obj[field])) {
+      obj[field] = resolveOfficialGovtPortal(obj.title || '', obj.boardName || '', obj[field]);
+    }
+  });
+
+  // Sanitize source field
+  if (obj.source && /sarkari/i.test(obj.source)) {
+    obj.source = 'Official Portal';
+  }
+
+  // Sanitize text fields
+  ['title', 'detailsText'].forEach(field => {
+    if (obj[field] && COMPETITOR_PATTERN.test(obj[field])) {
+      obj[field] = obj[field]
+        .replace(/sarkari\s*result\s*official\s*(?:website|app|portal|tools?)/gi, 'Digital Home Official Portal')
+        .replace(/sarkari\s*result\s*(?:tools?|resizer|cropper|compressor)/gi, 'Student Utility Tools')
+        .replace(/sarkari\s*result/gi, 'Digital Home Portal')
+        .replace(/sarkariresult/gi, 'Digital Home')
+        .replace(/www\.sarkariresult\.com/gi, 'www.digitalhomeblog.in')
+        .replace(/sarkariresult\.com/gi, 'digitalhomeblog.in')
+        .replace(/freejobalert\.com/gi, 'digitalhomeblog.in');
+    }
+  });
+
+  // Never expose sourceUrl to public client (keep for admin reference)
+  // sourceUrl stays in the object but won't have competitor link in visible fields
+
+  return obj;
+}
 
 // Pexels integration helper to auto-populate featuredImage (Thumbnail)
 const HERO_PHOTOS = [
@@ -138,7 +177,6 @@ async function getAlerts(req, res) {
         LiveAlert.find({
           ...filter,
           $and: [
-            { $or: cleanYearCondition },
             { title: { $not: /admit card|hall ticket|call letter|exam city|result|score card|merit list|answer key|objection|syllabus/i } },
             { category: { $not: /Admit Card|Result|Answer Key|Syllabus/i } }
           ]
@@ -146,66 +184,41 @@ async function getAlerts(req, res) {
 
         LiveAlert.find({
           ...filter,
-          $and: [
-            { $or: cleanYearCondition },
-            {
-              $or: [
-                { category: 'Admit Card' },
-                { title: { $regex: /admit card|hall ticket|call letter|exam city/i } }
-              ]
-            }
+          $or: [
+            { category: 'Admit Card' },
+            { title: { $regex: /admit card|hall ticket|call letter|exam city/i } }
           ]
         }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
 
         LiveAlert.find({
           ...filter,
-          $and: [
-            { $or: cleanYearCondition },
-            {
-              $or: [
-                { category: 'Result' },
-                { title: { $regex: /result|score card|merit list/i } }
-              ]
-            }
+          $or: [
+            { category: 'Result' },
+            { title: { $regex: /result|score card|merit list/i } }
           ]
         }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
 
         LiveAlert.find({
           ...filter,
-          $and: [
-            { $or: cleanYearCondition },
-            {
-              $or: [
-                { category: 'Answer Key' },
-                { title: { $regex: /answer key|answer-key|objection tracker/i } }
-              ]
-            }
+          $or: [
+            { category: 'Answer Key' },
+            { title: { $regex: /answer key|answer-key|objection tracker/i } }
           ]
         }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(50).lean(),
 
         LiveAlert.find({
           ...filter,
-          $and: [
-            { $or: cleanYearCondition },
-            {
-              $or: [
-                { category: 'Admission' },
-                { title: { $regex: /admission|counselling|seat allotment/i } }
-              ]
-            }
+          $or: [
+            { category: 'Admission' },
+            { title: { $regex: /admission|counselling|seat allotment/i } }
           ]
         }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(50).lean(),
 
         LiveAlert.find({
           ...filter,
-          $and: [
-            { $or: cleanYearCondition },
-            {
-              $or: [
-                { category: 'Syllabus' },
-                { title: { $regex: /syllabus|exam pattern|curriculum/i } }
-              ]
-            }
+          $or: [
+            { category: 'Syllabus' },
+            { title: { $regex: /syllabus|exam pattern|curriculum/i } }
           ]
         }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(50).lean()
       ]);
@@ -271,7 +284,9 @@ async function getAlerts(req, res) {
         .limit(queryLimit);
     }
 
-    res.json({ success: true, count: alerts.length, data: alerts, page: pageNum, hasMore: alerts.length === queryLimit });
+    // Final safety net: sanitize all alerts before sending to client
+    const sanitizedAlerts = alerts.map(a => sanitizeAlertResponse(a));
+    res.json({ success: true, count: sanitizedAlerts.length, data: sanitizedAlerts, page: pageNum, hasMore: alerts.length === queryLimit });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -285,7 +300,7 @@ async function getAlertById(req, res) {
     if (!alert) {
       return res.status(404).json({ success: false, message: 'Alert not found' });
     }
-    res.json({ success: true, data: alert });
+    res.json({ success: true, data: sanitizeAlertResponse(alert) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -340,7 +355,7 @@ function sanitizeUrlValue(url, boardName) {
     return '/tools';
   }
   
-  if (lowerUrl.includes('sarkariresult') || lowerUrl.includes('freejobalert')) {
+  if (lowerUrl.includes('sarkariresult') || lowerUrl.includes('freejobalert') || lowerUrl.includes('sarkari-result') || lowerUrl.includes('sarkariexam') || lowerUrl.includes('jobalerts')) {
     return '/job-alerts';
   }
   
@@ -353,8 +368,8 @@ function stripSarkariResultMentionsAndLinks(str = '') {
   let cleaned = str;
 
   // 1. Replace outbound links
-  cleaned = cleaned.replace(/href=["']https?:\/\/(?:www\.)?sarkariresult\.com[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
-  cleaned = cleaned.replace(/href=["']https?:\/\/[^"']*sarkariresult[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+  cleaned = cleaned.replace(/href=["']https?:\/\/(?:www\.)?(?:sarkariresult|freejobalert|sarkariexam|jobalerts)\.com[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
+  cleaned = cleaned.replace(/href=["']https?:\/\/[^"']*(?:sarkariresult|freejobalert|sarkariexam|jobalerts)[^"']*["']/gi, 'href="https://www.digitalhomeblog.in/job-alerts"');
 
   // 2. Remove/replace text mentions & praises
   cleaned = cleaned
@@ -363,11 +378,13 @@ function stripSarkariResultMentionsAndLinks(str = '') {
     .replace(/sarkari\s*result/gi, 'Digital Home Portal')
     .replace(/sarkariresult/gi, 'Digital Home')
     .replace(/sarkari\s*resut/gi, 'Digital Home')
-    .replace(/sarkari\s*reult/gi, 'Digital Home');
+    .replace(/sarkari\s*reult/gi, 'Digital Home')
+    .replace(/freejobalert/gi, 'Digital Home');
 
   // 3. Remove raw URLs
   cleaned = cleaned.replace(/www\.sarkariresult\.com/gi, 'www.digitalhomeblog.in');
   cleaned = cleaned.replace(/sarkariresult\.com/gi, 'digitalhomeblog.in');
+  cleaned = cleaned.replace(/freejobalert\.com/gi, 'digitalhomeblog.in');
 
   return cleaned;
 }

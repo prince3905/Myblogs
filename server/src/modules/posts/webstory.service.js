@@ -193,7 +193,7 @@ Post Title: "${post.title}"
 Post Summary/Excerpt: "${post.excerpt}"
 Factual Job Context:
 """
-${alert.detailsText}
+${alert?.detailsText || post?.content || post?.excerpt || ''}
 """
 
 SLIDE STRUCTURE DIRECTIVES:
