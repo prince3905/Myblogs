@@ -229,9 +229,9 @@ async function renderWebStory(req, res, next) {
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
-            <span class="badge">Vacancy Alert</span>
-            <h1 class="slide-title">${escapeXml(story.slides?.[0]?.heading || story.title)}</h1>
-            <p class="slide-desc">${escapeXml(story.slides?.[0]?.text || story.title)}</p>
+            <span class="badge" animate-in="fade-in" animate-in-duration="0.4s">Vacancy Alert</span>
+            <h1 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[0]?.heading || story.title)}</h1>
+            <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[0]?.text || story.title)}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
@@ -247,9 +247,9 @@ async function renderWebStory(req, res, next) {
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
-            <span class="badge">Qualification</span>
-            <h2 class="slide-title">${escapeXml(story.slides?.[1]?.heading || 'Eligibility & Rules')}</h2>
-            <p class="slide-desc">${escapeXml(story.slides?.[1]?.text || 'Check qualification details in full article.')}</p>
+            <span class="badge" animate-in="fade-in" animate-in-duration="0.4s">Qualification</span>
+            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[1]?.heading || 'Eligibility & Rules')}</h2>
+            <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[1]?.text || 'Check qualification details in full article.')}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
@@ -265,14 +265,14 @@ async function renderWebStory(req, res, next) {
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
-            <span class="badge">Important Dates</span>
-            <h2 class="slide-title">${escapeXml(story.slides?.[2]?.heading || 'Dates & Fees')}</h2>
-            <p class="slide-desc">${escapeXml(story.slides?.[2]?.text || 'Important application dates & fee details.')}</p>
+            <span class="badge" animate-in="fade-in" animate-in-duration="0.4s">Important Dates</span>
+            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[2]?.heading || 'Dates & Fees')}</h2>
+            <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[2]?.text || 'Important application dates & fee details.')}</p>
           </div>
         </amp-story-grid-layer>
       </amp-story-page>
 
-      <!-- Slide 4: Selection Process -->
+      <!-- Slide 4: Photo & Signature Tools Alert -->
       <amp-story-page id="slide4">
         <amp-story-grid-layer template="fill">
           <amp-img src="${formatAmpUrl(story.slides?.[3]?.image)}"
@@ -283,11 +283,14 @@ async function renderWebStory(req, res, next) {
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
-            <span class="badge">Selection Process</span>
-            <h2 class="slide-title">${escapeXml(story.slides?.[3]?.heading || 'Selection Procedure')}</h2>
-            <p class="slide-desc">${escapeXml(story.slides?.[3]?.text || 'Written test & physical merit selection process.')}</p>
+            <span class="badge" style="background: linear-gradient(135deg, #059669, #10B981);" animate-in="fade-in" animate-in-duration="0.4s">Free Student Tools</span>
+            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[3]?.heading || 'Form Photo & Signature Resizer')}</h2>
+            <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[3]?.text || 'Photo aur signature size sahi karein taaki form reject na ho.')}</p>
           </div>
         </amp-story-grid-layer>
+        <amp-story-page-outlink layout="nodisplay">
+          <a href="https://www.digitalhomeblog.in/tools">🛠️ Resize Photo & Signature Free</a>
+        </amp-story-page-outlink>
       </amp-story-page>
 
       <!-- Slide 5: Call to Action -->
@@ -301,11 +304,14 @@ async function renderWebStory(req, res, next) {
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer text-layer-center">
-            <span class="badge badge-center">Direct Link Active</span>
-            <h2 class="slide-title">${escapeXml(story.slides?.[4]?.heading || 'Apply Online Now')}</h2>
-            <p class="slide-desc">${escapeXml(story.slides?.[4]?.text || 'Click below to read full guide and apply.')}</p>
+            <span class="badge badge-center" animate-in="fade-in" animate-in-duration="0.4s">Direct Link Active</span>
+            <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[4]?.heading || 'Apply Online Now')}</h2>
+            <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[4]?.text || 'Click below to read full guide and apply.')}</p>
           </div>
         </amp-story-grid-layer>
+        <amp-story-page-outlink layout="nodisplay">
+          <a href="${postUrl}">👉 Read Full Notification & Apply</a>
+        </amp-story-page-outlink>
         <amp-story-cta-layer>
           <a href="${postUrl}" class="cta-button">👉 Read Full Article & Apply</a>
         </amp-story-cta-layer>
