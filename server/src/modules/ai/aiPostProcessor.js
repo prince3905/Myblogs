@@ -25,7 +25,7 @@ function generateTags(title, content, keywords, category) {
   }
 
   const lsiTags = {
-    'Sarkari Jobs & Exams': ['govt jobs', 'latest job', 'admit card', 'sarkari result', 'exam date', 'recruitment', 'job alert'],
+    'Sarkari Jobs & Exams': ['govt jobs', 'latest job', 'admit card', 'sarkari bharti', 'exam date', 'recruitment', 'job alert'],
     'Career': ['job alert', 'govt jobs', 'exam preparation', 'result 2026', 'apply online', 'syllabus', 'eligibility', 'qualification', 'admit card', 'exam date', 'vacancy', 'recruitment', 'notification', 'latest job', 'career guidance'],
     'Education': ['online classes', 'admission 2026', 'scholarship', 'study material', 'university', 'college', 'entrance exam', 'result', 'board exam', 'competition'],
     'Technology': ['tech news', 'smartphone', 'laptop', 'AI tools', 'software', 'gadgets', 'latest tech', 'digital india', 'app review', 'online tools'],
@@ -118,8 +118,33 @@ function cleanContent(content, category) {
   c = c.replace(/---+/g, '');
   c = c.replace(/___+/g, '');
 
-  // For Sarkari Jobs & Exams, we want to preserve lists (ul/li) and tables exactly as they are.
-  if (category === 'Sarkari Jobs & Exams') {
+  // 1. Wrap all tables in a responsive scroll container so mobile users can view seamlessly
+  c = c.replace(/(<table[\s\S]*?<\/table>)/gi, (match) => {
+    if (match.includes('table-responsive')) return match;
+    return `<div class="table-responsive" style="overflow-x:auto; margin:20px 0; border-radius:8px; border:1px solid #e2e8f0;">\n${match}\n</div>`;
+  });
+
+  // For Sarkari Jobs & Exams, inject free student tools banner if not present
+  if (category === 'Sarkari Jobs & Exams' || category === 'Career') {
+    if (!c.includes('/tools') && !c.includes('Photo & Signature Resizer')) {
+      const toolsBox = `
+<div class="student-tools-box" style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:18px; margin:24px 0; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+  <h3 style="margin-top:0; color:#1e293b; font-size:1.05rem; font-weight:800;">🛠️ Free Student Tools for Application Form:</h3>
+  <p style="margin-bottom:12px; color:#475569; font-size:0.88rem;">Online form bharte waqt photo aur signature resize karne ya document compress karne ke liye free tools:</p>
+  <div style="display:flex; flex-wrap:wrap; gap:8px;">
+    <a href="/tools" style="background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:0.82rem;">📸 Photo & Signature Resizer</a>
+    <a href="/tools" style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:0.82rem;">📄 PDF & Image Compressor</a>
+    <a href="/tools" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:6px 14px; border-radius:6px; font-weight:700; text-decoration:none; font-size:0.82rem;">🎂 Age Calculator</a>
+  </div>
+</div>
+`;
+      // Place right before FAQ or at the bottom
+      if (c.includes('<h2>अक्सर पूछे जाने वाले सवाल')) {
+        c = c.replace('<h2>अक्सर पूछे जाने वाले सवाल', toolsBox + '\n<h2>अक्सर पूछे जाने वाले सवाल');
+      } else {
+        c += '\n' + toolsBox;
+      }
+    }
     return c;
   }
 
