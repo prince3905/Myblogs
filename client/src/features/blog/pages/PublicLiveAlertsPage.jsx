@@ -583,6 +583,95 @@ function renderBlogContent(alert) {
 
         return null;
       })}
+
+      {/* Digital Home Student Tools & Fast Community Banner */}
+      <Box sx={{ mt: 3, p: 2.5, bgcolor: '#F8FAFC', borderRadius: 3, border: '1.5px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1E293B', mb: 1, display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.88rem' }}>
+          🛠️ Free Student Tools for Application Form:
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+          <MuiLink
+            href="/tools"
+            target="_blank"
+            sx={{
+              fontWeight: 700,
+              color: '#4338CA',
+              bgcolor: '#EEF2FF',
+              border: '1px solid #C7D2FE',
+              px: 1.5,
+              py: 0.6,
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              textDecoration: 'none',
+              '&:hover': { bgcolor: '#E0E7FF', textDecoration: 'none' }
+            }}
+          >
+            📸 Photo & Signature Resizer
+          </MuiLink>
+          <MuiLink
+            href="/tools"
+            target="_blank"
+            sx={{
+              fontWeight: 700,
+              color: '#047857',
+              bgcolor: '#ECFDF5',
+              border: '1px solid #A7F3D0',
+              px: 1.5,
+              py: 0.6,
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              textDecoration: 'none',
+              '&:hover': { bgcolor: '#D1FAE5', textDecoration: 'none' }
+            }}
+          >
+            📄 PDF & Image Compressor
+          </MuiLink>
+          <MuiLink
+            href="/tools"
+            target="_blank"
+            sx={{
+              fontWeight: 700,
+              color: '#B45309',
+              bgcolor: '#FEF3C7',
+              border: '1px solid #FDE68A',
+              px: 1.5,
+              py: 0.6,
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              textDecoration: 'none',
+              '&:hover': { bgcolor: '#FDE68A', textDecoration: 'none' }
+            }}
+          >
+            🎂 Age Calculator & Eligibility
+          </MuiLink>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1, pt: 1.5, borderTop: '1px dashed #E2E8F0' }}>
+          <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.72rem' }}>
+            ⚡ Real-time updates delivered straight to your phone.
+          </Typography>
+          <MuiLink
+            href="https://t.me/digitalhomeblog"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              fontWeight: 800,
+              color: '#ffffff',
+              bgcolor: '#0284C7',
+              px: 1.8,
+              py: 0.5,
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.5,
+              '&:hover': { bgcolor: '#0369A1', textDecoration: 'none' }
+            }}
+          >
+            ✈️ Join Telegram Alerts
+          </MuiLink>
+        </Box>
+      </Box>
     </Box>
   );
 }
