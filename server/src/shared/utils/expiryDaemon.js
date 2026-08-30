@@ -53,8 +53,7 @@ async function checkAndFlagExpiredPosts() {
       if (deadline < new Date()) {
         console.log(`[Expiry Daemon] Post expired: "${post.title}" (Deadline: ${alert.lastDate})`);
 
-        // Prepend warning to title
-        post.title = `[आवेदन समाप्त] ${post.title}`;
+        // Do not alter title to keep clean SEO titles
 
         // Inject red warning banner at the top of content
         const expiredBanner = `\n<div class="ql-table-embed">
