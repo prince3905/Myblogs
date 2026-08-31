@@ -10,6 +10,543 @@ import { postUrl, catSlug } from '../../../shared/lib/category';
 import { optimizeImage } from '../../../shared/lib/images';
 import { request } from '../../../shared/lib/api';
 
+const QUICK_EXAM_FILTERS = [
+  { label: '🌟 All Updates', query: '', color: '#4F46E5', icon: '⚡' },
+  { label: '🚆 Railway / RRB', query: 'rrb', color: '#0284C7', icon: '🚆' },
+  { label: '📋 SSC Exams', query: 'ssc', color: '#D97706', icon: '📋' },
+  { label: '🏦 Bank / IBPS / SBI', query: 'bank', color: '#059669', icon: '🏦' },
+  { label: '👮 Police & Defence / Army', query: 'police', color: '#DC2626', icon: '👮' },
+  { label: '🏢 BPSC / State PSC', query: 'bpsc', color: '#7C3AED', icon: '🏢' },
+  { label: '📑 UPSSSC / UKSSSC', query: 'upsssc', color: '#EA580C', icon: '📑' },
+  { label: '🎓 10th & 12th Board Results', query: 'board', color: '#E11D48', icon: '🎓' },
+  { label: '🔑 Answer Keys', query: 'answer key', color: '#0D9488', icon: '🔑' },
+  { label: '📄 Syllabus & Pattern', query: 'syllabus', color: '#4338CA', icon: '📄' },
+  { label: '🎓 Admissions & CUET', query: 'admission', color: '#9333EA', icon: '🎓' },
+  { label: '🛠️ Free Student Tools', query: '__tools__', color: '#2563EB', icon: '🛠️' }
+];
+
+const InteractivePillMarquee = () => {
+  const scrollContainerRef = useRef(null);
+  const isPausedRef = useRef(false);
+  const resumeTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    let animationFrameId;
+
+    const step = () => {
+      if (!isPausedRef.current && el) {
+        // Alternating Direction 1: Right to Left (R to L)
+        el.scrollLeft += 0.65;
+        if (el.scrollLeft >= el.scrollWidth / 2) {
+          el.scrollLeft = 0;
+        }
+      }
+      animationFrameId = requestAnimationFrame(step);
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+    };
+  }, []);
+
+  const handlePause = () => {
+    isPausedRef.current = true;
+    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+  };
+
+  const handleResume = () => {
+    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+    resumeTimeoutRef.current = setTimeout(() => {
+      isPausedRef.current = false;
+    }, 1500);
+  };
+
+  const items = [...QUICK_EXAM_FILTERS, ...QUICK_EXAM_FILTERS];
+
+  return (
+    <Box 
+      sx={{ 
+        mb: 2.5, 
+        position: 'relative',
+        width: '100%',
+        py: 0.5
+      }}
+      onMouseEnter={handlePause}
+      onMouseLeave={handleResume}
+      onTouchStart={handlePause}
+      onTouchEnd={handleResume}
+    >
+      <Box
+        ref={scrollContainerRef}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.2,
+          overflowX: 'auto',
+          py: 0.8,
+          px: 0.5,
+          cursor: 'grab',
+          userSelect: 'none',
+          WebkitOverflowScrolling: 'touch',
+          '&::-webkit-scrollbar': { height: '4px' },
+          '&::-webkit-scrollbar-thumb': { bgcolor: '#CBD5E1', borderRadius: '10px' },
+          '&::-webkit-scrollbar-track': { bgcolor: 'rgba(0,0,0,0.02)' }
+        }}
+      >
+        {items.map((f, i) => {
+          const targetUrl = f.query === '__tools__' ? '/tools' : (f.query ? `/job-alerts?search=${encodeURIComponent(f.query)}` : '/job-alerts');
+          return (
+            <Chip
+              key={i}
+              component={Link}
+              to={targetUrl}
+              label={`${f.icon} ${f.label}`}
+              clickable
+              sx={{
+                textDecoration: 'none',
+                fontWeight: 800,
+                fontSize: '0.78rem',
+                py: 2.1,
+                px: 1.3,
+                borderRadius: '30px',
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                bgcolor: '#FFFFFF',
+                color: '#334155',
+                border: '1.5px solid #E2E8F0',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.03)',
+                '&:hover': {
+                  bgcolor: `${f.color}15`,
+                  color: f.color,
+                  borderColor: f.color,
+                  transform: 'translateY(-2px)'
+                }
+              }}
+            />
+          );
+        })}
+      </Box>
+    </Box>
+  );
+};
+
+const InteractiveAlertsMarquee = ({ alerts = [] }) => {
+  const scrollContainerRef = useRef(null);
+  const isPausedRef = useRef(false);
+  const resumeTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || alerts.length === 0) return;
+
+    // Set initial position at middle for smooth L to R backward scroll
+    el.scrollLeft = el.scrollWidth / 2;
+
+    let animationFrameId;
+
+    const step = () => {
+      if (!isPausedRef.current && el) {
+        // Alternating Direction 2: Left to Right (L to R)
+        el.scrollLeft -= 0.65;
+        if (el.scrollLeft <= 0) {
+          el.scrollLeft = el.scrollWidth / 2;
+        }
+      }
+      animationFrameId = requestAnimationFrame(step);
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+    };
+  }, [alerts]);
+
+  const handlePause = () => {
+    isPausedRef.current = true;
+    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+  };
+
+  const handleResume = () => {
+    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+    resumeTimeoutRef.current = setTimeout(() => {
+      isPausedRef.current = false;
+    }, 1500);
+  };
+
+  const handleScrollManual = (direction) => {
+    handlePause();
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const scrollAmount = direction === 'left' ? -320 : 320;
+    el.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    handleResume();
+  };
+
+  if (!alerts || alerts.length === 0) return null;
+
+  const displayAlerts = alerts.length >= 8 ? [...alerts, ...alerts] : [...alerts, ...alerts, ...alerts];
+
+  return (
+    <Box 
+      sx={{ 
+        position: 'relative', 
+        width: '100%', 
+        overflow: 'hidden',
+        py: 0.5
+      }}
+      onMouseEnter={handlePause}
+      onMouseLeave={handleResume}
+      onTouchStart={handlePause}
+      onTouchEnd={handleResume}
+    >
+      {/* Left Navigation Arrow */}
+      <IconButton 
+        onClick={() => handleScrollManual('left')}
+        aria-label="Scroll Left"
+        sx={{
+          position: 'absolute',
+          left: 4,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          bgcolor: 'rgba(255, 255, 255, 0.95)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          border: '1px solid #E5E7EB',
+          color: '#374151',
+          zIndex: 10,
+          width: 36,
+          height: 36,
+          display: { xs: 'none', sm: 'inline-flex' },
+          '&:hover': { bgcolor: '#F3F4F6' }
+        }}
+      >
+        <ChevronLeft sx={{ fontSize: 20 }} />
+      </IconButton>
+
+      {/* Right Navigation Arrow */}
+      <IconButton 
+        onClick={() => handleScrollManual('right')}
+        aria-label="Scroll Right"
+        sx={{
+          position: 'absolute',
+          right: 4,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          bgcolor: 'rgba(255, 255, 255, 0.95)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          border: '1px solid #E5E7EB',
+          color: '#374151',
+          zIndex: 10,
+          width: 36,
+          height: 36,
+          display: { xs: 'none', sm: 'inline-flex' },
+          '&:hover': { bgcolor: '#F3F4F6' }
+        }}
+      >
+        <ChevronRight sx={{ fontSize: 20 }} />
+      </IconButton>
+
+      {/* Scrollable Track */}
+      <Box
+        ref={scrollContainerRef}
+        sx={{
+          display: 'flex',
+          alignItems: 'stretch',
+          gap: 1.5,
+          overflowX: 'auto',
+          py: 1,
+          px: { xs: 0.5, sm: 1 },
+          cursor: 'grab',
+          userSelect: 'none',
+          WebkitOverflowScrolling: 'touch',
+          '&::-webkit-scrollbar': { height: '4px' },
+          '&::-webkit-scrollbar-thumb': { bgcolor: '#CBD5E1', borderRadius: '10px' },
+          '&::-webkit-scrollbar-track': { bgcolor: 'rgba(0,0,0,0.02)' }
+        }}
+      >
+        {displayAlerts.map((alert, idx) => (
+          <Box 
+            key={`${alert._id}-${idx}`} 
+            sx={{ 
+              flex: { xs: '0 0 240px', sm: '0 0 260px' }, 
+              width: { xs: '240px', sm: '260px' },
+              minHeight: '100px',
+              display: 'flex'
+            }}
+          >
+            <AlertCard alert={alert} idx={idx} />
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
+const InteractiveStoriesMarquee = ({ stories = [] }) => {
+  const scrollContainerRef = useRef(null);
+  const isPausedRef = useRef(false);
+  const resumeTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || stories.length === 0) return;
+
+    let animationFrameId;
+
+    const step = () => {
+      if (!isPausedRef.current && el) {
+        // Alternating Direction 3: Right to Left (R to L)
+        el.scrollLeft += 0.65;
+        if (el.scrollLeft >= el.scrollWidth / 2) {
+          el.scrollLeft = 0;
+        }
+      }
+      animationFrameId = requestAnimationFrame(step);
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+    };
+  }, [stories]);
+
+  const handlePause = () => {
+    isPausedRef.current = true;
+    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+  };
+
+  const handleResume = () => {
+    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+    resumeTimeoutRef.current = setTimeout(() => {
+      isPausedRef.current = false;
+    }, 1500);
+  };
+
+  const handleScrollManual = (direction) => {
+    handlePause();
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const scrollAmount = direction === 'left' ? -280 : 280;
+    el.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    handleResume();
+  };
+
+  if (!stories || stories.length === 0) return null;
+
+  const displayStories = stories.length >= 6 ? [...stories, ...stories] : [...stories, ...stories, ...stories];
+
+  return (
+    <Box 
+      sx={{ 
+        position: 'relative', 
+        width: '100%', 
+        overflow: 'hidden',
+        py: 0.5
+      }}
+      onMouseEnter={handlePause}
+      onMouseLeave={handleResume}
+      onTouchStart={handlePause}
+      onTouchEnd={handleResume}
+    >
+      {/* Left Navigation Arrow */}
+      <IconButton 
+        onClick={() => handleScrollManual('left')}
+        aria-label="Scroll Left"
+        sx={{
+          position: 'absolute',
+          left: 4,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          bgcolor: 'rgba(255, 255, 255, 0.95)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          border: '1px solid #E5E7EB',
+          color: '#374151',
+          zIndex: 10,
+          width: 36,
+          height: 36,
+          display: { xs: 'none', sm: 'inline-flex' },
+          '&:hover': { bgcolor: '#F3F4F6' }
+        }}
+      >
+        <ChevronLeft sx={{ fontSize: 20 }} />
+      </IconButton>
+
+      {/* Right Navigation Arrow */}
+      <IconButton 
+        onClick={() => handleScrollManual('right')}
+        aria-label="Scroll Right"
+        sx={{
+          position: 'absolute',
+          right: 4,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          bgcolor: 'rgba(255, 255, 255, 0.95)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          border: '1px solid #E5E7EB',
+          color: '#374151',
+          zIndex: 10,
+          width: 36,
+          height: 36,
+          display: { xs: 'none', sm: 'inline-flex' },
+          '&:hover': { bgcolor: '#F3F4F6' }
+        }}
+      >
+        <ChevronRight sx={{ fontSize: 20 }} />
+      </IconButton>
+
+      {/* Scrollable Track */}
+      <Box
+        ref={scrollContainerRef}
+        sx={{
+          display: 'flex',
+          gap: 2.2,
+          overflowX: 'auto',
+          py: 1,
+          px: { xs: 0.5, sm: 1 },
+          cursor: 'grab',
+          userSelect: 'none',
+          WebkitOverflowScrolling: 'touch',
+          '&::-webkit-scrollbar': { height: '4px' },
+          '&::-webkit-scrollbar-thumb': { bgcolor: '#CBD5E1', borderRadius: '10px' },
+          '&::-webkit-scrollbar-track': { bgcolor: 'rgba(0,0,0,0.02)' }
+        }}
+      >
+        {displayStories.map((story, sIdx) => (
+          <Box 
+            key={`${story._id}-${sIdx}`}
+            component="a"
+            href={`/web-stories/${story.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              flex: { xs: '0 0 160px', sm: '0 0 190px', md: '0 0 210px' },
+              aspectRatio: '9/16',
+              position: 'relative',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
+              cursor: 'pointer',
+              textDecoration: 'none',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                transform: 'translateY(-6px)',
+                boxShadow: '0 12px 25px rgba(37,99,235,0.25)',
+                '& img': {
+                  transform: 'scale(1.08)'
+                }
+              }
+            }}
+          >
+            {/* Background Image */}
+            <Box 
+              component="img"
+              src={optimizeImage(story.slides[0]?.image, 220, 391)}
+              alt={story.title}
+              width="220"
+              height="391"
+              loading="lazy"
+              sx={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+            />
+
+            {/* Gradient Overlay */}
+            <Box 
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.85) 100%)'
+              }}
+            />
+
+            {/* Top Badge: Slide Count */}
+            <Box 
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                backdropFilter: 'blur(4px)',
+                color: '#fff',
+                px: 0.8,
+                py: 0.2,
+                borderRadius: '6px',
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.4
+              }}
+            >
+              📖 {story.slides?.length || 5}
+            </Box>
+
+            {/* Content Bottom */}
+            <Box 
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                p: 1.5,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.4
+              }}
+            >
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#60A5FA', 
+                  fontWeight: 800, 
+                  textTransform: 'uppercase',
+                  fontSize: '0.62rem',
+                  letterSpacing: 0.5
+                }}
+              >
+                {story.category || 'Web Story'}
+              </Typography>
+              <Typography 
+                sx={{
+                  color: '#fff',
+                  fontWeight: 750,
+                  fontSize: { xs: '0.78rem', sm: '0.85rem' },
+                  lineHeight: 1.3,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.6)'
+                }}
+              >
+                {story.title}
+              </Typography>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
 const AlertCard = ({ alert, idx }) => {
   const isEven = idx % 2 === 0;
   const cardBorder = isEven ? '#F87171' : '#60A5FA';
@@ -966,7 +1503,10 @@ export default function HomePage() {
         }}
       >
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          {/* 1-Click Fast Exam & Board Filter Pills Hub with Interactive Smart Marquee (Top Ticker) */}
+          <InteractivePillMarquee />
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box 
                 sx={{ 
@@ -1015,99 +1555,8 @@ export default function HomePage() {
             ) : alerts.length === 0 ? (
               <Typography variant="body2" sx={{ color: 'text.secondary', py: 4, fontStyle: 'italic', textAlign: 'center' }}>No active updates at the moment.</Typography>
             ) : (
-            <>
-              {/* Desktop Slider View (sm and up) */}
-              <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'relative', width: '100%' }}>
-                <Box sx={{ overflow: 'hidden', width: '100%', borderRadius: '12px' }}>
-                  <Box sx={{
-                    display: 'flex',
-                    transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                    transform: `translate3d(-${currentSlide * 100}%, 0, 0)`,
-                    width: '100%'
-                  }}>
-                    {desktopPages.map((pageItems, pageIdx) => (
-                      <Box key={pageIdx} sx={{ flex: '0 0 100%', width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, px: 0.5 }}>
-                        {pageItems.map((alert, idx) => (
-                          <AlertCard key={alert._id} alert={alert} idx={pageIdx * 8 + idx} />
-                        ))}
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
-                
-                {/* Arrow navigation buttons */}
-                {currentSlide > 0 && (
-                  <IconButton 
-                    onClick={handlePrev}
-                    aria-label="Previous Slide"
-                    sx={{
-                      position: 'absolute',
-                      left: -20,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      bgcolor: 'white',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                      border: '1px solid #E5E7EB',
-                      color: '#374151',
-                      zIndex: 10,
-                      width: 40,
-                      height: 40,
-                      '&:hover': { bgcolor: '#F3F4F6' }
-                    }}
-                  >
-                    <ChevronLeft />
-                  </IconButton>
-                )}
-
-                {(currentSlide < desktopPages.length - 1 || hasMoreAlerts) && (
-                  <IconButton 
-                    onClick={handleNext}
-                    aria-label="Next Slide"
-                    sx={{
-                      position: 'absolute',
-                      right: -20,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      bgcolor: 'white',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                      border: '1px solid #E5E7EB',
-                      color: '#374151',
-                      zIndex: 10,
-                      width: 40,
-                      height: 40,
-                      '&:hover': { bgcolor: '#F3F4F6' }
-                    }}
-                  >
-                    <ChevronRight />
-                  </IconButton>
-                )}
-              </Box>
-
-              {/* Mobile Swipeable View */}
-              <Box 
-                ref={mobileScrollRef}
-                onScroll={handleAlertsMobileScroll}
-                sx={{
-                display: { xs: 'flex', sm: 'none' },
-                overflowX: 'auto',
-                gap: 2,
-                pb: 1.5,
-                px: 0.5,
-                scrollSnapType: 'x mandatory',
-                '&::-webkit-scrollbar': { display: 'none' }
-              }}>
-                {mobilePairs.map((pair, pairIdx) => (
-                  <Box key={pairIdx} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: '0 0 calc(50% - 8px)', scrollSnapAlign: 'start' }}>
-                    {pair.map((alert, idx) => (
-                      <Box key={alert._id} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                        <AlertCard alert={alert} idx={pairIdx * 2 + idx} />
-                      </Box>
-                    ))}
-                  </Box>
-                ))}
-              </Box>
-            </>
-          )}
+              <InteractiveAlertsMarquee alerts={alerts} />
+            )}
           </Box>
         </Container>
       </Box>
@@ -1172,115 +1621,8 @@ export default function HomePage() {
                 />
               ))}
             </Box>
-          ) : stories.length > 0 && (
-            <Box 
-              ref={mobileStoriesScrollRef}
-              onScroll={handleStoriesScroll}
-              sx={{ 
-                display: 'flex',
-                gap: 2.5,
-                overflowX: 'auto',
-                pb: 2,
-                pt: 0.5,
-                px: 0.5,
-                scrollSnapType: 'x mandatory',
-                '&::-webkit-scrollbar': { height: '6px' },
-                '&::-webkit-scrollbar-thumb': { bgcolor: '#E5E7EB', borderRadius: '99px' },
-                '&::-webkit-scrollbar-track': { bgcolor: 'transparent' }
-              }}
-            >
-              {stories.map((story) => (
-                <Box 
-                  key={story._id}
-                  component="a"
-                  href={`/web-stories/${story.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  sx={{
-                    flex: { xs: '0 0 160px', sm: '0 0 200px', md: '0 0 220px' },
-                    aspectRatio: '9/16',
-                    position: 'relative',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.06)',
-                    cursor: 'pointer',
-                    textDecoration: 'none',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      transform: 'translateY(-6px)',
-                      boxShadow: '0 12px 25px rgba(37,99,235,0.25)',
-                      '& img': {
-                        transform: 'scale(1.08)'
-                      }
-                    }
-                  }}
-                >
-                  {/* Background Image */}
-                  <Box 
-                    component="img"
-                    src={optimizeImage(story.slides[0]?.image, 220, 391)}
-                    alt={story.title}
-                    width="220"
-                    height="391"
-                    loading="lazy"
-                    sx={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      aspectRatio: '9/16',
-                      transition: 'transform 0.5s ease'
-                    }}
-                  />
-                  {/* Overlay Gradient */}
-                  <Box 
-                    sx={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '70%',
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'flex-end',
-                      p: 2,
-                      color: '#fff',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <Typography 
-                      sx={{
-                        fontSize: { xs: '0.85rem', sm: '0.95rem' },
-                        fontWeight: 800,
-                        lineHeight: 1.3,
-                        mb: 0.5,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textShadow: '0 1.5px 3px rgba(0,0,0,0.8)'
-                      }}
-                    >
-                      {story.title}
-                    </Typography>
-                    <Typography 
-                      sx={{
-                        fontSize: '0.65rem',
-                        opacity: 0.8,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
-                      }}
-                    >
-                      {new Date(story.createdAt).toLocaleDateString('hi-IN', { month: 'short', day: 'numeric' })}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
+          ) : (
+            <InteractiveStoriesMarquee stories={stories} />
           )}
         </Container>
       </Box>

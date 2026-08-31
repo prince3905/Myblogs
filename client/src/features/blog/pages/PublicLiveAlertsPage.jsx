@@ -775,7 +775,7 @@ function renderAlertListItem(alert, setSelectedAlert, themeColor) {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.8, pt: 0.5, borderTop: '1px dashed #F1F5F9' }}>
         <Typography variant="caption" sx={{ color: '#4B5563', fontSize: '0.68rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.4 }}>
           <CalendarIcon sx={{ fontSize: 13, color: themeColor }} />
-          📅 Post: {alert.postDate && alert.postDate !== 'Latest Update' ? alert.postDate : new Date(alert.parsedPostDate || alert.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+          📅 Post: {new Date(alert.parsedPostDate || alert.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
         </Typography>
         {hasValidDate ? (
           <Chip
@@ -812,47 +812,68 @@ function renderAlertListItem(alert, setSelectedAlert, themeColor) {
   );
 }
 
+const QUICK_EXAM_FILTERS = [
+  { label: '🌟 All Updates', query: '', color: '#4F46E5', icon: '⚡' },
+  { label: '🚆 Railway / RRB', query: 'rrb', color: '#0284C7', icon: '🚆' },
+  { label: '📋 SSC Exams', query: 'ssc', color: '#D97706', icon: '📋' },
+  { label: '🏦 Bank / IBPS / SBI', query: 'bank', color: '#059669', icon: '🏦' },
+  { label: '👮 Police & Defence / Army', query: 'police', color: '#DC2626', icon: '👮' },
+  { label: '🏢 BPSC / State PSC', query: 'bpsc', color: '#7C3AED', icon: '🏢' },
+  { label: '📑 UPSSSC / UKSSSC', query: 'upsssc', color: '#EA580C', icon: '📑' },
+  { label: '🎓 10th & 12th Board Results', query: 'board', color: '#E11D48', icon: '🎓' },
+  { label: '🔑 Answer Keys', query: 'answer key', color: '#0D9488', icon: '🔑' },
+  { label: '📄 Syllabus & Pattern', query: 'syllabus', color: '#4338CA', icon: '📄' },
+  { label: '🎓 Admissions & CUET', query: 'admission', color: '#9333EA', icon: '🎓' },
+  { label: '🛠️ Free Student Tools', query: '__tools__', color: '#2563EB', icon: '🛠️' }
+];
+
 const HOT_LINKS_CONFIG = [
   {
-    displayName: "SSC CGL Form 2026",
-    searchKeywords: ["ssc cgl", "cgl 2026", "cgl"],
-    postCount: "12,256 Posts",
+    displayName: "IBPS RRB 15th Gramin Bank Online Form 2026",
+    searchKeywords: ["ibps rrb", "ibps gramin", "rrb 15th"],
+    postCount: "Scale I, II, III & OA",
     type: "alert"
   },
   {
-    displayName: "DSSSB Various Post Form",
-    searchKeywords: ["dsssb"],
-    postCount: "1979 Posts",
+    displayName: "UKSSSC Group C Various Post Form 2026",
+    searchKeywords: ["uksssc group c", "uksssc"],
+    postCount: "Group C Vacancies",
     type: "alert"
   },
   {
-    displayName: "UPSSSC Lower PCS Form",
-    searchKeywords: ["upsssc lower", "lower pcs"],
-    postCount: "2516 Posts",
+    displayName: "UCO Bank Specialist Officer SO Form 2026",
+    searchKeywords: ["uco", "uco bank"],
+    postCount: "Specialist Officer",
     type: "alert"
   },
   {
-    displayName: "Allahabad High Court RO, ARO & CA Form",
-    searchKeywords: ["allahabad high court", "ro, aro", "high court ro"],
-    postCount: "RO/ARO/CA",
+    displayName: "ISRO ICRB Scientist Engineer SC Form 2026",
+    searchKeywords: ["isro", "isro icrb"],
+    postCount: "Scientist / Engineer",
     type: "alert"
   },
   {
-    displayName: "RRB Technician Form 2026",
-    searchKeywords: ["rrb technician", "rrb tech", "technician 2026"],
-    postCount: "6565 Posts",
+    displayName: "Bihar Secondary Teacher STET Online Form 2026",
+    searchKeywords: ["bihar stet", "bseb stet", "stet"],
+    postCount: "Teacher Eligibility",
     type: "alert"
   },
   {
-    displayName: "UPSSSC Excise Constable Form",
-    searchKeywords: ["excise constable", "upsssc excise"],
-    postCount: "Excise Constable",
+    displayName: "India Post GDS Schedule II July 2026",
+    searchKeywords: ["india post", "gds"],
+    postCount: "44,228+ Posts",
     type: "alert"
   },
   {
-    displayName: "BPSC Teacher TRE 4.0 Form",
-    searchKeywords: ["bpsc teacher", "tre 4.0", "bpsc tre"],
-    postCount: "44,000+ Posts",
+    displayName: "HPPSC HPAS Online Form 2026",
+    searchKeywords: ["hppsc", "hpas"],
+    postCount: "Administrative Service",
+    type: "alert"
+  },
+  {
+    displayName: "MPESB Group 3 Sub Engineer Form 2026",
+    searchKeywords: ["mpesb", "group 3"],
+    postCount: "Sub Engineer",
     type: "alert"
   }
 ];
@@ -1239,6 +1260,71 @@ export default function PublicLiveAlertsPage() {
           )}
         </Paper>
 
+        {/* 1-Click Fast Exam & Board Filter Pills Hub (User Swipeable / Scrollable) */}
+        <Box 
+          sx={{ 
+            mb: 3, 
+            maxWidth: '1200px', 
+            mx: 'auto',
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.2,
+            overflowX: 'auto',
+            py: 1,
+            px: 0.5,
+            scrollSnapType: 'x proximity',
+            WebkitOverflowScrolling: 'touch',
+            '&::-webkit-scrollbar': { height: '5px' },
+            '&::-webkit-scrollbar-thumb': { bgcolor: '#CBD5E1', borderRadius: '10px' },
+            '&::-webkit-scrollbar-track': { bgcolor: 'rgba(0,0,0,0.02)' }
+          }}
+        >
+          {QUICK_EXAM_FILTERS.map((f, i) => {
+            const isSelected = f.query === '__tools__' ? false : (searchQuery.toLowerCase() === f.query.toLowerCase() || (!searchQuery && !f.query));
+            return (
+              <Chip
+                key={i}
+                label={`${f.icon} ${f.label}`}
+                clickable
+                onClick={() => {
+                  if (f.query === '__tools__') {
+                    navigate('/tools');
+                    return;
+                  }
+                  setSearchQuery(f.query);
+                  setSelectedState('All States');
+                  setTimeout(() => {
+                    const el = document.getElementById('alerts-lists-grid') || document.getElementById('search-filter-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+                sx={{
+                  scrollSnapAlign: 'start',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  py: 2.1,
+                  px: 1.3,
+                  borderRadius: '30px',
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  bgcolor: isSelected ? f.color : '#FFFFFF',
+                  color: isSelected ? '#FFFFFF' : '#334155',
+                  border: `1.5px solid ${isSelected ? f.color : '#E2E8F0'}`,
+                  boxShadow: isSelected ? `0 4px 14px ${f.color}40` : '0 2px 4px rgba(0,0,0,0.02)',
+                  '&:hover': {
+                    bgcolor: isSelected ? f.color : `${f.color}15`,
+                    color: isSelected ? '#FFFFFF' : f.color,
+                    borderColor: f.color,
+                    transform: 'translateY(-2px)'
+                  }
+                }}
+              />
+            );
+          })}
+        </Box>
+
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress size={44} /></Box>
         ) : error ? (
@@ -1292,46 +1378,45 @@ export default function PublicLiveAlertsPage() {
               <Box sx={{
                 display: 'grid',
                 gridTemplateColumns: {
-                  xs: 'repeat(2, 1fr)',
-                  sm: 'repeat(4, 1fr)',
+                  xs: 'repeat(1, 1fr)',
+                  sm: 'repeat(2, 1fr)',
                   md: 'repeat(4, 1fr)'
                 },
-                gap: 2,
+                gap: { xs: 1.5, sm: 2 }
               }}>
                 {hotLinks.map((item, idx) => {
-                  const isFeatured = idx === 0;
                   const styles = getCardStyles(item, idx);
                   const isLive = !item.isStatic && item.targetAlert;
                   const isNew = isLive && (new Date() - new Date(item.targetAlert.createdAt) < 3 * 24 * 60 * 60 * 1000);
-                  const accentColor = isFeatured ? '#4F46E5' : (idx % 2 !== 0 ? '#EF4444' : '#3B82F6');
+                  const accentColor = idx % 2 === 0 ? '#4F46E5' : '#EF4444';
+                  const board = item.targetAlert?.boardName || item.displayName.split(' ')[0] || 'Govt Portal';
+                  const lastDate = item.targetAlert?.lastDate;
+                  const hasLastDate = lastDate && lastDate !== 'N/A' && lastDate !== 'Check Detail Page' && lastDate !== 'अधिसूचना देखें';
 
                   return (
                     <Box
                       key={idx}
                       onClick={() => handleHotLinkClick(item)}
                       sx={{
-                        gridColumn: isFeatured 
-                          ? { xs: 'span 2', sm: 'span 2', md: 'span 2' } 
-                          : 'span 1',
-                        p: 2,
+                        p: 1.5,
                         display: 'flex',
-                        flexDirection: isFeatured ? 'row' : 'column',
-                        justifyContent: isFeatured ? 'space-between' : 'center',
-                        alignItems: 'center',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        minHeight: '125px',
+                        height: '100%',
                         bgcolor: styles.bgColor,
                         background: styles.bgGradient || styles.bgColor,
                         border: isNew ? `1.5px solid ${accentColor}` : `1px solid ${styles.borderColor}`,
                         borderRadius: '12px',
                         cursor: 'pointer',
-                        textAlign: isFeatured ? 'left' : 'center',
                         position: 'relative',
                         transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                         boxShadow: isNew 
-                          ? `0 2px 8px ${isFeatured ? 'rgba(99, 102, 241, 0.15)' : (idx % 2 !== 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)')}`
-                          : `0 4px 6px -1px ${styles.shadowColor || 'rgba(0,0,0,0.03)'}`,
+                          ? `0 2px 8px ${idx % 2 === 0 ? 'rgba(79, 70, 229, 0.15)' : 'rgba(239, 68, 68, 0.15)'}`
+                          : `0 2px 4px -1px ${styles.shadowColor || 'rgba(0,0,0,0.03)'}`,
                         '&:hover': {
                           transform: 'translateY(-3px)',
-                          boxShadow: `0 10px 15px -3px ${styles.shadowColor || 'rgba(0,0,0,0.06)'}`,
+                          boxShadow: `0 8px 16px -3px ${styles.shadowColor || 'rgba(0,0,0,0.08)'}`,
                           background: styles.hoverBgGradient || styles.hoverBg,
                           borderColor: accentColor,
                           '& .hot-link-title': {
@@ -1340,175 +1425,83 @@ export default function PublicLiveAlertsPage() {
                         }
                       }}
                     >
-                      {/* NEW Badge absolute in top-right */}
-                      {isNew && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: 6,
-                            right: 6,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 0.3,
-                            bgcolor: accentColor,
-                            color: 'white',
-                            px: 0.5,
-                            py: 0.1,
-                            borderRadius: '3px',
-                            fontSize: '0.5rem',
-                            fontWeight: 900,
-                            boxShadow: `0 1px 4px ${isFeatured ? 'rgba(99, 102, 241, 0.3)' : (idx % 2 !== 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)')}`,
-                            animation: 'pulse 1.5s infinite ease-in-out',
-                            '@keyframes pulse': {
-                              '0%': { transform: 'scale(1)', opacity: 0.9 },
-                              '50%': { transform: 'scale(1.05)', opacity: 1 },
-                              '100%': { transform: 'scale(1)', opacity: 0.9 }
-                            }
+                      {/* Top Row: Board Name + NEW Badge */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.8 }}>
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontWeight: 850, 
+                            color: styles.textColor, 
+                            textTransform: 'uppercase', 
+                            fontSize: '0.62rem',
+                            letterSpacing: 0.4
                           }}
                         >
-                          <Box sx={{ width: 3, height: 3, bgcolor: 'white', borderRadius: '50%' }} />
-                          NEW 🔥
-                        </Box>
-                      )}
-
-                      {isFeatured ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', gap: 2 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Typography sx={{ fontSize: '1.4rem', lineHeight: 1 }}>🔥</Typography>
-                            <Box>
-                              <Typography
-                                className="hot-link-title"
-                                sx={{
-                                  fontWeight: 900,
-                                  fontSize: '0.88rem',
-                                  color: styles.textColor,
-                                  lineHeight: 1.3,
-                                  mb: 0.3,
-                                  transition: 'color 0.15s ease'
-                                }}
-                              >
-                                {item.displayName}
-                              </Typography>
-                              <Typography
-                                sx={{
-                                  fontWeight: 700,
-                                  fontSize: '0.62rem',
-                                  color: '#4F46E5',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: 0.5
-                                }}
-                              >
-                                {isLive ? `${item.targetAlert?.boardName || 'Active Notification'}` : "Featured Form"}
-                              </Typography>
-                              {isLive && (
-                                <Box sx={{ display: 'flex', gap: 1.5, mt: 0.5, alignItems: 'center' }}>
-                                  <Typography sx={{ color: '#9CA3AF', fontSize: '0.58rem' }}>
-                                    {item.targetAlert?.createdAt ? new Date(item.targetAlert.createdAt).toLocaleDateString() : ''}
-                                  </Typography>
-                                  {item.targetAlert?.lastDate && item.targetAlert.lastDate !== 'N/A' && (
-                                    <Typography sx={{ color: '#E11D48', fontSize: '0.58rem', fontWeight: 800 }}>
-                                      Last Date: {item.targetAlert.lastDate}
-                                    </Typography>
-                                  )}
-                                </Box>
-                              )}
-                            </Box>
-                          </Box>
-                          
-                          <Chip
-                            label={item.postCount}
-                            size="small"
+                          {board}
+                        </Typography>
+                        {isNew && (
+                          <Box
                             sx={{
-                              fontWeight: 800,
-                              fontSize: '0.68rem',
-                              bgcolor: '#4F46E5',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.3,
+                              bgcolor: accentColor,
                               color: 'white',
-                              borderRadius: '6px',
-                              px: 0.5
-                            }}
-                          />
-                        </Box>
-                      ) : isLive ? (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
-                          {/* Board Name */}
-                          <Typography 
-                            variant="caption" 
-                            sx={{ 
-                              fontWeight: 850, 
-                              color: styles.textColor, 
-                              textTransform: 'uppercase', 
-                              fontSize: '0.58rem',
-                              letterSpacing: 0.3,
-                              mb: 0.3,
-                              pr: isNew ? 4 : 0,
-                              transition: 'color 0.2s ease',
-                              textAlign: 'left'
+                              px: 0.6,
+                              py: 0.15,
+                              borderRadius: '4px',
+                              fontSize: '0.52rem',
+                              fontWeight: 900,
+                              boxShadow: `0 1px 4px ${accentColor}40`,
+                              animation: 'pulse 1.5s infinite ease-in-out',
+                              '@keyframes pulse': {
+                                '0%': { transform: 'scale(1)', opacity: 0.9 },
+                                '50%': { transform: 'scale(1.05)', opacity: 1 },
+                                '100%': { transform: 'scale(1)', opacity: 0.9 }
+                              }
                             }}
                           >
-                            {item.targetAlert?.boardName || 'Official Update'}
-                          </Typography>
-
-                          {/* Title */}
-                          <Typography
-                            className="hot-link-title"
-                            sx={{
-                              fontWeight: 800,
-                              fontSize: '0.78rem',
-                              color: '#374151',
-                              lineHeight: 1.25,
-                              mb: 'auto',
-                              transition: 'color 0.15s ease',
-                              textAlign: 'left'
-                            }}
-                          >
-                            {item.displayName}
-                          </Typography>
-
-                          {/* Date details */}
-                          <Box sx={{ mt: 1.5 }}>
-                            {item.targetAlert?.lastDate && item.targetAlert.lastDate !== 'N/A' && (
-                              <Typography variant="caption" sx={{ color: '#E11D48', fontSize: '0.58rem', fontWeight: 800, display: 'block', mb: 0.2, textAlign: 'left' }}>
-                                Last Date: {item.targetAlert.lastDate}
-                              </Typography>
-                            )}
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <Typography variant="caption" sx={{ color: '#9CA3AF', fontSize: '0.58rem' }}>
-                                {item.targetAlert?.createdAt ? new Date(item.targetAlert.createdAt).toLocaleDateString() : ''}
-                              </Typography>
-                              <Typography variant="caption" sx={{ color: styles.textColor, fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
-                                Apply ↗
-                              </Typography>
-                            </Box>
+                            <Box sx={{ width: 3, height: 3, bgcolor: 'white', borderRadius: '50%' }} />
+                            NEW 🔥
                           </Box>
-                        </Box>
-                      ) : (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
-                          <Typography
-                            className="hot-link-title"
-                            sx={{
-                              fontWeight: 800,
-                              fontSize: '0.78rem',
-                              color: styles.textColor,
-                              lineHeight: 1.25,
-                              mb: 0.3,
-                              transition: 'color 0.15s ease'
-                            }}
-                          >
-                            {item.displayName}
+                        )}
+                      </Box>
+
+                      {/* Middle Row: Title (Clamped to 2 lines) */}
+                      <Typography
+                        className="hot-link-title"
+                        sx={{
+                          fontWeight: 800,
+                          fontSize: '0.78rem',
+                          color: '#1F2937',
+                          lineHeight: 1.3,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          mb: 'auto',
+                          transition: 'color 0.15s ease'
+                        }}
+                      >
+                        {item.displayName}
+                      </Typography>
+
+                      {/* Bottom Row: Post Date & Last Date / Apply Badge */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, pt: 0.6, borderTop: '1px dashed rgba(0,0,0,0.08)' }}>
+                        <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.62rem', fontWeight: 700 }}>
+                          📅 {new Date(item.targetAlert?.parsedPostDate || item.targetAlert?.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        </Typography>
+                        {hasLastDate ? (
+                          <Typography variant="caption" sx={{ color: '#DC2626', fontSize: '0.6rem', fontWeight: 800, bgcolor: '#FEE2E2', px: 0.6, py: 0.15, borderRadius: '4px' }}>
+                            ⏳ {lastDate}
                           </Typography>
-                          <Typography
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: '0.62rem',
-                              color: '#6B7280',
-                              textTransform: 'uppercase',
-                              letterSpacing: 0.3
-                            }}
-                          >
-                            {item.postCount || "Check Details"}
+                        ) : (
+                          <Typography variant="caption" sx={{ color: styles.textColor, fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
+                            Apply ↗
                           </Typography>
-                        </Box>
-                      )}
+                        )}
+                      </Box>
                     </Box>
                   );
                 })}
