@@ -81,9 +81,9 @@ function isOldOrExpiredAlert(title = '', parsedDate = null, lastDateStr = '') {
     }
   }
 
-  // 2. Check past year in title (2025, 2024, 2023, 2022)
-  const hasPastYear = /\b(2025|2024|2023|2022|2021|2020)\b/.test(titleLower);
-  const hasCurrentOrFutureYear = /\b(2026|2027)\b/.test(titleLower);
+  // 2. Check past year in title (1990-2025)
+  const hasPastYear = /\b(19\d\d|200\d|201\d|202[0-5])\b/.test(titleLower);
+  const hasCurrentOrFutureYear = /\b(2026|2027|2028)\b/.test(titleLower);
 
   if (hasPastYear && !hasCurrentOrFutureYear) {
     return true;

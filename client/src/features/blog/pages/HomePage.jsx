@@ -812,7 +812,7 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    request('/api/public/live-alerts?status=active&limit=16')
+    request('/api/public/live-alerts?status=active&limit=32')
       .then(res => {
         if (res.success) {
           setAlerts(res.data || []);
