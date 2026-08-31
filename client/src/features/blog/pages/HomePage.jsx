@@ -834,31 +834,47 @@ export default function HomePage() {
     }, 150);
   }, []);
   useEffect(() => {
-    const allCategories = [
-      'Sarkari Jobs & Exams',
-      'Health & Wellness',
-      'Tech & Tutorials',
-      'AI & Web Tools',
-      'News & Trends',
-      'Finance & Business'
-    ];
-
     setLoadingCategories(true);
-    
-    Promise.all(
-      allCategories.map(cat => 
-        request(`/api/posts?category=${encodeURIComponent(cat)}&limit=6`)
-          .then(res => ({ category: cat, posts: res.posts || [] }))
-          .catch(err => ({ category: cat, posts: [] }))
-      )
-    ).then(results => {
-      const dataMap = {};
-      results.forEach(item => {
-        dataMap[item.category] = item.posts;
+
+    // 1. Immediately fetch Sarkari Jobs & Exams for instant Hero rendering
+    request(`/api/posts?category=${encodeURIComponent('Sarkari Jobs & Exams')}&limit=6`)
+      .then(res => {
+        setCategoriesData(prev => ({
+          ...prev,
+          'Sarkari Jobs & Exams': res.posts || []
+        }));
+      })
+      .catch(() => {});
+
+    // 2. Fetch remaining categories after a tiny 100ms delay to keep TTFB & LCP lightning fast
+    const timer = setTimeout(() => {
+      const remainingCategories = [
+        'Health & Wellness',
+        'Tech & Tutorials',
+        'AI & Web Tools',
+        'News & Trends',
+        'Finance & Business'
+      ];
+
+      Promise.all(
+        remainingCategories.map(cat => 
+          request(`/api/posts?category=${encodeURIComponent(cat)}&limit=6`)
+            .then(res => ({ category: cat, posts: res.posts || [] }))
+            .catch(err => ({ category: cat, posts: [] }))
+        )
+      ).then(results => {
+        setCategoriesData(prev => {
+          const dataMap = { ...prev };
+          results.forEach(item => {
+            dataMap[item.category] = item.posts;
+          });
+          return dataMap;
+        });
+        setLoadingCategories(false);
       });
-      setCategoriesData(dataMap);
-      setLoadingCategories(false);
-    });
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
   // Autoplay slideshow timer only for Live Job Alerts & Web Stories (Calm 8s interval)
   // Pauses automatically when tab is inactive/hidden to eliminate background CPU load!
