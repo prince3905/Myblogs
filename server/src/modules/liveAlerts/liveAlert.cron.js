@@ -40,12 +40,49 @@ function extractBoardName(title) {
   return words || 'Govt Board';
 }
 
-function isOldOrExpiredAlert(title = '', parsedDate = null) {
+function parseIndianDate(dateStr) {
+  if (!dateStr || typeof dateStr !== "string") return null;
+  const str = dateStr.trim();
+  if (str.includes("अधिसूचना") || str.includes("Check") || str.includes("Notify")) return null;
+
+  // DD/MM/YYYY or DD-MM-YYYY
+  let m = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (m) {
+    return new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]), 23, 59, 59);
+  }
+
+  // DD Month YYYY e.g. "15 July 2026", "03 August 2026"
+  const months = {
+    jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
+    may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7, sep: 8, september: 8,
+    oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11
+  };
+  m = str.match(/(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})/);
+  if (m) {
+    const monthKey = m[2].toLowerCase().slice(0, 3);
+    const monthIdx = months[monthKey];
+    if (monthIdx !== undefined) {
+      return new Date(parseInt(m[3]), monthIdx, parseInt(m[1]), 23, 59, 59);
+    }
+  }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function isOldOrExpiredAlert(title = '', parsedDate = null, lastDateStr = '') {
   const titleLower = title.toLowerCase();
 
-  // Check past year in title (2025, 2024, 2023, 2022)
+  // 1. Check exact lastDate against current date
+  if (lastDateStr) {
+    const deadline = parseIndianDate(lastDateStr);
+    if (deadline && deadline < new Date()) {
+      return true; // Expired!
+    }
+  }
+
+  // 2. Check past year in title (2025, 2024, 2023, 2022)
   const hasPastYear = /\b(2025|2024|2023|2022|2021|2020)\b/.test(titleLower);
-  // Check if title mentions current or future year (2026, 2027)
   const hasCurrentOrFutureYear = /\b(2026|2027)\b/.test(titleLower);
 
   if (hasPastYear && !hasCurrentOrFutureYear) {
@@ -838,7 +875,7 @@ async function scrapeFeeds() {
       const cleanTitle = stripSarkariResultMentionsAndLinks(title);
       finalDetailsText = stripSarkariResultMentionsAndLinks(finalDetailsText);
 
-      const isExpired = isOldOrExpiredAlert(title, parsedDate);
+      const isExpired = isOldOrExpiredAlert(title, parsedDate, finalLastDate);
       const computedStatus = isExpired ? 'expired' : 'active';
 
       // Save or update to DB
@@ -999,11 +1036,36 @@ function initScheduler() {
     }
   });
 
+  // Helper to sweep all live alerts whose deadline has passed
+  async function sweepExpiredLiveAlerts() {
+    try {
+      const now = new Date();
+      const activeAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } });
+      let expiredCount = 0;
+      for (const a of activeAlerts) {
+        if (a.lastDate) {
+          const deadline = parseIndianDate(a.lastDate);
+          if (deadline && deadline < now) {
+            await LiveAlert.updateOne({ _id: a._id }, { $set: { status: 'expired' } });
+            expiredCount++;
+          }
+        }
+      }
+      if (expiredCount > 0) {
+        console.log(`[Auto Expiry Sweep] Automatically transitioned ${expiredCount} expired alerts to 'expired' status.`);
+      }
+    } catch (err) {
+      console.error('[Auto Expiry Sweep] Error:', err.message);
+    }
+  }
+
   // Scraper Run: Every 15 minutes
   cron.schedule('*/15 * * * *', async () => {
     try {
+      await sweepExpiredLiveAlerts();
       logAutomation({ service: 'SCRAPER', level: 'INFO', action: '15m Scraper Start', message: 'Cron job initiated multi-source DOM scrape' });
       const totalSaved = await scrapeFeeds();
+      await sweepExpiredLiveAlerts();
       logAutomation({ service: 'SCRAPER', level: 'SUCCESS', action: '15m Scraper Finish', message: `Scraper completed successfully. Processed/Saved ${totalSaved || 0} updates.`, metadata: { totalSaved } });
     } catch (err) {
       console.error('[LiveAlert Scheduler] Cron task error:', err.message);
