@@ -312,9 +312,6 @@ async function renderWebStory(req, res, next) {
         <amp-story-page-outlink layout="nodisplay">
           <a href="${postUrl}">👉 Read Full Notification & Apply</a>
         </amp-story-page-outlink>
-        <amp-story-cta-layer>
-          <a href="${postUrl}" class="cta-button">👉 Read Full Article & Apply</a>
-        </amp-story-cta-layer>
       </amp-story-page>
     </amp-story>
   </body>
