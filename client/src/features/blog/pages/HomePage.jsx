@@ -194,7 +194,13 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
 
   if (!alerts || alerts.length === 0) return null;
 
-  const displayAlerts = alerts.length >= 8 ? [...alerts, ...alerts] : [...alerts, ...alerts, ...alerts];
+  // Group alerts into 2-card vertical stacks (2 rows per column = 8 cards visible across 4 columns)
+  const pairs = [];
+  for (let i = 0; i < alerts.length; i += 2) {
+    pairs.push(alerts.slice(i, i + 2));
+  }
+
+  const displayPairs = pairs.length >= 8 ? [...pairs, ...pairs] : [...pairs, ...pairs, ...pairs];
 
   return (
     <Box 
@@ -273,17 +279,22 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
           '&::-webkit-scrollbar-track': { bgcolor: 'rgba(0,0,0,0.02)' }
         }}
       >
-        {displayAlerts.map((alert, idx) => (
+        {displayPairs.map((pair, pIdx) => (
           <Box 
-            key={`${alert._id}-${idx}`} 
+            key={pIdx} 
             sx={{ 
-              flex: { xs: '0 0 240px', sm: '0 0 260px' }, 
-              width: { xs: '240px', sm: '260px' },
-              minHeight: '100px',
-              display: 'flex'
+              flex: { xs: '0 0 calc(50% - 10px)', sm: '0 0 calc(25% - 12px)', md: '0 0 270px' }, 
+              width: { xs: 'calc(50% - 10px)', sm: 'calc(25% - 12px)', md: '270px' },
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5
             }}
           >
-            <AlertCard alert={alert} idx={idx} />
+            {pair.map((alert, idx) => (
+              <Box key={alert._id} sx={{ flex: 1, minHeight: '95px', display: 'flex' }}>
+                <AlertCard alert={alert} idx={pIdx * 2 + idx} />
+              </Box>
+            ))}
           </Box>
         ))}
       </Box>
