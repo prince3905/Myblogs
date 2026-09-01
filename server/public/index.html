@@ -47,16 +47,16 @@
           document.head.appendChild(ads);
         }
 
-        // Defer script execution until user interaction or idle callback (3s)
-        var events = ['touchstart', 'scroll', 'mousemove', 'keydown'];
+        // Defer script execution until user interaction or idle callback (6.5s)
+        var events = ['touchstart', 'scroll', 'mousemove', 'keydown', 'click'];
         events.forEach(function(evt) {
           window.addEventListener(evt, loadThirdPartyScripts, { passive: true, once: true });
         });
 
         if ('requestIdleCallback' in window) {
-          requestIdleCallback(function() { setTimeout(loadThirdPartyScripts, 3000); });
+          requestIdleCallback(function() { setTimeout(loadThirdPartyScripts, 6500); });
         } else {
-          setTimeout(loadThirdPartyScripts, 3500);
+          setTimeout(loadThirdPartyScripts, 7000);
         }
       })();
     </script>
