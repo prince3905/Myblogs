@@ -113,7 +113,7 @@ router.get('/automation-logs', async (req, res, next) => {
   }
 });
 
-router.post('/pagespeed-audit/trigger', async (req, res, next) => {
+router.all(['/pagespeed-audit/trigger', '/pagespeed/trigger'], async (req, res, next) => {
   try {
     const { runDailyPageSpeedAudit } = require('../../shared/services/pageSpeedMonitorCron');
     // Run audit asynchronously so admin UI gets immediate confirmation
