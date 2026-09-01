@@ -1134,8 +1134,16 @@ function initScheduler() {
     }
   });
 
-  console.log('[LiveAlert Scheduler] Node-cron initialized: Scraper (15m), Queue (9AM, 6PM), Auto-GSC Boost (6h) & Expiry (00:00).');
-  logAutomation({ service: 'SYSTEM_CRON', level: 'SUCCESS', action: 'Scheduler Initialized', message: 'Node-cron active for Scraper (15m), Queue (9AM, 6PM), Auto-GSC Boost (6h) & Expiry (00:00)' });
+  // PageSpeed 2x Daily Performance Monitor (8:00 AM & 8:00 PM IST)
+  try {
+    const { initPageSpeedMonitorCron } = require('../../shared/services/pageSpeedMonitorCron');
+    initPageSpeedMonitorCron();
+  } catch (psErr) {
+    console.error('[LiveAlert Scheduler] PageSpeed Monitor Cron init failed:', psErr.message);
+  }
+
+  console.log('[LiveAlert Scheduler] Node-cron initialized: Scraper (15m), Queue (9AM, 6PM), PageSpeed Monitor (8AM, 8PM), Auto-GSC Boost (6h) & Expiry (00:00).');
+  logAutomation({ service: 'SYSTEM_CRON', level: 'SUCCESS', action: 'Scheduler Initialized', message: 'Node-cron active for Scraper (15m), Queue (9AM, 6PM), PageSpeed Monitor (8AM, 8PM), Auto-GSC Boost (6h) & Expiry (00:00)' });
 
   // Run initial startup tasks immediately (asynchronously in the background)
   Promise.resolve().then(async () => {

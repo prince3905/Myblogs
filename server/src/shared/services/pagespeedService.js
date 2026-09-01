@@ -39,24 +39,27 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
       const statusCode = fallbackErr.response?.status || primaryErr.response?.status;
       let userMsg = fallbackErr.response?.data?.error?.message || primaryErr.response?.data?.error?.message || fallbackErr.message;
       
-      // Handle Google API Quota Exceeded or transient errors accurately
-      if (userMsg.includes('Quota exceeded') || userMsg.includes('quota') || userMsg.includes('NO_FCP') || userMsg.includes('disabled')) {
-        console.warn('[PageSpeed Service] Google API quota limit reached.');
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execPromise = util.promisify(exec);
+
+      // Handle Google API Quota Exceeded by running local headless Lighthouse CLI
+      console.warn('[PageSpeed Service] Google online API unavailable. Running local Lighthouse CLI engine fallback...');
+      try {
+        const flags = strategy === 'mobile'
+          ? '--chrome-flags="--headless" --form-factor=mobile --screenEmulation.mobile=true --throttling-method=simulate'
+          : '--chrome-flags="--headless" --preset=desktop --throttling-method=simulate';
+
+        const { stdout } = await execPromise(`npx lighthouse "${targetUrl}" --output=json --quiet ${flags}`, { maxBuffer: 1024 * 1024 * 30, timeout: 90000 });
+        responseData = { lighthouseResult: JSON.parse(stdout) };
+      } catch (cliErr) {
+        console.error('[PageSpeed Service] Local Lighthouse CLI fallback failed:', cliErr.message);
         return {
           success: false,
-          isQuotaExceeded: true,
-          timestamp: new Date().toISOString(),
-          strategy,
-          targetUrl,
-          message: 'Google PageSpeed API Daily Quota Exceeded. Please run audit directly on Google PageSpeed Insights website (https://pagespeed.web.dev/) or configure PAGESPEED_API_KEY in server/.env.'
+          error: userMsg,
+          statusCode
         };
       }
-
-      return {
-        success: false,
-        error: userMsg,
-        statusCode
-      };
     }
   }
 
