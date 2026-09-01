@@ -38,15 +38,7 @@ export default defineConfig({
     cssCodeSplit: true,
     cssMinify: true,
     chunkSizeWarningLimit: 2000,
-    modulePreload: {
-      polyfill: false,
-      filter(viteModule) {
-        return !viteModule.includes('vendor-pdf-tools') &&
-               !viteModule.includes('vendor-html2canvas') &&
-               !viteModule.includes('vendor-editor') &&
-               !viteModule.includes('vendor-date-pickers');
-      }
-    },
+    modulePreload: false,
     rollupOptions: {
       output: {
         manualChunks(id) {
