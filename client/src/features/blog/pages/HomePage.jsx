@@ -466,8 +466,8 @@ const InteractiveStoriesMarquee = ({ stories = [] }) => {
               alt={story.title}
               width="220"
               height="391"
-              loading={i < 2 ? "eager" : "lazy"}
-              fetchpriority={i === 0 ? "high" : "auto"}
+              loading={sIdx < 2 ? "eager" : "lazy"}
+              fetchpriority={sIdx === 0 ? "high" : "auto"}
               sx={{
                 width: '100%',
                 height: '100%',
