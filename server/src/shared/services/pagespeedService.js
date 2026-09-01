@@ -16,7 +16,7 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
   let responseData = null;
   try {
     const response = await axios.get(primaryApiUrl, {
-      timeout: 60000,
+      timeout: 12000,
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -24,10 +24,10 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
     });
     responseData = response.data;
   } catch (primaryErr) {
-    console.warn('[PageSpeed Service] Primary Key query failed/disabled. Retrying with fallback unauthenticated endpoint...', primaryErr.response?.data?.error?.message || primaryErr.message);
+    console.warn('[PageSpeed Service] Primary Google API call failed/timed-out. Retrying fallback unauthenticated endpoint...', primaryErr.response?.data?.error?.message || primaryErr.message);
     try {
       const fallbackResponse = await axios.get(fallbackApiUrl, {
-        timeout: 60000,
+        timeout: 12000,
         headers: {
           'Accept': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -35,7 +35,6 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
       });
       responseData = fallbackResponse.data;
     } catch (fallbackErr) {
-      console.error('[PageSpeed Service] Audit failed on both primary and fallback endpoints:', fallbackErr.response?.data?.error?.message || fallbackErr.message);
       const statusCode = fallbackErr.response?.status || primaryErr.response?.status;
       let userMsg = fallbackErr.response?.data?.error?.message || primaryErr.response?.data?.error?.message || fallbackErr.message;
       
@@ -43,14 +42,14 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
       const util = require('util');
       const execPromise = util.promisify(exec);
 
-      // Handle Google API Quota Exceeded by running local headless Lighthouse CLI
-      console.warn('[PageSpeed Service] Google online API unavailable. Running local Lighthouse CLI engine fallback...');
+      // Handle Google API Quota Exceeded by running local headless Lighthouse CLI directly
+      console.log(`[PageSpeed Service] Running high-speed local Lighthouse engine for ${targetUrl} (${strategy})...`);
       try {
         const flags = strategy === 'mobile'
           ? '--chrome-flags="--headless" --form-factor=mobile --screenEmulation.mobile=true --throttling-method=simulate'
           : '--chrome-flags="--headless" --preset=desktop --throttling-method=simulate';
 
-        const { stdout } = await execPromise(`npx lighthouse "${targetUrl}" --output=json --quiet ${flags}`, { maxBuffer: 1024 * 1024 * 30, timeout: 90000 });
+        const { stdout } = await execPromise(`npx lighthouse "${targetUrl}" --output=json --quiet ${flags}`, { maxBuffer: 1024 * 1024 * 30, timeout: 60000 });
         responseData = { lighthouseResult: JSON.parse(stdout) };
       } catch (cliErr) {
         console.error('[PageSpeed Service] Local Lighthouse CLI fallback failed:', cliErr.message);
