@@ -3,8 +3,9 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import ToastProvider from '../components/Toast';
 import AdminRoute from '../features/auth/components/AdminRoute';
 
-// Lazy load public pages
-const HomePage = lazy(() => import('../features/blog/pages/HomePage'));
+import HomePage from '../features/blog/pages/HomePage';
+
+// Lazy load secondary/heavy public pages
 const BlogListPage = lazy(() => import('../features/blog/pages/BlogListPage'));
 const PostPage = lazy(() => import('../features/blog/pages/PostPage'));
 const BlogRedirectPage = lazy(() => import('../features/blog/pages/BlogRedirectPage'));
@@ -83,7 +84,6 @@ const AdminSettingsPageSuspense = withAdminSuspense(AdminSettingsPage);
 const AdminWebStoriesPageSuspense = withAdminSuspense(AdminWebStoriesPage);
 const AdminAutomationLogsPageSuspense = withAdminSuspense(AdminAutomationLogsPage);
 
-const HomePageSuspense = withPublicSuspense(HomePage);
 const BlogListPageSuspense = withPublicSuspense(BlogListPage);
 const PostPageSuspense = withPublicSuspense(PostPage);
 const BlogRedirectPageSuspense = withPublicSuspense(BlogRedirectPage);
@@ -117,7 +117,7 @@ export default function App() {
   return (
     <ToastProvider>
       <Routes>
-        <Route path="/" element={<HomePageSuspense />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/web-stories/:slug" element={<WebStoryRedirect />} />
         <Route path="/blog" element={<BlogListPageSuspense />} />
         <Route path="/blog/:category/:slug" element={<PostPageSuspense />} />
