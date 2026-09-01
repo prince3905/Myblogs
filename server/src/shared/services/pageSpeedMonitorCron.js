@@ -19,64 +19,70 @@ function formatPageDiagnosticReport(pageName, url, mobileAudit, desktopAudit) {
   const dScore = desktopAudit.scores?.performance ?? desktopAudit.score ?? 0;
   const isBelowTarget = mScore < TARGET_SCORE || dScore < TARGET_SCORE;
 
-  let report = `🚨 **PageSpeed Alert: ${pageName}** (${url})\n`;
-  report += `📅 Date: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST\n\n`;
+  let report = `🚨 **PageSpeed Deep Audit: ${pageName}** (${url})\n`;
+  report += `📅 Audited: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST\n\n`;
 
   report += `📊 **Scores Summary (Target: ${TARGET_SCORE}+):**\n`;
-  report += `📱 **Mobile Performance:** ${mScore}/100 ${mScore >= TARGET_SCORE ? '✅' : '⚠️ NEED IMPROVEMENT'}\n`;
-  report += `💻 **Desktop Performance:** ${dScore}/100 ${dScore >= TARGET_SCORE ? '✅' : '⚠️ NEED IMPROVEMENT'}\n`;
-  report += `🔍 SEO: ${mobileAudit.scores?.seo || 100}/100 | ♿ Accessibility: ${mobileAudit.scores?.accessibility || 96}/100\n\n`;
+  report += `📱 **Mobile Performance:** ${mScore}/100 ${mScore >= TARGET_SCORE ? '✅ (PASS)' : '⚠️ (NEED IMPROVEMENT)'}\n`;
+  report += `💻 **Desktop Performance:** ${dScore}/100 ${dScore >= TARGET_SCORE ? '✅ (PASS)' : '⚠️ (NEED IMPROVEMENT)'}\n`;
+  report += `🔍 SEO: ${mobileAudit.scores?.seo || 100}/100 | ♿ Accessibility: ${mobileAudit.scores?.accessibility || 96}/100 | 🛡️ Best Practices: ${mobileAudit.scores?.bestPractices || 77}/100\n\n`;
 
-  report += `⏱️ **Core Web Vitals (Mobile):**\n`;
-  report += `- FCP (First Contentful Paint): ${mobileAudit.metrics?.fcp || 'N/A'}\n`;
-  report += `- LCP (Largest Contentful Paint): ${mobileAudit.metrics?.lcp || 'N/A'}\n`;
-  report += `- TBT (Total Blocking Time): ${mobileAudit.metrics?.tbt || 'N/A'}\n`;
-  report += `- CLS (Layout Shift): ${mobileAudit.metrics?.cls ?? '0.000'}\n`;
-  report += `- Speed Index: ${mobileAudit.metrics?.speedIndex || 'N/A'}\n\n`;
+  report += `⏱️ **Core Web Vitals Comparison:**\n`;
+  report += `| Metric | Mobile (${mScore}/100) | Desktop (${dScore}/100) | Google Target |\n`;
+  report += `|---|---|---|---|\n`;
+  report += `| **FCP (First Contentful Paint)** | ${mobileAudit.metrics?.fcp || 'N/A'} | ${desktopAudit.metrics?.fcp || 'N/A'} | ≤ 1.8s (Green) |\n`;
+  report += `| **LCP (Largest Contentful Paint)** | ${mobileAudit.metrics?.lcp || 'N/A'} | ${desktopAudit.metrics?.lcp || 'N/A'} | ≤ 2.5s (Green) |\n`;
+  report += `| **TBT (Total Blocking Time)** | ${mobileAudit.metrics?.tbt || 'N/A'} | ${desktopAudit.metrics?.tbt || 'N/A'} | ≤ 200ms (Green) |\n`;
+  report += `| **CLS (Cumulative Layout Shift)** | ${mobileAudit.metrics?.cls ?? '0.000'} | ${desktopAudit.metrics?.cls ?? '0.000'} | ≤ 0.1 (Green) |\n`;
+  report += `| **Speed Index** | ${mobileAudit.metrics?.speedIndex || 'N/A'} | ${desktopAudit.metrics?.speedIndex || 'N/A'} | ≤ 3.4s (Green) |\n\n`;
 
-  report += `🛑 **Exact Bottlenecks & Opportunities (Mobile):**\n`;
+  report += `🛑 **Exact Bottlenecks & Optimization Opportunities:**\n`;
 
   // 1. Render Blocking Resources
-  if (mobileAudit.diagnostics?.renderBlocking?.length > 0) {
+  const renderBlocking = mobileAudit.diagnostics?.renderBlocking || desktopAudit.diagnostics?.renderBlocking || [];
+  if (renderBlocking.length > 0) {
     report += `\n📦 **Render-Blocking Resources:**\n`;
-    mobileAudit.diagnostics.renderBlocking.slice(0, 5).forEach((item, idx) => {
-      report += `  ${idx + 1}. \`${item.url}\` (Savings: ${item.wastedMs}ms, ${item.totalBytes}KB)\n`;
+    renderBlocking.slice(0, 5).forEach((item, idx) => {
+      report += `  ${idx + 1}. \`${item.url}\` (Wasted: ${item.wastedMs}ms, ${item.totalBytes}KB)\n`;
     });
   }
 
   // 2. Unused JavaScript
-  if (mobileAudit.diagnostics?.unusedJs?.length > 0) {
+  const unusedJs = mobileAudit.diagnostics?.unusedJs || desktopAudit.diagnostics?.unusedJs || [];
+  if (unusedJs.length > 0) {
     report += `\n📜 **Unused JavaScript (Code Splitting Needed):**\n`;
-    mobileAudit.diagnostics.unusedJs.slice(0, 5).forEach((item, idx) => {
+    unusedJs.slice(0, 5).forEach((item, idx) => {
       report += `  ${idx + 1}. \`${item.url}\` (Wasted: ${item.wastedKb}KB / ${item.wastedPercent}%)\n`;
     });
   }
 
   // 3. Unused CSS
-  if (mobileAudit.diagnostics?.unusedCss?.length > 0) {
+  const unusedCss = mobileAudit.diagnostics?.unusedCss || desktopAudit.diagnostics?.unusedCss || [];
+  if (unusedCss.length > 0) {
     report += `\n🎨 **Unused CSS Rules:**\n`;
-    mobileAudit.diagnostics.unusedCss.slice(0, 5).forEach((item, idx) => {
+    unusedCss.slice(0, 5).forEach((item, idx) => {
       report += `  ${idx + 1}. \`${item.url}\` (Wasted: ${item.wastedKb}KB)\n`;
     });
   }
 
   // 4. Oversized Images
-  if (mobileAudit.diagnostics?.oversizedImages?.length > 0) {
+  const oversizedImages = mobileAudit.diagnostics?.oversizedImages || desktopAudit.diagnostics?.oversizedImages || [];
+  if (oversizedImages.length > 0) {
     report += `\n🖼️ **Heavy / Oversized Images:**\n`;
-    mobileAudit.diagnostics.oversizedImages.slice(0, 5).forEach((item, idx) => {
+    oversizedImages.slice(0, 5).forEach((item, idx) => {
       report += `  ${idx + 1}. \`${item.url}\` (Wasted: ${item.wastedKb}KB)\n`;
     });
   }
 
   // 5. Heavy Main Thread Tasks
   if (mobileAudit.diagnostics?.mainThreadWork?.length > 0) {
-    report += `\n🧵 **Main Thread Work Breakdown:**\n`;
+    report += `\n🧵 **Main Thread Work Breakdown (Mobile):**\n`;
     mobileAudit.diagnostics.mainThreadWork.slice(0, 4).forEach((item) => {
       report += `  - ${item.group}: ${item.durationMs}ms\n`;
     });
   }
 
-  report += `\n🔧 **Action:** Copy this diagnostic and ask developer to optimize the listed URLs to reach 90+ speed.\n`;
+  report += `\n🔧 **Action Required:** Copy this entire diagnostic and provide to developer to optimize the listed resources.\n`;
 
   return { report, isBelowTarget, mScore, dScore };
 }
