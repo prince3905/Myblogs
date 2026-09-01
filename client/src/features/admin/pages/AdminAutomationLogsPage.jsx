@@ -89,10 +89,26 @@ export default function AdminAutomationLogsPage() {
       WHATSAPP: { bg: '#DCFCE7', text: '#15803D' },
       SEO_INDEXING: { bg: '#FCE7F3', text: '#9D174D' },
       SYSTEM_CRON: { bg: '#FEF3C7', text: '#92400E' },
-      WEB_STORY: { bg: '#F3E8FF', text: '#6B21A8' }
+      WEB_STORY: { bg: '#F3E8FF', text: '#6B21A8' },
+      PAGESPEED_MONITOR: { bg: '#FEF2F2', text: '#B91C1C' }
     };
     const style = serviceColors[srv] || { bg: '#F3F4F6', text: '#374151' };
     return <Chip label={srv} size="small" sx={{ bgcolor: style.bg, color: style.text, fontWeight: 700, borderRadius: '6px' }} />;
+  };
+
+  const handleTriggerPageSpeed = () => {
+    setMsg('Initiating PageSpeed 4-page deep diagnostic audit in the background...');
+    setMsgType('info');
+    request('/api/admin/pagespeed-audit/trigger', { method: 'POST' })
+      .then(res => {
+        setMsg(res.message || 'PageSpeed audit running! Results will update automatically.');
+        setMsgType('success');
+        setTimeout(() => loadLogs(), 3000);
+      })
+      .catch(err => {
+        setMsg('Failed to trigger PageSpeed audit: ' + err.message);
+        setMsgType('error');
+      });
   };
 
   return (
@@ -103,10 +119,18 @@ export default function AdminAutomationLogsPage() {
             🤖 Automation System Logs
           </Typography>
           <Typography variant="body2" sx={{ color: '#6B7280', mt: 0.5 }}>
-            Real-time execution telemetry for Scrapers, Telegram, WhatsApp, SEO Indexer & System Crons ({totalLogs} total events logged)
+            Real-time execution telemetry for Scrapers, PageSpeed 90+ Monitor, Telegram, WhatsApp, SEO Indexer & Crons ({totalLogs} total events)
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          <Button
+            variant="contained"
+            color="warning"
+            onClick={handleTriggerPageSpeed}
+            sx={{ borderRadius: 2.5, textTransform: 'none', fontWeight: 700, bgcolor: '#F59E0B', '&:hover': { bgcolor: '#D97706' } }}
+          >
+            ⚡ Test PageSpeed Now
+          </Button>
           <FormControlLabel
             control={
               <Switch 
@@ -159,10 +183,11 @@ export default function AdminAutomationLogsPage() {
           }}
         />
 
-        <FormControl size="small" sx={{ minWidth: 160 }}>
+        <FormControl size="small" sx={{ minWidth: 180 }}>
           <InputLabel>Filter Service</InputLabel>
           <Select value={service} label="Filter Service" onChange={e => { setService(e.target.value); setPage(1); }} sx={{ borderRadius: 2.5 }}>
             <MenuItem value="ALL">All Services</MenuItem>
+            <MenuItem value="PAGESPEED_MONITOR">⚡ PageSpeed Monitor</MenuItem>
             <MenuItem value="SCRAPER">Scraper Daemon</MenuItem>
             <MenuItem value="TELEGRAM">Telegram Bot</MenuItem>
             <MenuItem value="WHATSAPP">WhatsApp Broadcast</MenuItem>
@@ -262,23 +287,57 @@ export default function AdminAutomationLogsPage() {
       </Box>
 
       {/* Payload Inspection Modal */}
-      <Dialog open={Boolean(selectedMeta)} onClose={() => setSelectedMeta(null)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>Payload Metadata Inspection</DialogTitle>
+      <Dialog open={Boolean(selectedMeta)} onClose={() => setSelectedMeta(null)} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{selectedMeta?.report ? '⚡ PageSpeed Deep Diagnostic Report' : 'Payload Metadata Inspection'}</span>
+          {selectedMeta?.report && (
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => {
+                navigator.clipboard.writeText(selectedMeta.report);
+                alert('Report copied to clipboard! You can paste it to the developer to fix.');
+              }}
+              sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
+            >
+              📋 Copy Full Report
+            </Button>
+          )}
+        </DialogTitle>
         <DialogContent dividers>
-          <Box 
-            component="pre" 
-            sx={{ 
-              bgcolor: '#0F172A', 
-              color: '#38BDF8', 
-              p: 2.5, 
-              borderRadius: 2.5, 
-              fontSize: '0.82rem', 
-              overflowX: 'auto',
-              fontFamily: 'monospace'
-            }}
-          >
-            {JSON.stringify(selectedMeta, null, 2)}
-          </Box>
+          {selectedMeta?.report ? (
+            <Box 
+              component="pre" 
+              sx={{ 
+                bgcolor: '#0F172A', 
+                color: '#38BDF8', 
+                p: 2.5, 
+                borderRadius: 2.5, 
+                fontSize: '0.85rem', 
+                overflowX: 'auto',
+                whiteSpace: 'pre-wrap',
+                fontFamily: 'monospace',
+                lineHeight: 1.6
+              }}
+            >
+              {selectedMeta.report}
+            </Box>
+          ) : (
+            <Box 
+              component="pre" 
+              sx={{ 
+                bgcolor: '#0F172A', 
+                color: '#38BDF8', 
+                p: 2.5, 
+                borderRadius: 2.5, 
+                fontSize: '0.82rem', 
+                overflowX: 'auto',
+                fontFamily: 'monospace'
+              }}
+            >
+              {JSON.stringify(selectedMeta, null, 2)}
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setSelectedMeta(null)} sx={{ fontWeight: 700 }}>Close</Button>

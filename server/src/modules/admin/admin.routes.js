@@ -113,6 +113,17 @@ router.get('/automation-logs', async (req, res, next) => {
   }
 });
 
+router.post('/pagespeed-audit/trigger', async (req, res, next) => {
+  try {
+    const { runDailyPageSpeedAudit } = require('../../shared/services/pageSpeedMonitorCron');
+    // Run audit asynchronously so admin UI gets immediate confirmation
+    runDailyPageSpeedAudit().catch(err => console.error('[Admin PageSpeed Trigger] Error:', err.message));
+    res.json({ success: true, message: 'PageSpeed 4-Page Deep Audit initiated! Results will appear in Automation Logs shortly.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.delete('/automation-logs/clear', async (req, res, next) => {
   try {
     require('./automationLog.model');
