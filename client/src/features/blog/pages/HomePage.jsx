@@ -1280,8 +1280,8 @@ export default function HomePage() {
   const [categoriesData, setCategoriesData] = useState({});
   const [loadingCategories, setLoadingCategories] = useState(true);
 
-  const [stories, setStories] = useState([]);
-  const [loadingStories, setLoadingStories] = useState(true);
+  const [stories, setStories] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_STORIES__) && window.__INITIAL_STORIES__.length > 0) ? window.__INITIAL_STORIES__ : []);
+  const [loadingStories, setLoadingStories] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_STORIES__) && window.__INITIAL_STORIES__.length > 0) ? false : true);
 
   const [alertsPage, setAlertsPage] = useState(1);
   const [hasMoreAlerts, setHasMoreAlerts] = useState(true);
@@ -1405,16 +1405,14 @@ export default function HomePage() {
       .finally(() => setLoadingAlerts(false));
   }, []);
   useEffect(() => {
-    // Defer below-the-fold Web Stories slightly for instant Hero LCP
-    setTimeout(() => {
-      request('/api/public/web-stories?limit=8')
-        .then(res => {
-          const list = Array.isArray(res) ? res : (res?.data || []);
-          setStories(list);
-        })
-        .catch(err => console.error(err))
-        .finally(() => setLoadingStories(false));
-    }, 150);
+    if (stories.length > 0) return;
+    request('/api/public/web-stories?limit=8')
+      .then(res => {
+        const list = Array.isArray(res) ? res : (res?.data || []);
+        setStories(list);
+      })
+      .catch(err => console.error(err))
+      .finally(() => setLoadingStories(false));
   }, []);
   useEffect(() => {
     setLoadingCategories(true);

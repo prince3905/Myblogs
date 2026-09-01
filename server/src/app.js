@@ -187,11 +187,33 @@ app.get('/', async (req, res, next) => {
     }
     let html = fs.readFileSync(indexPath, 'utf8');
     
-    // Get pre-cached homepage posts data
+    // Get pre-cached homepage posts and stories data
     const data = await getHomepageData();
-    if (data) {
-      const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data).replace(/</g, '\\u003c')};</script>`;
-      html = html.replace('</head>', `${scriptTag}\n</head>`);
+    let initialStories = [];
+    let lcpPreloadTag = '';
+    
+    try {
+      const mongoose = require('mongoose');
+      const WebStory = mongoose.model('WebStory');
+      initialStories = await WebStory.find({ status: 'published' })
+        .sort({ publishedAt: -1, createdAt: -1 })
+        .limit(8)
+        .lean();
+      
+      const firstImg = initialStories[0]?.slides?.[0]?.image;
+      if (firstImg) {
+        const optimizedFirstImg = firstImg.includes('pexels.com')
+          ? `${firstImg.split('?')[0]}?auto=format,compress&q=75&w=220&h=391&fit=crop`
+          : firstImg;
+        lcpPreloadTag = `<link rel="preload" as="image" href="${optimizedFirstImg}" fetchpriority="high">`;
+      }
+    } catch (storyErr) {
+      console.warn('Failed to pre-fetch initial stories:', storyErr.message);
+    }
+
+    if (data || initialStories.length > 0) {
+      const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data || null).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories).replace(/</g, '\\u003c')};</script>`;
+      html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
     }
 
     // Inject static HTML links for SEO crawlers (limited to top 30 latest posts)
