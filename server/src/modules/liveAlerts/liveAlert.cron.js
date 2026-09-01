@@ -1036,19 +1036,26 @@ function initScheduler() {
     }
   });
 
-  // Helper to sweep all live alerts whose deadline has passed
+  // Helper to sweep all live alerts whose deadline has passed or belong to past years
   async function sweepExpiredLiveAlerts() {
     try {
       const now = new Date();
       const activeAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } });
       let expiredCount = 0;
       for (const a of activeAlerts) {
+        let isExpired = false;
         if (a.lastDate) {
           const deadline = parseIndianDate(a.lastDate);
           if (deadline && deadline < now) {
-            await LiveAlert.updateOne({ _id: a._id }, { $set: { status: 'expired' } });
-            expiredCount++;
+            isExpired = true;
           }
+        }
+        if (!isExpired && isOldOrExpiredAlert(a.title, a.parsedPostDate, a.lastDate)) {
+          isExpired = true;
+        }
+        if (isExpired) {
+          await LiveAlert.updateOne({ _id: a._id }, { $set: { status: 'expired' } });
+          expiredCount++;
         }
       }
       if (expiredCount > 0) {
