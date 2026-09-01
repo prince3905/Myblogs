@@ -35,21 +35,32 @@ const InteractivePillMarquee = () => {
     if (!el) return;
 
     let animationFrameId;
+    let halfWidth = el.scrollWidth / 2;
+
+    const onResize = () => {
+      if (el) halfWidth = el.scrollWidth / 2;
+    };
+    window.addEventListener('resize', onResize, { passive: true });
 
     const step = () => {
-      if (!isPausedRef.current && el) {
+      if (!isPausedRef.current && el && halfWidth > 0) {
         // Alternating Direction 1: Right to Left (R to L)
         el.scrollLeft += 0.65;
-        if (el.scrollLeft >= el.scrollWidth / 2) {
+        if (el.scrollLeft >= halfWidth) {
           el.scrollLeft = 0;
         }
       }
       animationFrameId = requestAnimationFrame(step);
     };
 
-    animationFrameId = requestAnimationFrame(step);
+    const startTimer = setTimeout(() => {
+      if (el) halfWidth = el.scrollWidth / 2;
+      animationFrameId = requestAnimationFrame(step);
+    }, 300);
 
     return () => {
+      clearTimeout(startTimer);
+      window.removeEventListener('resize', onResize);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
     };
@@ -147,25 +158,37 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
     const el = scrollContainerRef.current;
     if (!el || alerts.length === 0) return;
 
-    // Set initial position at middle for smooth L to R backward scroll
-    el.scrollLeft = el.scrollWidth / 2;
-
     let animationFrameId;
+    let halfWidth = el.scrollWidth / 2;
+    el.scrollLeft = halfWidth;
+
+    const onResize = () => {
+      if (el) halfWidth = el.scrollWidth / 2;
+    };
+    window.addEventListener('resize', onResize, { passive: true });
 
     const step = () => {
-      if (!isPausedRef.current && el) {
+      if (!isPausedRef.current && el && halfWidth > 0) {
         // Alternating Direction 2: Left to Right (L to R)
         el.scrollLeft -= 0.65;
         if (el.scrollLeft <= 0) {
-          el.scrollLeft = el.scrollWidth / 2;
+          el.scrollLeft = halfWidth;
         }
       }
       animationFrameId = requestAnimationFrame(step);
     };
 
-    animationFrameId = requestAnimationFrame(step);
+    const startTimer = setTimeout(() => {
+      if (el) {
+        halfWidth = el.scrollWidth / 2;
+        el.scrollLeft = halfWidth;
+      }
+      animationFrameId = requestAnimationFrame(step);
+    }, 300);
 
     return () => {
+      clearTimeout(startTimer);
+      window.removeEventListener('resize', onResize);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
     };
@@ -312,21 +335,32 @@ const InteractiveStoriesMarquee = ({ stories = [] }) => {
     if (!el || stories.length === 0) return;
 
     let animationFrameId;
+    let halfWidth = el.scrollWidth / 2;
+
+    const onResize = () => {
+      if (el) halfWidth = el.scrollWidth / 2;
+    };
+    window.addEventListener('resize', onResize, { passive: true });
 
     const step = () => {
-      if (!isPausedRef.current && el) {
+      if (!isPausedRef.current && el && halfWidth > 0) {
         // Alternating Direction 3: Right to Left (R to L)
         el.scrollLeft += 0.65;
-        if (el.scrollLeft >= el.scrollWidth / 2) {
+        if (el.scrollLeft >= halfWidth) {
           el.scrollLeft = 0;
         }
       }
       animationFrameId = requestAnimationFrame(step);
     };
 
-    animationFrameId = requestAnimationFrame(step);
+    const startTimer = setTimeout(() => {
+      if (el) halfWidth = el.scrollWidth / 2;
+      animationFrameId = requestAnimationFrame(step);
+    }, 300);
 
     return () => {
+      clearTimeout(startTimer);
+      window.removeEventListener('resize', onResize);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
     };
