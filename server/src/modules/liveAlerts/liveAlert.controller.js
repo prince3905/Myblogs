@@ -105,8 +105,12 @@ async function getAlerts(req, res) {
   try {
     const { status, limit, page, search, q } = req.query;
     const filter = {};
-    if (status && status !== 'all') {
-      filter.status = status;
+    if (status && status === 'expired') {
+      filter.status = 'expired';
+    } else if (status && status === 'drafted') {
+      filter.status = 'drafted';
+    } else if (status && status !== 'all') {
+      filter.status = { $in: ['active', 'published'] };
     } else {
       filter.status = { $in: ['active', 'published'] };
     }
