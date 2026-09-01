@@ -51,12 +51,6 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('@mui/icons-material')) {
-              return 'vendor-icons';
-            }
-            if (id.includes('@mui/x-date-pickers') || id.includes('date-fns')) {
-              return 'vendor-date-pickers';
-            }
             if (id.includes('jspdf') || id.includes('pdfjs-dist') || id.includes('pdf-lib')) {
               return 'vendor-pdf-tools';
             }
@@ -66,8 +60,17 @@ export default defineConfig({
             if (id.includes('react-quill') || id.includes('prismjs')) {
               return 'vendor-editor';
             }
-            if (id.includes('@mui') || id.includes('@emotion') || id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor-framework';
+            if (id.includes('@mui/icons-material')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('@mui/x-date-pickers') || id.includes('date-fns')) {
+              return 'vendor-date-pickers';
+            }
+            if (id.includes('@mui') || id.includes('@emotion')) {
+              return 'vendor-mui';
+            }
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react';
             }
           }
         }

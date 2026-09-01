@@ -674,7 +674,7 @@ async function sitemap(req, res) {
 
 function robots(req, res) {
   res.type('text/plain');
-  return res.send(`User-agent: *\nAllow: /\nSitemap: ${env.siteUrl}/sitemap.xml`);
+  return res.send(`User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n\nSitemap: https://www.digitalhomeblog.in/sitemap.xml\n`);
 }
 
 async function rssFeed(req, res) {
