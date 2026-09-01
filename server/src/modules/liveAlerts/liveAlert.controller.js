@@ -175,8 +175,15 @@ async function getAlerts(req, res) {
 
     let alerts = [];
 
-    // If default feed with no search query: fetch balanced items across all categories so every column is 100% full
-    if (!searchQuery && pageNum === 1) {
+    // For Homepage widget requests (e.g. limit=32): return pure latest-first active alerts in strict chronological order
+    if (!searchQuery && queryLimit <= 50 && pageNum === 1) {
+      alerts = await LiveAlert.find(filter)
+        .select('-detailsText')
+        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .limit(queryLimit)
+        .lean();
+    } else if (!searchQuery && pageNum === 1) {
+      // If default full feed for /job-alerts page: fetch balanced items across all 6 categories so every column table is 100% full
       const [jobs, admitCards, results, answerKeys, admissions, syllabus] = await Promise.all([
         LiveAlert.find({
           ...filter,
