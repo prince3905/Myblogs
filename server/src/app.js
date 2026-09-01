@@ -168,9 +168,19 @@ app.get('/:key.txt', (req, res, next) => {
   next();
 });
 
-// Handle root path / specially to inject initial posts data to avoid client API waterfall
+let cachedHomepageHtml = null;
+let lastHomepageCacheTime = 0;
+
+// Handle root path / with High-Speed In-Memory HTML Cache (Instant 2ms TTFB)
 app.get('/', async (req, res, next) => {
   try {
+    const now = Date.now();
+    if (cachedHomepageHtml && now - lastHomepageCacheTime < 180000) { // 3-minute RAM cache
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300, stale-while-revalidate=600');
+      return res.send(cachedHomepageHtml);
+    }
+
     const indexPath = path.join(publicPath, 'index.html');
     if (!fs.existsSync(indexPath)) {
       return res.status(404).send('index.html not found');
@@ -184,19 +194,21 @@ app.get('/', async (req, res, next) => {
       html = html.replace('</head>', `${scriptTag}\n</head>`);
     }
 
-    // Inject static HTML links for SEO crawlers who do not execute client-side Javascript
+    // Inject static HTML links for SEO crawlers (limited to top 30 latest posts)
     try {
       const mongoose = require('mongoose');
       const BlogPost = mongoose.model('BlogPost');
-      const allPosts = await BlogPost.find({ status: 'published' })
+      const topPosts = await BlogPost.find({ status: 'published' })
         .select('title category slug')
+        .sort({ publishedAt: -1, createdAt: -1 })
+        .limit(30)
         .lean();
       
       const catUrlSlug = (cat) => (cat || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       
       let seoLinks = '\n<div style="display:none;" id="seo-crawler-links" aria-hidden="true">\n';
       seoLinks += '  <h1 style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;">Digital Home - Latest Sarkari Jobs, Exams & Tech Updates</h1>\n';
-      allPosts.forEach(p => {
+      topPosts.forEach(p => {
         const path = `/blog/${catUrlSlug(p.category)}/${p.slug}`;
         seoLinks += `  <a href="${path}">${p.title}</a>\n`;
       });
@@ -207,7 +219,11 @@ app.get('/', async (req, res, next) => {
       console.warn('Failed to inject SEO crawler links:', dbErr.message);
     }
     
-    res.setHeader('Content-Type', 'text/html');
+    cachedHomepageHtml = html;
+    lastHomepageCacheTime = now;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300, stale-while-revalidate=600');
     return res.send(html);
   } catch (err) {
     next(err);
