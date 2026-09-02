@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { postsService } from '../services/posts';
 
 export function usePosts(params = {}) {
-  // Check if we are fetching the default homepage feed (limit 10, page 1, no filters)
-  const isDefaultHome = !params.search && !params.category && !params.tags && !params.dateFrom && !params.dateTo && (!params.limit || params.limit === 10);
+  // Check if we are fetching the default homepage feed (limit 6 or 10, page 1, no filters)
+  const isDefaultHome = !params.search && !params.category && !params.tags && !params.dateFrom && !params.dateTo && (!params.limit || params.limit === 10 || params.limit === 6);
 
   const [posts, setPosts] = useState(() => {
     if (isDefaultHome && typeof window !== 'undefined' && window.__INITIAL_POSTS__) {
-      return window.__INITIAL_POSTS__.posts || [];
+      const p = window.__INITIAL_POSTS__.posts || [];
+      return params.limit ? p.slice(0, params.limit) : p;
     }
     return [];
   });

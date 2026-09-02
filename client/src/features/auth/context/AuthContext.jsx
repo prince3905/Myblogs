@@ -14,13 +14,21 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    const checkAuth = () => {
       request('/api/auth/me')
-      .then((data) => setUser(data.user))
-      .catch(() => {
-        localStorage.removeItem('blog_admin_token');
-        setUser(null);
-      })
-      .finally(() => setLoading(false));
+        .then((data) => setUser(data.user))
+        .catch(() => {
+          localStorage.removeItem('blog_admin_token');
+          setUser(null);
+        })
+        .finally(() => setLoading(false));
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      window.requestIdleCallback(checkAuth, { timeout: 2000 });
+    } else {
+      setTimeout(checkAuth, 1200);
+    }
   }, []);
 
   async function login(email, password) {
