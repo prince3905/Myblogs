@@ -8,7 +8,10 @@ export default function Seo({ title, description, image, url, canonical, keyword
   // Strip any trailing "| Digital Home" or "| Inkspire Blog" or "| Sarkari Result" suffixes
   cleanTitle = cleanTitle.replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '');
 
-  const fullTitle = cleanTitle ? `${cleanTitle} | ${siteName}` : siteName;
+  const isHomepageOrBrandTitle = cleanTitle.startsWith('Digital Home');
+  const fullTitle = isHomepageOrBrandTitle 
+    ? cleanTitle 
+    : (cleanTitle ? `${cleanTitle} | ${siteName}` : siteName);
   const desc = description || 'Sarkari Result, Admit Card, Latest Jobs, Vacancies, Sarkari Result Tools, Kids Games (बचो का गेम), Health, Education, Tech, and Career Insights from Digital Home Blog.';
   
   const currentHref = typeof window !== 'undefined' ? window.location.href : 'https://www.digitalhomeblog.in';
