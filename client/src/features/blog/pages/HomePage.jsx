@@ -37,7 +37,7 @@ const InteractivePillMarquee = () => {
     if (!el) return;
 
     let animationFrameId;
-    let halfWidth = el.scrollWidth / 2;
+    let halfWidth = 0;
 
     const onResize = () => {
       if (el) halfWidth = el.scrollWidth / 2;
@@ -55,10 +55,13 @@ const InteractivePillMarquee = () => {
       animationFrameId = requestAnimationFrame(step);
     };
 
+    // Defer measurement until after initial paint is fully settled (1200ms)
     const startTimer = setTimeout(() => {
-      if (el) halfWidth = el.scrollWidth / 2;
-      animationFrameId = requestAnimationFrame(step);
-    }, 300);
+      if (el) {
+        halfWidth = el.scrollWidth / 2;
+        animationFrameId = requestAnimationFrame(step);
+      }
+    }, 1200);
 
     return () => {
       clearTimeout(startTimer);
@@ -161,8 +164,7 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
     if (!el || alerts.length === 0) return;
 
     let animationFrameId;
-    let halfWidth = el.scrollWidth / 2;
-    el.scrollLeft = halfWidth;
+    let halfWidth = 0;
 
     const onResize = () => {
       if (el) halfWidth = el.scrollWidth / 2;
@@ -180,13 +182,14 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
       animationFrameId = requestAnimationFrame(step);
     };
 
+    // Defer measurement until after initial paint is fully settled (1200ms)
     const startTimer = setTimeout(() => {
       if (el) {
         halfWidth = el.scrollWidth / 2;
         el.scrollLeft = halfWidth;
+        animationFrameId = requestAnimationFrame(step);
       }
-      animationFrameId = requestAnimationFrame(step);
-    }, 300);
+    }, 1200);
 
     return () => {
       clearTimeout(startTimer);
@@ -340,7 +343,7 @@ const InteractiveStoriesMarquee = ({ stories = [] }) => {
     if (!el || stories.length === 0) return;
 
     let animationFrameId;
-    let halfWidth = el.scrollWidth / 2;
+    let halfWidth = 0;
 
     const onResize = () => {
       if (el) halfWidth = el.scrollWidth / 2;
@@ -358,10 +361,13 @@ const InteractiveStoriesMarquee = ({ stories = [] }) => {
       animationFrameId = requestAnimationFrame(step);
     };
 
+    // Defer measurement until after initial paint is fully settled (1200ms)
     const startTimer = setTimeout(() => {
-      if (el) halfWidth = el.scrollWidth / 2;
-      animationFrameId = requestAnimationFrame(step);
-    }, 300);
+      if (el) {
+        halfWidth = el.scrollWidth / 2;
+        animationFrameId = requestAnimationFrame(step);
+      }
+    }, 1200);
 
     return () => {
       clearTimeout(startTimer);
@@ -1485,63 +1491,6 @@ export default function HomePage() {
       .catch(() => {})
       .finally(() => setLoadingCategories(false));
   }, []);
-  // Autoplay slideshow timer only for Live Job Alerts & Web Stories (Calm 8s interval)
-  // Pauses automatically when tab is inactive/hidden to eliminate background CPU load!
-  useEffect(() => {
-    if (loadingAlerts || alerts.length === 0) return;
-    
-    const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
-
-    const timer = setInterval(() => {
-      // Pause slideshow if document/tab is not visible to user
-      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
-        return;
-      }
-
-      // 1. Desktop Live Job Alerts Autoplay
-      if (maxSlide > 0) {
-        setCurrentSlide(prev => (prev < maxSlide ? prev + 1 : 0));
-      }
-
-      // 2. Mobile Live Job Alerts Autoplay
-      if (mobileScrollRef.current) {
-        const container = mobileScrollRef.current;
-        const scrollWidth = container.scrollWidth;
-        const clientWidth = container.clientWidth;
-        const currentScrollLeft = container.scrollLeft;
-
-        let nextScrollLeft = currentScrollLeft + clientWidth;
-        if (nextScrollLeft + clientWidth >= scrollWidth - 10) {
-          nextScrollLeft = 0;
-        }
-
-        container.scrollTo({
-          left: nextScrollLeft,
-          behavior: 'smooth'
-        });
-      }
-
-      // 3. Mobile Web Stories Autoplay
-      if (mobileStoriesScrollRef.current && window.innerWidth < 600 && stories.length > 2) {
-        const container = mobileStoriesScrollRef.current;
-        const scrollWidth = container.scrollWidth;
-        const clientWidth = container.clientWidth;
-        const currentScrollLeft = container.scrollLeft;
-
-        let nextScrollLeft = currentScrollLeft + (clientWidth / 2 + 10);
-        if (nextScrollLeft >= scrollWidth - clientWidth - 10) {
-          nextScrollLeft = 0;
-        }
-
-        container.scrollTo({
-          left: nextScrollLeft,
-          behavior: 'smooth'
-        });
-      }
-    }, 8000); // Calm 8-second slide interval focused on New Vacancy / Job Posts & Stories
-
-    return () => clearInterval(timer);
-  }, [alerts, loadingAlerts, currentSlide, stories, loadingStories]);
 
   return (
     <Layout>
