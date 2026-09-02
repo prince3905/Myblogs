@@ -3,13 +3,37 @@ import { Button, Container, Box, Typography, useTheme, Drawer, List, ListItem, L
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import NewsletterWidget from '../../../components/NewsletterWidget';
 import DarkModeToggle from '../../../components/DarkModeToggle';
 import BreadcrumbsNav from '../../../components/Breadcrumbs';
 import TelegramStickyBanner from '../../../components/TelegramStickyBanner';
 import FloatingQuickShare, { ShareModalProvider } from '../../../components/FloatingQuickShare';
+
+function useDeferredMount(delay = 2500) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    let timer = setTimeout(() => setMounted(true), delay);
+    const onUserInteraction = () => {
+      setMounted(true);
+      window.removeEventListener('scroll', onUserInteraction);
+      window.removeEventListener('touchstart', onUserInteraction);
+      window.removeEventListener('mousemove', onUserInteraction);
+      clearTimeout(timer);
+    };
+    window.addEventListener('scroll', onUserInteraction, { passive: true, once: true });
+    window.addEventListener('touchstart', onUserInteraction, { passive: true, once: true });
+    window.addEventListener('mousemove', onUserInteraction, { passive: true, once: true });
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', onUserInteraction);
+      window.removeEventListener('touchstart', onUserInteraction);
+      window.removeEventListener('mousemove', onUserInteraction);
+    };
+  }, [delay]);
+  return mounted;
+}
 
 
 export default function Layout({ children }) {
@@ -273,11 +297,13 @@ export default function Layout({ children }) {
         </Container>
       </Box>
 
-      {/* Telegram Sticky Banner */}
-      <TelegramStickyBanner />
-
-      {/* Floating Quick Share Button (Mobile Only) */}
-      <FloatingQuickShare />
+      {/* Deferred Floating Widgets */}
+      {isDeferredMounted && (
+        <>
+          <TelegramStickyBanner />
+          <FloatingQuickShare />
+        </>
+      )}
     </Box>
   </ShareModalProvider>
   );

@@ -57,6 +57,7 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
             height="225"
             loading={isFirst ? "eager" : "lazy"}
             {...(isFirst ? { fetchpriority: "high" } : {})}
+            decoding="async"
             sx={{
               width: '100%',
               height: '100%',

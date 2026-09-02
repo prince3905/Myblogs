@@ -78,7 +78,7 @@ const InteractivePillMarquee = () => {
     }, 1500);
   };
 
-  const items = [...QUICK_EXAM_FILTERS, ...QUICK_EXAM_FILTERS];
+  const items = QUICK_EXAM_FILTERS;
 
   return (
     <Box 
@@ -217,13 +217,14 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
 
   if (!alerts || alerts.length === 0) return null;
 
-  // Group alerts into 2-card vertical stacks (2 rows per column = 8 cards visible across 4 columns)
-  const pairs = [];
-  for (let i = 0; i < alerts.length; i += 2) {
-    pairs.push(alerts.slice(i, i + 2));
-  }
+  // Limit initial alerts to top 8 items (eliminates DOM bloat)
+  const visibleAlerts = alerts.slice(0, 8);
 
-  const displayPairs = pairs.length >= 8 ? [...pairs, ...pairs] : [...pairs, ...pairs, ...pairs];
+  // Group alerts into 2-card vertical stacks (2 rows per column = 8 cards across 4 columns)
+  const displayPairs = [];
+  for (let i = 0; i < visibleAlerts.length; i += 2) {
+    displayPairs.push(visibleAlerts.slice(i, i + 2));
+  }
 
   return (
     <Box 
@@ -389,7 +390,8 @@ const InteractiveStoriesMarquee = ({ stories = [] }) => {
 
   if (!stories || stories.length === 0) return null;
 
-  const displayStories = stories.length >= 6 ? [...stories, ...stories] : [...stories, ...stories, ...stories];
+  // Limit initial stories to top 6 items (eliminates DOM bloat)
+  const displayStories = stories.slice(0, 6);
 
   return (
     <Box 
@@ -963,6 +965,58 @@ const CategoryRowSlider = ({ categoryName, posts: initialPosts = [], loading: in
   );
 };
 
+const LazyCategorySection = ({ categoryName, initialPosts = [] }) => {
+  const [isVisible, setIsVisible] = useState(initialPosts.length > 0);
+  const [posts, setPosts] = useState(initialPosts);
+  const [loading, setLoading] = useState(initialPosts.length === 0);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (initialPosts.length > 0) {
+      setPosts(initialPosts);
+      setLoading(false);
+      setIsVisible(true);
+      return;
+    }
+
+    if (typeof window === 'undefined' || !window.IntersectionObserver) {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsVisible(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '300px' });
+
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [initialPosts]);
+
+  useEffect(() => {
+    if (!isVisible || posts.length > 0) return;
+    setLoading(true);
+    request(`/api/posts?category=${encodeURIComponent(categoryName)}&limit=6`)
+      .then(res => setPosts(res.posts || []))
+      .catch(() => setPosts([]))
+      .finally(() => setLoading(false));
+  }, [isVisible, categoryName]);
+
+  return (
+    <Box ref={ref} sx={{ minHeight: isVisible ? 'auto' : { xs: '320px', md: '380px' } }}>
+      {isVisible ? (
+        <CategoryRowSlider
+          categoryName={categoryName}
+          posts={posts}
+          loading={loading}
+        />
+      ) : null}
+    </Box>
+  );
+};
+
 const HeroSectionSlider = ({ initialPosts = [], loading: initialLoading }) => {
   const [heroPosts, setHeroPosts] = useState(initialPosts);
   const [page, setPage] = useState(1);
@@ -1113,6 +1167,7 @@ const HeroSectionSlider = ({ initialPosts = [], loading: initialLoading }) => {
                           height="310"
                           loading={idx === 0 ? 'eager' : 'lazy'}
                           fetchPriority={idx === 0 ? 'high' : 'auto'}
+                          decoding="async"
                           sx={{
                             width: '100%',
                             height: '100%',
@@ -1416,46 +1471,15 @@ export default function HomePage() {
   }, []);
   useEffect(() => {
     setLoadingCategories(true);
-
     // 1. Immediately fetch Sarkari Jobs & Exams for instant Hero rendering
     request(`/api/posts?category=${encodeURIComponent('Sarkari Jobs & Exams')}&limit=6`)
       .then(res => {
-        setCategoriesData(prev => ({
-          ...prev,
+        setCategoriesData({
           'Sarkari Jobs & Exams': res.posts || []
-        }));
-      })
-      .catch(() => {});
-
-    // 2. Fetch remaining categories after a tiny 100ms delay to keep TTFB & LCP lightning fast
-    const timer = setTimeout(() => {
-      const remainingCategories = [
-        'Health & Wellness',
-        'Tech & Tutorials',
-        'AI & Web Tools',
-        'News & Trends',
-        'Finance & Business'
-      ];
-
-      Promise.all(
-        remainingCategories.map(cat => 
-          request(`/api/posts?category=${encodeURIComponent(cat)}&limit=6`)
-            .then(res => ({ category: cat, posts: res.posts || [] }))
-            .catch(err => ({ category: cat, posts: [] }))
-        )
-      ).then(results => {
-        setCategoriesData(prev => {
-          const dataMap = { ...prev };
-          results.forEach(item => {
-            dataMap[item.category] = item.posts;
-          });
-          return dataMap;
         });
-        setLoadingCategories(false);
-      });
-    }, 100);
-
-    return () => clearTimeout(timer);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingCategories(false));
   }, []);
   // Autoplay slideshow timer only for Live Job Alerts & Web Stories (Calm 8s interval)
   // Pauses automatically when tab is inactive/hidden to eliminate background CPU load!
@@ -1695,11 +1719,10 @@ export default function HomePage() {
             'News & Trends',
             'Finance & Business'
           ].map(cat => (
-            <CategoryRowSlider 
+            <LazyCategorySection 
               key={cat}
               categoryName={cat}
-              posts={categoriesData[cat] || []}
-              loading={loadingCategories}
+              initialPosts={categoriesData[cat] || []}
             />
           ))}
         </Container>
