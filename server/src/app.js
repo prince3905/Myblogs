@@ -170,90 +170,110 @@ app.get('/:key.txt', (req, res, next) => {
 
 let cachedHomepageHtml = null;
 let lastHomepageCacheTime = 0;
+let isUpdatingHomepageCache = false;
 
-// Handle root path / with High-Speed In-Memory HTML Cache
+async function buildHomepageHtml() {
+  const indexPath = path.join(publicPath, 'index.html');
+  if (!fs.existsSync(indexPath)) return null;
+  let html = fs.readFileSync(indexPath, 'utf8');
+
+  // Get pre-cached homepage posts, stories, alerts, and category data
+  let data = null;
+  try {
+    data = await getHomepageData();
+  } catch (e) {}
+
+  let initialStories = [];
+  let initialAlerts = [];
+  let sarkariPosts = [];
+  let lcpPreloadTag = '';
+
+  try {
+    const mongoose = require('mongoose');
+    const WebStory = mongoose.model('WebStory');
+    const LiveAlert = mongoose.model('LiveAlert');
+    const BlogPost = mongoose.model('BlogPost');
+
+    const [storiesRes, alertsRes, sarkariRes] = await Promise.allSettled([
+      WebStory.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean(),
+      LiveAlert.find({ status: 'active' }).sort({ parsedPostDate: -1, createdAt: -1 }).limit(8).lean(),
+      BlogPost.find({ status: 'published', category: 'Sarkari Jobs & Exams' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean()
+    ]);
+
+    initialStories = storiesRes.status === 'fulfilled' ? storiesRes.value : [];
+    initialAlerts = alertsRes.status === 'fulfilled' ? alertsRes.value : [];
+    sarkariPosts = sarkariRes.status === 'fulfilled' ? sarkariRes.value : [];
+
+    const firstImg = initialStories[0]?.slides?.[0]?.image;
+    if (firstImg) {
+      const optimizedFirstImg = firstImg.includes('pexels.com')
+        ? `${firstImg.split('?')[0]}?auto=compress&cs=tinysrgb&dpr=1&fit=crop&w=220&h=391&q=60`
+        : firstImg;
+      lcpPreloadTag = `<link rel="preload" as="image" href="${optimizedFirstImg}" fetchpriority="high">`;
+    }
+  } catch (ssrErr) {
+    console.warn('Failed to pre-fetch initial SSR data:', ssrErr.message);
+  }
+
+  const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data || null).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories).replace(/</g, '\\u003c')}; window.__INITIAL_ALERTS__ = ${JSON.stringify(initialAlerts).replace(/</g, '\\u003c')}; window.__INITIAL_SARKARI_POSTS__ = ${JSON.stringify(sarkariPosts).replace(/</g, '\\u003c')};</script>`;
+  html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
+
+  // Inject static HTML links for SEO crawlers (limited to top 30 latest posts)
+  try {
+    const mongoose = require('mongoose');
+    const BlogPost = mongoose.model('BlogPost');
+    const topPosts = await BlogPost.find({ status: 'published' })
+      .select('title category slug')
+      .sort({ publishedAt: -1, createdAt: -1 })
+      .limit(30)
+      .lean();
+
+    const catUrlSlug = (cat) => (cat || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    let seoLinks = '\n<div style="display:none;" id="seo-crawler-links" aria-hidden="true">\n';
+    seoLinks += '  <h1 style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;">Digital Home - Latest Sarkari Jobs, Exams & Tech Updates</h1>\n';
+    topPosts.forEach(p => {
+      const path = `/blog/${catUrlSlug(p.category)}/${p.slug}`;
+      seoLinks += `  <a href="${path}">${p.title}</a>\n`;
+    });
+    seoLinks += '</div>\n';
+
+    html = html.replace('<body>', `<body>${seoLinks}`);
+  } catch (dbErr) {
+    console.warn('Failed to inject SEO crawler links:', dbErr.message);
+  }
+
+  cachedHomepageHtml = html;
+  lastHomepageCacheTime = Date.now();
+  return html;
+}
+
+// Handle root path / with High-Speed In-Memory HTML Cache (0ms - 2ms TTFB)
 app.get('/', async (req, res, next) => {
   try {
     const now = Date.now();
     const isLocal = !req.headers.host || req.headers.host.includes('localhost') || req.headers.host.includes('127.0.0.1');
 
-    if (!isLocal && cachedHomepageHtml && now - lastHomepageCacheTime < 180000) { // 3-minute RAM cache for production
+    // In production, ALWAYS serve cached HTML instantly from RAM (2ms TTFB)
+    if (!isLocal && cachedHomepageHtml) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
-      return res.send(cachedHomepageHtml);
+      res.send(cachedHomepageHtml);
+
+      // Stale-While-Revalidate: refresh in background if cache is older than 3 minutes
+      if (now - lastHomepageCacheTime > 180000 && !isUpdatingHomepageCache) {
+        isUpdatingHomepageCache = true;
+        buildHomepageHtml()
+          .catch(e => console.warn('Background homepage HTML cache refresh failed:', e.message))
+          .finally(() => { isUpdatingHomepageCache = false; });
+      }
+      return;
     }
 
-    const indexPath = path.join(publicPath, 'index.html');
-    if (!fs.existsSync(indexPath)) {
+    const html = await buildHomepageHtml();
+    if (!html) {
       return res.status(404).send('index.html not found');
     }
-    let html = fs.readFileSync(indexPath, 'utf8');
-    
-    // Get pre-cached homepage posts, stories, alerts, and category data
-    const data = await getHomepageData();
-    let initialStories = [];
-    let initialAlerts = [];
-    let sarkariPosts = [];
-    let lcpPreloadTag = '';
-    
-    try {
-      const mongoose = require('mongoose');
-      const WebStory = mongoose.model('WebStory');
-      const LiveAlert = mongoose.model('LiveAlert');
-      const BlogPost = mongoose.model('BlogPost');
-
-      const [storiesRes, alertsRes, sarkariRes] = await Promise.allSettled([
-        WebStory.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean(),
-        LiveAlert.find({ status: 'active' }).sort({ parsedPostDate: -1, createdAt: -1 }).limit(8).lean(),
-        BlogPost.find({ status: 'published', category: 'Sarkari Jobs & Exams' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean()
-      ]);
-
-      initialStories = storiesRes.status === 'fulfilled' ? storiesRes.value : [];
-      initialAlerts = alertsRes.status === 'fulfilled' ? alertsRes.value : [];
-      sarkariPosts = sarkariRes.status === 'fulfilled' ? sarkariRes.value : [];
-      
-      const firstImg = initialStories[0]?.slides?.[0]?.image;
-      if (firstImg) {
-        const optimizedFirstImg = firstImg.includes('pexels.com')
-          ? `${firstImg.split('?')[0]}?auto=compress&cs=tinysrgb&dpr=1&fit=crop&w=220&h=391&q=60`
-          : firstImg;
-        lcpPreloadTag = `<link rel="preload" as="image" href="${optimizedFirstImg}" fetchpriority="high">`;
-      }
-    } catch (ssrErr) {
-      console.warn('Failed to pre-fetch initial SSR data:', ssrErr.message);
-    }
-
-    const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data || null).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories).replace(/</g, '\\u003c')}; window.__INITIAL_ALERTS__ = ${JSON.stringify(initialAlerts).replace(/</g, '\\u003c')}; window.__INITIAL_SARKARI_POSTS__ = ${JSON.stringify(sarkariPosts).replace(/</g, '\\u003c')};</script>`;
-    html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
-
-    // Inject static HTML links for SEO crawlers (limited to top 30 latest posts)
-    try {
-      const mongoose = require('mongoose');
-      const BlogPost = mongoose.model('BlogPost');
-      const topPosts = await BlogPost.find({ status: 'published' })
-        .select('title category slug')
-        .sort({ publishedAt: -1, createdAt: -1 })
-        .limit(30)
-        .lean();
-      
-      const catUrlSlug = (cat) => (cat || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      
-      let seoLinks = '\n<div style="display:none;" id="seo-crawler-links" aria-hidden="true">\n';
-      seoLinks += '  <h1 style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;">Digital Home - Latest Sarkari Jobs, Exams & Tech Updates</h1>\n';
-      topPosts.forEach(p => {
-        const path = `/blog/${catUrlSlug(p.category)}/${p.slug}`;
-        seoLinks += `  <a href="${path}">${p.title}</a>\n`;
-      });
-      seoLinks += '</div>\n';
-      
-      html = html.replace('<body>', `<body>${seoLinks}`);
-    } catch (dbErr) {
-      console.warn('Failed to inject SEO crawler links:', dbErr.message);
-    }
-    
-    cachedHomepageHtml = html;
-    lastHomepageCacheTime = now;
-
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', isLocal ? 'no-store, no-cache, must-revalidate' : 'public, max-age=0, must-revalidate');
     return res.send(html);
@@ -396,4 +416,5 @@ app.get('*', (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
+app.buildHomepageHtml = buildHomepageHtml;
 module.exports = app;

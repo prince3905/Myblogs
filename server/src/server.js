@@ -18,6 +18,13 @@ async function start() {
   initScheduler();
   app.listen(env.port, () => {
     console.log(`Server running on port ${env.port}`);
+    if (app.buildHomepageHtml) {
+      app.buildHomepageHtml().then(() => {
+        console.log('[Cache] Pre-warmed homepage HTML cache (Instant 2ms TTFB ready).');
+      }).catch(err => {
+        console.warn('[Cache] Pre-warm failed:', err.message);
+      });
+    }
   });
 }
 
