@@ -187,34 +187,42 @@ app.get('/', async (req, res, next) => {
     }
     let html = fs.readFileSync(indexPath, 'utf8');
     
-    // Get pre-cached homepage posts and stories data
+    // Get pre-cached homepage posts, stories, alerts, and category data
     const data = await getHomepageData();
     let initialStories = [];
+    let initialAlerts = [];
+    let sarkariPosts = [];
     let lcpPreloadTag = '';
     
     try {
       const mongoose = require('mongoose');
       const WebStory = mongoose.model('WebStory');
-      initialStories = await WebStory.find({ status: 'published' })
-        .sort({ publishedAt: -1, createdAt: -1 })
-        .limit(8)
-        .lean();
+      const LiveAlert = mongoose.model('LiveAlert');
+      const BlogPost = mongoose.model('BlogPost');
+
+      const [storiesRes, alertsRes, sarkariRes] = await Promise.allSettled([
+        WebStory.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 }).limit(8).lean(),
+        LiveAlert.find({ status: 'active' }).sort({ parsedPostDate: -1, createdAt: -1 }).limit(8).lean(),
+        BlogPost.find({ status: 'published', category: 'Sarkari Jobs & Exams' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean()
+      ]);
+
+      initialStories = storiesRes.status === 'fulfilled' ? storiesRes.value : [];
+      initialAlerts = alertsRes.status === 'fulfilled' ? alertsRes.value : [];
+      sarkariPosts = sarkariRes.status === 'fulfilled' ? sarkariRes.value : [];
       
       const firstImg = initialStories[0]?.slides?.[0]?.image;
       if (firstImg) {
         const optimizedFirstImg = firstImg.includes('pexels.com')
-          ? `${firstImg.split('?')[0]}?auto=format,compress&q=75&w=220&h=391&fit=crop`
+          ? `${firstImg.split('?')[0]}?auto=compress&cs=tinysrgb&dpr=1&fit=crop&w=220&h=391&q=60`
           : firstImg;
         lcpPreloadTag = `<link rel="preload" as="image" href="${optimizedFirstImg}" fetchpriority="high">`;
       }
-    } catch (storyErr) {
-      console.warn('Failed to pre-fetch initial stories:', storyErr.message);
+    } catch (ssrErr) {
+      console.warn('Failed to pre-fetch initial SSR data:', ssrErr.message);
     }
 
-    if (data || initialStories.length > 0) {
-      const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data || null).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories).replace(/</g, '\\u003c')};</script>`;
-      html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
-    }
+    const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data || null).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories).replace(/</g, '\\u003c')}; window.__INITIAL_ALERTS__ = ${JSON.stringify(initialAlerts).replace(/</g, '\\u003c')}; window.__INITIAL_SARKARI_POSTS__ = ${JSON.stringify(sarkariPosts).replace(/</g, '\\u003c')};</script>`;
+    html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
 
     // Inject static HTML links for SEO crawlers (limited to top 30 latest posts)
     try {

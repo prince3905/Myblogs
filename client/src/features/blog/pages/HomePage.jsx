@@ -1336,14 +1336,14 @@ export default function HomePage() {
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = [];
 
-  const [alerts, setAlerts] = useState([]);
-  const [loadingAlerts, setLoadingAlerts] = useState(true);
+  const [alerts, setAlerts] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_ALERTS__) && window.__INITIAL_ALERTS__.length > 0) ? window.__INITIAL_ALERTS__ : []);
+  const [loadingAlerts, setLoadingAlerts] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_ALERTS__) && window.__INITIAL_ALERTS__.length > 0) ? false : true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const mobileScrollRef = useRef(null);
   const mobileStoriesScrollRef = useRef(null);
 
-  const [categoriesData, setCategoriesData] = useState({});
-  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [categoriesData, setCategoriesData] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_SARKARI_POSTS__) && window.__INITIAL_SARKARI_POSTS__.length > 0) ? { 'Sarkari Jobs & Exams': window.__INITIAL_SARKARI_POSTS__ } : {});
+  const [loadingCategories, setLoadingCategories] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_SARKARI_POSTS__) && window.__INITIAL_SARKARI_POSTS__.length > 0) ? false : true);
 
   const [stories, setStories] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_STORIES__) && window.__INITIAL_STORIES__.length > 0) ? window.__INITIAL_STORIES__ : []);
   const [loadingStories, setLoadingStories] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_STORIES__) && window.__INITIAL_STORIES__.length > 0) ? false : true);
@@ -1460,7 +1460,8 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    request('/api/public/live-alerts?status=active&limit=32')
+    if (alerts.length > 0) return;
+    request('/api/public/live-alerts?status=active&limit=8')
       .then(res => {
         if (res.success) {
           setAlerts(res.data || []);
@@ -1480,8 +1481,9 @@ export default function HomePage() {
       .finally(() => setLoadingStories(false));
   }, []);
   useEffect(() => {
+    if (categoriesData['Sarkari Jobs & Exams']?.length > 0) return;
     setLoadingCategories(true);
-    // 1. Immediately fetch Sarkari Jobs & Exams for instant Hero rendering
+    // 1. Fetch Sarkari Jobs & Exams only if not present in SSR
     request(`/api/posts?category=${encodeURIComponent('Sarkari Jobs & Exams')}&limit=6`)
       .then(res => {
         setCategoriesData({
