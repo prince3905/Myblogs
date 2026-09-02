@@ -296,10 +296,11 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
           gap: 1.5,
           overflowX: 'auto',
           py: 1,
-          px: { xs: 0.5, sm: 1 },
+          px: { xs: 1.5, sm: 1 },
           cursor: 'grab',
           userSelect: 'none',
           WebkitOverflowScrolling: 'touch',
+          scrollSnapType: { xs: 'x mandatory', sm: 'none' },
           '&::-webkit-scrollbar': { height: '4px' },
           '&::-webkit-scrollbar-thumb': { bgcolor: '#CBD5E1', borderRadius: '10px' },
           '&::-webkit-scrollbar-track': { bgcolor: 'rgba(0,0,0,0.02)' }
@@ -309,8 +310,9 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
           <Box 
             key={pIdx} 
             sx={{ 
-              flex: { xs: '0 0 calc(50% - 10px)', sm: '0 0 calc(25% - 12px)', md: '0 0 270px' }, 
-              width: { xs: 'calc(50% - 10px)', sm: 'calc(25% - 12px)', md: '270px' },
+              flex: { xs: '0 0 280px', sm: '0 0 270px', md: '0 0 270px' }, 
+              width: { xs: '280px', sm: '270px', md: '270px' },
+              scrollSnapAlign: 'start',
               display: 'flex',
               flexDirection: 'column',
               gap: 1.5
