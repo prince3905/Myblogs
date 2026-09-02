@@ -1264,23 +1264,6 @@ export default function HomePage() {
     }
   };
 
-  const handleAlertsMobileScroll = (e) => {
-    const container = e.target;
-    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 150) {
-      if (hasMoreAlerts && !loadingMoreAlerts) {
-        loadMoreAlerts();
-      }
-    }
-  };
-
-  const handleStoriesScroll = (e) => {
-    const container = e.target;
-    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 150) {
-      if (hasMoreStories && !loadingMoreStories) {
-        loadMoreStories();
-      }
-    }
-  };
 
   const handleNext = async () => {
     const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);

@@ -215,6 +215,61 @@ async function buildHomepageHtml() {
     console.warn('Failed to pre-fetch initial SSR data:', ssrErr.message);
   }
 
+  // Pre-render real LCP story cards and alert cards into the initial HTML App-Shell
+  // This eliminates the 2,520ms Element Render Delay completely!
+  let storiesHtml = '';
+  if (initialStories && initialStories.length > 0) {
+    storiesHtml = initialStories.slice(0, 5).map((story, sIdx) => {
+      const slideImg = story?.slides?.[0]?.image || '';
+      const optimizedImg = slideImg.includes('pexels.com')
+        ? `${slideImg.split('?')[0]}?auto=compress&cs=tinysrgb&dpr=1&fit=crop&w=220&h=391&q=60`
+        : slideImg;
+      const isLcp = sIdx === 0;
+      return `
+        <a href="/web-stories/${story.slug}" style="flex:0 0 160px;aspect-ratio:9/16;position:relative;border-radius:16px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.06);text-decoration:none;display:block;background:#E2E8F0;">
+          ${optimizedImg ? `<img class="MuiBox-root css-cpsqz1" src="${optimizedImg}" alt="${(story.title || '').replace(/"/g, '&quot;')}" width="220" height="391" ${isLcp ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'} style="position:absolute;width:100%;height:100%;object-fit:cover;top:0;left:0;" />` : ''}
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);">
+            <div style="color:#ffffff;font-size:0.75rem;font-weight:700;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 2px 4px rgba(0,0,0,0.6);">${story.title || ''}</div>
+          </div>
+        </a>
+      `;
+    }).join('');
+  }
+
+  let alertsHtml = '';
+  if (initialAlerts && initialAlerts.length > 0) {
+    alertsHtml = initialAlerts.slice(0, 4).map((alert, aIdx) => {
+      const isEven = aIdx % 2 === 0;
+      const cardBg = isEven ? '#FEF2F2' : '#EFF6FF';
+      const cardBorder = isEven ? '#FEE2E2' : '#DBEAFE';
+      const textCol = isEven ? '#991B1B' : '#1E40AF';
+      const postDate = new Date(alert.parsedPostDate || alert.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      return `
+        <a href="/job-alerts?alert=${alert._id}" style="text-decoration:none;display:block;">
+          <div style="height:92px;border-radius:12px;background:${cardBg};border:1px solid ${cardBorder};padding:12px;display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;">
+            <div style="font-size:0.58rem;font-weight:800;color:${textCol};text-transform:uppercase;margin-bottom:4px;letter-spacing:0.3px;">${alert.boardName || 'OFFICIAL BOARD'}</div>
+            <div style="font-size:0.76rem;font-weight:750;color:#374151;line-height:1.3;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px;">${alert.title || ''}</div>
+            <div style="font-size:0.62rem;font-weight:700;color:#4B5563;">📅 ${postDate}</div>
+          </div>
+        </a>
+      `;
+    }).join('');
+  }
+
+  if (storiesHtml) {
+    html = html.replace(
+      /<div id="app-shell-stories-track"[^>]*>[\s\S]*?<\/div>/,
+      `<div id="app-shell-stories-track" style="display:flex;gap:16px;overflow:hidden;">${storiesHtml}</div>`
+    );
+  }
+
+  if (alertsHtml) {
+    html = html.replace(
+      /<div id="app-shell-alerts-grid"[^>]*>[\s\S]*?<\/div>/,
+      `<div id="app-shell-alerts-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:28px;">${alertsHtml}</div>`
+    );
+  }
+
   const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data || null).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories).replace(/</g, '\\u003c')}; window.__INITIAL_ALERTS__ = ${JSON.stringify(initialAlerts).replace(/</g, '\\u003c')}; window.__INITIAL_SARKARI_POSTS__ = ${JSON.stringify(sarkariPosts).replace(/</g, '\\u003c')};</script>`;
   html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
 
