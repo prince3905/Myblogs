@@ -218,23 +218,35 @@ async function buildHomepageHtml() {
   const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data || null).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories).replace(/</g, '\\u003c')}; window.__INITIAL_ALERTS__ = ${JSON.stringify(initialAlerts).replace(/</g, '\\u003c')}; window.__INITIAL_SARKARI_POSTS__ = ${JSON.stringify(sarkariPosts).replace(/</g, '\\u003c')};</script>`;
   html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
 
-  // Inject static HTML links for SEO crawlers (limited to top 30 latest posts)
+  // Inject static HTML links for SEO crawlers (limited to top 30 latest posts + top 30 live alerts)
   try {
     const mongoose = require('mongoose');
     const BlogPost = mongoose.model('BlogPost');
-    const topPosts = await BlogPost.find({ status: 'published' })
-      .select('title category slug')
-      .sort({ publishedAt: -1, createdAt: -1 })
-      .limit(30)
-      .lean();
+    const LiveAlert = mongoose.model('LiveAlert');
+
+    const [topPosts, topAlerts] = await Promise.all([
+      BlogPost.find({ status: 'published' })
+        .select('title category slug')
+        .sort({ publishedAt: -1, createdAt: -1 })
+        .limit(30)
+        .lean(),
+      LiveAlert.find({ status: { $in: ['active', 'published'] } })
+        .select('title _id')
+        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .limit(30)
+        .lean()
+    ]);
 
     const catUrlSlug = (cat) => (cat || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
     let seoLinks = '\n<div style="display:none;" id="seo-crawler-links" aria-hidden="true">\n';
-    seoLinks += '  <h1 style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;">Digital Home - Latest Sarkari Jobs, Exams & Tech Updates</h1>\n';
+    seoLinks += '  <h1 style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;">Digital Home - Latest Sarkari Jobs, Exams & Tech Updates (सरकारी रिजल्ट 2026)</h1>\n';
     topPosts.forEach(p => {
       const path = `/blog/${catUrlSlug(p.category)}/${p.slug}`;
       seoLinks += `  <a href="${path}">${p.title}</a>\n`;
+    });
+    topAlerts.forEach(a => {
+      seoLinks += `  <a href="/job-alerts?alert=${a._id}">${a.title}</a>\n`;
     });
     seoLinks += '</div>\n';
 

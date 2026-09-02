@@ -17,7 +17,7 @@ export default function Seo({ title, description, image, url, canonical, keyword
   const currentHref = typeof window !== 'undefined' ? window.location.href : 'https://www.digitalhomeblog.in';
   const pageUrl = normalizeCanonicalUrl(url || currentHref);
   const canonicalUrl = normalizeCanonicalUrl(canonical || url || currentHref);
-  const keys = keywords || 'Sarkari Result, Admit Card, Latest Jobs, Govt Vacancies, Sarkari Result Tools, Kids Games, Bacho Ka Game, Health Tips, Education, Tech Insights, All Insights Blog, Digital Home';
+  const keys = keywords || 'Digital Home, Sarkari Result, सरकारी रिजल्ट 2026, Latest Jobs, सरकारी नौकरी, Live Job Alerts, Admit Card, प्रवेश पत्र, Sarkari Exam, Online Form, Govt Vacancies, Sarkari Result Tools, Kids Games, Bacho Ka Game, Health Tips, Education, Tech Tutorials, All Insights Blog';
 
   const isValidSchema = (s) => {
     return s && typeof s === 'object' && !Array.isArray(s) && Object.keys(s).length > 0 && !!s['@type'];
@@ -80,6 +80,9 @@ export default function Seo({ title, description, image, url, canonical, keyword
             "Digital Home",
             "Digital Home Blog",
             "Sarkari Result Digital Home",
+            "सरकारी रिजल्ट 2026",
+            "सरकारी रिजल्ट डिजिटल होम",
+            "सरकारी नौकरी अलर्ट",
             "Digital Home Health",
             "Digital Home Education",
             "Digital Home Insights",
