@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Post = require('./post.model');
 const BlogPost = Post;
 const env = require('../../config/env');
@@ -74,10 +75,33 @@ let cachedPostsTotal = 0;
 let cacheTimestamp = 0;
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours cache duration (invalidated on updates)
 
+let cachedPdfSetting = null;
+let cachedPdfSettingTime = 0;
+async function getCachedPdfSetting() {
+  const now = Date.now();
+  if (cachedPdfSetting !== null && (now - cachedPdfSettingTime < 60000)) {
+    return cachedPdfSetting;
+  }
+  try {
+    const Settings = require('../settings/settings.model');
+    const pdfSetting = await Settings.findOne({ key: 'disablePdfDownload' }).lean();
+    cachedPdfSetting = pdfSetting ? pdfSetting.value === true : false;
+    cachedPdfSettingTime = now;
+    return cachedPdfSetting;
+  } catch {
+    return false;
+  }
+}
+
 function invalidateFeedCache() {
   cachedPostsFeed = null;
   cachedPostsTotal = 0;
   cacheTimestamp = 0;
+  cachedPdfSetting = null;
+  try {
+    const serverCacheService = require('../../shared/services/serverCacheService');
+    serverCacheService.purgeApiCache();
+  } catch {}
 }
 
 // Proactively warm up the cache on startup
@@ -381,15 +405,8 @@ async function getPostBySlug(req, res) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Expose disablePdfDownload toggle to public post page
-    try {
-      const Settings = require('../settings/settings.model');
-      const pdfSetting = await Settings.findOne({ key: 'disablePdfDownload' });
-      post.disablePdfDownload = pdfSetting ? pdfSetting.value === true : false;
-    } catch (err) {
-      console.error('Failed to get disablePdfDownload setting:', err.message);
-      post.disablePdfDownload = false;
-    }
+    // Expose disablePdfDownload toggle to public post page (using 60s RAM cache to eliminate DB query)
+    post.disablePdfDownload = await getCachedPdfSetting();
 
     // Increment views (fire-and-forget, no await needed for response)
     BlogPost.updateOne({ _id: post._id }, { $inc: { views: 1 } }).catch(() => {});
@@ -544,8 +561,8 @@ async function updatePost(req, res, next) {
     invalidateFeedCache();
 
     if (existing.status === 'published') {
-      const { notifyUrl } = require('../../shared/utils/google-indexing');
-      notifyUrl(postUrl(existing), 'URL_UPDATED').catch(() => {});
+      const { notifyAllIndexing, notifyUrl } = require('../../shared/utils/google-indexing');
+      notifyAllIndexing(postUrl(existing), 'URL_UPDATED').catch(() => {});
 
       if (oldStatus === 'published' && oldUrl !== postUrl(existing)) {
         notifyUrl(oldUrl, 'URL_DELETED').catch(() => {});
@@ -624,45 +641,54 @@ async function sitemap(req, res) {
 
     const { normalizeCanonicalUrl } = require('../../shared/utils/urlUtils');
 
-    const posts = await BlogPost.find({ status: 'published' }).sort({ updatedAt: -1 });
+    const posts = await BlogPost.find({ status: 'published' })
+      .select('canonicalUrl category slug updatedAt')
+      .sort({ updatedAt: -1 })
+      .lean();
     const urls = posts
       .map((post) => {
         const canonical = normalizeCanonicalUrl(post.canonicalUrl || postUrl(post));
-        return `<url><loc>${canonical}</loc><lastmod>${post.updatedAt ? post.updatedAt.toISOString() : new Date().toISOString()}</lastmod></url>`;
+        const lastmod = post.updatedAt ? new Date(post.updatedAt).toISOString() : new Date().toISOString();
+        return `<url><loc>${canonical}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
       })
       .join('');
 
-    const staticPages = ['/about', '/contact', '/privacy', '/search', '/archive', '/tools', '/games', '/terms', '/job-alerts'].map(p =>
-      `<url><loc>${normalizeCanonicalUrl(p)}</loc><priority>0.8</priority></url>`
-    ).join('');
+    // Strictly INDEXABLE static pages only (Excludes noindex pages: /search, /archive)
+    const staticPages = ['/about', '/contact', '/privacy', '/terms', '/tools', '/games', '/job-alerts'].map(p => {
+      return `<url><loc>${normalizeCanonicalUrl(p)}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>`;
+    }).join('');
 
-    // Include category pages dynamically
+    // Include category pages dynamically with valid ISO lastmod & changefreq
     const categories = await BlogPost.distinct('category', { status: 'published' });
     const categoryUrls = categories
       .filter(Boolean)
-      .map((cat) => `<url><loc>${normalizeCanonicalUrl(`/category/${catUrlSlug(cat)}`)}</loc><priority>0.7</priority></url>`)
+      .map((cat) => {
+        return `<url><loc>${normalizeCanonicalUrl(`/category/${catUrlSlug(cat)}`)}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>`;
+      })
       .join('');
 
-    // Include tag pages dynamically
-    const tags = await BlogPost.distinct('tags', { status: 'published' });
-    const tagUrls = tags
-      .filter(Boolean)
-      .map((tag) => `<url><loc>${normalizeCanonicalUrl(`/tags/${encodeURIComponent(tag.toLowerCase())}`)}</loc><priority>0.6</priority></url>`)
-      .join('');
+    // Note: Tag pages (/tags/:tag) are strictly marked noindex in TagPage.jsx, so they are intentionally excluded from sitemap.xml to prevent search engine indexing conflicts!
 
     // Include published Web Stories dynamically
     let storyUrls = '';
     try {
       const WebStory = mongoose.model('WebStory');
-      const stories = await WebStory.find({ status: 'published' }).sort({ updatedAt: -1 });
+      const stories = await WebStory.find({ status: 'published' })
+        .select('slug updatedAt')
+        .sort({ updatedAt: -1 })
+        .lean();
       storyUrls = stories
-        .map((story) => `<url><loc>${normalizeCanonicalUrl(`/web-stories/${story.slug}`)}</loc><lastmod>${story.updatedAt ? story.updatedAt.toISOString() : new Date().toISOString()}</lastmod><priority>0.8</priority></url>`)
+        .map((story) => {
+          const lastmod = story.updatedAt ? new Date(story.updatedAt).toISOString() : new Date().toISOString();
+          return `<url><loc>${normalizeCanonicalUrl(`/web-stories/${story.slug}`)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
+        })
         .join('');
     } catch (storyErr) {
       console.error('[Sitemap] Failed to append Web Stories:', storyErr.message);
     }
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><priority>0.9</priority></url>${staticPages}${categoryUrls}${tagUrls}${urls}${storyUrls}</urlset>`;
+    const homeMod = new Date().toISOString();
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><lastmod>${homeMod}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><lastmod>${homeMod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>${staticPages}${categoryUrls}${urls}${storyUrls}</urlset>`;
     res.type('application/xml');
     return res.send(xml);
   } catch (err) {

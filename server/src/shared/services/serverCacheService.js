@@ -20,12 +20,11 @@ class ServerCacheService {
         return next();
       }
 
-      // Do not cache authenticated admin requests, live alerts endpoint, or single post/webstory detail endpoints (needs instant view tracking)
+      // Do not cache authenticated admin requests, live alerts endpoint, or raw webstories endpoint
       if (
         req.headers.authorization || 
         req.path.startsWith('/api/admin') || 
         req.path.includes('/live-alerts') || 
-        req.path.includes('/posts/') ||
         req.path.includes('/webstories/')
       ) {
         return next();

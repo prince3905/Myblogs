@@ -553,6 +553,8 @@ blogPostSchema.post('findOneAndDelete', async function (doc) {
   }
 });
 
+blogPostSchema.index({ slug: 1, status: 1 });
+blogPostSchema.index({ category: 1, status: 1, publishedAt: -1 });
 blogPostSchema.index({ title: 'text', content: 'text', excerpt: 'text' });
 blogPostSchema.index({ status: 1, publishedAt: -1, createdAt: -1 });
 

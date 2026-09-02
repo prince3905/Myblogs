@@ -16,7 +16,7 @@ async function start() {
   await mongoose.connect(env.mongoUri);
   await seedAdmin();
   initScheduler();
-  app.listen(env.port, () => {
+  const server = app.listen(env.port, () => {
     console.log(`Server running on port ${env.port}`);
     if (app.buildHomepageHtml) {
       app.buildHomepageHtml().then(() => {
@@ -26,6 +26,8 @@ async function start() {
       });
     }
   });
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
 }
 
 start().catch((error) => {

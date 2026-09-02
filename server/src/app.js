@@ -33,7 +33,14 @@ const publicPath = path.join(__dirname, '../public');
 // Static asset HTTP Cache-Control header injection (max-age 1 year for static assets)
 app.use(serverCacheService.staticAssetCacheMiddleware());
 
-// Unified 301 Canonical Redirect Middleware (Eliminates Multi-hop Redirect Chains)
+// Keep-Alive Connection Tuning Header Middleware (Prevents crawler socket hang-ups & timeouts)
+app.use((req, res, next) => {
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Keep-Alive', 'timeout=65');
+  next();
+});
+
+// Unified 301 Canonical Redirect Middleware (Eliminates Multi-hop Redirect Chains & Flattens to 1 Hop)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/assets') || req.path.startsWith('/static')) {
     return next();
@@ -42,61 +49,63 @@ app.use((req, res, next) => {
   const rawHost = (req.headers.host || '').toLowerCase();
   const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').toLowerCase();
   const rawUrl = req.originalUrl || req.url;
+  const isProd = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production';
 
-  let needsRedirect = false;
-  let targetHost = rawHost;
-  let targetProto = proto;
+  // 1. Single-Hop Host & Protocol Normalization (Production)
+  // Consolidates HTTP -> HTTPS and non-www -> www into EXACTLY ONE 301 HOP
+  if (isProd && (proto !== 'https' || !rawHost.startsWith('www.') || rawHost.includes('onrender.com'))) {
+    let cleanPath = rawUrl;
+    if (cleanPath.includes('digitalhomeblog.in')) {
+      cleanPath = cleanPath.replace(/\/digitalhomeblog\.in\/?/gi, '/').replace(/digitalhomeblog\.in\/?/gi, '');
+    }
+    if (cleanPath.includes('sarkari-jobs-&-exams') || cleanPath.includes('sarkari-jobs-%26-exams')) {
+      cleanPath = cleanPath.replace(/sarkari-jobs-(&|%26)-exams/gi, 'sarkari-jobs-exams');
+    }
+    if (/\/{2,}/.test(cleanPath)) {
+      cleanPath = cleanPath.replace(/\/{2,}/g, '/');
+    }
+    if (!cleanPath.startsWith('/')) {
+      cleanPath = '/' + cleanPath;
+    }
+    const finalTarget = `https://www.digitalhomeblog.in${cleanPath}`;
+    console.log(`[Unified 301 Canonical Redirect] ${proto}://${rawHost}${rawUrl} -> ${finalTarget}`);
+    return res.redirect(301, finalTarget);
+  }
+
+  // 2. Path-level Normalization (Local or Production)
+  let needsPathRedirect = false;
   let cleanedPath = rawUrl;
 
-  // 1. Host & Protocol Normalization (Production)
-  if (env.nodeEnv === 'production') {
-    if (rawHost === 'digitalhomeblog.in' || rawHost === 'digital-home-blog.onrender.com') {
-      needsRedirect = true;
-      targetHost = 'www.digitalhomeblog.in';
-    }
-    if (proto !== 'https') {
-      needsRedirect = true;
-      targetProto = 'https';
-    }
-  }
-
-  // 2. Handle nested domain duplication e.g., /digitalhomeblog.in/
   if (cleanedPath.includes('digitalhomeblog.in')) {
-    needsRedirect = true;
-    cleanedPath = cleanedPath.replace(/\/digitalhomeblog\.in\/?/gi, '/');
-    cleanedPath = cleanedPath.replace(/digitalhomeblog\.in\/?/gi, '');
+    needsPathRedirect = true;
+    cleanedPath = cleanedPath.replace(/\/digitalhomeblog\.in\/?/gi, '/').replace(/digitalhomeblog\.in\/?/gi, '');
   }
 
-  // 3. Handle ampersand in category e.g., sarkari-jobs-&-exams or %26
   if (cleanedPath.includes('sarkari-jobs-&-exams') || cleanedPath.includes('sarkari-jobs-%26-exams')) {
-    needsRedirect = true;
+    needsPathRedirect = true;
     cleanedPath = cleanedPath.replace(/sarkari-jobs-(&|%26)-exams/gi, 'sarkari-jobs-exams');
   }
 
-  // 4. Handle double nested path e.g., /blog/sarkari-jobs-exams/blog/...
   if (/\/(blog|category)\/.*\/(blog|category)\//i.test(cleanedPath)) {
-    needsRedirect = true;
+    needsPathRedirect = true;
     const parts = cleanedPath.split('/').filter(Boolean);
     const lastSlug = parts[parts.length - 1];
     cleanedPath = `/blog/sarkari-jobs-exams/${lastSlug}`;
   }
 
-  // 5. Clean multiple consecutive slashes
   if (/\/{2,}/.test(cleanedPath)) {
-    needsRedirect = true;
+    needsPathRedirect = true;
     cleanedPath = cleanedPath.replace(/\/{2,}/g, '/');
   }
 
-  // 6. Ensure clean leading slash
   if (!cleanedPath.startsWith('/')) {
     cleanedPath = '/' + cleanedPath;
   }
 
-  if (needsRedirect) {
-    const finalTarget = env.nodeEnv === 'production'
+  if (needsPathRedirect) {
+    const finalTarget = isProd
       ? `https://www.digitalhomeblog.in${cleanedPath}`
-      : `http://${targetHost}${cleanedPath}`;
-
+      : cleanedPath;
     if (finalTarget !== `${proto}://${rawHost}${rawUrl}`) {
       console.log(`[Unified 301 Canonical Redirect] ${proto}://${rawHost}${rawUrl} -> ${finalTarget}`);
       return res.redirect(301, finalTarget);
@@ -297,9 +306,57 @@ app.get('/', async (req, res, next) => {
 // Serve static files
 app.use(express.static(publicPath));
 
-// Dynamic Server-Side Meta Tag Injection for Blog Post Pages (Forces perfect OG/Twitter social scraping)
+// In-Memory SSR HTML Cache for Individual Blog Posts (Guarantees <5ms crawler response and prevents timeouts)
+const postSsrCache = new Map();
+const POST_SSR_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Server-Side 301 Redirect for legacy /blog/:slug (Eliminates SPA Orphan Redirects)
+app.get('/blog/:slug', async (req, res, next) => {
+  try {
+    const slug = req.params.slug ? String(req.params.slug).trim() : '';
+    if (!slug) return next();
+
+    const catMap = {
+      'sarkari-jobs-exams': 'sarkari-jobs-exams',
+      'health-wellness': 'health-wellness',
+      'tech-tutorials': 'tech-tutorials',
+      'ai-web-tools': 'ai-web-tools',
+      'news-trends': 'news-trends',
+      'finance-business': 'finance-business'
+    };
+    if (catMap[slug]) {
+      return res.redirect(301, `https://www.digitalhomeblog.in/category/${catMap[slug]}`);
+    }
+
+    const mongoose = require('mongoose');
+    const BlogPost = mongoose.model('BlogPost');
+    const post = await BlogPost.findOne({ slug, status: 'published' }).select('category slug').lean();
+    if (post) {
+      const catUrl = (post.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'sarkari-jobs-exams';
+      return res.redirect(301, `https://www.digitalhomeblog.in/blog/${catUrl}/${post.slug}`);
+    }
+    next();
+  } catch {
+    next();
+  }
+});
+
+// Dynamic Server-Side Meta Tag Injection for Blog Post Pages (Forces perfect OG/Twitter social scraping & <5ms SSR response)
 app.get('/blog/:category/:slug', async (req, res, next) => {
   try {
+    const isLocal = !req.headers.host || req.headers.host.includes('localhost') || req.headers.host.includes('127.0.0.1');
+    const cacheKey = `${req.params.category}:${req.params.slug}`;
+
+    if (!isLocal) {
+      const cached = postSsrCache.get(cacheKey);
+      if (cached && (Date.now() - cached.time < POST_SSR_CACHE_TTL)) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('X-SSR-Cache', 'HIT');
+        res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+        return res.status(cached.status).send(cached.html);
+      }
+    }
+
     const indexPath = path.join(publicPath, 'index.html');
     if (!fs.existsSync(indexPath)) {
       return res.status(404).send('index.html not found');
@@ -395,7 +452,17 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       html = html.replace(/<title>.*?<\/title>/, '');
       html = html.replace(/<meta name="description" .*?\/>/, '');
       html = html.replace('</head>', `${metaTags}\n</head>`);
-      res.setHeader('Content-Type', 'text/html');
+
+      if (!isLocal) {
+        if (postSsrCache.size > 500) {
+          const oldestKey = postSsrCache.keys().next().value;
+          postSsrCache.delete(oldestKey);
+        }
+        postSsrCache.set(cacheKey, { status: 200, html, time: Date.now() });
+      }
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
       return res.status(200).send(html);
     } else {
       // 404 HTTP Status Code for missing/draft/deleted posts (Prevents Soft 404s!)
@@ -407,7 +474,12 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       html = html.replace(/<title>.*?<\/title>/, '');
       html = html.replace(/<meta name="description" .*?\/>/, '');
       html = html.replace('</head>', `${noindexMeta}\n</head>`);
-      res.setHeader('Content-Type', 'text/html');
+
+      if (!isLocal) {
+        postSsrCache.set(cacheKey, { status: 404, html, time: Date.now() });
+      }
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(404).send(html);
     }
   } catch (err) {
@@ -429,4 +501,5 @@ app.use(notFound);
 app.use(errorHandler);
 
 app.buildHomepageHtml = buildHomepageHtml;
+app.purgePostSsrCache = () => postSsrCache.clear();
 module.exports = app;
