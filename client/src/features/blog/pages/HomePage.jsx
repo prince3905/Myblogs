@@ -222,10 +222,10 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
 
   if (!alerts || alerts.length === 0) return null;
 
-  // Limit initial alerts to top 8 items (eliminates DOM bloat)
-  const visibleAlerts = alerts.slice(0, 8);
+  // Display rich list of alerts (up to 24 alerts across 12 dual-stacked columns)
+  const visibleAlerts = alerts.slice(0, 24);
 
-  // Group alerts into 2-card vertical stacks (2 rows per column = 8 cards across 4 columns)
+  // Group alerts into 2-card vertical stacks (2 rows per column)
   const displayPairs = [];
   for (let i = 0; i < visibleAlerts.length; i += 2) {
     displayPairs.push(visibleAlerts.slice(i, i + 2));
@@ -400,8 +400,8 @@ const InteractiveStoriesMarquee = ({ stories = [] }) => {
 
   if (!stories || stories.length === 0) return null;
 
-  // Limit initial stories to top 6 items (eliminates DOM bloat)
-  const displayStories = stories.slice(0, 6);
+  // Display rich list of visual web stories (up to 16 items)
+  const displayStories = stories.slice(0, 16);
 
   return (
     <Box 
