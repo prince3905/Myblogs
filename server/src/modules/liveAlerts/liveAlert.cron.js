@@ -73,8 +73,11 @@ function parseIndianDate(dateStr) {
 function isOldOrExpiredAlert(title = '', parsedDate = null, lastDateStr = '') {
   const titleLower = title.toLowerCase();
 
-  // 1. Check exact lastDate against current date
-  if (lastDateStr) {
+  // Non-application notices (Syllabus, Admit Card, Result, Answer Key) don't have application deadlines
+  const isNonApplicationNotice = /\b(admit card|result|answer key|syllabus|counselling|merit list|score card|exam date|city intimation)\b/i.test(titleLower);
+
+  // 1. Check exact lastDate against current date (only for job vacancies/applications)
+  if (!isNonApplicationNotice && lastDateStr) {
     const deadline = parseIndianDate(lastDateStr);
     if (deadline && deadline < new Date()) {
       return true; // Expired!
@@ -370,13 +373,19 @@ async function scrapeDetailedUrls(pageUrl) {
         lower.includes('last date :') ||
         lower.includes('last date:')
       ) {
-        const dateMatch = text.match(/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/);
-        if (dateMatch) {
-          lastDate = dateMatch[0];
+        const lastDatePattern = /(?:last\s*date[^\d\n]{0,35}|apply\s*(?:online\s*)?till[^\d\n]{0,35}|deadline[^\d\n]{0,35}|closing\s*date[^\d\n]{0,35})(\d{1,2}[-/.]\d{1,2}[-/.]\d{4}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i;
+        const targetMatch = text.match(lastDatePattern);
+        if (targetMatch && targetMatch[1]) {
+          lastDate = targetMatch[1].trim();
         } else {
-          const wordDateMatch = text.match(/\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}\b/i);
-          if (wordDateMatch) {
-            lastDate = wordDateMatch[0];
+          const dateMatch = text.match(/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/);
+          if (dateMatch) {
+            lastDate = dateMatch[0];
+          } else {
+            const wordDateMatch = text.match(/\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}\b/i);
+            if (wordDateMatch) {
+              lastDate = wordDateMatch[0];
+            }
           }
         }
       }
