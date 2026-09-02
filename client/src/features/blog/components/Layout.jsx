@@ -40,6 +40,7 @@ export default function Layout({ children }) {
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catAnchor, setCatAnchor] = useState(null);
+  const isDeferredMounted = useDeferredMount(2500);
 
   const categories = [
     { label: 'Sarkari Jobs & Exams', path: '/category/sarkari-jobs-exams' },

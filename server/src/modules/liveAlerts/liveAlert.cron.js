@@ -1027,12 +1027,12 @@ function initScheduler() {
   const { logAutomation } = require('../../shared/utils/automationLogger');
   const { runCompetitorPurge } = require('../../shared/utils/purgeCompetitorLinksDaemon');
   
-  // 1. Continuous Competitor Link Purge & Official Link Resolver: Runs every 5 minutes
-  cron.schedule('*/5 * * * *', async () => {
+  // 1. Competitor Link Purge & Official Link Resolver: Runs every 2 hours (saves CPU & database resources)
+  cron.schedule('0 */2 * * *', async () => {
     try {
       await runCompetitorPurge();
     } catch (err) {
-      console.error('[LiveAlert Scheduler] 5m Competitor Purge error:', err.message);
+      console.error('[LiveAlert Scheduler] 2h Competitor Purge error:', err.message);
     }
   });
 
