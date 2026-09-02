@@ -37,28 +37,12 @@ async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', s
     } catch (fallbackErr) {
       const statusCode = fallbackErr.response?.status || primaryErr.response?.status;
       let userMsg = fallbackErr.response?.data?.error?.message || primaryErr.response?.data?.error?.message || fallbackErr.message;
-      
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execPromise = util.promisify(exec);
-
-      // Handle Google API Quota Exceeded by running local headless Lighthouse CLI directly
-      console.log(`[PageSpeed Service] Running high-speed local Lighthouse engine for ${targetUrl} (${strategy})...`);
-      try {
-        const flags = strategy === 'mobile'
-          ? '--chrome-flags="--headless" --form-factor=mobile --screenEmulation.mobile=true --throttling-method=simulate'
-          : '--chrome-flags="--headless" --preset=desktop --throttling-method=simulate';
-
-        const { stdout } = await execPromise(`npx lighthouse "${targetUrl}" --output=json --quiet ${flags}`, { maxBuffer: 1024 * 1024 * 30, timeout: 60000 });
-        responseData = { lighthouseResult: JSON.parse(stdout) };
-      } catch (cliErr) {
-        console.error('[PageSpeed Service] Local Lighthouse CLI fallback failed:', cliErr.message);
-        return {
-          success: false,
-          error: userMsg,
-          statusCode
-        };
-      }
+      console.warn(`[PageSpeed Service] Google API unavailable (${userMsg}). Gracefully returning without heavy local CLI execution to protect server CPU.`);
+      return {
+        success: false,
+        error: userMsg || 'Google PageSpeed API temporarily rate-limited or unavailable',
+        statusCode
+      };
     }
   }
 

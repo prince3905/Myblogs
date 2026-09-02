@@ -924,16 +924,24 @@ async function scrapeFeeds() {
     console.error('[Autopilot] Settings database check failed:', dbErr.message);
   }
 
-  try {
-    // Process active alerts created within the last 3 days
+    let autopilotRateLimitCooldownUntil = global.__autopilotCooldownUntil || 0;
+    if (Date.now() < autopilotRateLimitCooldownUntil) {
+      const remainingMins = Math.round((autopilotRateLimitCooldownUntil - Date.now()) / 60000);
+      console.log(`[Autopilot] AI Rate-limit cooldown active (${remainingMins}m remaining). Skipping to protect server performance.`);
+      return totalSaved;
+    }
+
+    // Process active alerts created within the last 3 days that haven't been recently attempted
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
     console.log(`[Autopilot] Scanning for active alerts (created after: ${threeDaysAgo.toISOString()})...`);
     const activeAlerts = await LiveAlert.find({ 
       status: 'active',
-      createdAt: { $gte: threeDaysAgo }
+      createdAt: { $gte: threeDaysAgo },
+      autopilotAttemptedAt: { $exists: false }
     }).limit(3);
+
     if (activeAlerts.length > 0) {
       console.log(`[Autopilot] Found active alerts. Processing a limited batch of ${activeAlerts.length} alerts to prevent API overload...`);
       const Settings = require('../settings/settings.model');
@@ -950,6 +958,11 @@ async function scrapeFeeds() {
           console.warn('[Autopilot] Failed to check status mid-run:', checkErr.message);
         }
 
+        // Mark as attempted so we don't repeatedly bombard failing alerts every 15m
+        try {
+          await LiveAlert.updateOne({ _id: alert._id }, { $set: { autopilotAttemptedAt: new Date() } });
+        } catch (mErr) {}
+
         try {
           console.log(`[Autopilot] Automatically drafting post for alert: "${alert.title}"`);
           await draftAlertToPostDoc(alert);
@@ -961,7 +974,8 @@ async function scrapeFeeds() {
           console.error(`[Autopilot] Failed to auto-draft alert "${alert.title}":`, draftErr.message);
           
           if (draftErr.message && (draftErr.message.includes('429') || draftErr.message.includes('Rate limit'))) {
-            console.warn(`[Autopilot] Rate limit (429) detected! Aborting the remaining batch to let the API cooldown.`);
+            global.__autopilotCooldownUntil = Date.now() + 60 * 60 * 1000; // 1-hour cooldown
+            console.warn(`[Autopilot] Rate limit (429) detected! Cooldown set for 1 hour to protect server performance.`);
             break; // Abort this scraper run's loop
           }
           
