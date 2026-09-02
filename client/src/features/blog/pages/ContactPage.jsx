@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Container, Typography, Box, Paper, TextField, Button, Alert, Avatar } from '@mui/material';
-import { Email, LocationOn, Send, Schedule } from '@mui/icons-material';
+import Email from '@mui/icons-material/Email';
+import LocationOn from '@mui/icons-material/LocationOn';
+import Send from '@mui/icons-material/Send';
+import Schedule from '@mui/icons-material/Schedule';
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
 import { request } from '../../../shared/lib/api';

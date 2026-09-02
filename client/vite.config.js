@@ -58,8 +58,8 @@ export default defineConfig({
             if (id.includes('@mui/x-date-pickers') || id.includes('date-fns')) {
               return 'vendor-date-pickers';
             }
-            if (id.includes('@mui') || id.includes('@emotion') || id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor-framework';
+            if (id.includes('@mui') || id.includes('@emotion') || id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('scheduler')) {
+              return 'vendor-ui-core';
             }
           }
         }

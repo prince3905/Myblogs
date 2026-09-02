@@ -1,7 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Typography, Button, Box, Chip, Avatar, IconButton } from '@mui/material';
-import { ChevronLeft, ChevronRight, WhatsApp } from '@mui/icons-material';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import WhatsApp from '@mui/icons-material/WhatsApp';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';

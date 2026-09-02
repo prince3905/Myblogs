@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, Button, IconButton, Slide } from '@mui/material';
-import { WhatsApp, Close } from '@mui/icons-material';
+import WhatsApp from '@mui/icons-material/WhatsApp';
+import Close from '@mui/icons-material/Close';
 
 export default function WhatsappChannelBanner() {
   // Temporarily hidden until user activates WhatsApp
