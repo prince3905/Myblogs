@@ -201,8 +201,8 @@ app.get('/', async (req, res, next) => {
       const BlogPost = mongoose.model('BlogPost');
 
       const [storiesRes, alertsRes, sarkariRes] = await Promise.allSettled([
-        WebStory.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 }).limit(16).lean(),
-        LiveAlert.find({ status: 'active' }).sort({ parsedPostDate: -1, createdAt: -1 }).limit(24).lean(),
+        WebStory.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean(),
+        LiveAlert.find({ status: 'active' }).sort({ parsedPostDate: -1, createdAt: -1 }).limit(8).lean(),
         BlogPost.find({ status: 'published', category: 'Sarkari Jobs & Exams' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean()
       ]);
 

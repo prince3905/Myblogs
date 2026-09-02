@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Typography, Button, Box, Chip, Avatar, IconButton } from '@mui/material';
+import { Container, Typography, Button, Box, Chip, Avatar, IconButton, CircularProgress } from '@mui/material';
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import ChevronRight from '@mui/icons-material/ChevronRight';
 import WhatsApp from '@mui/icons-material/WhatsApp';
@@ -154,81 +154,36 @@ const InteractivePillMarquee = () => {
   );
 };
 
-const InteractiveAlertsMarquee = ({ alerts = [] }) => {
+const InteractiveAlertsMarquee = ({ alerts = [], onLoadMore, hasMore = false, loadingMore = false }) => {
   const scrollContainerRef = useRef(null);
-  const isPausedRef = useRef(false);
-  const resumeTimeoutRef = useRef(null);
 
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el || alerts.length === 0) return;
-
-    let animationFrameId;
-    let halfWidth = 0;
-
-    const onResize = () => {
-      if (el) halfWidth = el.scrollWidth / 2;
-    };
-    window.addEventListener('resize', onResize, { passive: true });
-
-    const step = () => {
-      if (!isPausedRef.current && el && halfWidth > 0) {
-        // Alternating Direction 2: Left to Right (L to R)
-        el.scrollLeft -= 0.65;
-        if (el.scrollLeft <= 0) {
-          el.scrollLeft = halfWidth;
-        }
+  const handleScroll = (e) => {
+    const container = e.target;
+    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 250) {
+      if (hasMore && !loadingMore && onLoadMore) {
+        onLoadMore();
       }
-      animationFrameId = requestAnimationFrame(step);
-    };
-
-    // Defer measurement until after initial paint is fully settled (1200ms)
-    const startTimer = setTimeout(() => {
-      if (el) {
-        halfWidth = el.scrollWidth / 2;
-        el.scrollLeft = halfWidth;
-        animationFrameId = requestAnimationFrame(step);
-      }
-    }, 1200);
-
-    return () => {
-      clearTimeout(startTimer);
-      window.removeEventListener('resize', onResize);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-    };
-  }, [alerts]);
-
-  const handlePause = () => {
-    isPausedRef.current = true;
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-  };
-
-  const handleResume = () => {
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-    resumeTimeoutRef.current = setTimeout(() => {
-      isPausedRef.current = false;
-    }, 1500);
+    }
   };
 
   const handleScrollManual = (direction) => {
-    handlePause();
     const el = scrollContainerRef.current;
     if (!el) return;
     const scrollAmount = direction === 'left' ? -320 : 320;
     el.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    handleResume();
+    if (direction === 'right' && hasMore && !loadingMore && onLoadMore) {
+      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 500) {
+        onLoadMore();
+      }
+    }
   };
 
   if (!alerts || alerts.length === 0) return null;
 
-  // Display rich list of alerts (up to 24 alerts across 12 dual-stacked columns)
-  const visibleAlerts = alerts.slice(0, 24);
-
   // Group alerts into 2-card vertical stacks (2 rows per column)
   const displayPairs = [];
-  for (let i = 0; i < visibleAlerts.length; i += 2) {
-    displayPairs.push(visibleAlerts.slice(i, i + 2));
+  for (let i = 0; i < alerts.length; i += 2) {
+    displayPairs.push(alerts.slice(i, i + 2));
   }
 
   return (
@@ -239,10 +194,6 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
         overflow: 'hidden',
         py: 0.5
       }}
-      onMouseEnter={handlePause}
-      onMouseLeave={handleResume}
-      onTouchStart={handlePause}
-      onTouchEnd={handleResume}
     >
       {/* Left Navigation Arrow */}
       <IconButton 
@@ -293,6 +244,7 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
       {/* Scrollable Track */}
       <Box
         ref={scrollContainerRef}
+        onScroll={handleScroll}
         sx={{
           display: 'flex',
           alignItems: 'stretch',
@@ -300,8 +252,6 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
           overflowX: 'auto',
           py: 1,
           px: { xs: 1.5, sm: 1 },
-          cursor: 'grab',
-          userSelect: 'none',
           WebkitOverflowScrolling: 'touch',
           scrollSnapType: { xs: 'x mandatory', sm: 'none' },
           '&::-webkit-scrollbar': { height: '4px' },
@@ -328,80 +278,42 @@ const InteractiveAlertsMarquee = ({ alerts = [] }) => {
             ))}
           </Box>
         ))}
+
+        {loadingMore && (
+          <Box sx={{ flex: '0 0 80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CircularProgress size={24} sx={{ color: '#4F46E5' }} />
+          </Box>
+        )}
       </Box>
     </Box>
   );
 };
 
-const InteractiveStoriesMarquee = ({ stories = [] }) => {
+const InteractiveStoriesMarquee = ({ stories = [], onLoadMore, hasMore = false, loadingMore = false }) => {
   const scrollContainerRef = useRef(null);
-  const isPausedRef = useRef(false);
-  const resumeTimeoutRef = useRef(null);
 
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el || stories.length === 0) return;
-
-    let animationFrameId;
-    let halfWidth = 0;
-
-    const onResize = () => {
-      if (el) halfWidth = el.scrollWidth / 2;
-    };
-    window.addEventListener('resize', onResize, { passive: true });
-
-    const step = () => {
-      if (!isPausedRef.current && el && halfWidth > 0) {
-        // Alternating Direction 3: Right to Left (R to L)
-        el.scrollLeft += 0.65;
-        if (el.scrollLeft >= halfWidth) {
-          el.scrollLeft = 0;
-        }
+  const handleScroll = (e) => {
+    const container = e.target;
+    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 250) {
+      if (hasMore && !loadingMore && onLoadMore) {
+        onLoadMore();
       }
-      animationFrameId = requestAnimationFrame(step);
-    };
-
-    // Defer measurement until after initial paint is fully settled (1200ms)
-    const startTimer = setTimeout(() => {
-      if (el) {
-        halfWidth = el.scrollWidth / 2;
-        animationFrameId = requestAnimationFrame(step);
-      }
-    }, 1200);
-
-    return () => {
-      clearTimeout(startTimer);
-      window.removeEventListener('resize', onResize);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-    };
-  }, [stories]);
-
-  const handlePause = () => {
-    isPausedRef.current = true;
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-  };
-
-  const handleResume = () => {
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-    resumeTimeoutRef.current = setTimeout(() => {
-      isPausedRef.current = false;
-    }, 1500);
+    }
   };
 
   const handleScrollManual = (direction) => {
-    handlePause();
     const el = scrollContainerRef.current;
     if (!el) return;
     const scrollAmount = direction === 'left' ? -280 : 280;
     el.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    handleResume();
+    if (direction === 'right' && hasMore && !loadingMore && onLoadMore) {
+      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 450) {
+        onLoadMore();
+      }
+    }
   };
 
   if (!stories || stories.length === 0) return null;
-
-  // Display rich list of visual web stories (up to 16 items)
-  const displayStories = stories.slice(0, 16);
 
   return (
     <Box 
@@ -411,10 +323,6 @@ const InteractiveStoriesMarquee = ({ stories = [] }) => {
         overflow: 'hidden',
         py: 0.5
       }}
-      onMouseEnter={handlePause}
-      onMouseLeave={handleResume}
-      onTouchStart={handlePause}
-      onTouchEnd={handleResume}
     >
       {/* Left Navigation Arrow */}
       <IconButton 
@@ -465,15 +373,15 @@ const InteractiveStoriesMarquee = ({ stories = [] }) => {
       {/* Scrollable Track */}
       <Box
         ref={scrollContainerRef}
+        onScroll={handleScroll}
         sx={{
           display: 'flex',
           gap: 2.2,
           overflowX: 'auto',
           py: 1,
-          px: { xs: 0.5, sm: 1 },
-          cursor: 'grab',
-          userSelect: 'none',
+          px: { xs: 1, sm: 1 },
           WebkitOverflowScrolling: 'touch',
+          scrollSnapType: { xs: 'x mandatory', sm: 'none' },
           '&::-webkit-scrollbar': { height: '4px' },
           '&::-webkit-scrollbar-thumb': { bgcolor: '#CBD5E1', borderRadius: '10px' },
           '&::-webkit-scrollbar-track': { bgcolor: 'rgba(0,0,0,0.02)' }
@@ -600,6 +508,12 @@ const InteractiveStoriesMarquee = ({ stories = [] }) => {
             </Box>
           </Box>
         ))}
+
+        {loadingMore && (
+          <Box sx={{ flex: '0 0 80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CircularProgress size={24} sx={{ color: '#4F46E5' }} />
+          </Box>
+        )}
       </Box>
     </Box>
   );
@@ -1578,7 +1492,12 @@ export default function HomePage() {
             ) : alerts.length === 0 ? (
               <Typography variant="body2" sx={{ color: 'text.secondary', py: 4, fontStyle: 'italic', textAlign: 'center' }}>No active updates at the moment.</Typography>
             ) : (
-              <InteractiveAlertsMarquee alerts={alerts} />
+              <InteractiveAlertsMarquee 
+                alerts={alerts} 
+                onLoadMore={loadMoreAlerts} 
+                hasMore={hasMoreAlerts} 
+                loadingMore={loadingMoreAlerts} 
+              />
             )}
           </Box>
         </Container>
@@ -1645,7 +1564,12 @@ export default function HomePage() {
               ))}
             </Box>
           ) : (
-            <InteractiveStoriesMarquee stories={stories} />
+            <InteractiveStoriesMarquee 
+              stories={stories} 
+              onLoadMore={loadMoreStories} 
+              hasMore={hasMoreStories} 
+              loadingMore={loadingMoreStories} 
+            />
           )}
         </Container>
       </Box>
