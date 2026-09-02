@@ -924,6 +924,7 @@ async function scrapeFeeds() {
     console.error('[Autopilot] Settings database check failed:', dbErr.message);
   }
 
+  try {
     let autopilotRateLimitCooldownUntil = global.__autopilotCooldownUntil || 0;
     if (Date.now() < autopilotRateLimitCooldownUntil) {
       const remainingMins = Math.round((autopilotRateLimitCooldownUntil - Date.now()) / 60000);
