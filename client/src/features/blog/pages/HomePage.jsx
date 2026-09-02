@@ -387,7 +387,7 @@ const InteractiveStoriesMarquee = ({ stories = [], onLoadMore, hasMore = false, 
           '&::-webkit-scrollbar-track': { bgcolor: 'rgba(0,0,0,0.02)' }
         }}
       >
-        {displayStories.map((story, sIdx) => (
+        {stories.map((story, sIdx) => (
           <Box 
             key={`${story._id}-${sIdx}`}
             component="a"

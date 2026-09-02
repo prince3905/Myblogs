@@ -171,13 +171,15 @@ app.get('/:key.txt', (req, res, next) => {
 let cachedHomepageHtml = null;
 let lastHomepageCacheTime = 0;
 
-// Handle root path / with High-Speed In-Memory HTML Cache (Instant 2ms TTFB)
+// Handle root path / with High-Speed In-Memory HTML Cache
 app.get('/', async (req, res, next) => {
   try {
     const now = Date.now();
-    if (cachedHomepageHtml && now - lastHomepageCacheTime < 180000) { // 3-minute RAM cache
+    const isLocal = !req.headers.host || req.headers.host.includes('localhost') || req.headers.host.includes('127.0.0.1');
+
+    if (!isLocal && cachedHomepageHtml && now - lastHomepageCacheTime < 180000) { // 3-minute RAM cache for production
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300, stale-while-revalidate=600');
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
       return res.send(cachedHomepageHtml);
     }
 
@@ -253,7 +255,7 @@ app.get('/', async (req, res, next) => {
     lastHomepageCacheTime = now;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300, stale-while-revalidate=600');
+    res.setHeader('Cache-Control', isLocal ? 'no-store, no-cache, must-revalidate' : 'public, max-age=0, must-revalidate');
     return res.send(html);
   } catch (err) {
     next(err);
