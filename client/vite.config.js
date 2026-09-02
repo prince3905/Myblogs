@@ -41,27 +41,9 @@ export default defineConfig({
     modulePreload: false,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('jspdf') || id.includes('pdfjs-dist') || id.includes('pdf-lib')) {
-              return 'vendor-pdf-tools';
-            }
-            if (id.includes('html2canvas')) {
-              return 'vendor-html2canvas';
-            }
-            if (id.includes('react-quill') || id.includes('prismjs')) {
-              return 'vendor-editor';
-            }
-            if (id.includes('@mui/icons-material')) {
-              return 'vendor-icons';
-            }
-            if (id.includes('@mui/x-date-pickers') || id.includes('date-fns')) {
-              return 'vendor-date-pickers';
-            }
-            if (id.includes('@mui') || id.includes('@emotion') || id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('scheduler')) {
-              return 'vendor-ui-core';
-            }
-          }
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@mui/material', '@emotion/react', '@emotion/styled']
         }
       }
     }

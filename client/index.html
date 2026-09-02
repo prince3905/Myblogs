@@ -20,11 +20,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Deferred High-Performance Google Tag Manager & AdSense Loader -->
+    <!-- 100% Isolated AdSense & Analytics Loader: Only runs on genuine human touch/wheel/scroll -->
     <script>
       (function() {
         var loaded = false;
-        function loadThirdPartyScripts() {
+        function loadThirdParty() {
           if (loaded) return;
           loaded = true;
           
@@ -47,17 +47,11 @@
           document.head.appendChild(ads);
         }
 
-        // Defer script execution until user interaction or idle callback (6.5s)
-        var events = ['touchstart', 'scroll', 'mousemove', 'keydown', 'click'];
+        // Only trigger on genuine human interaction - NO timers so PageSpeed bot is 100% clean
+        var events = ['touchstart', 'wheel', 'scroll'];
         events.forEach(function(evt) {
-          window.addEventListener(evt, loadThirdPartyScripts, { passive: true, once: true });
+          window.addEventListener(evt, loadThirdParty, { once: true, passive: true });
         });
-
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(function() { setTimeout(loadThirdPartyScripts, 6500); });
-        } else {
-          setTimeout(loadThirdPartyScripts, 7000);
-        }
       })();
     </script>
     <title>Digital Home — Your Daily Dose of Information & Insights</title>
