@@ -923,13 +923,19 @@ export default function PublicLiveAlertsPage() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const urlSearchParam = searchParams.get('search') || searchParams.get('q') || '';
+  const [searchQuery, setSearchQuery] = useState(urlSearchParam);
   const [selectedState, setSelectedState] = useState('All States');
   const [selectedAlert, setSelectedAlertState] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [errorLoadingDetails, setErrorLoadingDetails] = useState('');
   const [redirectModalOpen, setRedirectModalOpen] = useState(false);
   const [pendingRedirectUrl, setPendingRedirectUrl] = useState('');
+
+  useEffect(() => {
+    const q = searchParams.get('search') || searchParams.get('q') || '';
+    setSearchQuery(q);
+  }, [searchParams]);
 
   const setSelectedAlert = async (alert) => {
     if (!alert) {

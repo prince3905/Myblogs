@@ -28,61 +28,6 @@ const QUICK_EXAM_FILTERS = [
 ];
 
 const InteractivePillMarquee = () => {
-  const scrollContainerRef = useRef(null);
-  const isPausedRef = useRef(false);
-  const resumeTimeoutRef = useRef(null);
-
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-
-    let animationFrameId;
-    let halfWidth = 0;
-
-    const onResize = () => {
-      if (el) halfWidth = el.scrollWidth / 2;
-    };
-    window.addEventListener('resize', onResize, { passive: true });
-
-    const step = () => {
-      if (!isPausedRef.current && el && halfWidth > 0) {
-        // Alternating Direction 1: Right to Left (R to L)
-        el.scrollLeft += 0.65;
-        if (el.scrollLeft >= halfWidth) {
-          el.scrollLeft = 0;
-        }
-      }
-      animationFrameId = requestAnimationFrame(step);
-    };
-
-    // Defer measurement until after initial paint is fully settled (1200ms)
-    const startTimer = setTimeout(() => {
-      if (el) {
-        halfWidth = el.scrollWidth / 2;
-        animationFrameId = requestAnimationFrame(step);
-      }
-    }, 1200);
-
-    return () => {
-      clearTimeout(startTimer);
-      window.removeEventListener('resize', onResize);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-    };
-  }, []);
-
-  const handlePause = () => {
-    isPausedRef.current = true;
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-  };
-
-  const handleResume = () => {
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-    resumeTimeoutRef.current = setTimeout(() => {
-      isPausedRef.current = false;
-    }, 1500);
-  };
-
   const items = QUICK_EXAM_FILTERS;
 
   return (
@@ -93,13 +38,8 @@ const InteractivePillMarquee = () => {
         width: '100%',
         py: 0.5
       }}
-      onMouseEnter={handlePause}
-      onMouseLeave={handleResume}
-      onTouchStart={handlePause}
-      onTouchEnd={handleResume}
     >
       <Box
-        ref={scrollContainerRef}
         sx={{
           display: 'flex',
           alignItems: 'center',
