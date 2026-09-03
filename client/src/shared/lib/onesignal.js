@@ -8,10 +8,8 @@ let isInitialized = false;
 export function initOneSignal() {
   if (typeof window === 'undefined' || isInitialized) return;
   
-  const appId = import.meta.env.VITE_ONESIGNAL_APP_ID || window.ONESIGNAL_APP_ID;
-  if (!appId || appId.startsWith('11111111')) {
-    return;
-  }
+  const appId = import.meta.env.VITE_ONESIGNAL_APP_ID || window.ONESIGNAL_APP_ID || '1be67f5d-ed1b-4f97-acf8-2f711447cc10';
+  if (!appId) return;
 
   isInitialized = true;
   window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -20,7 +18,22 @@ export function initOneSignal() {
       appId: appId,
       safari_web_id: window.ONESIGNAL_SAFARI_WEB_ID,
       notifyButton: {
-        enable: false,
+        enable: true,
+        size: 'medium',
+        position: 'bottom-left',
+        showCredit: false,
+        theme: 'inverse',
+        text: {
+          'tip.state.unsubscribed': 'Get Free Sarkari Job Alerts on Mobile 🔔',
+          'tip.state.subscribed': 'You are receiving Sarkari Alerts 🚀',
+          'tip.state.blocked': 'You have blocked notifications',
+          'message.action.subscribed': 'Thanks for subscribing! 🎉',
+          'message.action.resubscribed': 'You are subscribed to alerts',
+          'message.action.unsubscribed': 'You will not receive alerts',
+          'dialog.main.title': 'Digital Home - Sarkari Job Alerts',
+          'dialog.main.button.subscribe': 'SUBSCRIBE NOW 🔔',
+          'dialog.main.button.unsubscribe': 'UNSUBSCRIBE'
+        }
       },
       allowLocalhostAsSecureOrigin: true,
     });
