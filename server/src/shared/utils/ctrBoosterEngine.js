@@ -206,6 +206,39 @@ function generateJobPostingSchema(post = {}) {
   };
 }
 
+function generateBreadcrumbSchema(post = {}) {
+  if (!post || !post.title) return null;
+  const { normalizeCanonicalUrl } = require('./urlUtils');
+  const catSlug = (post.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'sarkari-jobs-exams';
+  const postUrl = normalizeCanonicalUrl(post.canonicalUrl || `https://www.digitalhomeblog.in/blog/${catSlug}/${post.slug}`);
+  const catUrl = normalizeCanonicalUrl(`https://www.digitalhomeblog.in/category/${catSlug}`);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.digitalhomeblog.in"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": post.category || "Sarkari Jobs & Exams",
+        "item": catUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": post.title,
+        "item": postUrl
+      }
+    ]
+  };
+}
+
 function hashString(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -220,6 +253,7 @@ module.exports = {
   optimizeHighCtrMetaDescription,
   generateFaqSchema,
   generateJobPostingSchema,
+  generateBreadcrumbSchema,
   extractCleanSnippet,
   isJobCategory
 };

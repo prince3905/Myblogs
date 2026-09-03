@@ -20,6 +20,7 @@ import WorkIcon from '@mui/icons-material/Work';
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
 import TechIcon from '@mui/icons-material/Computer';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import Seo from '../components/Seo';
 
 export default function NotFoundPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,6 +42,11 @@ export default function NotFoundPage() {
 
   return (
     <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
+      <Seo 
+        title="404 — Page Not Found | Digital Home" 
+        description="The page you are looking for does not exist or has been moved." 
+        noindex={true} 
+      />
       <Box sx={{ mb: 4 }}>
         <Typography
           variant="h1"

@@ -708,12 +708,12 @@ ${buttonHtmlBlock}
     sendTelegramMessage(newPost).catch(err => console.warn('[Telegram Channel] Notice:', err.message));
   } catch (tgErr) {}
 
-  // 2. Trigger Instant Google Indexing API Ping
+  // 2. Trigger Instant Google & IndexNow Multi-Engine Indexing Ping
   try {
-    const { notifyUrl } = require('../../shared/utils/google-indexing');
+    const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
     const catUrl = (newPost.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
     const postUrl = `https://www.digitalhomeblog.in/blog/${catUrl}/${newPost.slug}`;
-    notifyUrl(postUrl, 'URL_UPDATED').catch(() => {});
+    notifyAllIndexing(postUrl, 'URL_UPDATED').catch(() => {});
   } catch (idxErr) {}
 
   // 3. Generate Web Story for this new post in background

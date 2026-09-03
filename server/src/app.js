@@ -379,7 +379,7 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
     }
 
     if (post) {
-      const { generateFaqSchema, generateJobPostingSchema } = require('./shared/utils/ctrBoosterEngine');
+      const { generateFaqSchema, generateJobPostingSchema, generateBreadcrumbSchema } = require('./shared/utils/ctrBoosterEngine');
       const { normalizeCanonicalUrl } = require('./shared/utils/urlUtils');
       const siteName = 'Digital Home Sarkari Result';
       const cleanTitle = (post.title || '').replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '');
@@ -428,6 +428,12 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
         ? `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>`
         : '';
 
+      // Optional Breadcrumb Schema
+      const breadcrumbSchema = generateBreadcrumbSchema(post);
+      const breadcrumbScript = (breadcrumbSchema && typeof breadcrumbSchema === 'object')
+        ? `<script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>`
+        : '';
+
       // SEO Social Metadata Block
       const metaTags = `
     <title>${fullTitle}</title>
@@ -446,6 +452,7 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
     ${articleScript}
     ${jobPostingScript}
     ${faqScript}
+    ${breadcrumbScript}
       `;
 
       // Remove default title/meta tags to prevent duplicates and append post specific tags
