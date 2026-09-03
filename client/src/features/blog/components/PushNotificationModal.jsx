@@ -135,20 +135,44 @@ export default function PushNotificationModal() {
       </IconButton>
 
       <DialogContent sx={{ p: { xs: 1.5, sm: 2 }, position: 'relative', zIndex: 1 }}>
+        {/* Top Urgency Pill Badge */}
+        <Box
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.6,
+            bgcolor: '#FEE2E2',
+            color: '#DC2626',
+            px: 1.5,
+            py: 0.4,
+            borderRadius: '20px',
+            fontSize: '0.72rem',
+            fontWeight: 850,
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            mb: 1.5,
+            border: '1px solid rgba(220, 38, 38, 0.2)'
+          }}
+        >
+          <Box sx={{ width: 6, height: 6, bgcolor: '#DC2626', borderRadius: '50%', animation: 'pulse 1.5s infinite' }} />
+          🔥 LIVE SARKARI UPDATES • 100% FREE
+        </Box>
+
         {/* Animated Bell Icon */}
         <Box
           sx={{
-            width: 64,
-            height: 64,
+            width: 58,
+            height: 58,
             borderRadius: '50%',
-            bgcolor: '#FEE2E2',
-            color: '#DC2626',
+            bgcolor: 'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)',
+            background: 'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)',
+            color: '#ffffff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mx: 'auto',
-            mb: 2,
-            boxShadow: '0 8px 20px rgba(220, 38, 38, 0.25)',
+            mb: 1.8,
+            boxShadow: '0 10px 25px rgba(220, 38, 38, 0.35)',
             animation: 'bellRing 2s infinite ease-in-out',
             '@keyframes bellRing': {
               '0%, 100%': { transform: 'rotate(0deg) scale(1)' },
@@ -158,34 +182,34 @@ export default function PushNotificationModal() {
             }
           }}
         >
-          <NotificationsActiveIcon sx={{ fontSize: 34 }} />
+          <NotificationsActiveIcon sx={{ fontSize: 32 }} />
         </Box>
 
         <Typography
           variant="h6"
           sx={{
-            fontWeight: 850,
-            fontSize: { xs: '1.15rem', sm: '1.25rem' },
+            fontWeight: 900,
+            fontSize: { xs: '1.2rem', sm: '1.35rem' },
             color: '#0F172A',
             letterSpacing: '-0.02em',
-            mb: 1,
+            mb: 0.8,
             lineHeight: 1.3
           }}
         >
-          Sarkari Job Updates Miss Na Karein! 🔔
+          सरकारी नौकरी के फॉर्म & Admit Card कभी मिस न हों! 🔔
         </Typography>
 
         <Typography
           variant="body2"
           sx={{
             color: '#475569',
-            fontSize: { xs: '0.85rem', sm: '0.9rem' },
+            fontSize: { xs: '0.85rem', sm: '0.92rem' },
             lineHeight: 1.5,
-            mb: 2.5,
+            mb: 2.2,
             px: { xs: 0.5, sm: 1 }
           }}
         >
-          UP TET, SSC, Railway, UPSC, Admit Cards aur Results ka <strong>Instant Alert</strong> sabse pehle apne mobile par paayein.
+          UP TET, SSC, Railway, Police, UPSC और State Jobs के <strong>Live Alerts & Direct Apply Link</strong> सबसे पहले अपने फोन पर पाएं।
         </Typography>
 
         {/* Feature Highlights */}
@@ -193,65 +217,71 @@ export default function PushNotificationModal() {
           sx={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 1,
-            mb: 3,
-            bgcolor: 'rgba(241, 245, 249, 0.8)',
+            gap: 0.9,
+            mb: 2.5,
+            bgcolor: 'rgba(241, 245, 249, 0.85)',
             p: 1.5,
             borderRadius: '12px',
-            textAlign: 'left'
+            textAlign: 'left',
+            border: '1px solid rgba(226, 232, 240, 0.8)'
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <FlashOnIcon sx={{ fontSize: 16, color: '#EAB308' }} />
-            <Typography variant="caption" sx={{ fontWeight: 700, color: '#334155', fontSize: '0.78rem' }}>
-              100% Free & Direct Official Links
+            <FlashOnIcon sx={{ fontSize: 17, color: '#EAB308' }} />
+            <Typography variant="caption" sx={{ fontWeight: 750, color: '#1E293B', fontSize: '0.8rem' }}>
+              ⚡ Direct Official Apply & PDF Link (कोई फेक लिंक नहीं)
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CheckCircleIcon sx={{ fontSize: 16, color: '#16A34A' }} />
-            <Typography variant="caption" sx={{ fontWeight: 700, color: '#334155', fontSize: '0.78rem' }}>
-              Kabhi Bhi Unsubscribe Kar Sakte Hain
+            <CheckCircleIcon sx={{ fontSize: 17, color: '#16A34A' }} />
+            <Typography variant="caption" sx={{ fontWeight: 750, color: '#1E293B', fontSize: '0.8rem' }}>
+              ⏳ Last Date & Result Reminder (फॉर्म छूटने से बचें)
             </Typography>
           </Box>
         </Box>
 
         {/* Action Buttons */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Button
             variant="contained"
             onClick={handleAllow}
             fullWidth
             sx={{
-              bgcolor: '#DC2626',
+              background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)',
               color: '#ffffff',
-              py: 1.3,
+              py: 1.35,
               borderRadius: '12px',
-              fontSize: '0.95rem',
-              fontWeight: 800,
+              fontSize: '1rem',
+              fontWeight: 850,
               textTransform: 'none',
-              boxShadow: '0 8px 20px rgba(220, 38, 38, 0.35)',
+              letterSpacing: '0.01em',
+              boxShadow: '0 8px 22px rgba(220, 38, 38, 0.4)',
               '&:hover': {
-                bgcolor: '#B91C1C',
-                boxShadow: '0 10px 24px rgba(220, 38, 38, 0.45)'
+                background: 'linear-gradient(135deg, #B91C1C 0%, #991B1B 100%)',
+                boxShadow: '0 10px 26px rgba(220, 38, 38, 0.5)'
               }
             }}
           >
-            Allow Free Alerts (🔔 अनुमति दें)
+            🔔 हाँ, मुझे फ्री अलर्ट भेजें (Allow Free Alerts)
           </Button>
+
+          <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: '0.72rem', fontWeight: 600, mt: 0.2 }}>
+            🔒 100% Free Lifetime • 1-Click में कभी भी बंद कर सकते हैं
+          </Typography>
 
           <Button
             variant="text"
             onClick={handleLater}
             sx={{
               color: '#64748B',
-              fontSize: '0.82rem',
+              fontSize: '0.8rem',
               fontWeight: 700,
               textTransform: 'none',
-              py: 0.5,
-              '&:hover': { bgcolor: 'transparent', color: '#334155' }
+              py: 0.4,
+              '&:hover': { bgcolor: 'transparent', color: '#1E293B' }
             }}
           >
-            Baad Me / Later
+            बाद में (Later)
           </Button>
         </Box>
       </DialogContent>
