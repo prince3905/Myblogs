@@ -702,10 +702,13 @@ ${buttonHtmlBlock}
     throw saveErr;
   }
 
-  // 1. Trigger Instant Telegram Public Channel Broadcast
+  // 1. Trigger Instant Telegram Public Channel Broadcast & Web Push
   try {
     const { sendTelegramMessage } = require('../../shared/services/telegramService');
     sendTelegramMessage(newPost).catch(err => console.warn('[Telegram Channel] Notice:', err.message));
+
+    const { sendPushNotification } = require('../../shared/services/pushNotificationService');
+    sendPushNotification(newPost).catch(err => console.warn('[Push Notification] Notice:', err.message));
   } catch (tgErr) {}
 
   // 2. Trigger Instant Google & IndexNow Multi-Engine Indexing Ping

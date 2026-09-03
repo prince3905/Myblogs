@@ -575,6 +575,9 @@ async function updatePost(req, res, next) {
 
         const { sendWhatsappChannelMessage } = require('../../shared/services/whatsappService');
         sendWhatsappChannelMessage(existing).catch(() => {});
+
+        const { sendPushNotification } = require('../../shared/services/pushNotificationService');
+        sendPushNotification(existing).catch(() => {});
       }
     } else if (oldStatus === 'published' && existing.status !== 'published') {
       const { notifyUrl } = require('../../shared/utils/google-indexing');

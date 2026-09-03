@@ -42,6 +42,12 @@ export default function Layout({ children }) {
   const [catAnchor, setCatAnchor] = useState(null);
   const isDeferredMounted = useDeferredMount(2500);
 
+  useEffect(() => {
+    if (isDeferredMounted) {
+      import('../../../shared/lib/onesignal').then(m => m.initOneSignal()).catch(() => {});
+    }
+  }, [isDeferredMounted]);
+
   const categories = [
     { label: 'Sarkari Jobs & Exams', path: '/category/sarkari-jobs-exams' },
     { label: 'Health & Wellness', path: '/category/health-wellness' },
