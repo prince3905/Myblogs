@@ -48,20 +48,24 @@ export default function PushNotificationModal() {
     setOpen(false);
 
     try {
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          setIsSubscribed(true);
+        }
+      }
+
       if (window.OneSignalDeferred) {
         window.OneSignalDeferred.push(async function(OneSignal) {
-          if (OneSignal.Notifications) {
-            await OneSignal.Notifications.requestPermission();
-            if (Notification.permission === 'granted') {
-              setIsSubscribed(true);
+          try {
+            if (OneSignal.Notifications) {
+              await OneSignal.Notifications.requestPermission();
             }
-          } else if (OneSignal.Slidedown) {
-            await OneSignal.Slidedown.promptPush({ force: true });
-          }
+            if (OneSignal.User && OneSignal.User.PushSubscription) {
+              await OneSignal.User.PushSubscription.optIn();
+            }
+          } catch (e) {}
         });
-      } else if (Notification.requestPermission) {
-        const perm = await Notification.requestPermission();
-        if (perm === 'granted') setIsSubscribed(true);
       }
     } catch (err) {
       console.warn('[Push Modal] Permission request notice:', err.message);

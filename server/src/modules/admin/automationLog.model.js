@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const automationLogSchema = new mongoose.Schema({
   service: {
     type: String,
-    enum: ['SCRAPER', 'TELEGRAM', 'WHATSAPP', 'SEO_INDEXING', 'SYSTEM_CRON', 'WEB_STORY', 'AI_WRITER', 'PAGESPEED_MONITOR'],
+    enum: ['SCRAPER', 'TELEGRAM', 'WHATSAPP', 'SEO_INDEXING', 'SYSTEM_CRON', 'WEB_STORY', 'AI_WRITER', 'PAGESPEED_MONITOR', 'PUSH_NOTIFICATION'],
     required: true,
     index: true
   },
