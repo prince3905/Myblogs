@@ -1158,6 +1158,17 @@ function initScheduler() {
     }
   });
 
+  // Bulk Indexing Sweeper: Runs every 12 hours to continuously flush unindexed backlog into Google & Bing
+  cron.schedule('0 */12 * * *', async () => {
+    try {
+      console.log('[LiveAlert Scheduler] Running 12-hour Bulk Indexing Sweeper...');
+      const { runBulkIndexSweep } = require('../../shared/utils/bulkIndexBooster');
+      await runBulkIndexSweep();
+    } catch (err) {
+      console.error('[LiveAlert Scheduler] Bulk Index Sweeper error:', err.message);
+    }
+  });
+
   // PageSpeed 2x Daily Performance Monitor (8:00 AM & 8:00 PM IST)
   try {
     const { initPageSpeedMonitorCron } = require('../../shared/services/pageSpeedMonitorCron');

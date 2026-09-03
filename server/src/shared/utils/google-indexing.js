@@ -180,6 +180,37 @@ async function pingSitemapEngines() {
 }
 
 /**
+ * Instant Batch IndexNow Auto-Ping (Notifies Bing, Yandex, Seznam for up to 1,000 URLs in 1 call)
+ */
+async function notifyBatchIndexNow(urlList = []) {
+  if (!urlList || urlList.length === 0) return { success: true, count: 0 };
+  const indexNowKey = process.env.INDEXNOW_KEY || '8f7e2a9b3c4d5e6f7a8b9c0d1e2f3a4b';
+  const host = 'www.digitalhomeblog.in';
+  const keyLocation = `https://${host}/${indexNowKey}.txt`;
+
+  try {
+    const payload = {
+      host: host,
+      key: indexNowKey,
+      keyLocation: keyLocation,
+      urlList: urlList.slice(0, 1000)
+    };
+
+    console.log(`[IndexNow Batch] Auto-pinging batch of ${payload.urlList.length} URLs...`);
+    const response = await axios.post('https://api.indexnow.org/indexnow', payload, {
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      timeout: 15000
+    });
+
+    console.log(`[IndexNow Batch] Batch ping success (Status: ${response.status}, Count: ${payload.urlList.length})`);
+    return { success: true, status: response.status, count: payload.urlList.length };
+  } catch (err) {
+    console.warn('[IndexNow Batch] Notice:', err.response?.data || err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
  * Universal Auto-Indexing Orchestrator (Google API + IndexNow Protocol + Sitemap Pings)
  */
 async function notifyAllIndexing(url, type = 'URL_UPDATED') {
@@ -198,6 +229,8 @@ async function notifyAllIndexing(url, type = 'URL_UPDATED') {
 module.exports = { 
   notifyUrl,
   notifyIndexNow,
+  notifyBatchIndexNow,
   pingSitemapEngines,
   notifyAllIndexing
 };
+
