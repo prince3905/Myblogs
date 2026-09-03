@@ -48,12 +48,24 @@ export function initOneSignal() {
             },
             delay: {
               pageViews: 1,
-              timeDelay: 3
+              timeDelay: 1
             }
           }
         ]
       }
     });
+
+    // Proactively show the slidedown prompt on mobile if user has not yet subscribed
+    try {
+      if (OneSignal.Notifications && OneSignal.Notifications.isPushSupported()) {
+        const permission = OneSignal.Notifications.permission;
+        if (!permission && OneSignal.Slidedown) {
+          setTimeout(() => {
+            OneSignal.Slidedown.promptPush({ force: true }).catch(() => {});
+          }, 1500);
+        }
+      }
+    } catch (e) {}
   });
 
   const script = document.createElement('script');
