@@ -10,6 +10,7 @@ import DarkModeToggle from '../../../components/DarkModeToggle';
 import BreadcrumbsNav from '../../../components/Breadcrumbs';
 import TelegramStickyBanner from '../../../components/TelegramStickyBanner';
 import FloatingQuickShare, { ShareModalProvider } from '../../../components/FloatingQuickShare';
+import PushNotificationModal from './PushNotificationModal';
 
 function useDeferredMount(delay = 2500) {
   const [mounted, setMounted] = useState(false);
@@ -309,6 +310,7 @@ export default function Layout({ children }) {
         <>
           <TelegramStickyBanner />
           <FloatingQuickShare />
+          <PushNotificationModal />
         </>
       )}
     </Box>
