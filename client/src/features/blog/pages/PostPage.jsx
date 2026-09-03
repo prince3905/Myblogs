@@ -16,6 +16,7 @@ import Info from '@mui/icons-material/Info';
 import PictureAsPdf from '@mui/icons-material/PictureAsPdf';
 import CalendarToday from '@mui/icons-material/CalendarToday';
 import AccessTime from '@mui/icons-material/AccessTime';
+import WhatsApp from '@mui/icons-material/WhatsApp';
 import { useEffect, useState } from 'react';
 import { useToast } from '../../../components/Toast';
 import Prism from 'prismjs';
@@ -926,7 +927,31 @@ export default function PostPage() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
                   <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.84 9.1L15.22 16.74C15.1 17.29 14.77 17.42 14.31 17.16L11.84 15.34L10.65 16.49C10.52 16.62 10.41 16.73 10.16 16.73L10.34 14.18L14.98 9.98C15.18 9.8 14.94 9.7 14.67 9.88L8.94 13.49L6.47 12.71C5.93 12.54 5.92 12.17 6.58 11.91L16.23 8.19C16.68 8.02 17.07 8.29 16.84 9.1Z" fill="currentColor"/>
                 </svg>
-                Join Telegram (टेलीग्राम ग्रुप)
+                Join Telegram
+              </Button>
+
+              <Button
+                variant="contained"
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`🚨 *${(post.title || '').replace(/\s*\|\s*(Digital Home|Sarkari Result)\s*$/i, '')}*\n\n🎓 योग्यता व पूरी जानकारी यहाँ देखें 👇\n${canonicalUrl || (typeof window !== 'undefined' ? window.location.href : 'https://www.digitalhomeblog.in')}\n\n(अपने दोस्तों और Study Groups में जरूर शेयर करें 🙏)`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                startIcon={<WhatsApp sx={{ fontSize: '20px !important' }} />}
+                sx={{
+                  py: 1.2,
+                  px: 3,
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  bgcolor: '#25D366',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)',
+                  '&:hover': {
+                    bgcolor: '#1EBE5D',
+                    boxShadow: '0 6px 16px rgba(37, 211, 102, 0.4)'
+                  }
+                }}
+              >
+                Share on WhatsApp 📲
               </Button>
             </Box>
           )}
