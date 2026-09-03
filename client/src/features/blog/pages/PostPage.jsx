@@ -932,7 +932,7 @@ export default function PostPage() {
 
               <Button
                 variant="contained"
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`🚨 *${(post.title || '').replace(/\s*\|\s*(Digital Home|Sarkari Result)\s*$/i, '')}*\n\n🎓 योग्यता व पूरी जानकारी यहाँ देखें 👇\n${canonicalUrl || (typeof window !== 'undefined' ? window.location.href : 'https://www.digitalhomeblog.in')}\n\n(अपने दोस्तों और Study Groups में जरूर शेयर करें 🙏)`)}`}
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`🚨 *${(post?.title || '').replace(/\s*\|\s*(Digital Home|Sarkari Result)\s*$/i, '')}*\n\n🎓 योग्यता व पूरी जानकारी यहाँ देखें 👇\n${post?.canonicalUrl || (typeof window !== 'undefined' ? window.location.href : 'https://www.digitalhomeblog.in')}\n\n(अपने दोस्तों और Study Groups में जरूर शेयर करें 🙏)`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 startIcon={<WhatsApp sx={{ fontSize: '20px !important' }} />}
