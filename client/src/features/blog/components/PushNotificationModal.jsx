@@ -18,22 +18,18 @@ export default function PushNotificationModal() {
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   useEffect(() => {
-    // If browser doesn't support notifications or already granted, do nothing
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (typeof window === 'undefined') return;
 
-    if (Notification.permission === 'granted') {
+    // Check if already granted
+    if ('Notification' in window && Notification.permission === 'granted') {
       setIsSubscribed(true);
       return;
     }
 
-    if (Notification.permission === 'denied') {
-      return;
-    }
-
-    // Initial trigger after 4 seconds
+    // Fast initial trigger after 1.5 seconds on page load
     const initialTimer = setTimeout(() => {
       checkAndShowPrompt();
-    }, 4000);
+    }, 1500);
 
     return () => clearTimeout(initialTimer);
   }, []);

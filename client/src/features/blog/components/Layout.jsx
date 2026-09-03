@@ -305,12 +305,14 @@ export default function Layout({ children }) {
         </Container>
       </Box>
 
+      {/* Real-time Push Notification Centered Modal */}
+      <PushNotificationModal />
+
       {/* Deferred Floating Widgets */}
       {isDeferredMounted && (
         <>
           <TelegramStickyBanner />
           <FloatingQuickShare />
-          <PushNotificationModal />
         </>
       )}
     </Box>
