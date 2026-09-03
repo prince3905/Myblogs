@@ -1298,7 +1298,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (alerts.length > 0) return;
-    request('/api/public/live-alerts?status=active&limit=8')
+    request('/api/public/live-alerts?status=active&limit=32')
       .then(res => {
         if (res.success) {
           setAlerts(res.data || []);

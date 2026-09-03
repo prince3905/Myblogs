@@ -235,6 +235,7 @@ async function getAlerts(req, res) {
       ]);
 
       alerts = [...jobs, ...admitCards, ...results, ...answerKeys, ...admissions, ...syllabus];
+      alerts.sort((a, b) => new Date(b.parsedPostDate || b.createdAt) - new Date(a.parsedPostDate || a.createdAt));
     } else {
       alerts = await LiveAlert.find(filter)
         .select('-detailsText')
