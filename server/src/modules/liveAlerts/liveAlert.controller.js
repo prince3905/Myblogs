@@ -543,6 +543,8 @@ async function draftAlertToPostDoc(alert) {
 
   const buttonHtmlBlock = `<div class="ql-table-embed">\n<div class="action-buttons-group" style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0; align-items: flex-start;">\n${buttonHtmls.join('\n')}\n</div>\n</div>`;
 
+  const { INDEXING_RULES_MANIFESTO, validateIndexingQuality } = require('../../shared/utils/indexingQualityGuard');
+
   const aiParams = {
     title: cleanTitle,
     model: 'gemini-2.5-flash',
@@ -550,7 +552,9 @@ async function draftAlertToPostDoc(alert) {
     tone: 'informative',
     language: 'hinglish',
     category: 'Sarkari Jobs & Exams',
-    command: `Below is the official notification details block containing the EXACT facts, vacancy details, fees, dates, age limits, and eligibility criteria for this job post. You MUST use these exact details to build the post. Do NOT hallucinate, change, or omit seat numbers, districts, fees, age limits, or eligibility criteria. All lists and values from the details block below must be printed exactly same-to-same.
+    command: `${INDEXING_RULES_MANIFESTO}
+
+Below is the official notification details block containing the EXACT facts, vacancy details, fees, dates, age limits, and eligibility criteria for this job post. You MUST use these exact details to build the post. Do NOT hallucinate, change, or omit seat numbers, districts, fees, age limits, or eligibility criteria. All lists and values from the details block below must be printed exactly same-to-same.
 
 OFFICIAL NOTIFICATION DETAILS:
 """
@@ -688,6 +692,13 @@ ${buttonHtmlBlock}
     canonicalUrl: `https://www.digitalhomeblog.in/blog/sarkari-jobs-exams/${processed.slug}`,
     author: 'Harry Prince'
   });
+
+  // Pre-Flight Indexing Quality Check
+  const qualityReport = validateIndexingQuality(newPost);
+  console.log(`[Indexing Quality Guard] Quality Score for "${newPost.title}": ${qualityReport.score}/100 (Words: ${qualityReport.wordCount})`);
+  if (qualityReport.issues.length > 0) {
+    console.warn(`[Indexing Quality Guard] Quality Notices:`, qualityReport.issues.join(' | '));
+  }
 
   // Remove any existing post with the same slug to prevent unique slug index violations
   await BlogPost.deleteMany({ slug: processed.slug });
