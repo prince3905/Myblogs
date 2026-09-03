@@ -17,6 +17,7 @@ export function initOneSignal() {
     await OneSignal.init({
       appId: appId,
       safari_web_id: window.ONESIGNAL_SAFARI_WEB_ID,
+      allowLocalhostAsSecureOrigin: true,
       notifyButton: {
         enable: true,
         size: 'medium',
@@ -35,7 +36,23 @@ export function initOneSignal() {
           'dialog.main.button.unsubscribe': 'UNSUBSCRIBE'
         }
       },
-      allowLocalhostAsSecureOrigin: true,
+      slidedown: {
+        prompts: [
+          {
+            type: 'push',
+            autoPrompt: true,
+            text: {
+              actionMessage: 'Get Instant Government Job Alerts, Admit Cards & Results on your mobile! 🔔',
+              acceptButton: 'Allow Alerts 🚀',
+              cancelButton: 'Later'
+            },
+            delay: {
+              pageViews: 1,
+              timeDelay: 3
+            }
+          }
+        ]
+      }
     });
   });
 
