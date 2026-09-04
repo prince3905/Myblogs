@@ -960,7 +960,7 @@ export default function PostPage() {
         {post.tags?.length ? (
           <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             {post.tags.map((tag) => (
-              <Chip key={tag} label={`#${tag}`} size="small" component={Link} to={`/tags/${tag}`} clickable />
+              <Chip key={tag} label={`#${tag}`} size="small" component={Link} to={`/tags/${tag}`} rel="nofollow" clickable />
             ))}
           </Box>
         ) : null}

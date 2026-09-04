@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /tags/
+Disallow: /tags/*
+Disallow: /tag/
+Disallow: /tag/*
+
+Sitemap: https://www.digitalhomeblog.in/sitemap.xml

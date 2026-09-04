@@ -703,7 +703,17 @@ async function sitemap(req, res) {
 
 function robots(req, res) {
   res.type('text/plain');
-  return res.send(`User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n\nSitemap: https://www.digitalhomeblog.in/sitemap.xml\n`);
+  return res.send(`User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /tags/
+Disallow: /tags/*
+Disallow: /tag/
+Disallow: /tag/*
+
+Sitemap: https://www.digitalhomeblog.in/sitemap.xml
+`);
 }
 
 async function rssFeed(req, res) {
