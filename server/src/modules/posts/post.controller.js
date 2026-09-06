@@ -546,12 +546,17 @@ async function updatePost(req, res, next) {
     payload.seoTitle = processed.seoTitle;
     payload.seoDescription = processed.seoDescription;
 
-    const baseSlug = makeSlug(processed.slug || req.body.slug || payload.title);
-    payload.slug = await ensureUniqueSlug(baseSlug, existing._id);
+    // Immutable Slugs Safeguard: If post is already published, freeze its slug permanently to prevent 301 redirect chains & broken URLs
+    if (existing.status === 'published' && existing.slug) {
+      payload.slug = existing.slug;
+    } else {
+      const baseSlug = makeSlug(processed.slug || req.body.slug || payload.title);
+      payload.slug = await ensureUniqueSlug(baseSlug, existing._id);
+    }
     payload.publishedAt = payload.status === 'published'
       ? existing.publishedAt || new Date()
       : null;
-    payload.canonicalUrl = payload.canonicalUrl || postUrl(payload);
+    payload.canonicalUrl = existing.canonicalUrl || postUrl(payload);
 
     const oldUrl = postUrl(existing);
     const oldStatus = existing.status;
@@ -570,7 +575,7 @@ async function updatePost(req, res, next) {
 
       // Share to Telegram & WhatsApp if status just changed to published
       if (oldStatus !== 'published') {
-        const { sendTelegramMessage } = require('../../shared/services/telegramService');
+        const { sendTelegramMessage } = require('../../shared/services/telegramMessageService');
         sendTelegramMessage(existing).catch(() => {});
 
         const { sendWhatsappChannelMessage } = require('../../shared/services/whatsappService');
@@ -644,19 +649,25 @@ async function sitemap(req, res) {
 
     const { normalizeCanonicalUrl } = require('../../shared/utils/urlUtils');
 
-    const posts = await BlogPost.find({ status: 'published' })
-      .select('canonicalUrl category slug updatedAt')
+    // Strictly query LIVE, PUBLISHED articles with valid slugs (Excludes drafts, broken shells, soft-404s)
+    const posts = await BlogPost.find({ 
+      status: 'published',
+      slug: { $exists: true, $type: 'string', $ne: '' }
+    })
+      .select('canonicalUrl category slug updatedAt publishedAt')
       .sort({ updatedAt: -1 })
       .lean();
+
     const urls = posts
+      .filter(p => p.slug && p.category)
       .map((post) => {
         const canonical = normalizeCanonicalUrl(post.canonicalUrl || postUrl(post));
-        const lastmod = post.updatedAt ? new Date(post.updatedAt).toISOString() : new Date().toISOString();
+        const lastmod = post.updatedAt ? new Date(post.updatedAt).toISOString() : (post.publishedAt ? new Date(post.publishedAt).toISOString() : new Date().toISOString());
         return `<url><loc>${canonical}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
       })
       .join('');
 
-    // Strictly INDEXABLE static pages only (Excludes noindex pages: /search, /archive)
+    // Strictly INDEXABLE static pages only (Excludes noindex pages: /search, /archive, /tags/*)
     const staticPages = ['/about', '/contact', '/privacy', '/terms', '/tools', '/games', '/job-alerts'].map(p => {
       return `<url><loc>${normalizeCanonicalUrl(p)}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>`;
     }).join('');
@@ -670,17 +681,21 @@ async function sitemap(req, res) {
       })
       .join('');
 
-    // Note: Tag pages (/tags/:tag) are strictly marked noindex in TagPage.jsx, so they are intentionally excluded from sitemap.xml to prevent search engine indexing conflicts!
+    // Note: Tag pages (/tags/:tag) are strictly marked noindex in TagPage.jsx and blocked in robots.txt, so they are excluded from sitemap.xml!
 
     // Include published Web Stories dynamically
     let storyUrls = '';
     try {
       const WebStory = mongoose.model('WebStory');
-      const stories = await WebStory.find({ status: 'published' })
+      const stories = await WebStory.find({ 
+        status: 'published',
+        slug: { $exists: true, $type: 'string', $ne: '' }
+      })
         .select('slug updatedAt')
         .sort({ updatedAt: -1 })
         .lean();
       storyUrls = stories
+        .filter(s => s.slug)
         .map((story) => {
           const lastmod = story.updatedAt ? new Date(story.updatedAt).toISOString() : new Date().toISOString();
           return `<url><loc>${normalizeCanonicalUrl(`/web-stories/${story.slug}`)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;

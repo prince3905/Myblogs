@@ -1105,6 +1105,8 @@ export default function PublicLiveAlertsPage() {
       <Seo 
         title="Live Job Alerts & Vacancies | Digital Home" 
         description="Browse, filter, and search active job vacancies, admit cards, and results fetched dynamically from official government boards." 
+        canonical="https://www.digitalhomeblog.in/job-alerts"
+        noindex={Boolean(searchParams.get('search') || searchParams.get('alert') || searchParams.get('board') || searchQuery.trim())}
       />
 
       <Box sx={{ pt: { xs: 1.5, md: 2 }, pb: { xs: 4, md: 6 } }}>

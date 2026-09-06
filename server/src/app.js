@@ -438,6 +438,7 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       const metaTags = `
     <title>${fullTitle}</title>
     <link rel="canonical" href="${canonicalUrl}" />
+    <meta name="robots" content="max-image-preview:large, index, follow" />
     <meta name="description" content="${desc}" />
     <meta property="og:title" content="${fullTitle}" />
     <meta property="og:description" content="${desc}" />
