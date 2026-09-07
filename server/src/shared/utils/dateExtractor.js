@@ -1,5 +1,6 @@
 /**
  * Enhanced Date Extractor for Job Alerts
+ * Prevents future-date anomalies and ensures proper chronological order.
  */
 
 const MONTH_MAP = {
@@ -10,6 +11,8 @@ const MONTH_MAP = {
 };
 
 function extractDateFromSlugOrText(href = '', text = '', bodyText = '') {
+  const now = new Date();
+
   // 1. Try extracting from detail page text (e.g. "Post Date / Update : 08 June 2026 | 02:45 PM")
   if (bodyText) {
     const postDateMatch = bodyText.match(/Post Date\s*\/?\s*Update\s*:\s*([0-9]{1,2}\s+[a-zA-Z]+\s+[0-9]{4})/i) ||
@@ -20,7 +23,7 @@ function extractDateFromSlugOrText(href = '', text = '', bodyText = '') {
       const rawDateStr = postDateMatch[1].trim();
       const parsed = parseFlexibleDate(rawDateStr);
       if (parsed) {
-        return { postDate: rawDateStr, parsedDate: parsed };
+        return { postDate: rawDateStr, parsedDate: parsed > now ? now : parsed };
       }
     }
   }
@@ -34,7 +37,14 @@ function extractDateFromSlugOrText(href = '', text = '', bodyText = '') {
       if (yearNum < 100) yearNum += 2000; // e.g. 26 -> 2026
       const monthIndex = MONTH_MAP[monthStr];
       if (monthIndex !== undefined) {
-        const d = new Date(yearNum, monthIndex, 15);
+        let d;
+        // If current month & year, use current date instead of arbitrary 15th
+        if (yearNum === now.getFullYear() && monthIndex === now.getMonth()) {
+          d = new Date();
+        } else {
+          d = new Date(yearNum, monthIndex, 1);
+        }
+        if (d > now) d = now;
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         return { postDate: `${monthNames[monthIndex]} ${yearNum}`, parsedDate: d };
       }
@@ -45,15 +55,17 @@ function extractDateFromSlugOrText(href = '', text = '', bodyText = '') {
   const yearMatch = text.match(/\b(2025|2026|2027)\b/);
   if (yearMatch) {
     const year = parseInt(yearMatch[1], 10);
-    const d = new Date(year, 7, 1); // August of that year
+    let d = new Date(year, 0, 1);
+    if (d > now) d = now;
     return { postDate: `${year}`, parsedDate: d };
   }
 
-  return { postDate: 'Latest Update', parsedDate: new Date() };
+  return { postDate: 'Latest Update', parsedDate: now };
 }
 
 function parseFlexibleDate(str) {
   if (!str) return null;
+  const now = new Date();
   // Match "08 June 2026" or "8 Aug 2026"
   const wordMatch = str.match(/(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})/);
   if (wordMatch) {
@@ -62,7 +74,8 @@ function parseFlexibleDate(str) {
     const year = parseInt(wordMatch[3], 10);
     const monthIndex = MONTH_MAP[monthStr];
     if (monthIndex !== undefined) {
-      return new Date(year, monthIndex, day);
+      const d = new Date(year, monthIndex, day);
+      return d > now ? now : d;
     }
   }
   // Match "28/08/2026" or "28-08-2026"
@@ -71,10 +84,11 @@ function parseFlexibleDate(str) {
     const day = parseInt(numMatch[1], 10);
     const month = parseInt(numMatch[2], 10) - 1;
     const year = parseInt(numMatch[3], 10);
-    return new Date(year, month, day);
+    const d = new Date(year, month, day);
+    return d > now ? now : d;
   }
   const fallback = new Date(str);
-  if (!isNaN(fallback.getTime())) return fallback;
+  if (!isNaN(fallback.getTime())) return fallback > now ? now : fallback;
   return null;
 }
 
