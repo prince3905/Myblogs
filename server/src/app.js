@@ -210,7 +210,14 @@ async function buildHomepageHtml() {
     ]);
 
     initialStories = storiesRes.status === 'fulfilled' ? storiesRes.value : [];
-    initialAlerts = alertsRes.status === 'fulfilled' ? alertsRes.value : [];
+    const rawAlerts = alertsRes.status === 'fulfilled' ? alertsRes.value : [];
+    const nowTime = Date.now();
+    initialAlerts = rawAlerts.map(a => {
+      if (a.parsedPostDate && new Date(a.parsedPostDate).getTime() > nowTime) {
+        return { ...a, parsedPostDate: a.createdAt || new Date(nowTime) };
+      }
+      return a;
+    });
     sarkariPosts = sarkariRes.status === 'fulfilled' ? sarkariRes.value : [];
 
     const firstImg = initialStories[0]?.slides?.[0]?.image;

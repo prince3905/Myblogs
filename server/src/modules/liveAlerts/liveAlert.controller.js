@@ -46,6 +46,15 @@ function sanitizeAlertResponse(alert) {
     }
   });
 
+  // Strictly clamp parsedPostDate: never expose future dates to client
+  const now = new Date();
+  if (obj.parsedPostDate && new Date(obj.parsedPostDate) > now) {
+    obj.parsedPostDate = obj.createdAt ? new Date(obj.createdAt) : now;
+  }
+  if (!obj.parsedPostDate) {
+    obj.parsedPostDate = obj.createdAt ? new Date(obj.createdAt) : now;
+  }
+
   // Never expose sourceUrl to public client (keep for admin reference)
   // sourceUrl stays in the object but won't have competitor link in visible fields
 
@@ -235,7 +244,8 @@ async function getAlerts(req, res) {
       ]);
 
       alerts = [...jobs, ...admitCards, ...results, ...answerKeys, ...admissions, ...syllabus];
-      alerts.sort((a, b) => new Date(b.parsedPostDate || b.createdAt) - new Date(a.parsedPostDate || a.createdAt));
+      const safeAlertTime = (x) => Math.min(new Date(x.parsedPostDate || x.createdAt || 0).getTime(), Date.now());
+      alerts.sort((a, b) => safeAlertTime(b) - safeAlertTime(a));
     } else {
       alerts = await LiveAlert.find(filter)
         .select('-detailsText')

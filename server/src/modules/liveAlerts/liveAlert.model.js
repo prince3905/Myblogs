@@ -27,6 +27,16 @@ liveAlertSchema.index({ parsedPostDate: -1, createdAt: -1 });
 
 // Pre-save hook to guarantee 100% real government portal URLs in DB & auto-expire past-year alerts
 liveAlertSchema.pre('save', function (next) {
+  const now = new Date();
+
+  // Strict Date Clamp: Never allow a future parsedPostDate in the database
+  if (this.parsedPostDate && this.parsedPostDate > now) {
+    this.parsedPostDate = this.createdAt ? new Date(this.createdAt) : now;
+  }
+  if (!this.parsedPostDate) {
+    this.parsedPostDate = this.createdAt ? new Date(this.createdAt) : now;
+  }
+
   // Pre-save guard: Automatic expiration of past-year alerts
   if (this.title) {
     const titleLower = this.title.toLowerCase();
