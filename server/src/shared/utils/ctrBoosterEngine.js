@@ -170,16 +170,91 @@ function generateJobPostingSchema(post = {}) {
 
   const cleanTitle = (post.title || '').replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '').trim();
   const desc = post.excerpt || post.seoDescription || post.title;
+  const lowerTitle = (post.title || '').toLowerCase();
+  const content = (post.content || '');
 
   const datePosted = post.publishedAt 
     ? new Date(post.publishedAt).toISOString() 
     : (post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString());
 
   const futureDate = new Date();
-  futureDate.setDate(futureDate.getDate() + 60);
+  futureDate.setDate(futureDate.getDate() + 45);
   const validThrough = post.applicationDeadline ? new Date(post.applicationDeadline).toISOString() : futureDate.toISOString();
 
-  const boardName = post.author && post.author !== 'Harry Prince' && post.author !== 'Digital Home Team' ? post.author : 'Sarkari Recruitment Board';
+  // Location & Postal Address resolution
+  let locState = 'Uttar Pradesh';
+  let locLocality = 'Lucknow';
+  let locStreet = 'State Recruitment Board Office, Civil Lines';
+  let locPostal = '226001';
+
+  if (lowerTitle.includes('bihar') || lowerTitle.includes('patna') || lowerTitle.includes('bpsc') || lowerTitle.includes('bpssc')) {
+    locState = 'Bihar';
+    locLocality = 'Patna';
+    locPostal = '800001';
+    locStreet = 'BPSC Recruitment HQ, Bailey Road, Patna';
+  } else if (lowerTitle.includes('delhi') || lowerTitle.includes('dsssb') || lowerTitle.includes('ssc') || lowerTitle.includes('upsc')) {
+    locState = 'Delhi';
+    locLocality = 'New Delhi';
+    locPostal = '110001';
+    locStreet = 'Central Recruitment Complex, Lodhi Road, New Delhi';
+  } else if (lowerTitle.includes('prayagraj') || lowerTitle.includes('allahabad')) {
+    locLocality = 'Prayagraj';
+    locPostal = '211001';
+    locStreet = 'Recruitment Board HQ, Civil Lines, Prayagraj';
+  } else if (lowerTitle.includes('kanpur')) {
+    locLocality = 'Kanpur';
+    locPostal = '208001';
+    locStreet = 'UPSRTC Depot, Kanpur Central';
+  } else if (lowerTitle.includes('rajasthan') || lowerTitle.includes('rpsc') || lowerTitle.includes('rsmssb')) {
+    locState = 'Rajasthan';
+    locLocality = 'Jaipur';
+    locPostal = '302001';
+    locStreet = 'Main Board Office, Tonk Road, Jaipur';
+  } else if (lowerTitle.includes('madhya pradesh') || lowerTitle.includes('mppsc') || lowerTitle.includes('mp police')) {
+    locState = 'Madhya Pradesh';
+    locLocality = 'Bhopal';
+    locPostal = '462001';
+    locStreet = 'Chayan Bhawan, Main Road, Bhopal';
+  } else if (lowerTitle.includes('maharashtra') || lowerTitle.includes('mumbai')) {
+    locState = 'Maharashtra';
+    locLocality = 'Mumbai';
+    locPostal = '400001';
+    locStreet = 'CST Area, Main Office, Mumbai';
+  } else if (lowerTitle.includes('bijnor')) {
+    locLocality = 'Bijnor';
+    locPostal = '246701';
+    locStreet = 'District Collectorate Office, Bijnor';
+  } else if (lowerTitle.includes('azamgarh')) {
+    locLocality = 'Azamgarh';
+    locPostal = '276001';
+    locStreet = 'District Education Office, Azamgarh';
+  } else if (lowerTitle.includes('ghazipur')) {
+    locLocality = 'Ghazipur';
+    locPostal = '233001';
+    locStreet = 'District Office, Ghazipur';
+  }
+
+  // Extract Salary / Pay Scale if present in content
+  let salaryVal = 21700; // Standard 7th Pay Commission Pay Matrix Level 1/3 default (Rs. 21,700/mo)
+  const salaryMatch = content.match(/(?:salary|pay\s*scale|मानदेय|वेतन|pay)[\s\S]{1,50}?(?:Rs\.?|₹|INR)?\s*([0-9]{1,2},[0-9]{3}|[0-9]{4,6})/i);
+  if (salaryMatch && salaryMatch[1]) {
+    const parsed = parseInt(salaryMatch[1].replace(/,/g, ''), 10);
+    if (parsed >= 5000 && parsed <= 250000) {
+      salaryVal = parsed;
+    }
+  }
+
+  // Determine Employment Type
+  let empType = 'FULL_TIME';
+  if (lowerTitle.includes('apprentice') || lowerTitle.includes('contract') || lowerTitle.includes('temporary')) {
+    empType = 'CONTRACT';
+  } else if (lowerTitle.includes('part time')) {
+    empType = 'PART_TIME';
+  }
+
+  const boardName = post.author && post.author !== 'Harry Prince' && post.author !== 'Digital Home Team' 
+    ? post.author 
+    : 'Sarkari Recruitment Board';
 
   return {
     "@context": "https://schema.org",
@@ -188,7 +263,7 @@ function generateJobPostingSchema(post = {}) {
     "description": desc,
     "datePosted": datePosted,
     "validThrough": validThrough,
-    "employmentType": "FULL_TIME",
+    "employmentType": empType,
     "hiringOrganization": {
       "@type": "Organization",
       "name": boardName,
@@ -198,9 +273,20 @@ function generateJobPostingSchema(post = {}) {
       "@type": "Place",
       "address": {
         "@type": "PostalAddress",
-        "addressLocality": "India",
-        "addressRegion": "IN",
+        "streetAddress": locStreet,
+        "addressLocality": locLocality,
+        "addressRegion": locState,
+        "postalCode": locPostal,
         "addressCountry": "IN"
+      }
+    },
+    "baseSalary": {
+      "@type": "MonetaryAmount",
+      "currency": "INR",
+      "value": {
+        "@type": "QuantitativeValue",
+        "value": salaryVal,
+        "unitText": "MONTH"
       }
     }
   };
