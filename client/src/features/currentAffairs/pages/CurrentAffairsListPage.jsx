@@ -17,6 +17,7 @@ import QuizIcon from '@mui/icons-material/Quiz';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SearchIcon from '@mui/icons-material/Search';
+import Layout from '../../blog/components/Layout';
 
 const CATEGORIES = [
   'All',
@@ -70,12 +71,13 @@ export default function CurrentAffairsListPage() {
   }
 
   return (
-    <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', py: { xs: 3, md: 5 } }}>
-      <Helmet>
-        <title>Daily Current Affairs in Hindi 2026: दैनिक समसामयिकी और Daily GK Quiz</title>
-        <meta name="description" content="आज का दैनिक करेंट अफेयर्स (Daily Current Affairs in Hindi) पढ़ें। UPSC, SSC, Railway, BPSC, Police व अन्य Sarkari Exam के लिए 10 महत्वपूर्ण डेली GK MCQs और Static GK नोट्स।" />
-        <link rel="canonical" href="https://www.digitalhomeblog.in/current-affairs" />
-      </Helmet>
+    <Layout>
+      <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', py: { xs: 3, md: 5 } }}>
+        <Helmet>
+          <title>Daily Current Affairs in Hindi 2026: दैनिक समसामयिकी और Daily GK Quiz</title>
+          <meta name="description" content="आज का दैनिक करेंट अफेयर्स (Daily Current Affairs in Hindi) पढ़ें। UPSC, SSC, Railway, BPSC, Police व अन्य Sarkari Exam के लिए 10 महत्वपूर्ण डेली GK MCQs और Static GK नोट्स।" />
+          <link rel="canonical" href="https://www.digitalhomeblog.in/current-affairs" />
+        </Helmet>
 
       <Container maxWidth="lg">
         {/* Header Hero Banner */}
@@ -305,5 +307,6 @@ export default function CurrentAffairsListPage() {
         )}
       </Container>
     </Box>
+  </Layout>
   );
 }

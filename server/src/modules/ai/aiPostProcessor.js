@@ -832,7 +832,7 @@ async function processAIOutput(data) {
     apply: rawData ? (rawData.officialApplyUrl || rawData.officialApplyLink) : undefined,
     pdf: rawData ? (rawData.officialPdfUrl || rawData.officialPdfLink) : undefined,
     web: rawData ? (rawData.officialUrl || rawData.officialWeb) : undefined
-  });
+  }, category);
 
   const tags = generateTags(processedTitle, processedContent, keywords, category);
 

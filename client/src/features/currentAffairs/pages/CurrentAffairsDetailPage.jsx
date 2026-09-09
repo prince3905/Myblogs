@@ -23,6 +23,7 @@ import HelpIcon from '@mui/icons-material/Help';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import Layout from '../../blog/components/Layout';
 
 export default function CurrentAffairsDetailPage() {
   const { slug } = useParams();
@@ -93,20 +94,24 @@ export default function CurrentAffairsDetailPage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress sx={{ color: '#4F46E5' }} />
-      </Box>
+      <Layout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <CircularProgress sx={{ color: '#4F46E5' }} />
+        </Box>
+      </Layout>
     );
   }
 
   if (error || !data) {
     return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Alert severity="error" sx={{ mb: 3 }}>{error || 'Article not found'}</Alert>
-        <Button component={Link} to="/current-affairs" variant="contained">
-          Back to Current Affairs List
-        </Button>
-      </Container>
+      <Layout>
+        <Container maxWidth="md" sx={{ py: 8 }}>
+          <Alert severity="error" sx={{ mb: 3 }}>{error || 'Article not found'}</Alert>
+          <Button component={Link} to="/current-affairs" variant="contained">
+            Back to Current Affairs List
+          </Button>
+        </Container>
+      </Layout>
     );
   }
 
@@ -116,8 +121,9 @@ export default function CurrentAffairsDetailPage() {
   const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(canonicalUrl)}&text=${encodeURIComponent(cleanTitle)}`;
 
   return (
-    <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', py: { xs: 3, md: 5 } }}>
-      <Helmet>
+    <Layout>
+      <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', py: { xs: 3, md: 5 } }}>
+        <Helmet>
         <title>{data.seoTitle || `${cleanTitle} | Digital Home`}</title>
         <meta name="description" content={data.seoDescription || data.summary} />
         <link rel="canonical" href={canonicalUrl} />
@@ -446,5 +452,6 @@ export default function CurrentAffairsDetailPage() {
         )}
       </Container>
     </Box>
+  </Layout>
   );
 }

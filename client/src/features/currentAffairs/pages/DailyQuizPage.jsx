@@ -19,6 +19,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ReplayIcon from '@mui/icons-material/Replay';
 import ArticleIcon from '@mui/icons-material/Article';
+import Layout from '../../blog/components/Layout';
 
 export default function DailyQuizPage() {
   const { date } = useParams();
@@ -117,20 +118,24 @@ export default function DailyQuizPage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress sx={{ color: '#4F46E5' }} />
-      </Box>
+      <Layout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <CircularProgress sx={{ color: '#4F46E5' }} />
+        </Box>
+      </Layout>
     );
   }
 
   if (error || !quizData) {
     return (
-      <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }}>
-        <Alert severity="warning" sx={{ mb: 3 }}>{error || 'Quiz not found'}</Alert>
-        <Button component={Link} to="/current-affairs" variant="contained">
-          Back to Current Affairs
-        </Button>
-      </Container>
+      <Layout>
+        <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }}>
+          <Alert severity="warning" sx={{ mb: 3 }}>{error || 'Quiz not found'}</Alert>
+          <Button component={Link} to="/current-affairs" variant="contained">
+            Back to Current Affairs
+          </Button>
+        </Container>
+      </Layout>
     );
   }
 
@@ -140,11 +145,12 @@ export default function DailyQuizPage() {
   const answeredCount = Object.keys(selectedAnswers).length;
 
   return (
-    <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
-      <Helmet>
-        <title>Daily Current Affairs GK Quiz ({quizData.dateString}) | Digital Home</title>
-        <meta name="description" content={`आज का डेली करेंट अफेयर्स मॉक टेस्ट (${quizData.dateString}) हल करें। 10 महत्वपूर्ण MCQs, टाइमर और विस्तृत व्याख्या।`} />
-      </Helmet>
+    <Layout>
+      <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
+        <Helmet>
+          <title>Daily Current Affairs GK Quiz ({quizData.dateString}) | Digital Home</title>
+          <meta name="description" content={`आज का डेली करेंट अफेयर्स मॉक टेस्ट (${quizData.dateString}) हल करें। 10 महत्वपूर्ण MCQs, टाइमर और विस्तृत व्याख्या।`} />
+        </Helmet>
 
       <Container maxWidth="md">
         {/* Top Header Card */}
@@ -400,5 +406,6 @@ export default function DailyQuizPage() {
         )}
       </Container>
     </Box>
+  </Layout>
   );
 }

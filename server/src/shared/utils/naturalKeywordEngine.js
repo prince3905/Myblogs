@@ -4,7 +4,7 @@
  * to achieve Rank 1 on Google Search for specific high-volume queries.
  */
 
-function generateIndianSearchVariants(title = '', focusKeyword = '', urls = {}) {
+function generateIndianSearchVariants(title = '', focusKeyword = '', urls = {}, category = '') {
   let base = (focusKeyword || title).replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
 
   // Clean trailing branding
@@ -13,6 +13,43 @@ function generateIndianSearchVariants(title = '', focusKeyword = '', urls = {}) 
     base += ' 2026';
   }
 
+  const catLower = (category || '').toLowerCase();
+
+  // Category 1: Current Affairs & Daily GK
+  if (catLower.includes('current affair') || catLower.includes('gk') || base.toLowerCase().includes('current affairs') || base.toLowerCase().includes('करेंट अफेयर्स')) {
+    return [
+      {
+        type: 'Quiz Query',
+        phrase: `${base} 10 GK MCQs practice quiz test kaise solve kare`,
+        linkUrl: '/daily-quiz',
+        buttonText: '🎯 10 MCQs क्विज़ टेस्ट हल करें (Play Daily Quiz 🚀)',
+        btnColor: '#10b981'
+      },
+      {
+        type: 'Archive Query',
+        phrase: `${base} monthly & weekly PDF capsules download link`,
+        linkUrl: '/current-affairs',
+        buttonText: '📚 पिछले सभी करेंट अफेयर्स देखें (All Archives 📁)',
+        btnColor: '#4f46e5'
+      },
+      {
+        type: 'Exam Alert Query',
+        phrase: `${base} based Sarkari Exam notifications & updates`,
+        linkUrl: '/job-alerts',
+        buttonText: '⚡ लेटेस्ट सरकारी जॉब अलर्ट्स (Live Job Alerts 🔔)',
+        btnColor: '#ea580c'
+      },
+      {
+        type: 'Static GK Query',
+        phrase: `${base} Static GK Booster points for UPSC, SSC & Railway`,
+        linkUrl: '/current-affairs',
+        buttonText: '📌 स्टेटिक GK और परीक्षा नोट्स (Static GK ✍️)',
+        btnColor: '#0284c7'
+      }
+    ];
+  }
+
+  // Category 2: Sarkari Job & Exam Alerts
   const applyUrl = urls.apply || 'https://www.india.gov.in/';
   const pdfUrl = urls.pdf || urls.web || 'https://www.india.gov.in/';
   const webUrl = urls.web || 'https://www.india.gov.in/';
@@ -52,7 +89,7 @@ function generateIndianSearchVariants(title = '', focusKeyword = '', urls = {}) 
 /**
  * Injects a natural, Google-friendly "Search Queries Overview" box into article HTML
  */
-function injectNaturalKeywordBox(content = '', title = '', focusKeyword = '', urls = {}) {
+function injectNaturalKeywordBox(content = '', title = '', focusKeyword = '', urls = {}, category = '') {
   if (!content) return content;
 
   // Don't duplicate if already injected
@@ -60,7 +97,7 @@ function injectNaturalKeywordBox(content = '', title = '', focusKeyword = '', ur
     return content;
   }
 
-  const variants = generateIndianSearchVariants(title, focusKeyword, urls);
+  const variants = generateIndianSearchVariants(title, focusKeyword, urls, category);
 
   const boxHtml = `
 <div class="search-intent-box" style="background:#F0FDF4; border-left:4px solid #16A34A; padding:18px; margin:24px 0; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06);">
