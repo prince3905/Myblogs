@@ -22,6 +22,7 @@ const adRoutes = require('./modules/ads/ad.routes');
 const keywordRoutes = require('./modules/keywords/keyword.routes');
 const liveAlertRoutes = require('./modules/liveAlerts/liveAlert.routes');
 const settingsRoutes = require('./modules/settings/settings.routes');
+const currentAffairsRoutes = require('./modules/currentAffairs/currentAffairs.routes');
 const { geoTranslateMiddleware } = require('./shared/middleware/geoTranslate');
 const { sitemap, robots, rssFeed, getHomepageData } = require('./modules/posts/post.controller');
 const serverCacheService = require('./shared/services/serverCacheService');
@@ -157,6 +158,7 @@ app.use('/api/admin', adRoutes.admin);
 app.use('/api', keywordRoutes);
 app.use('/api/admin', liveAlertRoutes);
 app.use('/api/admin', settingsRoutes);
+app.use('/api/current-affairs', currentAffairsRoutes);
 
 // SEO routes - before static files
 const { renderWebStory } = require('./modules/posts/webstory.controller');
@@ -497,6 +499,114 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(404).send(html);
     }
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Dynamic Server-Side Meta Tag Injection for Current Affairs Article Pages
+app.get('/current-affairs/:slug', async (req, res, next) => {
+  try {
+    const indexPath = path.join(publicPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(404).send('index.html not found');
+    }
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    const CurrentAffairs = require('./modules/currentAffairs/currentAffairs.model');
+    const item = await CurrentAffairs.findOne({
+      $or: [{ slug: req.params.slug }, { dateString: req.params.slug }],
+      status: 'published'
+    }).lean();
+
+    if (item) {
+      const siteName = 'Digital Home Sarkari Result';
+      const cleanTitle = (item.title || '').replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '');
+      const fullTitle = `${cleanTitle} | ${siteName}`;
+      const desc = item.seoDescription || item.summary || 'Read today daily current affairs and take the daily exam GK quiz.';
+      const canonicalUrl = `https://www.digitalhomeblog.in/current-affairs/${item.slug}`;
+      const imageUrl = item.featuredImage || 'https://www.digitalhomeblog.in/logo.png';
+
+      // NewsArticle Schema
+      const newsArticleSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'NewsArticle',
+        'headline': cleanTitle,
+        'description': desc,
+        'image': [imageUrl],
+        'datePublished': item.publishDate ? new Date(item.publishDate).toISOString() : new Date().toISOString(),
+        'dateModified': item.updatedAt ? new Date(item.updatedAt).toISOString() : new Date().toISOString(),
+        'author': {
+          '@type': 'Person',
+          'name': item.author || 'Digital Home Editorial Team'
+        },
+        'publisher': {
+          '@type': 'Organization',
+          'name': siteName,
+          'logo': {
+            '@type': 'ImageObject',
+            'url': 'https://www.digitalhomeblog.in/logo.webp',
+            'width': 190,
+            'height': 60
+          }
+        },
+        'mainEntityOfPage': canonicalUrl
+      };
+
+      // Quiz Schema (if MCQs are present)
+      let quizSchema = null;
+      if (item.quizzes && item.quizzes.length > 0) {
+        quizSchema = {
+          '@context': 'https://schema.org',
+          '@type': 'Quiz',
+          'name': `Daily GK Quiz - ${item.dateString}`,
+          'description': `10 Multiple Choice Questions on today's current affairs (${item.dateString}) with detailed explanations.`,
+          'hasPart': item.quizzes.map(q => ({
+            '@type': 'Question',
+            'name': q.questionText,
+            'text': q.questionText,
+            'acceptedAnswer': {
+              '@type': 'Answer',
+              'text': q.options[q.correctOptionIndex],
+              'comment': {
+                '@type': 'Comment',
+                'text': q.explanation
+              }
+            }
+          }))
+        };
+      }
+
+      const metaTags = `
+    <title>${fullTitle}</title>
+    <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="${canonicalUrl}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="${siteName}" />
+    <meta property="og:title" content="${fullTitle.replace(/"/g, '&quot;')}" />
+    <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:image" content="${imageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${fullTitle.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:image" content="${imageUrl}" />
+    <script type="application/ld+json">${JSON.stringify(newsArticleSchema)}</script>
+    ${quizSchema ? `<script type="application/ld+json">${JSON.stringify(quizSchema)}</script>` : ''}
+      `;
+
+      html = html.replace(/<title>.*?<\/title>/, '');
+      html = html.replace(/<meta name="description" .*?\/>/, '');
+      html = html.replace('</head>', `${metaTags}\n</head>`);
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+      return res.status(200).send(html);
+    }
+
+    // Fallback to React SPA
+    next();
   } catch (err) {
     next(err);
   }

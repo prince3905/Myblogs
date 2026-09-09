@@ -705,8 +705,33 @@ async function sitemap(req, res) {
       console.error('[Sitemap] Failed to append Web Stories:', storyErr.message);
     }
 
+    // Include published Daily Current Affairs dynamically
+    let caUrls = '';
+    try {
+      const CurrentAffairs = require('../currentAffairs/currentAffairs.model');
+      const caPosts = await CurrentAffairs.find({
+        status: 'published',
+        slug: { $exists: true, $type: 'string', $ne: '' }
+      })
+        .select('slug publishDate updatedAt')
+        .sort({ publishDate: -1 })
+        .limit(100)
+        .lean();
+
+      caUrls = `<url><loc>https://www.digitalhomeblog.in/current-affairs</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>`;
+      caUrls += caPosts
+        .filter(c => c.slug)
+        .map((ca) => {
+          const lastmod = ca.updatedAt ? new Date(ca.updatedAt).toISOString() : (ca.publishDate ? new Date(ca.publishDate).toISOString() : new Date().toISOString());
+          return `<url><loc>${normalizeCanonicalUrl(`/current-affairs/${ca.slug}`)}</loc><lastmod>${lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>`;
+        })
+        .join('');
+    } catch (caErr) {
+      console.error('[Sitemap] Failed to append Current Affairs:', caErr.message);
+    }
+
     const homeMod = new Date().toISOString();
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><lastmod>${homeMod}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><lastmod>${homeMod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>${staticPages}${categoryUrls}${urls}${storyUrls}</urlset>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><lastmod>${homeMod}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><lastmod>${homeMod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>${staticPages}${categoryUrls}${urls}${caUrls}${storyUrls}</urlset>`;
     res.type('application/xml');
     return res.send(xml);
   } catch (err) {

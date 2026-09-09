@@ -3,6 +3,7 @@ const app = require('./app');
 const env = require('./config/env');
 const seedAdmin = require('./shared/utils/seed-admin');
 const { initScheduler } = require('./modules/liveAlerts/liveAlert.cron');
+const { initCurrentAffairsCron } = require('./modules/currentAffairs/currentAffairs.cron');
 
 mongoose.connection.on('connected', () => {
   console.log('Database connected successfully');
@@ -16,6 +17,7 @@ async function start() {
   await mongoose.connect(env.mongoUri);
   await seedAdmin();
   initScheduler();
+  initCurrentAffairsCron();
   const server = app.listen(env.port, () => {
     console.log(`Server running on port ${env.port}`);
     if (app.buildHomepageHtml) {

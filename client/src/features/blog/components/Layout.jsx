@@ -60,6 +60,8 @@ export default function Layout({ children }) {
 
   const navItems = [
     { label: 'Blog', path: '/blog' },
+    { label: 'Current Affairs', path: '/current-affairs' },
+    { label: 'Daily Quiz', path: '/daily-quiz' },
     { label: 'Job Alerts', path: '/job-alerts' },
     { label: 'Games', path: '/games' },
     { label: 'Tools', path: '/tools' },
