@@ -23,6 +23,7 @@ const keywordRoutes = require('./modules/keywords/keyword.routes');
 const liveAlertRoutes = require('./modules/liveAlerts/liveAlert.routes');
 const settingsRoutes = require('./modules/settings/settings.routes');
 const currentAffairsRoutes = require('./modules/currentAffairs/currentAffairs.routes');
+const autoPublishRoutes = require('./modules/autoPublisher/multiCategory.routes');
 const { geoTranslateMiddleware } = require('./shared/middleware/geoTranslate');
 const { sitemap, robots, rssFeed, getHomepageData } = require('./modules/posts/post.controller');
 const serverCacheService = require('./shared/services/serverCacheService');
@@ -159,6 +160,7 @@ app.use('/api', keywordRoutes);
 app.use('/api/admin', liveAlertRoutes);
 app.use('/api/admin', settingsRoutes);
 app.use('/api/current-affairs', currentAffairsRoutes);
+app.use('/api/admin/auto-publish', autoPublishRoutes);
 
 // SEO routes - before static files
 const { renderWebStory } = require('./modules/posts/webstory.controller');

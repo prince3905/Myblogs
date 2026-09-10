@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,10 +12,12 @@ import CloseIcon from '@mui/icons-material/Close';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import QuizIcon from '@mui/icons-material/Quiz';
 
 export default function PushNotificationModal() {
   const [open, setOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -26,26 +28,38 @@ export default function PushNotificationModal() {
       return;
     }
 
-    // Fast initial trigger after 1.5 seconds on page load
-    const initialTimer = setTimeout(() => {
-      checkAndShowPrompt();
-    }, 1500);
+    // Check if permission already permanently blocked
+    if ('Notification' in window && Notification.permission === 'denied') {
+      return;
+    }
 
-    return () => clearTimeout(initialTimer);
+    // Incremental delay calculation (+10 seconds per previous dismiss)
+    const dismissCount = parseInt(sessionStorage.getItem('push_modal_dismiss_count') || '0', 10);
+    const initialDelay = 3000 + (dismissCount * 10000); // 3s initial, then +10s per dismiss
+
+    timerRef.current = setTimeout(() => {
+      checkAndShowPrompt();
+    }, initialDelay);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
 
   const checkAndShowPrompt = () => {
-    if (Notification.permission === 'granted') {
+    if (typeof window === 'undefined') return;
+    if ('Notification' in window && Notification.permission === 'granted') {
       setIsSubscribed(true);
       return;
     }
-    if (Notification.permission !== 'denied') {
+    if ('Notification' in window && Notification.permission !== 'denied') {
       setOpen(true);
     }
   };
 
   const handleAllow = async () => {
     setOpen(false);
+    if (timerRef.current) clearTimeout(timerRef.current);
 
     try {
       if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -74,12 +88,23 @@ export default function PushNotificationModal() {
 
   const handleLater = () => {
     setOpen(false);
-    // Re-prompt after 60 seconds if user still hasn't allowed!
-    setTimeout(() => {
-      if (Notification.permission === 'default') {
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    if (typeof window === 'undefined') return;
+
+    // Increment dismiss count in sessionStorage
+    const currentCount = parseInt(sessionStorage.getItem('push_modal_dismiss_count') || '0', 10);
+    const nextCount = currentCount + 1;
+    sessionStorage.setItem('push_modal_dismiss_count', nextCount.toString());
+
+    // Delay gets incremented by exactly +10 seconds each time user clicks "Later" (10s, 20s, 30s, 40s...)
+    const nextDelayMs = nextCount * 10000;
+
+    timerRef.current = setTimeout(() => {
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
         setOpen(true);
       }
-    }, 60000);
+    }, nextDelayMs);
   };
 
   if (isSubscribed) return null;
@@ -200,7 +225,7 @@ export default function PushNotificationModal() {
             lineHeight: 1.3
           }}
         >
-          सरकारी नौकरी के फॉर्म & Admit Card कभी मिस न हों! 🔔
+          सरकारी नौकरी के फॉर्म, Admit Card & करेंट अफेयर्स कभी मिस न हों! 🔔
         </Typography>
 
         <Typography
@@ -213,7 +238,7 @@ export default function PushNotificationModal() {
             px: { xs: 0.5, sm: 1 }
           }}
         >
-          UP TET, SSC, Railway, Police, UPSC और State Jobs के <strong>Live Alerts & Direct Apply Link</strong> सबसे पहले अपने फोन पर पाएं।
+          UP TET, SSC, Railway, Police, UPSC और State Jobs के <strong>Live Alerts, Direct Apply Link & Daily GK Quiz</strong> सबसे पहले अपने फोन पर पाएं।
         </Typography>
 
         {/* Feature Highlights */}
@@ -240,6 +265,12 @@ export default function PushNotificationModal() {
             <CheckCircleIcon sx={{ fontSize: 17, color: '#16A34A' }} />
             <Typography variant="caption" sx={{ fontWeight: 750, color: '#1E293B', fontSize: '0.8rem' }}>
               ⏳ Last Date & Result Reminder (फॉर्म छूटने से बचें)
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <QuizIcon sx={{ fontSize: 17, color: '#4F46E5' }} />
+            <Typography variant="caption" sx={{ fontWeight: 750, color: '#1E293B', fontSize: '0.8rem' }}>
+              📚 Daily Current Affairs & 10 GK MCQs Quiz (रोजाना सुबह)
             </Typography>
           </Box>
         </Box>

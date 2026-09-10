@@ -35,14 +35,42 @@ async function addTwoWayInternalLink(newPost) {
     const cleanNewTitle = newPost.title.split(/[:|]/)[0].trim();
     const cleanOldTitle = oldPost.title.split(/[:|]/)[0].trim();
 
+    // Generate Category-Aware Callout Text
+    function getCategoryLinkCopy(category, title, url, isNewToOld = false) {
+      const cat = (category || '').toLowerCase();
+      if (cat.includes('tech') || cat.includes('ai') || cat.includes('tool')) {
+        return isNewToOld
+          ? `⚡ <strong>संबंधित टेक व AI गाइड:</strong> ${title} के उपयोगी फीचर्स और टिप्स जानने के लिए हमारी मुख्य गाइड <strong><a href="${url}" style="color: #2563eb; text-decoration: underline; font-weight: 700;">${title}</a></strong> जरूर पढ़ें!`
+          : `💡 <strong>नवीनतम टेक व AI अपडेट:</strong> ${title} की पूरी स्टेप-बाय-स्टेप गाइड के लिए <strong><a href="${url}" style="color: #059669; text-decoration: underline; font-weight: 700;">${title}</a></strong> जरूर देखें!`;
+      }
+      if (cat.includes('finance') || cat.includes('business') || cat.includes('money')) {
+        return isNewToOld
+          ? `💰 <strong>संबंधित निवेश व बैंकिंग गाइड:</strong> ${title} के नियम व लाभ समझने के लिए <strong><a href="${url}" style="color: #2563eb; text-decoration: underline; font-weight: 700;">${title}</a></strong> भी देखें!`
+          : `📈 <strong>नवीनतम फाइनेंस गाइड:</strong> ${title} के बारे में विस्तार से जानने के लिए हमारी गाइड <strong><a href="${url}" style="color: #059669; text-decoration: underline; font-weight: 700;">${title}</a></strong> जरूर पढ़ें!`;
+      }
+      if (cat.includes('health') || cat.includes('wellness') || cat.includes('fitness')) {
+        return isNewToOld
+          ? `🩺 <strong>संबंधित हेल्थ गाइड:</strong> ${title} से जुड़ी उपयोगी जानकारी के लिए <strong><a href="${url}" style="color: #2563eb; text-decoration: underline; font-weight: 700;">${title}</a></strong> भी देखें!`
+          : `🌿 <strong>नवीनतम स्वास्थ्य एवं वेलनेस गाइड:</strong> ${title} के आसान उपाय व टिप्स जानने के लिए <strong><a href="${url}" style="color: #059669; text-decoration: underline; font-weight: 700;">${title}</a></strong> जरूर पढ़ें!`;
+      }
+      if (cat.includes('news') || cat.includes('trend')) {
+        return isNewToOld
+          ? `🌐 <strong>संबंधित ट्रेंडिंग रिपोर्ट:</strong> ${title} का पूरा विश्लेषण समझने के लिए <strong><a href="${url}" style="color: #2563eb; text-decoration: underline; font-weight: 700;">${title}</a></strong> भी देखें!`
+          : `📰 <strong>ट्रेंडिंग टॉपिक अपडेट:</strong> ${title} की पूरी रिपोर्ट और मुख्य आंकड़े जानने के लिए <strong><a href="${url}" style="color: #059669; text-decoration: underline; font-weight: 700;">${title}</a></strong> जरूर पढ़ें!`;
+      }
+      return isNewToOld
+        ? `📌 <strong>संबंधित मुख्य गाइड:</strong> ${title} के नियम, पात्रता और चयन प्रक्रिया से जुड़ी महत्वपूर्ण जानकारी के लिए <strong><a href="${url}" style="color: #2563eb; text-decoration: underline; font-weight: 700;">${title}</a></strong> भी जरूर देखें!`
+        : `👉 <strong>नवीनतम भर्ती अपडेट:</strong> ${title} की पूरी जानकारी, महत्वपूर्ण तिथियां और ऑनलाइन आवेदन करने के लिए हमारी नई गाइड <strong><a href="${url}" style="color: #059669; text-decoration: underline; font-weight: 700;">${title}</a></strong> जरूर पढ़ें!`;
+    }
+
     // 1. LINK OLD POST -> NEW POST (if not already linked)
-    const oldHasNewLink = oldPost.content.toLowerCase().includes(cleanNewSlug) || oldPost.content.includes('नवीनतम भर्ती अपडेट');
+    const oldHasNewLink = oldPost.content.toLowerCase().includes(cleanNewSlug);
     if (!oldHasNewLink) {
       console.log(`[SEO Silo Engine] Linking Authority Post "${oldPost.title}" -> New Post "${newPost.title}"`);
       
       const $old = cheerio.load(oldPost.content || '', null, false);
       const linkToNewHtml = `\n<p style="margin: 20px 0; padding: 14px 18px; border-radius: 8px; border-left: 4px solid #10b981; background-color: #f0fdf4; font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: #166534;">
-  👉 <strong>नवीनतम भर्ती अपडेट:</strong> ${cleanNewTitle} की पूरी जानकारी, महत्वपूर्ण तिथियां और ऑनलाइन आवेदन करने के लिए हमारी नई गाइड <strong><a href="${newPostUrl}" style="color: #059669; text-decoration: underline; font-weight: 700;">${cleanNewTitle}</a></strong> जरूर पढ़ें!
+  ${getCategoryLinkCopy(newPost.category, cleanNewTitle, newPostUrl, false)}
 </p>\n`;
 
       const promoEmbed = $old('.ql-table-embed').filter((i, el) => {
@@ -66,13 +94,13 @@ async function addTwoWayInternalLink(newPost) {
     }
 
     // 2. LINK NEW POST -> OLD POST (if not already linked)
-    const newHasOldLink = newPost.content.toLowerCase().includes(cleanOldSlug) || newPost.content.includes('संबंधित मुख्य गाइड');
+    const newHasOldLink = newPost.content.toLowerCase().includes(cleanOldSlug);
     if (!newHasOldLink) {
       console.log(`[SEO Silo Engine] Linking New Post "${newPost.title}" -> Authority Post "${oldPost.title}"`);
 
       const $new = cheerio.load(newPost.content || '', null, false);
       const linkToOldHtml = `\n<p style="margin: 20px 0; padding: 14px 18px; border-radius: 8px; border-left: 4px solid #3b82f6; background-color: #eff6ff; font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: #1e40af;">
-  📌 <strong>संबंधित मुख्य गाइड:</strong> ${cleanOldTitle} के नियम, पात्रता और चयन प्रक्रिया से जुड़ी महत्वपूर्ण जानकारी के लिए <strong><a href="${oldPostUrl}" style="color: #2563eb; text-decoration: underline; font-weight: 700;">${cleanOldTitle}</a></strong> भी जरूर देखें!
+  ${getCategoryLinkCopy(newPost.category, cleanOldTitle, oldPostUrl, true)}
 </p>\n`;
 
       const promoEmbedNew = $new('.ql-table-embed').filter((i, el) => {

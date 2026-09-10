@@ -1190,6 +1190,430 @@ const HeroSectionSlider = ({ initialPosts = [], loading: initialLoading }) => {
   );
 };
 
+const DailyCurrentAffairsSlider = ({ items = [], loading = false }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  if (loading || !items || items.length === 0) return null;
+
+  const handleNext = () => {
+    if (currentSlide < items.length - 1) {
+      setCurrentSlide(prev => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(prev => prev - 1);
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    const distance = touchStartX.current - touchEndX.current;
+    if (distance > 40) {
+      handleNext();
+    } else if (distance < -40) {
+      handlePrev();
+    }
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
+
+  return (
+    <Box 
+      component="section" 
+      sx={{ 
+        py: { xs: 2.5, md: 3.5 }, 
+        bgcolor: '#F8FAFC', 
+        borderBottom: '1px solid #ECECEC',
+        position: 'relative'
+      }}
+    >
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+        {/* Header with Navigation Controls */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5, flexWrap: 'wrap', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box 
+              sx={{ 
+                width: 8, 
+                height: 8, 
+                borderRadius: '50%', 
+                bgcolor: '#10B981',
+                animation: 'pulseGreen 1.6s infinite ease-in-out',
+                '@keyframes pulseGreen': {
+                  '0%': { transform: 'scale(0.8)', opacity: 0.5 },
+                  '50%': { transform: 'scale(1.4)', opacity: 1 },
+                  '100%': { transform: 'scale(0.8)', opacity: 0.5 }
+                }
+              }} 
+            />
+            <Typography
+              variant="h2"
+              sx={{
+                fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em',
+                fontSize: { xs: '1.25rem', md: '1.6rem' }
+              }}
+            >
+              Daily Current Affairs & GK Quiz
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {/* Slide Quick Jump Dots / Day Selector */}
+            {items.length > 1 && (
+              <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 0.8, mr: 1 }}>
+                {items.map((it, idx) => (
+                  <Box
+                    key={idx}
+                    onClick={() => setCurrentSlide(idx)}
+                    sx={{
+                      width: currentSlide === idx ? 24 : 8,
+                      height: 8,
+                      borderRadius: '4px',
+                      bgcolor: currentSlide === idx ? '#4F46E5' : '#CBD5E1',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                    title={it.dateString}
+                  />
+                ))}
+              </Box>
+            )}
+
+            <Button
+              component={Link}
+              to="/current-affairs"
+              sx={{
+                fontWeight: 700, fontSize: '0.85rem',
+                color: '#4F46E5',
+                '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.08)' }
+              }}
+            >
+              All Archives →
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Carousel Viewport with Touch Drag */}
+        <Box
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          sx={{ position: 'relative', overflow: 'hidden', width: '100%', borderRadius: 3 }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: `translate3d(-${currentSlide * 100}%, 0, 0)`,
+              width: '100%'
+            }}
+          >
+            {items.map((post, idx) => (
+              <Box 
+                key={post._id || idx} 
+                sx={{ 
+                  flex: '0 0 100%', 
+                  width: '100%', 
+                  boxSizing: 'border-box' 
+                }}
+              >
+                {/* 2-Column Responsive Layout (Capsule + Quiz Card) */}
+                <Box 
+                  sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: { xs: '1fr', lg: '1fr 340px' }, 
+                    gap: { xs: 2, md: 2.5 },
+                    alignItems: 'stretch'
+                  }}
+                >
+                  {/* Left Column: Daily Capsule */}
+                  <Box
+                    sx={{
+                      bgcolor: '#FFFFFF',
+                      borderRadius: 3,
+                      border: '1px solid #E2E8F0',
+                      p: { xs: 2.5, md: 3 },
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                      transition: 'all 0.25s ease',
+                      '&:hover': {
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                        borderColor: '#CBD5E1'
+                      }
+                    }}
+                  >
+                    <Box>
+                      {/* Badges Row */}
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', mb: 1.5 }}>
+                        <Chip
+                          label={`📅 ${post.dateString} ${idx === 0 ? '• TODAY' : ''}`}
+                          size="small"
+                          sx={{ 
+                            bgcolor: idx === 0 ? '#4F46E5' : '#EEF2FF', 
+                            color: idx === 0 ? '#FFFFFF' : '#4338CA', 
+                            fontWeight: 800, 
+                            fontSize: '0.72rem' 
+                          }}
+                        />
+                        <Chip
+                          label="⚡ 100% Exam Focused"
+                          size="small"
+                          sx={{ bgcolor: '#ECFDF5', color: '#059669', fontWeight: 800, fontSize: '0.72rem' }}
+                        />
+                        <Chip
+                          label="🎯 10 MCQs Quiz Included"
+                          size="small"
+                          sx={{ bgcolor: '#FEF3C7', color: '#D97706', fontWeight: 800, fontSize: '0.72rem' }}
+                        />
+                      </Box>
+
+                      {/* Title */}
+                      <Typography
+                        component={Link}
+                        to={`/current-affairs/${post.slug}`}
+                        variant="h3"
+                        sx={{
+                          fontSize: { xs: '1.05rem', md: '1.25rem' },
+                          fontWeight: 800,
+                          color: '#1E293B',
+                          lineHeight: 1.4,
+                          mb: 1.2,
+                          display: 'block',
+                          textDecoration: 'none',
+                          transition: 'color 0.2s ease',
+                          '&:hover': { color: '#4F46E5' }
+                        }}
+                      >
+                        {post.title}
+                      </Typography>
+
+                      {/* Summary */}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: '#64748B',
+                          fontSize: { xs: '0.85rem', md: '0.9rem' },
+                          lineHeight: 1.6,
+                          mb: 2,
+                          display: '-webkit-box',
+                          WebkitLineClamp: { xs: 2, md: 3 },
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        {post.summary}
+                      </Typography>
+
+                      {/* Topic Chips */}
+                      <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap', mb: 2.5 }}>
+                        {['National', 'International', 'Economy', 'Defense', 'Sports', 'Static GK'].map(cat => (
+                          <Chip
+                            key={cat}
+                            label={`• ${cat}`}
+                            size="small"
+                            sx={{
+                              bgcolor: '#F1F5F9',
+                              color: '#475569',
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              height: '22px'
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+
+                    {/* Action Buttons */}
+                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', pt: 2, borderTop: '1px solid #F1F5F9' }}>
+                      <Button
+                        component={Link}
+                        to={`/current-affairs/${post.slug}`}
+                        variant="contained"
+                        sx={{
+                          bgcolor: '#4F46E5',
+                          color: 'white',
+                          fontWeight: 700,
+                          textTransform: 'none',
+                          borderRadius: 2,
+                          px: 2.5,
+                          py: 0.9,
+                          fontSize: '0.85rem',
+                          boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
+                          '&:hover': { bgcolor: '#4338CA' }
+                        }}
+                      >
+                        📖 Read Full Capsule →
+                      </Button>
+                      <Button
+                        component={Link}
+                        to={`/current-affairs/${post.slug}#quiz-section`}
+                        variant="outlined"
+                        sx={{
+                          borderColor: '#10B981',
+                          color: '#059669',
+                          fontWeight: 700,
+                          textTransform: 'none',
+                          borderRadius: 2,
+                          px: 2,
+                          py: 0.9,
+                          fontSize: '0.85rem',
+                          '&:hover': { bgcolor: '#ECFDF5', borderColor: '#059669' }
+                        }}
+                      >
+                        🎯 Practice 10 MCQs
+                      </Button>
+                    </Box>
+                  </Box>
+
+                  {/* Right Column: Timed Mock Quiz Card */}
+                  <Box
+                    sx={{
+                      background: 'linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%)',
+                      borderRadius: 3,
+                      p: { xs: 2.5, md: 3 },
+                      color: 'white',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxShadow: '0 10px 25px -5px rgba(49, 46, 129, 0.3)',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <Box>
+                      <Chip
+                        label={`⚡ 10-Min Mock (${post.dateString})`}
+                        size="small"
+                        sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: '#FEF08A', fontWeight: 800, mb: 1.5 }}
+                      />
+                      <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.15rem', md: '1.3rem' }, mb: 1, letterSpacing: '-0.3px' }}>
+                        Daily GK Practice Quiz
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#E0E7FF', fontSize: '0.82rem', lineHeight: 1.5, mb: 2 }}>
+                        UPSC, SSC, Railway व Police परीक्षा हेतु इस दिन के 10 महत्वपूर्ण MCQs हल करें और इंस्टेंट रिजल्ट पाएं।
+                      </Typography>
+
+                      {/* Feature Checklist */}
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, mb: 2.5 }}>
+                        <Typography variant="caption" sx={{ color: '#C7D2FE', display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.78rem', fontWeight: 600 }}>
+                          <span style={{ color: '#34D399', fontWeight: 800 }}>✓</span> 10 Exam-Level Multiple Choice Questions
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#C7D2FE', display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.78rem', fontWeight: 600 }}>
+                          <span style={{ color: '#34D399', fontWeight: 800 }}>✓</span> Instant Green/Red Answer Explanations
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#C7D2FE', display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.78rem', fontWeight: 600 }}>
+                          <span style={{ color: '#34D399', fontWeight: 800 }}>✓</span> 10-Minute Timed Mock Test Simulator
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <Button
+                      component={Link}
+                      to={`/daily-quiz/${post.dateString}`}
+                      variant="contained"
+                      fullWidth
+                      sx={{
+                        bgcolor: '#10B981',
+                        color: 'white',
+                        fontWeight: 800,
+                        textTransform: 'none',
+                        py: 1.1,
+                        borderRadius: 2,
+                        fontSize: '0.9rem',
+                        boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+                        '&:hover': { bgcolor: '#059669' }
+                      }}
+                    >
+                      🚀 Start {post.dateString} Quiz ➔
+                    </Button>
+                  </Box>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Desktop & Mobile Chevron Floating Navigation Arrows */}
+          {items.length > 1 && currentSlide > 0 && (
+            <IconButton 
+              onClick={handlePrev}
+              aria-label="Previous Day Current Affairs"
+              sx={{
+                position: 'absolute',
+                left: { xs: 6, md: 12 },
+                top: '50%',
+                transform: 'translateY(-50%)',
+                bgcolor: 'rgba(255,255,255,0.95)',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+                border: '1px solid #E5E7EB',
+                color: '#111827',
+                zIndex: 10,
+                width: { xs: 34, md: 40 },
+                height: { xs: 34, md: 40 },
+                '&:hover': { bgcolor: 'white' }
+              }}
+            >
+              <ChevronLeft />
+            </IconButton>
+          )}
+
+          {items.length > 1 && currentSlide < items.length - 1 && (
+            <IconButton 
+              onClick={handleNext}
+              aria-label="Next Day Current Affairs"
+              sx={{
+                position: 'absolute',
+                right: { xs: 6, md: 12 },
+                top: '50%',
+                transform: 'translateY(-50%)',
+                bgcolor: 'rgba(255,255,255,0.95)',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+                border: '1px solid #E5E7EB',
+                color: '#111827',
+                zIndex: 10,
+                width: { xs: 34, md: 40 },
+                height: { xs: 34, md: 40 },
+                '&:hover': { bgcolor: 'white' }
+              }}
+            >
+              <ChevronRight />
+            </IconButton>
+          )}
+        </Box>
+
+        {/* Mobile Swipe Indicator Dots */}
+        {items.length > 1 && (
+          <Box sx={{ display: { xs: 'flex', sm: 'none' }, justifyContent: 'center', alignItems: 'center', gap: 1, mt: 2 }}>
+            {items.map((_, idx) => (
+              <Box
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                sx={{
+                  width: currentSlide === idx ? 20 : 6,
+                  height: 6,
+                  borderRadius: '3px',
+                  bgcolor: currentSlide === idx ? '#4F46E5' : '#CBD5E1',
+                  transition: 'all 0.3s ease'
+                }}
+              />
+            ))}
+          </Box>
+        )}
+      </Container>
+    </Box>
+  );
+};
+
 export default function HomePage() {
   const { posts, loading, error } = usePosts({ limit: 6 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
@@ -1301,8 +1725,8 @@ export default function HomePage() {
     mobilePairs.push(alerts.slice(i, i + 2));
   }
 
-  const [currentAffairsPost, setCurrentAffairsPost] = useState(() => (typeof window !== 'undefined' && window.__INITIAL_CURRENT_AFFAIRS__) ? window.__INITIAL_CURRENT_AFFAIRS__ : null);
-  const [loadingCA, setLoadingCA] = useState(() => (typeof window !== 'undefined' && window.__INITIAL_CURRENT_AFFAIRS__) ? false : true);
+  const [currentAffairsList, setCurrentAffairsList] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_CURRENT_AFFAIRS__)) ? window.__INITIAL_CURRENT_AFFAIRS__ : []);
+  const [loadingCA, setLoadingCA] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_CURRENT_AFFAIRS__) && window.__INITIAL_CURRENT_AFFAIRS__.length > 0) ? false : true);
 
   useEffect(() => {
     if (alerts.length > 0) return;
@@ -1326,11 +1750,11 @@ export default function HomePage() {
       .finally(() => setLoadingStories(false));
   }, []);
   useEffect(() => {
-    if (currentAffairsPost) return;
-    request('/api/current-affairs?limit=1')
+    if (currentAffairsList.length > 0) return;
+    request('/api/current-affairs?limit=6')
       .then(res => {
         if (res.success && res.items?.length > 0) {
-          setCurrentAffairsPost(res.items[0]);
+          setCurrentAffairsList(res.items);
         }
       })
       .catch(err => console.error(err))
@@ -1445,268 +1869,8 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* Daily Current Affairs & GK Quiz Section */}
-      {currentAffairsPost && (
-        <Box 
-          component="section" 
-          sx={{ 
-            py: { xs: 2.5, md: 3.5 }, 
-            bgcolor: '#F8FAFC', 
-            borderBottom: '1px solid #ECECEC' 
-          }}
-        >
-          <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-            {/* Section Header */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box 
-                  sx={{ 
-                    width: 8, 
-                    height: 8, 
-                    borderRadius: '50%', 
-                    bgcolor: '#10B981',
-                    animation: 'pulseGreen 1.6s infinite ease-in-out',
-                    '@keyframes pulseGreen': {
-                      '0%': { transform: 'scale(0.8)', opacity: 0.5 },
-                      '50%': { transform: 'scale(1.4)', opacity: 1 },
-                      '100%': { transform: 'scale(0.8)', opacity: 0.5 }
-                    }
-                  }} 
-                />
-                <Typography
-                  variant="h2"
-                  sx={{
-                    fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em',
-                    fontSize: { xs: '1.25rem', md: '1.6rem' }
-                  }}
-                >
-                  Daily Current Affairs & GK Quiz
-                </Typography>
-              </Box>
-              <Button
-                component={Link}
-                to="/current-affairs"
-                sx={{
-                  fontWeight: 700, fontSize: '0.85rem',
-                  color: '#4F46E5',
-                  '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.08)' }
-                }}
-              >
-                All Archives →
-              </Button>
-            </Box>
-
-            {/* 2-Column Responsive Layout */}
-            <Box 
-              sx={{ 
-                display: 'grid', 
-                gridTemplateColumns: { xs: '1fr', lg: '1fr 340px' }, 
-                gap: { xs: 2, md: 2.5 },
-                alignItems: 'stretch'
-              }}
-            >
-              {/* Left Column: Today's Featured Current Affairs Capsule */}
-              <Box
-                sx={{
-                  bgcolor: '#FFFFFF',
-                  borderRadius: 3,
-                  border: '1px solid #E2E8F0',
-                  p: { xs: 2.5, md: 3 },
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  transition: 'all 0.25s ease',
-                  '&:hover': {
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                    borderColor: '#CBD5E1'
-                  }
-                }}
-              >
-                <Box>
-                  {/* Badges Row */}
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', mb: 1.5 }}>
-                    <Chip
-                      label={`📅 ${currentAffairsPost.dateString}`}
-                      size="small"
-                      sx={{ bgcolor: '#EEF2FF', color: '#4338CA', fontWeight: 800, fontSize: '0.72rem' }}
-                    />
-                    <Chip
-                      label="⚡ 100% Exam Focused"
-                      size="small"
-                      sx={{ bgcolor: '#ECFDF5', color: '#059669', fontWeight: 800, fontSize: '0.72rem' }}
-                    />
-                    <Chip
-                      label="🎯 10 MCQs Quiz Included"
-                      size="small"
-                      sx={{ bgcolor: '#FEF3C7', color: '#D97706', fontWeight: 800, fontSize: '0.72rem' }}
-                    />
-                  </Box>
-
-                  {/* Title */}
-                  <Typography
-                    component={Link}
-                    to={`/current-affairs/${currentAffairsPost.slug}`}
-                    variant="h3"
-                    sx={{
-                      fontSize: { xs: '1.05rem', md: '1.25rem' },
-                      fontWeight: 800,
-                      color: '#1E293B',
-                      lineHeight: 1.4,
-                      mb: 1.2,
-                      display: 'block',
-                      textDecoration: 'none',
-                      transition: 'color 0.2s ease',
-                      '&:hover': { color: '#4F46E5' }
-                    }}
-                  >
-                    {currentAffairsPost.title}
-                  </Typography>
-
-                  {/* Summary */}
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: '#64748B',
-                      fontSize: { xs: '0.85rem', md: '0.9rem' },
-                      lineHeight: 1.6,
-                      mb: 2,
-                      display: '-webkit-box',
-                      WebkitLineClamp: { xs: 2, md: 3 },
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    {currentAffairsPost.summary}
-                  </Typography>
-
-                  {/* Topic Chips */}
-                  <Box sx={{ display: 'flex', gap: 0.8, flexWrap: 'wrap', mb: 2.5 }}>
-                    {['National', 'International', 'Economy', 'Defense', 'Sports', 'Static GK'].map(cat => (
-                      <Chip
-                        key={cat}
-                        label={`• ${cat}`}
-                        size="small"
-                        sx={{
-                          bgcolor: '#F1F5F9',
-                          color: '#475569',
-                          fontSize: '0.68rem',
-                          fontWeight: 700,
-                          height: '22px'
-                        }}
-                      />
-                    ))}
-                  </Box>
-                </Box>
-
-                {/* Action Buttons */}
-                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', pt: 2, borderTop: '1px solid #F1F5F9' }}>
-                  <Button
-                    component={Link}
-                    to={`/current-affairs/${currentAffairsPost.slug}`}
-                    variant="contained"
-                    sx={{
-                      bgcolor: '#4F46E5',
-                      color: 'white',
-                      fontWeight: 700,
-                      textTransform: 'none',
-                      borderRadius: 2,
-                      px: 2.5,
-                      py: 0.9,
-                      fontSize: '0.85rem',
-                      boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
-                      '&:hover': { bgcolor: '#4338CA' }
-                    }}
-                  >
-                    📖 Read Full Capsule →
-                  </Button>
-                  <Button
-                    component={Link}
-                    to={`/current-affairs/${currentAffairsPost.slug}#quiz-section`}
-                    variant="outlined"
-                    sx={{
-                      borderColor: '#10B981',
-                      color: '#059669',
-                      fontWeight: 700,
-                      textTransform: 'none',
-                      borderRadius: 2,
-                      px: 2,
-                      py: 0.9,
-                      fontSize: '0.85rem',
-                      '&:hover': { bgcolor: '#ECFDF5', borderColor: '#059669' }
-                    }}
-                  >
-                    🎯 Practice 10 MCQs
-                  </Button>
-                </Box>
-              </Box>
-
-              {/* Right Column: Timed Mock Quiz Card */}
-              <Box
-                sx={{
-                  background: 'linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%)',
-                  borderRadius: 3,
-                  p: { xs: 2.5, md: 3 },
-                  color: 'white',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  boxShadow: '0 10px 25px -5px rgba(49, 46, 129, 0.3)',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-              >
-                <Box>
-                  <Chip
-                    label="⚡ 10-Min Mock Exam"
-                    size="small"
-                    sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: '#FEF08A', fontWeight: 800, mb: 1.5 }}
-                  />
-                  <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.15rem', md: '1.3rem' }, mb: 1, letterSpacing: '-0.3px' }}>
-                    Daily GK Practice Quiz
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#E0E7FF', fontSize: '0.82rem', lineHeight: 1.5, mb: 2 }}>
-                    UPSC, SSC, Railway व Police परीक्षा हेतु आज के 10 महत्वपूर्ण MCQs हल करें और इंस्टेंट रिजल्ट पाएं।
-                  </Typography>
-
-                  {/* Feature Checklist */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, mb: 2.5 }}>
-                    <Typography variant="caption" sx={{ color: '#C7D2FE', display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.78rem', fontWeight: 600 }}>
-                      <span style={{ color: '#34D399', fontWeight: 800 }}>✓</span> 10 Exam-Level Multiple Choice Questions
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#C7D2FE', display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.78rem', fontWeight: 600 }}>
-                      <span style={{ color: '#34D399', fontWeight: 800 }}>✓</span> Instant Green/Red Answer Explanations
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#C7D2FE', display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.78rem', fontWeight: 600 }}>
-                      <span style={{ color: '#34D399', fontWeight: 800 }}>✓</span> 10-Minute Timed Mock Test Simulator
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Button
-                  component={Link}
-                  to="/daily-quiz"
-                  variant="contained"
-                  fullWidth
-                  sx={{
-                    bgcolor: '#10B981',
-                    color: 'white',
-                    fontWeight: 800,
-                    textTransform: 'none',
-                    py: 1.1,
-                    borderRadius: 2,
-                    fontSize: '0.9rem',
-                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
-                    '&:hover': { bgcolor: '#059669' }
-                  }}
-                >
-                  🚀 Start Today's Mock Quiz ➔
-                </Button>
-              </Box>
-            </Box>
-          </Container>
-        </Box>
-      )}
+      {/* Daily Current Affairs & GK Quiz Carousel Section */}
+      <DailyCurrentAffairsSlider items={currentAffairsList} loading={loadingCA} />
 
       {/* Web Stories Section */}
       <Box 
