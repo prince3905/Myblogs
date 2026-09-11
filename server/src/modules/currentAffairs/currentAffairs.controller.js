@@ -1,5 +1,5 @@
 const CurrentAffairs = require('./currentAffairs.model');
-const { generateDailyCurrentAffairs } = require('./currentAffairs.service');
+const { generateDailyCurrentAffairs, generateQuizForSummary, getDefaultEmergencyQuizzes } = require('./currentAffairs.service');
 
 /**
  * Public: Get paginated list of Current Affairs articles
@@ -81,7 +81,7 @@ async function getCurrentAffairsBySlug(req, res) {
 }
 
 /**
- * Public: Get today's or date-specific Daily Quiz
+ * Public: Get today's or date-specific Daily Quiz with Automatic Self-Healing
  */
 async function getTodayQuiz(req, res) {
   try {
@@ -92,17 +92,32 @@ async function getTodayQuiz(req, res) {
       query.dateString = dateParam;
     }
 
-    const item = await CurrentAffairs.findOne(query)
-      .select('title slug dateString publishDate quizzes')
-      .sort({ publishDate: -1 })
-      .lean();
+    let item = await CurrentAffairs.findOne(query)
+      .select('title slug dateString publishDate summary quizzes')
+      .sort({ publishDate: -1 });
 
-    if (!item || !item.quizzes || item.quizzes.length === 0) {
-      return res.status(404).json({ success: false, message: 'No quiz found for the specified date.' });
+    const now = new Date();
+    const istDate = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    const targetDateString = dateParam || (item ? item.dateString : istDate.toISOString().split('T')[0]);
+
+    // Self-healing: if article doesn't have quizzes, generate or provide emergency quizzes immediately
+    let quizzesList = item?.quizzes || [];
+    if (!quizzesList || quizzesList.length === 0) {
+      console.log(`[getTodayQuiz] No quizzes found in DB for ${targetDateString}. Triggering automatic self-healing...`);
+      quizzesList = await generateQuizForSummary(targetDateString, item?.summary || '');
+      
+      if (!quizzesList || quizzesList.length === 0) {
+        quizzesList = getDefaultEmergencyQuizzes(targetDateString);
+      }
+
+      if (item) {
+        item.quizzes = quizzesList;
+        await item.save().catch(e => console.error('Failed to persist self-healed quizzes:', e.message));
+      }
     }
 
     // Hide correctOptionIndex from questions so client cannot inspect/cheat before submitting
-    const sanitizedQuizzes = item.quizzes.map(q => ({
+    const sanitizedQuizzes = quizzesList.map(q => ({
       questionId: q.questionId,
       questionText: q.questionText,
       options: q.options,
@@ -111,14 +126,15 @@ async function getTodayQuiz(req, res) {
 
     return res.status(200).json({
       success: true,
-      postTitle: item.title,
-      slug: item.slug,
-      dateString: item.dateString,
-      publishDate: item.publishDate,
+      postTitle: item ? item.title : `Daily GK Practice Quiz (${targetDateString})`,
+      slug: item ? item.slug : `daily-current-affairs-${targetDateString}-hindi-gk-quiz`,
+      dateString: targetDateString,
+      publishDate: item ? item.publishDate : new Date(),
       totalQuestions: sanitizedQuizzes.length,
       quizzes: sanitizedQuizzes
     });
   } catch (err) {
+    console.error('[getTodayQuiz] Error:', err);
     return res.status(500).json({ success: false, message: err.message });
   }
 }

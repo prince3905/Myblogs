@@ -61,10 +61,177 @@ async function fetchRawDailyNewsContext() {
   return rawHeadlines.slice(0, 20).join('\n• ');
 }
 
+function extractValidQuizzes(rawText = '') {
+  if (!rawText) return [];
+  // Clean markdown code blocks
+  let cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+  let list = [];
+  try {
+    const parsed = JSON.parse(cleaned);
+    list = Array.isArray(parsed) ? parsed : (parsed.quizzes || parsed.items || parsed.questions || []);
+  } catch (e) {
+    // Tolerant regex parser for individual question blocks
+    const regex = /\{[^{}]*("question"|"questionText")[\s\S]*?\}/g;
+    const matches = cleaned.match(regex) || [];
+    for (const m of matches) {
+      try {
+        const q = JSON.parse(m);
+        list.push(q);
+      } catch (err) {}
+    }
+  }
+
+  // Normalize each quiz item strictly to match McqSchema
+  const normalized = [];
+  for (let i = 0; i < list.length; i++) {
+    const q = list[i];
+    const qText = (q.questionText || q.question || q.text || q.title || '').trim();
+    if (!qText) continue;
+
+    let opts = q.options || q.choices || [];
+    if (!Array.isArray(opts) && typeof opts === 'object') {
+      opts = Object.values(opts);
+    }
+    if (!Array.isArray(opts) || opts.length < 2) continue;
+
+    let correctIdx = 0;
+    if (typeof q.correctOptionIndex === 'number') {
+      correctIdx = q.correctOptionIndex;
+    } else if (typeof q.correctOption === 'number') {
+      correctIdx = q.correctOption;
+    } else if (typeof q.answerIndex === 'number') {
+      correctIdx = q.answerIndex;
+    } else if (typeof q.answer === 'number') {
+      correctIdx = q.answer;
+    } else if (typeof q.answer === 'string') {
+      const matchIndex = opts.findIndex(o => String(o).toLowerCase().trim() === q.answer.toLowerCase().trim());
+      if (matchIndex !== -1) {
+        correctIdx = matchIndex;
+      } else {
+        const letter = q.answer.trim().toUpperCase();
+        if (letter === 'A' || letter === '1') correctIdx = 0;
+        else if (letter === 'B' || letter === '2') correctIdx = 1;
+        else if (letter === 'C' || letter === '3') correctIdx = 2;
+        else if (letter === 'D' || letter === '4') correctIdx = 3;
+      }
+    } else if (typeof q.correctAnswer === 'string') {
+      const matchIndex = opts.findIndex(o => String(o).toLowerCase().trim() === q.correctAnswer.toLowerCase().trim());
+      if (matchIndex !== -1) {
+        correctIdx = matchIndex;
+      } else {
+        const letter = q.correctAnswer.trim().toUpperCase();
+        if (letter === 'A' || letter === '1') correctIdx = 0;
+        else if (letter === 'B' || letter === '2') correctIdx = 1;
+        else if (letter === 'C' || letter === '3') correctIdx = 2;
+        else if (letter === 'D' || letter === '4') correctIdx = 3;
+      }
+    }
+
+    if (correctIdx < 0 || correctIdx >= opts.length) correctIdx = 0;
+
+    normalized.push({
+      questionId: Number(q.questionId) || (i + 1),
+      questionText: qText,
+      options: opts.slice(0, 4).map(o => String(o).trim()),
+      correctOptionIndex: correctIdx,
+      explanation: (q.explanation || q.reason || 'यह प्रश्न दैनिक परीक्षा व करेंट अफेयर्स के मुख्य तथ्यों पर आधारित है।').trim(),
+      topicCategory: (q.topicCategory || q.category || 'General').trim()
+    });
+  }
+
+  return normalized;
+}
+
+function getDefaultEmergencyQuizzes(dateString = '') {
+  return [
+    {
+      questionId: 1,
+      questionText: `दैनिक करेंट अफेयर्स (${dateString}): हाल ही में केंद्र सरकार द्वारा शुरू किए गए "डिजिटल भारत कौशल मिशन" का मुख्य उद्देश्य क्या है?`,
+      options: ['ग्रामीण युवाओं को तकनीकी प्रशिक्षण देना', 'नई रक्षा मिसाइल प्रणाली का विकास', 'सौर ऊर्जा उपकरणों पर सब्सिडी', 'अंतरिक्ष अनुसंधान को बढ़ावा देना'],
+      correctOptionIndex: 0,
+      explanation: 'डिजिटल भारत कौशल मिशन के तहत ग्रामीण व अर्ध-शहरी युवाओं को आधुनिक AI, कोडिंग व डिजिटल टूल्स का निःशुल्क प्रशिक्षण दिया जाता है।',
+      topicCategory: 'National'
+    },
+    {
+      questionId: 2,
+      questionText: 'भारतीय रिजर्व बैंक (RBI) द्वारा मौद्रिक नीति समिति (MPC) की बैठक में रेपो दर का निर्धारण किस मुख्य उद्देश्य से किया जाता है?',
+      options: ['विदेशी मुद्रा भंडार बढ़ाना', 'मुद्रास्फीति (महंगाई) को नियंत्रित करना व विकास को गति देना', 'शेयर बाजार में निवेश बढ़ाना', 'सोने के आयात को सीमित करना'],
+      correctOptionIndex: 1,
+      explanation: 'RBI की MPC समिति का प्राथमिक लक्ष्य मूल्य स्थिरता बनाए रखते हुए विकास को गति देना और मुद्रास्फीति को 4% (+/-2%) के लक्ष्य में रखना है।',
+      topicCategory: 'Economy'
+    },
+    {
+      questionId: 3,
+      questionText: 'भारतीय अंतरिक्ष अनुसंधान संगठन (ISRO) के आगामी गगनयान मिशन का मुख्य उद्देश्य क्या है?',
+      options: ['चंद्रमा के दक्षिणी ध्रुव पर मानव बस्ती बसाना', 'भारतीय अंतरिक्ष यात्रियों को पृथ्वी की निचली कक्षा (LEO) में भेजना', 'मंगल ग्रह पर रोवर उतारना', 'सूर्य के कोरोना का विस्तृत अध्ययन'],
+      correctOptionIndex: 1,
+      explanation: 'गगनयान भारत का पहला मानव अंतरिक्ष उड़ान मिशन है, जिसके तहत 3 सदस्यीय दल को 3 दिनों के लिए 400 किमी की निचली कक्षा में भेजा जाएगा।',
+      topicCategory: 'Science'
+    },
+    {
+      questionId: 4,
+      questionText: 'हाल ही में आयोजित बहुराष्ट्रीय समुद्री अभ्यास "MILAN" का आयोजन भारतीय नौसेना द्वारा किस नौसैनिक कमान के तहत किया गया?',
+      options: ['पश्चिमी नौसेना कमान (मुंबई)', 'पूर्वी नौसेना कमान (विशाखापत्तनम)', 'दक्षिणी नौसेना कमान (कोच्चि)', 'अंडमान और निकोबार कमान'],
+      correctOptionIndex: 1,
+      explanation: 'मिलन (MILAN) द्विवार्षिक बहुपक्षीय नौसैनिक अभ्यास है, जिसका आयोजन पूर्वी नौसेना कमान, विशाखापत्तनम द्वारा मित्र देशों के साथ किया जाता है।',
+      topicCategory: 'Defense'
+    },
+    {
+      questionId: 5,
+      questionText: 'अंतर्राष्ट्रीय सौर गठबंधन (International Solar Alliance - ISA) का मुख्यालय भारत के किस शहर में स्थित है?',
+      options: ['नई दिल्ली', 'गुरुग्राम (हरियाणा)', 'बेंगलुरु (कर्नाटक)', 'गांधीनगर (गुजरात)'],
+      correctOptionIndex: 1,
+      explanation: 'ISA का मुख्यालय गुरुग्राम (हरियाणा) में राष्ट्रीय सौर ऊर्जा संस्थान (NISE) परिसर में स्थित है।',
+      topicCategory: 'International'
+    },
+    {
+      questionId: 6,
+      questionText: 'भारत के संविधान के किस अनुच्छेद के तहत "संघ लोक सेवा आयोग" (UPSC) के अध्यक्ष व सदस्यों की नियुक्ति राष्ट्रपति द्वारा की जाती है?',
+      options: ['अनुच्छेद 280', 'अनुच्छेद 316', 'अनुच्छेद 324', 'अनुच्छेद 352'],
+      correctOptionIndex: 1,
+      explanation: 'संविधान के अनुच्छेद 316 के तहत UPSC तथा राज्य लोक सेवा आयोगों के अध्यक्ष और सदस्यों की नियुक्ति का प्रावधान है।',
+      topicCategory: 'National'
+    },
+    {
+      questionId: 7,
+      questionText: 'हाल ही में संपन्न राष्ट्रीय खेलों में सर्वश्रेष्ठ पुरुष एथलीट की "राजा भालिंद्र सिंह ट्रॉफी" किस राज्य/दल ने जीती?',
+      options: ['महाराष्ट्र', 'सर्विसेज (Services Sports Control Board)', 'हरियाणा', 'केरल'],
+      correctOptionIndex: 1,
+      explanation: 'राष्ट्रीय खेलों में ओवरऑल चैंपियनशिप के लिए सर्विसेज स्पोर्ट्स कंट्रोल बोर्ड (SSCB) को राजा भालिंद्र सिंह ट्रॉफी प्रदान की जाती है।',
+      topicCategory: 'Sports'
+    },
+    {
+      questionId: 8,
+      questionText: 'नीति आयोग (NITI Aayog) के वर्तमान पदेन अध्यक्ष (Ex-officio Chairperson) कौन होते हैं?',
+      options: ['भारत के राष्ट्रपति', 'भारत के प्रधानमंत्री', 'केंद्रीय वित्त मंत्री', 'RBI गवर्नर'],
+      correctOptionIndex: 1,
+      explanation: 'भारत के प्रधानमंत्री नीति आयोग के पदेन अध्यक्ष होते हैं।',
+      topicCategory: 'Appointments'
+    },
+    {
+      questionId: 9,
+      questionText: 'प्रतिवर्ष "राष्ट्रीय विज्ञान दिवस" (National Science Day) किस ऐतिहासिक वैज्ञानिक खोज के उपलक्ष्य में 28 फरवरी को मनाया जाता है?',
+      options: ['रामानुजन संख्या सिद्धांत', 'रमन प्रभाव (Raman Effect)', 'बोस-आइंस्टीन सांख्यिकी', 'परमाणु परीक्षण पोखरण'],
+      correctOptionIndex: 1,
+      explanation: 'सर सी.वी. रमन द्वारा 28 फरवरी 1928 को की गई रमन प्रभाव की खोज के सम्मान में प्रतिवर्ष 28 फरवरी को राष्ट्रीय विज्ञान दिवस मनाया जाता है।',
+      topicCategory: 'Days & Themes'
+    },
+    {
+      questionId: 10,
+      questionText: 'पर्यावरण एवं जलवायु परिवर्तन: भारत ने किस वर्ष तक "शुद्ध शून्य कार्बन उत्सर्जन" (Net Zero Carbon Emissions) का राष्ट्रीय लक्ष्य निर्धारित किया है?',
+      options: ['2047 तक', '2050 तक', '2070 तक', '2030 तक'],
+      correctOptionIndex: 2,
+      explanation: 'COP26 जलवायु शिखर सम्मेलन में भारत ने वर्ष 2070 तक शुद्ध शून्य (Net Zero) कार्बन उत्सर्जन प्राप्त करने की पंचामृत प्रतिज्ञा ली थी।',
+      topicCategory: 'Environment'
+    }
+  ];
+}
+
 /**
- * Helper to call Gemini Structured Quiz Generator
+ * Helper to call Gemini Structured Quiz Generator with robust Multi-AI Fallback
  */
-async function generateQuizWithGemini(prompt) {
+async function generateQuizWithGemini(prompt, dateString = '') {
   const candidateKeys = [
     process.env.GEMINI_API_KEY,
     process.env.GEMINI_API_KEY_2,
@@ -82,52 +249,84 @@ async function generateQuizWithGemini(prompt) {
       const response = await axios.post(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          contents: [{ role: 'user', parts: [{ text: `${prompt}\nRespond ONLY in valid JSON with an array named "quizzes". Keep questions & explanations concise.` }] }],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 8192,
-            responseMimeType: "application/json",
-            responseSchema: quizResponseSchema
+            maxOutputTokens: 4096,
+            responseMimeType: "application/json"
           }
         },
         {
-          timeout: 75000,
+          timeout: 45000,
           headers: { 'Content-Type': 'application/json' }
         }
       );
 
       const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error('Empty response from Gemini');
-      
-      try {
-        const parsed = JSON.parse(text);
-        if (parsed.quizzes && parsed.quizzes.length > 0) {
-          return parsed.quizzes;
-        }
-      } catch (jsonErr) {
-        // Fallback: extract individual MCQ blocks using regex if outer JSON fails
-        const questionBlocks = text.match(/\{\s*"questionId"[\s\S]*?"topicCategory"\s*:\s*"[^"]*"\s*\}/g);
-        if (questionBlocks && questionBlocks.length > 0) {
-          const recovered = [];
-          for (const block of questionBlocks) {
-            try {
-              recovered.push(JSON.parse(block));
-            } catch (e) {}
-          }
-          if (recovered.length > 0) {
-            return recovered;
-          }
-        }
-        throw jsonErr;
+      let quizzes = extractValidQuizzes(text);
+      if (quizzes.length >= 6) {
+        console.log(`[CurrentAffairs Quiz] Gemini generated ${quizzes.length} MCQs. Ensuring 10 questions...`);
+        quizzes = ensureTenQuestions(quizzes, dateString);
+        return quizzes;
       }
     } catch (err) {
       lastError = err;
-      console.warn(`[CurrentAffairs Quiz] Notice: ${err.message}. Trying next key...`);
+      console.warn(`[CurrentAffairs Quiz] Gemini Notice: ${err.message}. Trying next key...`);
     }
   }
 
-  console.warn(`[CurrentAffairs Quiz] All keys exhausted for quiz: ${lastError?.message}`);
-  return [];
+  // Fallback 2: Try Groq API
+  const GROQ_API_KEY = process.env.GROQ_API_KEY;
+  if (GROQ_API_KEY) {
+    try {
+      console.log('[CurrentAffairs Quiz] Trying Groq fallback for MCQs...');
+      const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: 'openai/gpt-oss-120b',
+        messages: [
+          { role: 'system', content: 'You are an expert exam quiz creator. You must output only valid JSON with "quizzes" array containing 10 MCQs.' },
+          { role: 'user', content: prompt }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.3,
+        max_tokens: 3000
+      }, {
+        headers: { Authorization: `Bearer ${GROQ_API_KEY}` },
+        timeout: 35000
+      });
+
+      const raw = groqRes.data?.choices?.[0]?.message?.content;
+      let quizzes = extractValidQuizzes(raw);
+      if (quizzes.length >= 6) {
+        console.log(`[CurrentAffairs Quiz] Groq generated ${quizzes.length} MCQs. Ensuring 10 questions...`);
+        quizzes = ensureTenQuestions(quizzes, dateString);
+        return quizzes;
+      }
+    } catch (groqErr) {
+      console.warn(`[CurrentAffairs Quiz] Groq fallback notice: ${groqErr.message}`);
+    }
+  }
+
+  console.warn(`[CurrentAffairs Quiz] All AI models failed. Using guaranteed High-Yield Exam MCQs bank.`);
+  return getDefaultEmergencyQuizzes(dateString);
+}
+
+function ensureTenQuestions(quizzes = [], dateString = '') {
+  const emergency = getDefaultEmergencyQuizzes(dateString);
+  const combined = [...quizzes];
+  
+  for (const em of emergency) {
+    if (combined.length >= 10) break;
+    // avoid duplicate question text
+    if (!combined.some(q => q.questionText.slice(0, 20) === em.questionText.slice(0, 20))) {
+      combined.push(em);
+    }
+  }
+
+  // Re-index question IDs 1..10
+  return combined.slice(0, 10).map((q, idx) => ({
+    ...q,
+    questionId: idx + 1
+  }));
 }
 
 /**
@@ -278,7 +477,7 @@ Rules:
 `;
 
   console.log(`[CurrentAffairs Service] Step 2: Generating 10 MCQs for ${dateString}...`);
-  const quizzes = await generateQuizWithGemini(quizPrompt);
+  const quizzes = await generateQuizWithGemini(quizPrompt, dateString);
 
   const cleanSlug = `daily-current-affairs-${dateString}-hindi-gk-quiz`;
   const sanitizedContent = sanitizeCurrentAffairsHtml(generatedData.content || '', dateString);
@@ -299,8 +498,28 @@ Rules:
   };
 }
 
+async function generateQuizForSummary(dateString, summary = '') {
+  const quizPrompt = `
+Generate exactly 10 high-yield, exam-standard Multiple Choice Questions (MCQs) in Hindi for Daily Current Affairs & GK Quiz (${dateString}):
+
+Summary Context:
+${summary || 'National governance, RBI economy, ISRO missions, defense exercises, sports, and appointments.'}
+
+Rules:
+1. Exactly 10 questions with questionId 1 to 10.
+2. 4 distinct options per question.
+3. correctOptionIndex must be an integer (0, 1, 2, or 3).
+4. Detailed explanation in Hindi explaining why the answer is correct.
+5. Cover: National, Economy, Defense, Sports, Appointments, International, Science.
+`;
+  return await generateQuizWithGemini(quizPrompt, dateString);
+}
+
 module.exports = {
   generateDailyCurrentAffairs,
+  generateQuizForSummary,
+  generateQuizWithGemini,
+  getDefaultEmergencyQuizzes,
   sanitizeCurrentAffairsHtml,
   fetchRawDailyNewsContext
 };

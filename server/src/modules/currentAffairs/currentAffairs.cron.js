@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const CurrentAffairs = require('./currentAffairs.model');
-const { generateDailyCurrentAffairs } = require('./currentAffairs.service');
+const { generateDailyCurrentAffairs, generateQuizForSummary } = require('./currentAffairs.service');
 
 /**
  * Executes the Daily Current Affairs & Quiz Automation
@@ -15,7 +15,14 @@ async function runDailyCurrentAffairsJob() {
   try {
     const existing = await CurrentAffairs.findOne({ dateString });
     if (existing) {
-      console.log(`[CurrentAffairs Cron] Article for ${dateString} is already published. Skipping.`);
+      if (!existing.quizzes || existing.quizzes.length === 0) {
+        console.log(`[CurrentAffairs Cron] Article for ${dateString} exists but quizzes are missing. Regenerating quizzes...`);
+        existing.quizzes = await generateQuizForSummary(dateString, existing.summary || '');
+        await existing.save();
+        console.log(`[CurrentAffairs Cron] Successfully attached ${existing.quizzes.length} MCQs to ${dateString}.`);
+      } else {
+        console.log(`[CurrentAffairs Cron] Article for ${dateString} is already published with ${existing.quizzes.length} MCQs. Skipping.`);
+      }
       return;
     }
 
