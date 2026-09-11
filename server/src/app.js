@@ -199,13 +199,14 @@ async function buildHomepageHtml() {
   let initialStories = [];
   let initialAlerts = [];
   let sarkariPosts = [];
+  let initialCurrentAffairs = [];
   let lcpPreloadTag = '';
 
   try {
     const mongoose = require('mongoose');
     const WebStory = mongoose.model('WebStory');
     const LiveAlert = mongoose.model('LiveAlert');
-    let initialCurrentAffairs = [];
+    const BlogPost = mongoose.model('BlogPost');
     const CurrentAffairs = mongoose.model('CurrentAffairs');
 
     const [storiesRes, alertsRes, sarkariRes, caRes] = await Promise.allSettled([
@@ -215,8 +216,8 @@ async function buildHomepageHtml() {
       CurrentAffairs.find({ status: 'published' }).sort({ publishDate: -1, createdAt: -1 }).limit(6).lean()
     ]);
 
-    initialStories = storiesRes.status === 'fulfilled' ? storiesRes.value : [];
-    const rawAlerts = alertsRes.status === 'fulfilled' ? alertsRes.value : [];
+    initialStories = storiesRes.status === 'fulfilled' ? (storiesRes.value || []) : [];
+    const rawAlerts = alertsRes.status === 'fulfilled' ? (alertsRes.value || []) : [];
     const nowTime = Date.now();
     initialAlerts = rawAlerts.map(a => {
       if (a.parsedPostDate && new Date(a.parsedPostDate).getTime() > nowTime) {
@@ -224,8 +225,8 @@ async function buildHomepageHtml() {
       }
       return a;
     });
-    sarkariPosts = sarkariRes.status === 'fulfilled' ? sarkariRes.value : [];
-    initialCurrentAffairs = caRes.status === 'fulfilled' ? caRes.value : [];
+    sarkariPosts = sarkariRes.status === 'fulfilled' ? (sarkariRes.value || []) : [];
+    initialCurrentAffairs = caRes.status === 'fulfilled' ? (caRes.value || []) : [];
 
     const firstImg = initialStories[0]?.slides?.[0]?.image;
     if (firstImg) {
