@@ -204,10 +204,10 @@ async function buildHomepageHtml() {
 
   try {
     const mongoose = require('mongoose');
-    const WebStory = mongoose.model('WebStory');
-    const LiveAlert = mongoose.model('LiveAlert');
-    const BlogPost = mongoose.model('BlogPost');
-    const CurrentAffairs = mongoose.model('CurrentAffairs');
+    const WebStory = mongoose.models.WebStory || mongoose.model('WebStory');
+    const LiveAlert = mongoose.models.LiveAlert || mongoose.model('LiveAlert');
+    const BlogPost = mongoose.models.BlogPost || mongoose.model('BlogPost');
+    const CurrentAffairs = mongoose.models.CurrentAffairs || mongoose.model('CurrentAffairs');
 
     const [storiesRes, alertsRes, sarkariRes, caRes] = await Promise.allSettled([
       WebStory.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean(),
@@ -235,12 +235,12 @@ async function buildHomepageHtml() {
         : firstImg;
       lcpPreloadTag = `<link rel="preload" as="image" href="${optimizedFirstImg}" fetchpriority="high">`;
     }
+
+    const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data || null).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories || []).replace(/</g, '\\u003c')}; window.__INITIAL_ALERTS__ = ${JSON.stringify(initialAlerts || []).replace(/</g, '\\u003c')}; window.__INITIAL_SARKARI_POSTS__ = ${JSON.stringify(sarkariPosts || []).replace(/</g, '\\u003c')}; window.__INITIAL_CURRENT_AFFAIRS__ = ${JSON.stringify(initialCurrentAffairs || []).replace(/</g, '\\u003c')};</script>`;
+    html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
   } catch (ssrErr) {
     console.warn('Failed to pre-fetch initial SSR data:', ssrErr.message);
   }
-
-  const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(data || null).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories).replace(/</g, '\\u003c')}; window.__INITIAL_ALERTS__ = ${JSON.stringify(initialAlerts).replace(/</g, '\\u003c')}; window.__INITIAL_SARKARI_POSTS__ = ${JSON.stringify(sarkariPosts).replace(/</g, '\\u003c')}; window.__INITIAL_CURRENT_AFFAIRS__ = ${JSON.stringify(initialCurrentAffairs).replace(/</g, '\\u003c')};</script>`;
-  html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
 
   // Inject static HTML links for SEO crawlers (limited to top 30 latest posts + top 30 live alerts)
   try {
