@@ -41,13 +41,27 @@ export default function Layout({ children }) {
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catAnchor, setCatAnchor] = useState(null);
-  const isDeferredMounted = useDeferredMount(2500);
 
   useEffect(() => {
-    if (isDeferredMounted) {
+    let triggered = false;
+    function loadPush() {
+      if (triggered) return;
+      triggered = true;
+      cleanup();
       import('../../../shared/lib/onesignal').then(m => m.initOneSignal()).catch(() => {});
     }
-  }, [isDeferredMounted]);
+
+    const events = ['touchstart', 'scroll', 'click'];
+    events.forEach(evt => window.addEventListener(evt, loadPush, { once: true, passive: true }));
+    const timer = setTimeout(loadPush, 8000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      events.forEach(evt => window.removeEventListener(evt, loadPush));
+    }
+
+    return cleanup;
+  }, []);
 
   const categories = [
     { label: 'Sarkari Jobs & Exams', path: '/category/sarkari-jobs-exams' },

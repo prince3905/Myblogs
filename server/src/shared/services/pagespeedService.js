@@ -2,48 +2,53 @@ const axios = require('axios');
 const serverCacheService = require('./serverCacheService');
 
 async function runPageSpeedAudit(targetUrl = 'https://www.digitalhomeblog.in', strategy = 'desktop') {
-  const apiKey = process.env.PAGESPEED_API_KEY || process.env.PSI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyAgIM5iOgxLZslRaLPAk1DrwelhjOFm6Jc';
-  
-  let primaryApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=${strategy}&category=performance&category=accessibility&category=best-practices&category=seo`;
-  if (apiKey) {
-    primaryApiUrl += `&key=${encodeURIComponent(apiKey)}`;
-  }
-
-  const fallbackApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=${strategy}&category=performance&category=accessibility&category=best-practices&category=seo`;
+  const candidateKeys = [
+    process.env.PAGESPEED_API_KEY,
+    process.env.PSI_API_KEY,
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_2,
+    process.env.GEMINI_API_KEY_3,
+    process.env.GEMINI_API_KEY_4,
+    process.env.GEMINI_API_KEY_5
+  ].filter(Boolean);
 
   console.log(`[PageSpeed Service] Running ${strategy} full multi-category audit for ${targetUrl}...`);
 
   let responseData = null;
-  try {
-    const response = await axios.get(primaryApiUrl, {
-      timeout: 12000,
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
-    });
-    responseData = response.data;
-  } catch (primaryErr) {
-    console.warn('[PageSpeed Service] Primary Google API call failed/timed-out. Retrying fallback unauthenticated endpoint...', primaryErr.response?.data?.error?.message || primaryErr.message);
+  let lastError = null;
+
+  for (const apiKey of (candidateKeys.length > 0 ? candidateKeys : [''])) {
+    let primaryApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(targetUrl)}&strategy=${strategy}&category=performance&category=accessibility&category=best-practices&category=seo`;
+    if (apiKey) {
+      primaryApiUrl += `&key=${encodeURIComponent(apiKey)}`;
+    }
+
     try {
-      const fallbackResponse = await axios.get(fallbackApiUrl, {
-        timeout: 12000,
+      const response = await axios.get(primaryApiUrl, {
+        timeout: 40000,
         headers: {
           'Accept': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
       });
-      responseData = fallbackResponse.data;
-    } catch (fallbackErr) {
-      const statusCode = fallbackErr.response?.status || primaryErr.response?.status;
-      let userMsg = fallbackErr.response?.data?.error?.message || primaryErr.response?.data?.error?.message || fallbackErr.message;
-      console.warn(`[PageSpeed Service] Google API unavailable (${userMsg}). Gracefully returning without heavy local CLI execution to protect server CPU.`);
-      return {
-        success: false,
-        error: userMsg || 'Google PageSpeed API temporarily rate-limited or unavailable',
-        statusCode
-      };
+      responseData = response.data;
+      if (responseData && responseData.lighthouseResult) {
+        break;
+      }
+    } catch (err) {
+      lastError = err;
+      console.warn(`[PageSpeed Service] API attempt with key ending in ${apiKey.slice(-6)} failed:`, err.response?.data?.error?.message || err.message);
     }
+  }
+
+  if (!responseData || !responseData.lighthouseResult) {
+    const errorMsg = lastError?.response?.data?.error?.message || lastError?.message || 'Google PageSpeed API rate-limited or unavailable';
+    console.warn(`[PageSpeed Service] Audit failed: ${errorMsg}`);
+    return {
+      success: false,
+      error: errorMsg,
+      statusCode: lastError?.response?.status || 500
+    };
   }
 
   try {

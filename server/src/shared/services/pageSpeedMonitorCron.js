@@ -147,14 +147,27 @@ async function runDailyPageSpeedAudit() {
   }
 
   // Summary Log
-  const summaryMessage = `PageSpeed 2x Daily Check complete. ${results.map(r => `${r.target} (M: ${r.mScore}, D: ${r.dScore})`).join(' | ')}`;
+  if (results.length === 0) {
+    const failedMsg = 'PageSpeed 2x Daily Check could not audit any pages (Google API Quota or Network Timeout).';
+    console.warn(`[PageSpeed Monitor Cron] ${failedMsg}`);
+    await logAutomation({
+      service: 'PAGESPEED_MONITOR',
+      level: 'ERROR',
+      action: '2x Daily PageSpeed Audit Incomplete',
+      message: '⚠️ Could not fetch PageSpeed scores from Google API. Check API keys and network status.',
+      metadata: { summary: failedMsg, totalPagesAudited: 0, overallNeedImprovement: true }
+    });
+    return { results: [], overallNeedImprovement: true };
+  }
+
+  const summaryMessage = `PageSpeed 2x Daily Check complete (${results.length} pages audited). ${results.map(r => `${r.target} (M: ${r.mScore}, D: ${r.dScore})`).join(' | ')}`;
   console.log(`[PageSpeed Monitor Cron] ${summaryMessage}`);
 
   await logAutomation({
     service: 'PAGESPEED_MONITOR',
     level: overallNeedImprovement ? 'WARN' : 'SUCCESS',
     action: '2x Daily PageSpeed Audit Complete',
-    message: overallNeedImprovement ? '⚠️ One or more pages have scores below 90/100. Optimization details logged.' : '✅ All key pages meet the 90+ speed target!',
+    message: overallNeedImprovement ? `⚠️ One or more pages have scores below ${TARGET_SCORE}/100. Optimization details logged.` : `✅ All ${results.length} key pages meet the ${TARGET_SCORE}+ speed target!`,
     metadata: { summary: summaryMessage, totalPagesAudited: results.length, overallNeedImprovement }
   });
 
