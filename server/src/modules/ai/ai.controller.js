@@ -364,12 +364,20 @@ function markdownToHtml(text) {
   // Always convert markdown tables to HTML tables first, even if the rest of the text is HTML
   h = convertMarkdownTablesToHtml(h);
   
+  // Strip fake picture placeholders completely
+  h = h.replace(/<picture[\s\S]*?<\/picture>/gi, '');
+  h = h.replace(/<source[^>]*>/gi, '');
+  h = h.replace(/<img[^>]*placeholder[^>]*>/gi, '');
+
+  // Separate glued markdown headings (e.g. text## Heading -> text\n\n## Heading)
+  h = h.replace(/([^\n])\s*(#{1,4}\s+[^\n]+)/g, '$1\n\n$2\n\n');
+
   // Strip leading + prefix only (AI artifact for headings)
   h = h.replace(/^\+[ \t]*/gm, '');
   // Convert markdown headings to HTML headings
-  h = h.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
-  h = h.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
-  h = h.replace(/^#\s+(.+)$/gm, '<h2>$1</h2>');
+  h = h.replace(/^[ \t]*###\s+(.+)$/gm, '<h3>$1</h3>');
+  h = h.replace(/^[ \t]*##\s+(.+)$/gm, '<h2>$1</h2>');
+  h = h.replace(/^[ \t]*#\s+(.+)$/gm, '<h2>$1</h2>');
   // Blockquotes
   h = h.replace(/^>\s+(.+)$/gm, '<blockquote>$1</blockquote>');
   // Strip any remaining stray backticks
@@ -770,10 +778,7 @@ ${ADSENSE_CONSTRAINTS}
 - CTA LINK ANCHORING: All critical hyperlinks (Apply Online, Download Admit Card, Official Website) must be grouped cleanly under an explicit 'महत्वपूर्ण लिंक्स' H2 heading using clear bullet points and emoji indicators.
 
 **PAGE SPEED 100/100 RULES (MANDATORY):**
-- IMAGES: NEVER include raw JPEG/PNG in content. All images must use <picture> element with WebP format.
-  - First/hero image at top: fetchpriority="high" — NO loading="lazy"
-  - All other images: loading="lazy" + width="800" height="450" + style="width:100%; height:auto; object-fit:cover;
-  - Required format (do NOT output external image URLs like Unsplash to avoid safety filters; strictly use local placeholders and replace [SEO-Alt] with a descriptive, search-oriented Alt tag using the main focus keyword combined with modifiers like 'Notification Image', 'Apply Online Portal', 'Syllabus Details', e.g. alt="UP Dairy Development Vacancy 2026 Notification Details Image"): <picture><source srcset="/assets/images/placeholder.webp" type="image/webp" /><img src="/assets/images/placeholder.jpg" alt="[SEO-Alt]" width="800" height="450" style="width:100%; height:auto; object-fit:cover;" fetchpriority="high" /></picture>
+- IMAGES: Do NOT output fake image placeholders, broken <img> tags, or raw placeholder markup inside the content body. The featured image is handled automatically by the server. Keep body text 100% clean semantic HTML (headings, paragraphs, bullet lists, and structured data tables only).
 - ZERO BACKGROUND SCRIPTS: content MUST NOT contain any script tags, iframes, crypto widgets, OKX API calls, useEffect hooks, fetch calls to external APIs, or any JavaScript execution code. Page must be 100% clean static content only.
 - Keep the output clean HTML with no embedded scripts, no external resource calls.
 
@@ -1405,21 +1410,28 @@ async function convertYoutubeToBlog(req, res) {
   }
 }
 
-async function generateImagePrompt(title) {
-  const prompt = `Write a detailed, high-CTR AI image generator prompt for a blog post thumbnail based on the title: "${title}".
-You must describe a premium, professional infographic-style post thumbnail layout that follows these strict design rules:
-1. COLOR PALETTE: Deep dark blue (navy/indigo) and vibrant yellow contrast theme. High visual impact.
-2. CENTRAL VISUAL: A clean, realistic, central visual photograph representing the topic:
-   - Space/Science (ISRO): Indian space rocket or launchpad.
-   - Transport/Conductor (UPSRTC): Indian local transit bus or station.
-   - Navy/Defense (Navy SSC): Indian Navy warship or officers in uniform.
-   - Teaching/ECCE (KGVB, Anganwadi): Indian classroom board or school desks.
-   - Technology/Business/Money: modern gadgets, computers, or Indian Rupee notes.
-   - Engineering/Technical (Junior Engineer): blueprints, building construction site, or drafting tools.
-3. DUAL-LANGUAGE TEXT OVERLAY: Specify a bold, high-contrast text overlay containing a short English title (e.g. "UPRTOU YOGA 2026") and its Hindi translation in Devanagari script (e.g. "यूपीआरटू योग प्रवेश 2026") printed clearly on the thumbnail in clean modern typography.
-4. KEY FEATURE BADGES: Include two professional gold and navy blue shield-shaped circular badges on the sides with clean icons and small text overlay: "Time-Saving" on one badge, and a relevant trust badge like "Official Alert" or "Authorized University" on the other.
-5. MINIMAL CLUTTER: Clean composition, balanced layout, no messy design details.
-6. Return ONLY the description prompt in plain English (maximum 55 words, no conversational filler, no introductory verbs like "Create a image").`;
+async function generateImagePrompt(title, category = '') {
+  let categoryGuidance = 'infographic-style post thumbnail layout with vibrant contrasting colors';
+  const catLower = (category || '').toLowerCase();
+
+  if (catLower.includes('finance') || catLower.includes('money') || catLower.includes('business')) {
+    categoryGuidance = 'cinematic financial markets editorial photo, global trade, stock exchange screens or commodities, high-contrast professional lighting, ultra-realistic 4k';
+  } else if (catLower.includes('tech') || catLower.includes('ai') || catLower.includes('tools') || catLower.includes('tutorial')) {
+    categoryGuidance = 'futuristic modern technology, sleek devices, glowing neural AI network, code interface, clean minimalist workspace, 4k ultra-detailed';
+  } else if (catLower.includes('health') || catLower.includes('wellness') || catLower.includes('ayurveda')) {
+    categoryGuidance = 'natural organic herbs, healthy lifestyle wellness, clean bright medical aesthetic, botanical wellness photography, serene lighting';
+  } else if (catLower.includes('news') || catLower.includes('trend')) {
+    categoryGuidance = 'dramatic news photojournalism, high-impact storytelling, crisp professional editorial photography, authentic atmosphere';
+  } else if (catLower.includes('sarkari') || catLower.includes('job') || catLower.includes('exam')) {
+    categoryGuidance = 'official government notification theme, study desk with documents, badge, clean typography aesthetic';
+  }
+
+  const prompt = `Write a detailed, high-CTR AI image generator prompt for a blog post banner based on the title: "${title}" (Category: ${category || 'General'}).
+Visual style guidelines:
+- Style: ${categoryGuidance}.
+- Do NOT include messy tiny text or illegible letters.
+- Focus on high visual impact, clean composition, vibrant lighting, and high-CTR appeal.
+- Return ONLY the image prompt description in plain English (maximum 40 words, no intro words like "Create an image").`;
 
   const keys = [
     process.env.GEMINI_API_KEY,
@@ -1465,7 +1477,7 @@ You must describe a premium, professional infographic-style post thumbnail layou
     if (GROQ_API_KEY) {
       try {
         const groqResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-          model: 'llama-3.1-8b-instant',
+          model: 'qwen/qwen3.8-27b',
           messages: [
             { role: 'user', content: prompt }
           ],

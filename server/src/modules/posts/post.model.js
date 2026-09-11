@@ -249,22 +249,45 @@ blogPostSchema.pre('save', async function (next) {
       content = content.replace(/(?:<br\s*\/?>\s*){2,}/gi, '<br>');
       content = content.replace(/[ \t]{3,}/g, ' '); // Normalize spaces but keep line breaks
 
-      // F. Auto Interlink Engine: Ensure every post contains links to other relevant published posts
+      // F. Auto Interlink Engine: Ensure every post contains links to other relevant published posts in the SAME category
       if (!content.includes('related-posts-box')) {
         try {
-          const recentOtherPosts = await mongoose.model('BlogPost').find({
+          const categoryFilter = post.category ? { category: post.category } : {};
+          let recentOtherPosts = await mongoose.model('BlogPost').find({
             _id: { $ne: post._id },
+            ...categoryFilter,
             status: 'published'
           }).sort({ publishedAt: -1 }).limit(3).lean();
 
+          if (!recentOtherPosts || recentOtherPosts.length === 0) {
+            recentOtherPosts = await mongoose.model('BlogPost').find({
+              _id: { $ne: post._id },
+              status: 'published'
+            }).sort({ publishedAt: -1 }).limit(3).lean();
+          }
+
           if (recentOtherPosts && recentOtherPosts.length > 0) {
+            const catLower = (post.category || '').toLowerCase();
+            let relatedTitle = '📢 यह भी पढ़ें (Related Articles & Guides):';
+            if (catLower.includes('sarkari') || catLower.includes('job')) {
+              relatedTitle = '📢 यह भी पढ़ें (Related Job Updates & Recruitment):';
+            } else if (catLower.includes('finance') || catLower.includes('money') || catLower.includes('business')) {
+              relatedTitle = '📢 यह भी पढ़ें (Related Finance & Investment Guides):';
+            } else if (catLower.includes('tech') || catLower.includes('tutorial')) {
+              relatedTitle = '📢 यह भी पढ़ें (Related Tech & Software Tutorials):';
+            } else if (catLower.includes('ai') || catLower.includes('tool')) {
+              relatedTitle = '📢 यह भी पढ़ें (Related AI & Web Tools Guides):';
+            } else if (catLower.includes('health') || catLower.includes('wellness')) {
+              relatedTitle = '📢 यह भी पढ़ें (Related Health & Wellness Tips):';
+            }
+
             const linksHtml = recentOtherPosts.map(p => {
-              const catSlug = (p.category || 'sarkari-jobs-exams').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+              const catSlug = (p.category || 'blog').toLowerCase().replace(/[^a-z0-9]+/g, '-');
               const postUrl = `https://www.digitalhomeblog.in/blog/${catSlug}/${p.slug}`;
               return `<li style="margin-bottom: 6px;"><a href="${postUrl}" style="color: #2563eb; text-decoration: underline; font-weight: 600;" target="_blank" rel="noopener noreferrer">${p.title}</a></li>`;
             }).join('\n');
 
-            const relatedBox = `\n<div class="ql-table-embed">\n<div class="related-posts-box" style="margin: 25px 0; padding: 15px 20px; background: #f8fafc; border-left: 4px solid #2563eb; border-radius: 8px;">\n  <strong style="color: #1e293b; font-size: 1rem; display: block; margin-bottom: 8px;">📢 यह भी पढ़ें (Related Job Updates & News):</strong>\n  <ul style="margin: 0; padding-left: 20px; color: #2563eb;">\n${linksHtml}\n  </ul>\n</div>\n</div>\n`;
+            const relatedBox = `\n<div class="ql-table-embed">\n<div class="related-posts-box" style="margin: 25px 0; padding: 15px 20px; background: #f8fafc; border-left: 4px solid #2563eb; border-radius: 8px;">\n  <strong style="color: #1e293b; font-size: 1rem; display: block; margin-bottom: 8px;">${relatedTitle}</strong>\n  <ul style="margin: 0; padding-left: 20px; color: #2563eb;">\n${linksHtml}\n  </ul>\n</div>\n</div>\n`;
 
             content = content + relatedBox;
           }
@@ -320,32 +343,37 @@ blogPostSchema.pre('save', async function (next) {
       // Strip old search intent box so it upgrades to the new High-CTR clickable button layout
       content = content.replace(/<div[^>]*class=["']search-intent-box["'][^]*?<\/div>/gi, '');
 
-      // Resolve 100% real official board URLs and purge competitor links
-      const { resolveOfficialUrls, isSarkariResultUrl } = require('../../shared/utils/officialDomainResolver');
-      const resolvedUrls = resolveOfficialUrls(post.title, alertObj, post.sourceUrl);
-
-      const defaultApplyUrl = resolvedUrls.apply;
-      const defaultPdfUrl = resolvedUrls.pdf;
-      const defaultWebUrl = resolvedUrls.web;
-
-      // Auto-inject Hinglish Long-Tail Keyword Intent Box for Rank 1 Google Search with High-CTR Action Buttons
-      const { injectNaturalKeywordBox } = require('../../shared/utils/naturalKeywordEngine');
-      content = injectNaturalKeywordBox(content, post.title, post.focusKeyword, {
-        apply: defaultApplyUrl,
-        pdf: defaultPdfUrl,
-        web: defaultWebUrl
-      });
-
-      // 2. Prettify and place the "महत्वपूर्ण लिंक्स" (Important Links) buttons section strictly at the VERY BOTTOM of article
-      const { generateSmartActionButtons } = require('../../shared/utils/smartButtonGenerator');
-      const newSmartButtonsBlock = generateSmartActionButtons(post.title, resolvedUrls);
-
       // Strip any existing "महत्वपूर्ण लिंक्स" / "Important Links" sections from content to avoid duplication
       content = content.replace(/<h[23][^>]*>[^<]*?(?:महत्वपूर्ण|Important|Useful)[^<]*?लिंक्स?[^<]*?<\/h[23]>([^]*?)(?=<h[23]|<div class=["'](?:search-intent-box|games-promo-block|brand-authority-block)["']|$)/gi, '');
       content = content.replace(/<h2>(?:महत्वपूर्ण लिंक्स?|Important Links?|Useful Links?|Some Useful Important Links|महत्वपूर्ण लिंक्स \(Important Direct Links\))<\/h2>([^]*?)(?=<h[23]|<div class=["'](?:search-intent-box|games-promo-block|brand-authority-block)["']|$)/gi, '');
 
-      // Append "महत्वपूर्ण लिंक्स" section strictly at the bottom
-      content += `\n<h2>महत्वपूर्ण लिंक्स (Important Direct Links)</h2>${newSmartButtonsBlock}`;
+      const { resolveOfficialUrls, isSarkariResultUrl } = require('../../shared/utils/officialDomainResolver');
+      const resolvedUrls = isJobPost ? resolveOfficialUrls(post.title, alertObj, post.sourceUrl) : { apply: '', pdf: '', web: '' };
+      const defaultApplyUrl = resolvedUrls.apply;
+      const defaultPdfUrl = resolvedUrls.pdf;
+      const defaultWebUrl = resolvedUrls.web;
+
+      if (isJobPost) {
+        // Auto-inject Hinglish Long-Tail Keyword Intent Box for Rank 1 Google Search with High-CTR Action Buttons
+        const { injectNaturalKeywordBox } = require('../../shared/utils/naturalKeywordEngine');
+        content = injectNaturalKeywordBox(content, post.title, post.focusKeyword, {
+          apply: defaultApplyUrl,
+          pdf: defaultPdfUrl,
+          web: defaultWebUrl
+        }, post.category || 'Sarkari Jobs & Exams');
+
+        // 2. Prettify and place the "महत्वपूर्ण लिंक्स" (Important Links) buttons section strictly at the VERY BOTTOM of article
+        const { generateSmartActionButtons } = require('../../shared/utils/smartButtonGenerator');
+        const newSmartButtonsBlock = generateSmartActionButtons(post.title, resolvedUrls);
+
+        // Append "महत्वपूर्ण लिंक्स" section strictly for Sarkari Job Posts
+        content += `\n<h2>महत्वपूर्ण लिंक्स (Important Direct Links)</h2>${newSmartButtonsBlock}`;
+      } else {
+        // For Non-Sarkari Categories (Tech, Finance, Health, AI, News):
+        // Auto-inject Category-specific search intent box
+        const { injectNaturalKeywordBox } = require('../../shared/utils/naturalKeywordEngine');
+        content = injectNaturalKeywordBox(content, post.title, post.focusKeyword, {}, post.category || 'Technology');
+      }
 
       // 3. Create fresh games promotion block
       const gamesPromo = `\n<div class="ql-table-embed">\n<div class="games-promo-block" style="margin: 30px 0; padding: 24px; border-radius: 16px; border: 1px solid #e5e7eb; background: linear-gradient(135deg, #fef08a 0%, #fef9c3 100%); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); text-align: left; position: relative; overflow: hidden;">
@@ -361,11 +389,19 @@ blogPostSchema.pre('save', async function (next) {
   </div>
 </div>\n</div>\n`;
 
-      // 5. Create fresh brand authority block
-      const brandPromo = `\n<div class="ql-table-embed">
+      // 5. Create category-appropriate fresh brand authority block
+      let brandPromo = '';
+      if (isJobPost) {
+        brandPromo = `\n<div class="ql-table-embed">
 <div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; font-family: inherit;'>
 <p>यह महत्वपूर्ण जानकारी <strong><a href="/blog" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Digital Home Blog</a></strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong><a href="/category/sarkari-jobs-exams" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Government Job Vacancy & Result 2026</a></strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong><a href="/" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Home</a></strong> aur <strong><a href="/blog" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>
 </div>\n</div>\n`;
+      } else {
+        brandPromo = `\n<div class="ql-table-embed">
+<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; font-family: inherit;'>
+<p>यह लेख <strong><a href="/blog" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Digital Home Blog</a></strong> के एक्सपर्ट्स द्वारा रिसर्च करके तैयार किया गया है। हम अपने पाठकों तक टेक, फाइनेंस, हेल्थ और ट्रेंडिंग न्यूज की सटीक जानकारियां पहुंचाते हैं। ऐसे ही उपयोगी आर्टिकल्स और गाइड्स पढ़ने के लिए हमारे <strong><a href="/" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Home</a></strong> aur <strong><a href="/blog" style="margin: 2px 6px; display: inline-block; color: #4f46e5; text-decoration: none; font-weight: 700;">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>
+</div>\n</div>\n`;
+      }
 
       content += gamesPromo + brandPromo;
 

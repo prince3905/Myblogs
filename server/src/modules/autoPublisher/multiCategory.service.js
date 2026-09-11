@@ -1,7 +1,14 @@
 const axios = require('axios');
 const mongoose = require('mongoose');
-const { generateBlogContentCore } = require('../ai/ai.controller');
+const cloudinary = require('cloudinary').v2;
+const { generateBlogContentCore, generateImagePrompt } = require('../ai/ai.controller');
 const { logAutomation } = require('../../shared/utils/automationLogger');
+
+cloudinary.config({
+  cloud_name: 'drkm1wo9o',
+  api_key: '479412262566892',
+  api_secret: '_J0pP4VbLy-TL5vAVoRpaFjJFxg',
+});
 
 // Fallback high-intent seed topics if RSS feed is unreachable
 const CATEGORY_SEEDS = {
@@ -179,34 +186,60 @@ async function isTopicAlreadyPublished(topic, category) {
 }
 
 /**
- * Fetch a 100% topic-relevant high-resolution landscape banner image
+ * Fetch or Generate a 100% topic-relevant high-resolution landscape banner image
  */
 async function getCategoryBannerImage(category, topic = '') {
+  // 1. First priority: Generate 100% topic-tailored AI banner and upload to Cloudinary CDN
+  if (topic) {
+    try {
+      console.log(`[MultiCategory Image] Generating AI Banner for "${topic}" in category: "${category}"...`);
+      let visualPrompt = '';
+      try {
+        visualPrompt = await generateImagePrompt(topic, category);
+      } catch (err) {
+        visualPrompt = `${category} editorial photography, ${topic}, 4k ultra realistic, vibrant cinematic lighting`;
+      }
+
+      const seed = Math.floor(Math.random() * 1000000);
+      const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(visualPrompt)}?width=1200&height=675&nologo=true&seed=${seed}&model=flux`;
+      
+      console.log(`[MultiCategory Image] Uploading generated AI banner to Cloudinary...`);
+      const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
+        folder: 'myblogs',
+        transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
+      });
+
+      if (uploadResult && uploadResult.secure_url) {
+        console.log(`[MultiCategory Image] AI Banner uploaded successfully: ${uploadResult.secure_url}`);
+        return uploadResult.secure_url;
+      }
+    } catch (aiErr) {
+      console.warn(`[MultiCategory Image] AI image generation notice: ${aiErr.message}. Trying Pexels/Fallbacks...`);
+    }
+  }
+
+  // 2. Fallback: Search Pexels with clean contextual query
   const pexelsKey = process.env.PEXELS_API_KEY;
   if (pexelsKey && topic) {
     try {
-      // Extract clean search keywords from topic
       const searchKeywords = topic
         .replace(/^(how to|what is|top \d+|best|in \d{4}|guide|tutorial)\s+/gi, '')
         .replace(/[^a-zA-Z0-9\s]/g, '')
         .trim()
         .split(/\s+/)
-        .slice(0, 3)
+        .slice(0, 4)
         .join(' ');
 
       if (searchKeywords.length >= 3) {
-        console.log(`[MultiCategory Image] Searching Pexels for topic keywords: "${searchKeywords}"...`);
         const res = await axios.get('https://api.pexels.com/v1/search', {
-          params: { query: searchKeywords, per_page: 5, orientation: 'landscape' },
+          params: { query: `${searchKeywords} ${category.split(' ')[0]}`, per_page: 5, orientation: 'landscape' },
           headers: { Authorization: pexelsKey },
           timeout: 6000
         });
 
         const photos = res.data?.photos;
         if (photos && photos.length > 0) {
-          const picked = photos[0].src.landscape || photos[0].src.large2x || photos[0].src.large;
-          console.log(`[MultiCategory Image] Found topic-matched photo on Pexels: ${picked}`);
-          return picked;
+          return photos[0].src.landscape || photos[0].src.large2x || photos[0].src.large;
         }
       }
     } catch (err) {
@@ -214,7 +247,7 @@ async function getCategoryBannerImage(category, topic = '') {
     }
   }
 
-  // Fallback to high-res curated Unsplash photos
+  // 3. Fallback to curated high-res Unsplash photos
   const images = CATEGORY_FEATURED_IMAGES[category] || CATEGORY_FEATURED_IMAGES['Tech & Tutorials'];
   const randomIndex = Math.floor(Math.random() * images.length);
   return images[randomIndex];
