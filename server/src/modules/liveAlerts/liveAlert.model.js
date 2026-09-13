@@ -37,13 +37,31 @@ liveAlertSchema.pre('save', function (next) {
     this.parsedPostDate = this.createdAt ? new Date(this.createdAt) : now;
   }
 
-  // Pre-save guard: Automatic expiration of past-year alerts
+  // Pre-save guard: Automatic expiration of past-year alerts for JOB VACANCIES only
   if (this.title) {
     const titleLower = this.title.toLowerCase();
-    const hasPastYear = /\b(2025|2024|2023|2022|2021|2020)\b/.test(titleLower);
-    const hasCurrentOrFutureYear = /\b(2026|2027)\b/.test(titleLower);
-    if (hasPastYear && !hasCurrentOrFutureYear) {
-      this.status = 'expired';
+    const isNonApplicationNotice =
+      this.category === 'Result' ||
+      this.category === 'Admit Card' ||
+      this.category === 'Answer Key' ||
+      this.category === 'Syllabus' ||
+      this.category === 'Admission' ||
+      this.category === 'Certificate Verification' ||
+      /\b(admit card|result|answer key|syllabus|counselling|counseling|merit list|score card|exam date|city intimation|cut ?off|allotment)\b/i.test(titleLower);
+
+    if (!isNonApplicationNotice) {
+      const hasPastYear = /\b(2025|2024|2023|2022|2021|2020)\b/.test(titleLower);
+      const hasCurrentOrFutureYear = /\b(2026|2027|2028)\b/.test(titleLower);
+      if (hasPastYear && !hasCurrentOrFutureYear) {
+        this.status = 'expired';
+      }
+    } else {
+      // For results/admit cards/answer keys, only expire ancient items (2021 or older)
+      const isAncient = /\b(19\d\d|200\d|201\d|202[0-1])\b/.test(titleLower);
+      const hasRecentYear = /\b(202[2-8])\b/.test(titleLower);
+      if (isAncient && !hasRecentYear) {
+        this.status = 'expired';
+      }
     }
   }
 

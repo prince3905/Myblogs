@@ -15,7 +15,15 @@ mongoose.connection.on('error', (err) => {
 });
 
 async function start() {
-  await mongoose.connect(env.mongoUri);
+  await mongoose.connect(env.mongoUri, {
+    serverSelectionTimeoutMS: 30000,
+    socketTimeoutMS: 45000,
+    connectTimeoutMS: 30000,
+    maxPoolSize: 50,
+    minPoolSize: 5,
+    heartbeatFrequencyMS: 10000,
+    retryWrites: true,
+  });
   await seedAdmin();
   initScheduler();
   initCurrentAffairsCron();

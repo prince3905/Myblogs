@@ -476,65 +476,6 @@ export default function BlogListPage() {
             {/* Ad Slot */}
             <AdSlot format="sidebar" />
 
-            {/* Newsletter Card */}
-            <Paper
-              elevation={0}
-              sx={{ 
-                p: 2.5,
-                borderRadius: 3,
-                background: '#050816',
-                color: 'white',
-                textAlign: 'center',
-                width: '100%',
-                maxWidth: '100%',
-                boxSizing: 'border-box',
-                overflow: 'hidden'
-              }}
-            >
-              <Mail sx={{ fontSize: 28, mb: 1, color: '#818CF8' }} />
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: 'white', fontSize: '1rem' }}>
-                Stay Updated
-              </Typography>
-              <Typography variant="caption" sx={{ mb: 2, display: 'block', color: 'rgba(255,255,255,0.9)' }}>
-                Get the latest insights. No spam.
-              </Typography>
-              <Box 
-                component="form"
-                sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}
-              >
-                <TextField
-                  type="email"
-                  placeholder="your@email.com"
-                  size="small"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      bgcolor: 'rgba(255,255,255,0.95)',
-                      '& fieldset': { border: 'none' },
-                      height: 40,
-                    }
-                  }}
-                />
-                <Button 
-                  type="submit"
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    bgcolor: '#4F46E5',
-                    color: 'white',
-                    fontWeight: 600,
-                    fontSize: '0.8rem',
-                    borderRadius: 2,
-                    '&:hover': { bgcolor: '#4338CA' }
-                  }}
-                >
-                  Subscribe
-                </Button>
-              </Box>
-              <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem' }}>
-                No spam. Unsubscribe anytime.
-              </Typography>
-            </Paper>
           </Box>
         </Box>
       </Container>

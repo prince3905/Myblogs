@@ -283,15 +283,29 @@ async function publishMultiCategoryPost(targetCategory, manualTopic = null) {
 
   console.log(`[MultiCategory Auto] Generating in-depth content for topic: "${selectedTopic}"...`);
 
-  // 2. Generate 2,000+ words in-depth article using the AI Prompting Architecture
-  const generatedData = await generateBlogContentCore({
-    title: selectedTopic,
-    category: category,
-    model: 'gemini-2.5-flash',
-    length: 'long',
-    language: 'hinglish',
-    tone: 'informative'
-  });
+  // 2. Generate 2,000+ words in-depth article using the AI Prompting Architecture (with retry on transient 503/network spikes)
+  let generatedData = null;
+  let attempts = 0;
+  while (attempts < 3 && !generatedData) {
+    attempts++;
+    try {
+      generatedData = await generateBlogContentCore({
+        title: selectedTopic,
+        category: category,
+        model: 'gemini-2.5-flash',
+        length: 'long',
+        language: 'hinglish',
+        tone: 'informative'
+      });
+    } catch (aiErr) {
+      console.warn(`[MultiCategory Auto] AI generation attempt ${attempts} failed:`, aiErr.message);
+      if (attempts < 3) {
+        await new Promise(r => setTimeout(r, 4000));
+      } else {
+        throw aiErr;
+      }
+    }
+  }
 
   if (!generatedData || !generatedData.content || generatedData.content.length < 500) {
     throw new Error(`AI generation failed or returned thin content for topic: ${selectedTopic}`);

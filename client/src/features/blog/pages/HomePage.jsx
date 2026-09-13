@@ -907,7 +907,7 @@ const HeroSectionSlider = ({ initialPosts = [], loading: initialLoading }) => {
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const res = await request(`/api/posts?page=${nextPage}&limit=6`);
+      const res = await request(`/api/posts?category=${encodeURIComponent('Sarkari Jobs & Exams')}&page=${nextPage}&limit=6`);
       const newPosts = res.posts || [];
       if (newPosts.length > 0) {
         setHeroPosts(prev => {
@@ -1615,7 +1615,7 @@ const DailyCurrentAffairsSlider = ({ items = [], loading = false }) => {
 };
 
 export default function HomePage() {
-  const { posts, loading, error } = usePosts({ limit: 6 });
+  const { posts, loading, error } = usePosts({ category: 'Sarkari Jobs & Exams', limit: 6 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = [];
 

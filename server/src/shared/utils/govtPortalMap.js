@@ -96,6 +96,9 @@ const GOVT_PORTALS = [
   { keywords: ['mpsc', 'maharashtra public service'], url: 'https://mpsc.gov.in', name: 'MPSC Maharashtra Portal' },
   { keywords: ['maharashtra police', 'maha police'], url: 'https://mahapolice.gov.in', name: 'Maharashtra Police Portal' },
   { keywords: ['bombay high court'], url: 'https://bombayhighcourt.nic.in', name: 'Bombay High Court Official' },
+  { keywords: ['mahatransco'], url: 'https://www.mahatransco.in', name: 'MahaTransco Official Portal' },
+  { keywords: ['mahadiscom', 'msedcl'], url: 'https://www.mahadiscom.in', name: 'MahaDiscom Official Portal' },
+  { keywords: ['mahagenco'], url: 'https://www.mahagenco.in', name: 'MahaGenco Official Portal' },
   { keywords: ['gpsc', 'gujarat public service'], url: 'https://gpsc.gujarat.gov.in', name: 'GPSC Gujarat Portal' },
   { keywords: ['gsssb', 'gujarat subordinate'], url: 'https://gsssb.gujarat.gov.in', name: 'GSSSB Gujarat Subordinate' },
   { keywords: ['gujarat high court'], url: 'https://gujarathighcourt.nic.in', name: 'Gujarat High Court Official' },
@@ -112,9 +115,19 @@ const GOVT_PORTALS = [
 
   // 13. South Indian State Portals (TN, AP, Telangana, Karnataka, Kerala)
   { keywords: ['tnpsc', 'tamil nadu public service'], url: 'https://tnpsc.gov.in', name: 'TNPSC Tamil Nadu' },
+  { keywords: ['tnusrb', 'tamil nadu police'], url: 'https://www.tnusrb.tn.gov.in', name: 'TNUSRB Police Recruitment' },
+  { keywords: ['trb tn', 'teachers recruitment board tn'], url: 'https://trb.tn.gov.in', name: 'TRB Tamil Nadu' },
+  { keywords: ['madras high court'], url: 'https://hcmadras.tn.gov.in', name: 'Madras High Court Official' },
   { keywords: ['appsc', 'andhra pradesh public service'], url: 'https://psc.ap.gov.in', name: 'APPSC Andhra Pradesh' },
+  { keywords: ['slprb ap', 'ap police'], url: 'https://slprb.ap.gov.in', name: 'AP Police Recruitment' },
+  { keywords: ['ap high court'], url: 'https://aphc.gov.in', name: 'Andhra Pradesh High Court' },
   { keywords: ['tspsc', 'telangana public service', 'tggpsc'], url: 'https://tspsc.gov.in', name: 'TSPSC Telangana' },
+  { keywords: ['tslprb', 'telangana police'], url: 'https://www.tslprb.in', name: 'TSLPRB Telangana Police' },
+  { keywords: ['telangana high court', 'tshc'], url: 'https://tshc.gov.in', name: 'Telangana High Court Official' },
   { keywords: ['kpsc', 'karnataka public service'], url: 'https://kpsc.kar.nic.in', name: 'KPSC Karnataka' },
+  { keywords: ['ksp', 'karnataka police'], url: 'https://ksp-recruitment.in', name: 'KSP Karnataka Police' },
+  { keywords: ['kea', 'karnataka examination authority'], url: 'https://cetonline.karnataka.gov.in/kea/', name: 'KEA Karnataka' },
+  { keywords: ['karnataka high court'], url: 'https://karnatakahihecourt.kar.nic.in', name: 'Karnataka High Court' },
   { keywords: ['keralapsc', 'kerala psc'], url: 'https://keralapsc.gov.in', name: 'Kerala PSC Official' },
 
   // 14. Defense & Paramilitary Forces

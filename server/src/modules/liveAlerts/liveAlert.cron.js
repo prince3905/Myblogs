@@ -70,32 +70,57 @@ function parseIndianDate(dateStr) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-function isOldOrExpiredAlert(title = '', parsedDate = null, lastDateStr = '') {
+function isOldOrExpiredAlert(title = '', parsedDate = null, lastDateStr = '', category = '') {
   const titleLower = title.toLowerCase();
 
-  // Non-application notices (Syllabus, Admit Card, Result, Answer Key) don't have application deadlines
-  const isNonApplicationNotice = /\b(admit card|result|answer key|syllabus|counselling|merit list|score card|exam date|city intimation)\b/i.test(titleLower);
+  // Non-application notices (Syllabus, Admit Card, Result, Answer Key, Score Card, etc.) don't have application deadlines
+  const isNonApplicationNotice = 
+    category === 'Result' ||
+    category === 'Admit Card' ||
+    category === 'Answer Key' ||
+    category === 'Syllabus' ||
+    category === 'Admission' ||
+    category === 'Certificate Verification' ||
+    /\b(admit card|result|answer key|syllabus|counselling|counseling|merit list|score card|exam date|city intimation|cut ?off|allotment)\b/i.test(titleLower);
 
   // 1. Check exact lastDate against current date (only for job vacancies/applications)
   if (!isNonApplicationNotice && lastDateStr) {
     const deadline = parseIndianDate(lastDateStr);
     if (deadline && deadline < new Date()) {
-      return true; // Expired!
+      return true; // Application deadline expired!
     }
   }
 
-  // 2. Check past year in title (1990-2025)
-  const hasPastYear = /\b(19\d\d|200\d|201\d|202[0-5])\b/.test(titleLower);
-  const hasCurrentOrFutureYear = /\b(2026|2027|2028)\b/.test(titleLower);
+  // 2. Year checks:
+  if (!isNonApplicationNotice) {
+    // For job vacancies: if recruitment year is in the past (1990-2025) and no 2026+ year is present, it's expired
+    const hasPastYear = /\b(19\d\d|200\d|201\d|202[0-5])\b/.test(titleLower);
+    const hasCurrentOrFutureYear = /\b(2026|2027|2028)\b/.test(titleLower);
 
-  if (hasPastYear && !hasCurrentOrFutureYear) {
-    return true;
-  }
-
-  if (parsedDate) {
-    const postYear = new Date(parsedDate).getFullYear();
-    if (postYear < 2026 && !hasCurrentOrFutureYear) {
+    if (hasPastYear && !hasCurrentOrFutureYear) {
       return true;
+    }
+
+    if (parsedDate) {
+      const postYear = new Date(parsedDate).getFullYear();
+      if (postYear < 2026 && !hasCurrentOrFutureYear) {
+        return true;
+      }
+    }
+  } else {
+    // For Results, Admit Cards, Answer Keys, etc.:
+    // Recruitment exam years (e.g. "SSC CGL 2024 Result" declared in 2026) are normal.
+    // Only expire truly ancient archival entries (2021 or older)
+    const isAncientYear = /\b(19\d\d|200\d|201\d|202[0-1])\b/.test(titleLower);
+    const hasRecentYear = /\b(202[2-8])\b/.test(titleLower);
+    if (isAncientYear && !hasRecentYear) {
+      return true;
+    }
+    if (parsedDate) {
+      const postYear = new Date(parsedDate).getFullYear();
+      if (postYear < 2022 && !hasRecentYear) {
+        return true;
+      }
     }
   }
 
@@ -723,6 +748,165 @@ function cleanDetailsText(text) {
   return stripSarkariResultMentionsAndLinks(cleanedLines.join('\n'));
 }
 
+async function scrapeStateHubFeeds() {
+  console.log('[Multi-State Scraper] Ingesting state-level vacancies from official state commission hubs...');
+  let savedCount = 0;
+
+  const STATE_TARGETS = [
+    // 28 Indian States
+    { state: 'Andhra Pradesh', url: 'https://www.freejobalert.com/ap-government-jobs/', max: 12 },
+    { state: 'Arunachal Pradesh', url: 'https://www.freejobalert.com/arunachal-pradesh-government-jobs/', max: 8 },
+    { state: 'Assam', url: 'https://www.freejobalert.com/assam-government-jobs/', max: 10 },
+    { state: 'Bihar', url: 'https://www.freejobalert.com/bihar-government-jobs/', max: 12 },
+    { state: 'Chhattisgarh', url: 'https://www.freejobalert.com/chhattisgarh-government-jobs/', max: 10 },
+    { state: 'Goa', url: 'https://www.freejobalert.com/goa-government-jobs/', max: 8 },
+    { state: 'Gujarat', url: 'https://www.freejobalert.com/gujarat-government-jobs/', max: 12 },
+    { state: 'Haryana', url: 'https://www.freejobalert.com/haryana-government-jobs/', max: 12 },
+    { state: 'Himachal Pradesh', url: 'https://www.freejobalert.com/hp-government-jobs/', max: 10 },
+    { state: 'Jharkhand', url: 'https://www.freejobalert.com/jharkhand-government-jobs/', max: 10 },
+    { state: 'Karnataka', url: 'https://www.freejobalert.com/karnataka-government-jobs/', max: 12 },
+    { state: 'Kerala', url: 'https://www.freejobalert.com/kerala-government-jobs/', max: 12 },
+    { state: 'Madhya Pradesh', url: 'https://www.freejobalert.com/mp-government-jobs/', max: 12 },
+    { state: 'Maharashtra', url: 'https://www.freejobalert.com/maharashtra-government-jobs/', max: 15 },
+    { state: 'Manipur', url: 'https://www.freejobalert.com/manipur-government-jobs/', max: 8 },
+    { state: 'Meghalaya', url: 'https://www.freejobalert.com/meghalaya-government-jobs/', max: 8 },
+    { state: 'Mizoram', url: 'https://www.freejobalert.com/mizoram-government-jobs/', max: 8 },
+    { state: 'Nagaland', url: 'https://www.freejobalert.com/nagaland-government-jobs/', max: 8 },
+    { state: 'Odisha', url: 'https://www.freejobalert.com/odisha-government-jobs/', max: 10 },
+    { state: 'Punjab', url: 'https://www.freejobalert.com/punjab-government-jobs/', max: 12 },
+    { state: 'Rajasthan', url: 'https://www.freejobalert.com/rajasthan-government-jobs/', max: 12 },
+    { state: 'Sikkim', url: 'https://www.freejobalert.com/sikkim-government-jobs/', max: 8 },
+    { state: 'Tamil Nadu', url: 'https://www.freejobalert.com/tn-government-jobs/', max: 12 },
+    { state: 'Telangana', url: 'https://www.freejobalert.com/telangana-government-jobs/', max: 12 },
+    { state: 'Tripura', url: 'https://www.freejobalert.com/tripura-government-jobs/', max: 8 },
+    { state: 'Uttar Pradesh', url: 'https://www.freejobalert.com/up-government-jobs/', max: 15 },
+    { state: 'Uttarakhand', url: 'https://www.freejobalert.com/uttarakhand-government-jobs/', max: 10 },
+    { state: 'West Bengal', url: 'https://www.freejobalert.com/wb-government-jobs/', max: 12 },
+
+    // Key Union Territories
+    { state: 'Delhi', url: 'https://www.freejobalert.com/delhi-government-jobs/', max: 12 },
+    { state: 'Jammu & Kashmir', url: 'https://www.freejobalert.com/jk-government-jobs/', max: 8 },
+    { state: 'Chandigarh', url: 'https://www.freejobalert.com/chandigarh-government-jobs/', max: 8 }
+  ];
+
+  for (const target of STATE_TARGETS) {
+    try {
+      const res = await axios.get(target.url, {
+        timeout: 10000,
+        headers: {
+          'User-Agent': getRandomUA(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        }
+      });
+
+      const $ = cheerio.load(res.data);
+      let pageCount = 0;
+
+      const rows = $('table.latjn tr, table tr').toArray();
+      for (const el of rows) {
+        if (pageCount >= target.max) break;
+        const tds = $(el).find('td');
+        if (tds.length >= 4) {
+          const postDateStr = $(tds[0]).text().trim();
+          let rawBoard = $(tds[1]).text().trim();
+          const rawPostName = $(tds[2]).text().trim();
+          const qualification = $(tds[3]).text().trim();
+          const lastDateStr = tds.length >= 6 ? $(tds[5]).text().trim() : (tds.length >= 5 ? $(tds[4]).text().trim() : '');
+          const rawLink = $(el).find('a').attr('href') || '';
+
+          if (!rawBoard || !rawPostName || rawBoard.includes('Recruitment Board') || postDateStr.includes('Post Date')) {
+            continue;
+          }
+
+          // Clean board name from repetitive vacancy/announcement strings
+          rawBoard = rawBoard.split('Vacancy')[0].split('Recruitment')[0].split('-')[0].trim();
+          const boardName = rawBoard.replace(/\s+/g, ' ').trim() || `${target.state} Board`;
+          const postName = rawPostName.replace(/\s+/g, ' ').trim();
+
+          const cleanTitle = `${boardName} ${postName} Recruitment 2026`.replace(/\s+/g, ' ').trim();
+
+          // Parse Dates
+          const parsedDate = parseIndianDate(postDateStr) || new Date();
+
+          // Strict Freshness Gate: Only ingest fresh vacancies posted within the last 7 days / today onwards
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          if (parsedDate && parsedDate < sevenDaysAgo) {
+            continue; // Ignore old historical/archived vacancies
+          }
+
+          // Strict Deadline Gate: Must have an active future deadline
+          if (lastDateStr) {
+            const deadline = parseIndianDate(lastDateStr);
+            if (deadline && deadline < new Date()) {
+              continue; // Deadline has already passed
+            }
+          }
+
+          // Expiry & Year Check
+          if (isOldOrExpiredAlert(cleanTitle, parsedDate, lastDateStr, 'Latest Job')) {
+            continue;
+          }
+
+          // Resolve Official Govt Portal URL (100% official gov.in/nic.in)
+          const officialPortalUrl = resolveOfficialGovtPortal(cleanTitle, boardName, '');
+
+          // Check if already in DB (by sourceUrl or cleanTitle)
+          const uniqueKey = rawLink || `state-${target.state}-${boardName}-${postName}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const existing = await LiveAlert.findOne({
+            $or: [
+              { sourceUrl: uniqueKey },
+              { title: cleanTitle }
+            ]
+          });
+
+          if (existing) {
+            continue;
+          }
+
+          const detailsText = [
+            `Organization: ${boardName}`,
+            `Post Name: ${postName}`,
+            `Total Vacancies / Qualification: ${qualification || 'Check Official Notification'}`,
+            `Application Last Date: ${lastDateStr || 'Refer Official Portal'}`,
+            `State: ${target.state}`,
+            `Category: Latest Job`,
+            `Official Govt Portal: ${officialPortalUrl}`,
+            `Direct Apply Link: ${officialPortalUrl}`
+          ].join('\n');
+
+          await LiveAlert.create({
+            title: cleanTitle,
+            boardName,
+            sourceUrl: uniqueKey,
+            lastDate: lastDateStr,
+            parsedPostDate: parsedDate,
+            officialUrl: officialPortalUrl,
+            officialApplyUrl: officialPortalUrl,
+            source: 'Official Portal',
+            state: target.state,
+            category: 'Latest Job',
+            detailsText,
+            status: 'active'
+          });
+
+          savedCount++;
+          pageCount++;
+          console.log(`[Multi-State Scraper] Ingested ${target.state} alert: "${cleanTitle}" -> ${officialPortalUrl}`);
+        }
+      }
+
+      // 250ms non-blocking pause between state pages
+      await sleep(250);
+    } catch (stateErr) {
+      console.warn(`[Multi-State Scraper] State ${target.state} notice:`, stateErr.message);
+    }
+  }
+
+  console.log(`[Multi-State Scraper] Ingested ${savedCount} fresh state-level alerts.`);
+  return savedCount;
+}
+
 async function scrapeFeeds() {
   console.log('[LiveAlert Scraper] Starting multi-source DOM scraping...');
   // Clean up any old listings from other sources
@@ -734,19 +918,21 @@ async function scrapeFeeds() {
   const listLinks = [];
 
   const targets = [
-    'https://www.sarkariresult.com/',
-    'https://www.sarkariresult.com/latestjob/',
-    'https://www.sarkariresult.com/admitcard/',
-    'https://www.sarkariresult.com/result/',
-    'https://www.sarkariresult.com/syllabus/',
-    'https://www.sarkariresult.com/answerkey/',
-    'https://www.sarkariresult.com/admission/',
-    'https://www.sarkariresult.com/important/',
-    'https://www.sarkariresult.com/certificate/',
-    'https://www.sarkariresult.com/outsourcing/'
+    { url: 'https://www.sarkariresult.com/', max: 120 },
+    { url: 'https://www.sarkariresult.com/result/', max: 60, defaultCategory: 'Result' },
+    { url: 'https://www.sarkariresult.com/admitcard/', max: 60, defaultCategory: 'Admit Card' },
+    { url: 'https://www.sarkariresult.com/latestjob/', max: 60, defaultCategory: 'Latest Job' },
+    { url: 'https://www.sarkariresult.com/answerkey/', max: 40, defaultCategory: 'Answer Key' },
+    { url: 'https://www.sarkariresult.com/syllabus/', max: 40, defaultCategory: 'Syllabus' },
+    { url: 'https://www.sarkariresult.com/admission/', max: 40, defaultCategory: 'Admission' },
+    { url: 'https://www.sarkariresult.com/important/', max: 30 },
+    { url: 'https://www.sarkariresult.com/certificate/', max: 30 },
+    { url: 'https://www.sarkariresult.com/outsourcing/', max: 30 }
   ];
 
-  for (const targetUrl of targets) {
+  for (const target of targets) {
+    const targetUrl = target.url;
+    const maxLinks = target.max || 50;
     try {
       console.log(`[LiveAlert Scraper] Fetching target list: ${targetUrl}`);
       const res = await axios.get(targetUrl, {
@@ -759,18 +945,21 @@ async function scrapeFeeds() {
       });
       
       const $ = cheerio.load(res.data);
+      let pageLinksCount = 0;
       
       $('a').each((i, el) => {
+        if (pageLinksCount >= maxLinks) return false;
         const href = $(el).attr('href') || '';
         const rawText = $(el).text().trim();
-        if (href && rawText) {
+        if (href && rawText && rawText.length > 3) {
           const fullHref = href.startsWith('http') 
             ? href 
             : (href.startsWith('/') ? `https://www.sarkariresult.com${href}` : `https://www.sarkariresult.com/${href}`);
 
           if (isDetailUrl(fullHref)) {
             if (!listLinks.some(l => l.href === fullHref)) {
-              listLinks.push({ text: rawText, href: fullHref });
+              listLinks.push({ text: rawText, href: fullHref, defaultCategory: target.defaultCategory });
+              pageLinksCount++;
             }
           }
         }
@@ -794,8 +983,8 @@ async function scrapeFeeds() {
 
   console.log(`[LiveAlert Scraper] ${pendingListings.length} of ${listLinks.length} listings are new or pending detail fetch.`);
 
-  // Limit processing to top 150 pending listings to prevent API/network overload per sync run
-  const listingsToProcess = pendingListings.slice(0, 150);
+  // Limit processing to top 30 pending listings per cycle to maintain high speed and prevent MongoDB connection timeout
+  const listingsToProcess = pendingListings.slice(0, 30);
   console.log(`[LiveAlert Scraper] Processing top ${listingsToProcess.length} pending listings...`);
 
   for (const listing of listingsToProcess) {
@@ -836,9 +1025,8 @@ async function scrapeFeeds() {
         continue;
       }
 
-      // Random sleep multiplier (1-2 seconds delay)
-      const delay = 1000 + Math.floor(Math.random() * 1000);
-      console.log(`[LiveAlert Scraper] Sleeping for ${delay}ms before detail fetch...`);
+      // Fast non-blocking delay (300-600ms delay)
+      const delay = 300 + Math.floor(Math.random() * 300);
       await sleep(delay);
 
       console.log(`[LiveAlert Scraper] Fetching details for: ${href}`);
@@ -884,7 +1072,9 @@ async function scrapeFeeds() {
       const cleanTitle = stripSarkariResultMentionsAndLinks(title);
       finalDetailsText = stripSarkariResultMentionsAndLinks(finalDetailsText);
 
-      const isExpired = isOldOrExpiredAlert(title, parsedDate, finalLastDate);
+      const detectedCat = detectCategory(title, href);
+      const finalCategory = (detectedCat === 'Latest Job' && listing.defaultCategory) ? listing.defaultCategory : detectedCat;
+      const isExpired = isOldOrExpiredAlert(title, parsedDate, finalLastDate, finalCategory);
       const computedStatus = isExpired ? 'expired' : 'active';
 
       // Save or update to DB
@@ -902,7 +1092,7 @@ async function scrapeFeeds() {
             officialApplyUrl: finalOfficialApplyUrl,
             source: 'Official Portal',
             state,
-            category: detectCategory(title, href),
+            category: finalCategory,
             detailsText: finalDetailsText,
             status: computedStatus
           }
@@ -917,7 +1107,15 @@ async function scrapeFeeds() {
     }
   }
 
-  console.log(`[LiveAlert Scraper] Completed! Saved/updated ${totalSaved} raw alerts.`);
+  // Multi-State Government Job Feeds Ingestion
+  try {
+    const stateSaved = await scrapeStateHubFeeds();
+    totalSaved += (stateSaved || 0);
+  } catch (stateScrapeErr) {
+    console.error('[Multi-State Scraper] Feed processing notice:', stateScrapeErr.message);
+  }
+
+  console.log(`[LiveAlert Scraper] Completed! Saved/updated ${totalSaved} total raw alerts across Central & All States.`);
 
   // Autopilot Trigger: Find all active alerts and automatically draft blog posts for them in the background
   try {
@@ -941,19 +1139,50 @@ async function scrapeFeeds() {
       return totalSaved;
     }
 
-    // Process active alerts created within the last 3 days that haven't been recently attempted
+    // High-Traffic Search Volume & Demand Priority Scoring
+    function calculateSearchTrafficScore(alertDoc) {
+      const text = `${alertDoc.title || ''} ${alertDoc.boardName || ''} ${alertDoc.category || ''}`.toLowerCase();
+      let score = 0;
+
+      // Tier 1: Mega High-Search Central & National Vacancies (+50 pts)
+      if (/\b(ssc|cgl|chsl|mts|cpo|gd constable|upsc|ias|ips|nda|cds|rrb|railway|rrc|alp|technician|ntpc|group d)\b/i.test(text)) score += 50;
+      if (/\b(police|constable|sub inspector|daroga|si recruitment|home guard|jail warder)\b/i.test(text)) score += 45;
+      if (/\b(ibps|sbi|bank of baroda|pnb|rbi|bank po|bank clerk|bank so)\b/i.test(text)) score += 40;
+      if (/\b(army|navy|air force|agniveer|bsf|crpf|cisf|itbp|ssb|coast guard)\b/i.test(text)) score += 40;
+      if (/\b(upsssc|uppsc|bpsc|bssc|mppsc|mpesb|rpsc|rsmssb|dsssb|mpsc|kpsc|tnpsc|tspsc|appsc|hssc|hpsc)\b/i.test(text)) score += 35;
+      if (/\b(teacher|tet|ctet|reet|tgt|pgt|prt|bed|deled|assistant teacher|shikshak)\b/i.test(text)) score += 35;
+      if (/\b(high court|supreme court|district court|patwari|lekhpal|amin|vdo|gram sachiv)\b/i.test(text)) score += 30;
+      if (/\b(isro|drdo|barc|iocl|ongc|sail|bhel|ntpc|powergrid|coal india)\b/i.test(text)) score += 30;
+      if (/\b(staff nurse|anm|gnm|pharmacist|cho|medical officer|lab technician)\b/i.test(text)) score += 25;
+      if (/\b(junior engineer|je |assistant engineer|ae |supervisor)\b/i.test(text)) score += 25;
+
+      // Low-Demand / Niche Internal College Volunteer Penalties (-40 pts to skip drafting)
+      if (/\b(visiting faculty|guest faculty|guest lecturer|para legal|adhikar saathi|part time|temporary teaching assistant)\b/i.test(text)) score -= 40;
+      if (/\b(project jrf|project assistant|project fellow|research fellow|jrf|srf)\b/i.test(text)) score -= 25;
+
+      return score;
+    }
+
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
     console.log(`[Autopilot] Scanning for active alerts (created after: ${threeDaysAgo.toISOString()})...`);
-    const activeAlerts = await LiveAlert.find({ 
+    const candidateAlerts = await LiveAlert.find({ 
       status: 'active',
       createdAt: { $gte: threeDaysAgo },
       autopilotAttemptedAt: { $exists: false }
-    }).limit(3);
+    }).limit(30);
+
+    // Filter and sort candidates by Search Traffic Priority Score
+    const activeAlerts = candidateAlerts
+      .map(alert => ({ alert, score: calculateSearchTrafficScore(alert) }))
+      .filter(item => item.score >= 0) // Skip low-traffic micro/niche college vacancies
+      .sort((a, b) => b.score - a.score) // Highest search demand first
+      .slice(0, 3)
+      .map(item => item.alert);
 
     if (activeAlerts.length > 0) {
-      console.log(`[Autopilot] Found active alerts. Processing a limited batch of ${activeAlerts.length} alerts to prevent API overload...`);
+      console.log(`[Autopilot] Selected ${activeAlerts.length} high-traffic prioritized vacancies for auto-drafting...`);
       const Settings = require('../settings/settings.model');
       const { draftAlertToPostDoc } = require('./liveAlert.controller');
       for (const alert of activeAlerts) {
@@ -1068,13 +1297,16 @@ function initScheduler() {
       let expiredCount = 0;
       for (const a of activeAlerts) {
         let isExpired = false;
-        if (a.lastDate) {
+        const titleLower = (a.title || '').toLowerCase();
+        const isNonApp = a.category === 'Result' || a.category === 'Admit Card' || a.category === 'Answer Key' || a.category === 'Syllabus' || a.category === 'Admission' || /\b(admit card|result|answer key|syllabus|counselling|counseling|merit list|score card|exam date|city intimation)\b/i.test(titleLower);
+
+        if (!isNonApp && a.lastDate) {
           const deadline = parseIndianDate(a.lastDate);
           if (deadline && deadline < now) {
             isExpired = true;
           }
         }
-        if (!isExpired && isOldOrExpiredAlert(a.title, a.parsedPostDate, a.lastDate)) {
+        if (!isExpired && isOldOrExpiredAlert(a.title, a.parsedPostDate, a.lastDate, a.category)) {
           isExpired = true;
         }
         if (isExpired) {
