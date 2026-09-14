@@ -933,6 +933,30 @@ const CARD_PALETTES = [
   }
 ];
 
+function getCardStyles(item, idx = 0) {
+  const alert = item?.targetAlert || item;
+  const category = (alert?.category || '').toLowerCase();
+  const title = (alert?.title || '').toLowerCase();
+
+  if (category.includes('result') || title.includes('result') || title.includes('score card')) {
+    return CARD_PALETTES[4] || CARD_PALETTES[0]; // Purple / Results
+  }
+  if (category.includes('admit') || title.includes('admit') || title.includes('hall ticket')) {
+    return CARD_PALETTES[3] || CARD_PALETTES[0]; // Amber / Admit Card
+  }
+  if (category.includes('answer') || title.includes('answer key')) {
+    return CARD_PALETTES[6] || CARD_PALETTES[0]; // Pink / Answer Key
+  }
+  if (category.includes('syllabus') || title.includes('syllabus')) {
+    return CARD_PALETTES[0] || CARD_PALETTES[0]; // Indigo / Syllabus
+  }
+  if (category.includes('admission') || title.includes('admission')) {
+    return CARD_PALETTES[5] || CARD_PALETTES[0]; // Teal / Admissions
+  }
+
+  return CARD_PALETTES[idx % CARD_PALETTES.length];
+}
+
 const STATE_ALIASES = {
   'up': ['uttar pradesh', 'up', 'upsssc', 'uppsc', 'uppbpb', 'lucknow', 'allahabad'],
   'uttar pradesh': ['uttar pradesh', 'up', 'upsssc', 'uppsc', 'uppbpb', 'lucknow', 'allahabad'],
