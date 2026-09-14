@@ -303,9 +303,15 @@ html {
   background-color: #0f172a;
 }
 
-/* Blog Content Action Buttons */
-.blog-content .btn-link-action {
-  display: inline-flex;
+/* Blog Content Action Buttons & Google AdSense Buffer Rules (25px+ Gap) */
+.blog-content .btn-link-action,
+.apply-button,
+.btn-download,
+.btn-apply,
+.btn-notification,
+.btn-website,
+.action-button {
+  display: inline-flex !important;
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
@@ -313,13 +319,17 @@ html {
   font-size: 0.95rem;
   text-decoration: none !important;
   border-radius: 8px;
-  margin: 8px 12px 8px 0;
+  margin-top: 25px !important;
+  margin-bottom: 25px !important;
+  margin-right: 12px !important;
   transition: all 0.2s ease-in-out;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   cursor: pointer;
 }
 
-.blog-content .btn-link-action:hover {
+.blog-content .btn-link-action:hover,
+.apply-button:hover,
+.btn-download:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   opacity: 0.95;
@@ -341,6 +351,39 @@ html {
   background-color: #2563eb !important;
   color: #ffffff !important;
   border: 1px solid #2563eb;
+}
+
+/* Ad Unit Containers - Strict 28px Safety Buffer to Prevent Misclicks & Accidental Taps */
+.ad-slot-container,
+.ad-container,
+.adsbygoogle,
+ins.adsbygoogle {
+  margin-top: 28px !important;
+  margin-bottom: 28px !important;
+  display: block !important;
+  clear: both;
+}
+
+/* Mobile Specific Protection: Extra tap buffer for touch screens */
+@media (max-width: 768px) {
+  .blog-content .btn-link-action,
+  .apply-button,
+  .btn-download,
+  .btn-apply,
+  .btn-notification,
+  .btn-website {
+    margin-top: 28px !important;
+    margin-bottom: 28px !important;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ad-slot-container,
+  .ad-container,
+  ins.adsbygoogle {
+    margin-top: 32px !important;
+    margin-bottom: 32px !important;
+  }
 }
 
 

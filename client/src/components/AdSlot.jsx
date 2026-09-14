@@ -49,16 +49,16 @@ export default function AdSlot({ format = 'sidebar', style }) {
   }, [code]);
 
   if (!loaded) {
-    return <Box sx={{ minHeight: minH, width: '100%', ...style }} />;
+    return <Box className="ad-slot-container" sx={{ minHeight: minH, width: '100%', my: 3.5, ...style }} />;
   }
 
   if (!code) {
     return (
-      <Paper elevation={0} sx={{
+      <Paper elevation={0} className="ad-slot-container" sx={{
         borderRadius: 3, border: '1px dashed', borderColor: 'divider',
         bgcolor: 'action.hover', display: 'flex', alignItems: 'center',
         justifyContent: 'center', minHeight: minH, textAlign: 'center',
-        overflow: 'hidden', ...style,
+        overflow: 'hidden', my: 3.5, ...style,
       }}>
         <Box sx={{ py: 3, px: 2 }}>
           <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
@@ -69,5 +69,5 @@ export default function AdSlot({ format = 'sidebar', style }) {
     );
   }
 
-  return <Box ref={ref} sx={{ minHeight: minH, overflow: 'hidden', ...style }} />;
+  return <Box ref={ref} className="ad-slot-container" sx={{ minHeight: minH, overflow: 'hidden', my: 3.5, ...style }} />;
 }
