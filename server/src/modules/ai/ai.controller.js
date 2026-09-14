@@ -1411,27 +1411,28 @@ async function convertYoutubeToBlog(req, res) {
 }
 
 async function generateImagePrompt(title, category = '') {
-  let categoryGuidance = 'infographic-style post thumbnail layout with vibrant contrasting colors';
+  let categoryGuidance = 'cinematic editorial photography with vibrant natural colors, shallow depth of field, professional studio lighting, 8k ultra-detailed';
   const catLower = (category || '').toLowerCase();
 
   if (catLower.includes('finance') || catLower.includes('money') || catLower.includes('business')) {
-    categoryGuidance = 'cinematic financial markets editorial photo, global trade, stock exchange screens or commodities, high-contrast professional lighting, ultra-realistic 4k';
-  } else if (catLower.includes('tech') || catLower.includes('ai') || catLower.includes('tools') || catLower.includes('tutorial')) {
-    categoryGuidance = 'futuristic modern technology, sleek devices, glowing neural AI network, code interface, clean minimalist workspace, 4k ultra-detailed';
-  } else if (catLower.includes('health') || catLower.includes('wellness') || catLower.includes('ayurveda')) {
-    categoryGuidance = 'natural organic herbs, healthy lifestyle wellness, clean bright medical aesthetic, botanical wellness photography, serene lighting';
+    categoryGuidance = 'cinematic financial markets editorial photo, global trade, stock growth graphs, sleek modern trading desk, warm ambient lighting, 8k ultra-realistic';
+  } else if (catLower.includes('tech') || catLower.includes('ai') || catLower.includes('tools') || catLower.includes('tutorial') || catLower.includes('software')) {
+    categoryGuidance = 'futuristic modern technology, sleek devices, glowing neural AI network, holographic code elements, clean minimalist workspace, Octane 3D render, 8k wallpaper';
+  } else if (catLower.includes('health') || catLower.includes('wellness') || catLower.includes('ayurveda') || catLower.includes('fitness')) {
+    categoryGuidance = 'natural organic herbs, fresh holistic ingredients, healthy lifestyle wellness, botanical macro photography, soft golden hour sunlight, 8k photorealistic';
   } else if (catLower.includes('news') || catLower.includes('trend')) {
-    categoryGuidance = 'dramatic news photojournalism, high-impact storytelling, crisp professional editorial photography, authentic atmosphere';
+    categoryGuidance = 'dramatic editorial photojournalism, high-impact storytelling, crisp professional national geography aesthetic, authentic atmosphere, 8k';
   } else if (catLower.includes('sarkari') || catLower.includes('job') || catLower.includes('exam')) {
-    categoryGuidance = 'official government notification theme, study desk with documents, badge, clean typography aesthetic';
+    categoryGuidance = 'official study desk with fountain pen, documents, brass scales, clean aesthetic, warm cinematic lighting';
   }
 
-  const prompt = `Write a detailed, high-CTR AI image generator prompt for a blog post banner based on the title: "${title}" (Category: ${category || 'General'}).
-Visual style guidelines:
-- Style: ${categoryGuidance}.
-- Do NOT include messy tiny text or illegible letters.
-- Focus on high visual impact, clean composition, vibrant lighting, and high-CTR appeal.
-- Return ONLY the image prompt description in plain English (maximum 40 words, no intro words like "Create an image").`;
+  const prompt = `You are a world-class Midjourney/FLUX prompt engineer. Write a vivid, highly-detailed 30-word visual prompt to generate a stunning landscape banner for an article titled: "${title}" (Category: ${category || 'General'}).
+
+CRITICAL RULES:
+- VISUAL STYLE: ${categoryGuidance}.
+- STRICTLY NO TEXT, NO LETTERS, NO NUMBERS, NO WATERMARKS, NO BORDERS, NO FAKE LABELS.
+- Directly describe the physical subjects, environment, camera perspective, textures, and cinematic lighting.
+- Output ONLY the raw prompt text in plain English (no prefixes, no quotes).`;
 
   const keys = [
     process.env.GEMINI_API_KEY,
@@ -1443,62 +1444,86 @@ Visual style guidelines:
     process.env.GEMINI_API_KEY_7
   ].filter(Boolean);
 
-  if (keys.length === 0) {
-    throw new Error('API_KEY not set in env');
-  }
-
+  const geminiModels = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.6-flash', 'gemini-2.5-pro'];
   const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-  let lastErr = null;
+
+  // 1. Try Gemini Models
   for (const key of keys) {
-    try {
-      const response = await axios.post(`${GEMINI_BASE_URL}/gemini-2.5-pro:generateContent?key=${key}`, {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
+    for (const model of geminiModels) {
+      try {
+        const response = await axios.post(`${GEMINI_BASE_URL}/${model}:generateContent?key=${key}`, {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 250,
+          }
+        }, {
+          timeout: 12000,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text && text.trim()) {
+          return text.trim().replace(/^["']|["']$/g, '').replace(/^prompt:\s*/i, '');
         }
-      }, {
-        timeout: 25000,
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text && text.trim()) {
-        return text.trim().replace(/^"(.*)"$/, '$1'); // Strip quotes if any
+      } catch (err) {
+        // Continue to next model/key
       }
-    } catch (err) {
-      lastErr = err;
-      console.warn(`[AI Image Prompt] Gemini key failed: ${err.message}. Trying next...`);
     }
   }
-  
-  if (lastErr) {
-    console.log('[AI Image Prompt] All Gemini keys failed. Trying Groq Llama 3.1 8B...');
-    const GROQ_API_KEY = process.env.GROQ_API_KEY;
-    if (GROQ_API_KEY) {
+
+  // 2. Try Groq Models
+  const GROQ_API_KEY = process.env.GROQ_API_KEY;
+  if (GROQ_API_KEY) {
+    const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'qwen/qwen3.8-27b'];
+    for (const gModel of groqModels) {
       try {
         const groqResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-          model: 'qwen/qwen3.8-27b',
-          messages: [
-            { role: 'user', content: prompt }
-          ],
+          model: gModel,
+          messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
           max_tokens: 150
         }, {
           headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-          timeout: 25000
+          timeout: 12000
         });
         const text = groqResponse.data?.choices?.[0]?.message?.content;
         if (text && text.trim()) {
-          console.log('[AI Image Prompt] Groq Llama successfully generated image prompt.');
-          return text.trim().replace(/^"(.*)"$/, '$1');
+          return text.trim().replace(/^["']|["']$/g, '').replace(/^prompt:\s*/i, '');
         }
-      } catch (groqErr) {
-        console.error('[AI Image Prompt] Groq image prompt generation failed:', groqErr.message);
-      }
+      } catch (err) {}
     }
   }
 
-  throw lastErr || new Error('All image prompt generators failed');
+  // 3. Try OpenAI
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+  if (OPENAI_API_KEY) {
+    try {
+      const oaiResponse = await axios.post('https://api.openai.com/v1/chat/completions', {
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 150
+      }, {
+        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+        timeout: 12000
+      });
+      const text = oaiResponse.data?.choices?.[0]?.message?.content;
+      if (text && text.trim()) {
+        return text.trim().replace(/^["']|["']$/g, '').replace(/^prompt:\s*/i, '');
+      }
+    } catch (err) {}
+  }
+
+  // 4. Robust Algorithmic Fallback Prompt
+  const cleanTitle = title
+    .replace(/^(how to|what is|top \d+|best|in \d{4}|guide|tutorial|alert)\s+/gi, '')
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 6)
+    .join(' ');
+
+  return `cinematic editorial photography of ${cleanTitle || category}, ${categoryGuidance}, highly detailed, sharp focus, 8k masterpiece, no text`;
 }
 
 module.exports = { generateAIContent, generateBlogContentCore, generateImagePrompt, convertYoutubeToBlog, markdownToHtml };

@@ -94,8 +94,8 @@ async function generateAiThumbnail(req, res) {
       prompt = getPhotographicFallbackPrompt(title);
     }
 
-    // Force CTR optimized infographic/poster style with bold text overlay
-    const styledPrompt = `${prompt}, high-CTR blog post thumbnail design, vibrant yellow and deep navy blue contrasting color theme, clean layout, professional graphic design style`;
+    // Clean, photorealistic cinematic style without messy text artifacts
+    const styledPrompt = `${prompt}, cinematic 8k wallpaper, sharp focus, professional lighting, masterpiece, no text, no watermark`;
 
     let imageUri = '';
     try {
@@ -192,11 +192,7 @@ async function getImagePromptRoute(req, res) {
       prompt = getPhotographicFallbackPrompt(title);
     }
 
-    const mainPart = title.split(/[:|]/)[0].trim();
-    const words = mainPart.split(/\s+/);
-    const overlayText = words.length > 5 ? words.slice(0, 4).join(' ').toUpperCase() : mainPart.toUpperCase();
-
-    const styledPrompt = `${prompt}, natural realistic photograph style, authentic look, clear natural lighting, clean composition, high quality, no cartoon, no drawings, with a bold high-contrast text overlay that reads "${overlayText}" clearly visible on the image`;
+    const styledPrompt = `${prompt}, natural realistic editorial photograph style, authentic look, clear natural lighting, clean composition, 8k resolution, highly detailed, no text, no watermark`;
 
     res.json({
       success: true,

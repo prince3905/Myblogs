@@ -49,32 +49,47 @@ const CATEGORY_SEEDS = {
   ]
 };
 
-// High-resolution Unsplash curated banners per category
+// High-resolution curated 4K photography per subtopic & category
 const CATEGORY_FEATURED_IMAGES = {
   'Tech & Tutorials': [
-    'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80'
+    'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&h=675&q=85', // Chip / Tech
+    'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&h=675&q=85', // Code Matrix
+    'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&h=675&q=85', // Modern Developer Desk
+    'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&h=675&q=85', // Hardware / Retro Tech
+    'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&h=675&q=85', // Laptop Coding
+    'https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=1200&h=675&q=85', // Futuristic Laptop
+    'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&h=675&q=85'  // Tech Team / Collaboration
   ],
   'AI & Web Tools': [
-    'https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1200&q=80'
+    'https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=1200&h=675&q=85', // AI Neural Head
+    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=675&q=85', // Abstract AI Wave
+    'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1200&h=675&q=85', // AI Face Neon
+    'https://images.unsplash.com/photo-1676299081847-824916de030a?auto=format&fit=crop&w=1200&h=675&q=85', // AI Glowing Data
+    'https://images.unsplash.com/photo-1682687220063-4742bd7fd538?auto=format&fit=crop&w=1200&h=675&q=85', // Futuristic Digital Space
+    'https://images.unsplash.com/photo-1535378917042-10a22c95931a?auto=format&fit=crop&w=1200&h=675&q=85'  // Robot / AI Assistant
   ],
   'Finance & Business': [
-    'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80'
+    'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1200&h=675&q=85', // Stock Candlestick Chart
+    'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&h=675&q=85', // Stock Market Board
+    'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=1200&h=675&q=85', // Savings Coin Plant
+    'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&h=675&q=85', // Business Financial Analytics
+    'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=1200&h=675&q=85', // Investment Strategy Meeting
+    'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1200&h=675&q=85'  // Indian / Global Currency
   ],
   'Health & Wellness': [
-    'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=80'
+    'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&h=675&q=85', // Yoga / Serene Nature
+    'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&h=675&q=85', // Fresh Organic Diet
+    'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&h=675&q=85', // Wellness Meditation
+    'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&h=675&q=85', // Medical & Holistic Health
+    'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&h=675&q=85', // Healthy Green Salad
+    'https://images.unsplash.com/photo-1512290900672-1f02e71f2562?auto=format&fit=crop&w=1200&h=675&q=85'  // Ayurvedic Herbal Essential Oils
   ],
   'News & Trends': [
-    'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80'
+    'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&h=675&q=85', // News Breaking
+    'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&h=675&q=85', // Newspapers / Editorial
+    'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&h=675&q=85', // Digital World News
+    'https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?auto=format&fit=crop&w=1200&h=675&q=85', // World Summit / Global Affairs
+    'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&h=675&q=85'  // International Conference / Modi Summit
   ]
 };
 
@@ -108,7 +123,6 @@ async function fetchTrendingTopicsForCategory(category) {
         if (itemMatches && itemMatches.length > 1) {
           itemMatches.slice(1, 12).forEach(raw => {
             let t = raw.replace(/<\/?title>/gi, '').replace('<![CDATA[', '').replace(']]>', '').trim();
-            // Remove news outlet suffix (e.g. - NDTV, - Times of India)
             t = t.split(' - ')[0].trim();
             if (t.length > 15 && !t.toLowerCase().includes('google news')) {
               candidates.push(t);
@@ -125,7 +139,6 @@ async function fetchTrendingTopicsForCategory(category) {
   const seeds = CATEGORY_SEEDS[category] || CATEGORY_SEEDS['Tech & Tutorials'];
   candidates.push(...seeds);
 
-  // Return unique candidates
   return Array.from(new Set(candidates));
 }
 
@@ -169,7 +182,6 @@ async function isTopicAlreadyPublished(topic, category) {
   const BlogPost = mongoose.model('BlogPost');
   const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
 
-  // Clean topic for regex search
   const cleanKeyword = topic.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/).slice(0, 4).join(' ');
   if (!cleanKeyword || cleanKeyword.length < 5) return false;
 
@@ -197,7 +209,7 @@ async function getCategoryBannerImage(category, topic = '') {
       try {
         visualPrompt = await generateImagePrompt(topic, category);
       } catch (err) {
-        visualPrompt = `${category} editorial photography, ${topic}, 4k ultra realistic, vibrant cinematic lighting`;
+        visualPrompt = `cinematic photography of ${topic.replace(/[^a-zA-Z0-9\s]/g, '')}, ${category}, 8k resolution, shallow depth of field, dramatic studio lighting, masterpiece, no text`;
       }
 
       const seed = Math.floor(Math.random() * 1000000);
@@ -206,7 +218,8 @@ async function getCategoryBannerImage(category, topic = '') {
       console.log(`[MultiCategory Image] Uploading generated AI banner to Cloudinary...`);
       const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
         folder: 'myblogs',
-        transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
+        transformation: [{ width: 1200, height: 675, crop: 'fill', gravity: 'auto', quality: 'auto', fetch_format: 'auto' }],
+        timeout: 20000
       });
 
       if (uploadResult && uploadResult.secure_url) {
@@ -223,16 +236,16 @@ async function getCategoryBannerImage(category, topic = '') {
   if (pexelsKey && topic) {
     try {
       const searchKeywords = topic
-        .replace(/^(how to|what is|top \d+|best|in \d{4}|guide|tutorial)\s+/gi, '')
+        .replace(/^(how to|what is|top \d+|best|in \d{4}|guide|tutorial|alert|surge|target)\s+/gi, '')
         .replace(/[^a-zA-Z0-9\s]/g, '')
         .trim()
         .split(/\s+/)
-        .slice(0, 4)
+        .slice(0, 3)
         .join(' ');
 
       if (searchKeywords.length >= 3) {
         const res = await axios.get('https://api.pexels.com/v1/search', {
-          params: { query: `${searchKeywords} ${category.split(' ')[0]}`, per_page: 5, orientation: 'landscape' },
+          params: { query: `${searchKeywords}`, per_page: 5, orientation: 'landscape' },
           headers: { Authorization: pexelsKey },
           timeout: 6000
         });
@@ -247,10 +260,11 @@ async function getCategoryBannerImage(category, topic = '') {
     }
   }
 
-  // 3. Fallback to curated high-res Unsplash photos
+  // 3. Fallback to curated 4K Unsplash photos matching topic keywords
   const images = CATEGORY_FEATURED_IMAGES[category] || CATEGORY_FEATURED_IMAGES['Tech & Tutorials'];
-  const randomIndex = Math.floor(Math.random() * images.length);
-  return images[randomIndex];
+  const topicHash = topic ? topic.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
+  const selectedIndex = Math.abs(topicHash) % images.length;
+  return images[selectedIndex];
 }
 
 /**
