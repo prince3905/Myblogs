@@ -20,7 +20,7 @@ export function optimizeImage(url, width = 400, height = null) {
       );
       const mainPath = subparts.slice(mainPathIdx >= 0 ? mainPathIdx : 0).join('/');
       const h = height || Math.round(width * 9 / 16);
-      return `${parts[0]}/upload/f_webp,q_auto:eco,w_${width},h_${h},c_fill,g_auto/${mainPath}`;
+      return `${parts[0]}/upload/f_auto,q_auto:good,w_${width},h_${h},c_fill,g_auto/${mainPath}`;
     }
     return clean;
   }
@@ -34,7 +34,13 @@ export function optimizeImage(url, width = 400, height = null) {
   if (url.includes('images.pexels.com')) {
     const base = url.split('?')[0];
     const h = height || Math.round(width * 9 / 16);
-    return `${base}?auto=compress&cs=tinysrgb&dpr=1&fit=crop&w=${width}&h=${h}&q=60`;
+    return `${base}?auto=compress&cs=tinysrgb&dpr=1&fit=crop&w=${width}&h=${h}&q=70`;
+  }
+
+  if (url.includes('image.pollinations.ai')) {
+    const h = height || Math.round(width * 9 / 16);
+    let base = url.split('?')[0];
+    return `${base}?width=${width}&height=${h}&nologo=true`;
   }
 
   return url;
