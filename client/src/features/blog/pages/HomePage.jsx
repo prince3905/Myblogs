@@ -2212,6 +2212,46 @@ const DailyCurrentAffairsSlider = ({ items = [], loading = false }) => {
   );
 };
 
+const STATE_ALIASES = {
+  'up': ['uttar pradesh', 'up', 'upsssc', 'uppsc', 'uppbpb', 'lucknow', 'allahabad'],
+  'uttar pradesh': ['uttar pradesh', 'up', 'upsssc', 'uppsc', 'uppbpb', 'lucknow', 'allahabad'],
+  'bihar': ['bihar', 'bpsc', 'csbc', 'bpssc', 'bssc', 'bcece', 'patna'],
+  'mp': ['madhya pradesh', 'mp', 'mppsc', 'mpesb', 'mp peb', 'mpvyapam', 'bhopal', 'indore'],
+  'madhya pradesh': ['madhya pradesh', 'mp', 'mppsc', 'mpesb', 'mp peb', 'mpvyapam', 'bhopal', 'indore'],
+  'delhi': ['delhi', 'dsssb', 'dhc', 'delhi high court'],
+  'rajasthan': ['rajasthan', 'rpsc', 'rsmssb', 'rssb', 'jaipur'],
+  'haryana': ['haryana', 'hssc', 'hpsc'],
+  'punjab': ['punjab', 'ppsc', 'psssb'],
+  'jharkhand': ['jharkhand', 'jpsc', 'jssc', 'ranchi'],
+  'uttarakhand': ['uttarakhand', 'ukpsc', 'uksssc', 'dehradun'],
+  'chhattisgarh': ['chhattisgarh', 'cgpsc', 'cgvyapam', 'raipur'],
+  'gujarat': ['gujarat', 'gpsc', 'gsssb'],
+  'maharashtra': ['maharashtra', 'mpsc', 'mumbai', 'pune'],
+  'west bengal': ['west bengal', 'wbpsc', 'kolkata'],
+  'odisha': ['odisha', 'opsc', 'osssc'],
+  'andhra pradesh': ['andhra pradesh', 'appsc'],
+  'telangana': ['telangana', 'tspsc', 'hyderabad'],
+  'tamil nadu': ['tamil nadu', 'tnpsc', 'chennai'],
+  'himachal pradesh': ['himachal pradesh', 'hp', 'hppsc', 'hpsssb', 'shimla'],
+  'hp': ['himachal pradesh', 'hp', 'hppsc', 'hpsssb', 'shimla']
+};
+
+function isAlertMatchingState(alert, stateQuery) {
+  if (!alert || !stateQuery || stateQuery === 'all' || stateQuery === 'All States') return true;
+  const q = stateQuery.toLowerCase().trim();
+  const aliases = STATE_ALIASES[q] || [q];
+
+  const alertState = (alert.state || '').toLowerCase();
+  const alertTitle = (alert.title || '').toLowerCase();
+  const alertBoard = (alert.boardName || '').toLowerCase();
+
+  return aliases.some(alias => 
+    alertState.includes(alias) || 
+    alertTitle.includes(alias) || 
+    alertBoard.includes(alias)
+  );
+}
+
 function getStrictChronological(items = [], max = 8) {
   if (!items || items.length === 0) return [];
   return [...items].sort((a, b) => {
@@ -2279,11 +2319,30 @@ export default function HomePage() {
     setSelectedState(stateCode);
     if (stateCode !== 'all') {
       try {
-        const res = await request(`/api/public/live-alerts?state=${stateCode}&limit=32`);
-        if (res.success && res.data?.length > 0) {
+        const [stateRes, stateResultsRes, stateAdmitsRes] = await Promise.allSettled([
+          request(`/api/public/live-alerts?state=${stateCode}&limit=40`),
+          request(`/api/public/live-alerts?state=${stateCode}&category=Result&limit=10`),
+          request(`/api/public/live-alerts?state=${stateCode}&category=Admit+Card&limit=10`)
+        ]);
+
+        if (stateRes.status === 'fulfilled' && stateRes.value?.data?.length > 0) {
           setAlerts(prev => {
             const existingIds = new Set(prev.map(a => a._id));
-            const newItems = res.data.filter(a => !existingIds.has(a._id));
+            const newItems = stateRes.value.data.filter(a => !existingIds.has(a._id));
+            return [...newItems, ...prev];
+          });
+        }
+        if (stateResultsRes.status === 'fulfilled' && stateResultsRes.value?.data?.length > 0) {
+          setExtraResults(prev => {
+            const existingIds = new Set(prev.map(a => a._id));
+            const newItems = stateResultsRes.value.data.filter(a => !existingIds.has(a._id));
+            return [...newItems, ...prev];
+          });
+        }
+        if (stateAdmitsRes.status === 'fulfilled' && stateAdmitsRes.value?.data?.length > 0) {
+          setExtraAdmits(prev => {
+            const existingIds = new Set(prev.map(a => a._id));
+            const newItems = stateAdmitsRes.value.data.filter(a => !existingIds.has(a._id));
             return [...newItems, ...prev];
           });
         }
@@ -2296,13 +2355,7 @@ export default function HomePage() {
   const displayAlerts = useMemo(() => {
     let list = alerts;
     if (selectedState !== 'all') {
-      const sc = selectedState.toLowerCase();
-      const filtered = alerts.filter(a => {
-        const st = a.state ? a.state.toLowerCase() : '';
-        const tit = a.title ? a.title.toLowerCase() : '';
-        const brd = a.boardName ? a.boardName.toLowerCase() : '';
-        return st === sc || tit.includes(sc) || brd.includes(sc);
-      });
+      const filtered = alerts.filter(a => isAlertMatchingState(a, selectedState));
       list = filtered.length > 0 ? filtered : alerts;
     }
     return getStrictChronological(list, 100);
@@ -2312,23 +2365,37 @@ export default function HomePage() {
   const [extraAdmits, setExtraAdmits] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_ADMITS__) && window.__INITIAL_ADMITS__.length > 0) ? window.__INITIAL_ADMITS__ : []);
 
   const resultsAlerts = useMemo(() => {
-    const fromMain = displayAlerts.filter(a => a.category === 'Results' || a.category === 'Result' || /result|merit list|score card/i.test(a.title));
-    const combined = [...fromMain, ...extraResults];
-    const unique = Array.from(new Map(combined.map(item => [item._id, item])).values());
+    let pool = displayAlerts;
+    if (selectedState === 'all') {
+      pool = [...displayAlerts, ...extraResults];
+    } else {
+      pool = [...alerts, ...extraResults].filter(a => isAlertMatchingState(a, selectedState));
+    }
+    const filtered = pool.filter(a => (a.category === 'Results' || a.category === 'Result' || /result|merit list|score card/i.test(a.title)));
+    const unique = Array.from(new Map(filtered.map(item => [item._id, item])).values());
     return getStrictChronological(unique, 8);
-  }, [displayAlerts, extraResults]);
+  }, [alerts, displayAlerts, extraResults, selectedState]);
 
   const admitCardAlerts = useMemo(() => {
-    const fromMain = displayAlerts.filter(a => a.category === 'Admit Card' || a.category === 'Admit Cards' || /admit card|hall ticket|call letter/i.test(a.title));
-    const combined = [...fromMain, ...extraAdmits];
-    const unique = Array.from(new Map(combined.map(item => [item._id, item])).values());
+    let pool = displayAlerts;
+    if (selectedState === 'all') {
+      pool = [...displayAlerts, ...extraAdmits];
+    } else {
+      pool = [...alerts, ...extraAdmits].filter(a => isAlertMatchingState(a, selectedState));
+    }
+    const filtered = pool.filter(a => (a.category === 'Admit Card' || a.category === 'Admit Cards' || /admit card|hall ticket|call letter|exam city/i.test(a.title)));
+    const unique = Array.from(new Map(filtered.map(item => [item._id, item])).values());
     return getStrictChronological(unique, 8);
-  }, [displayAlerts, extraAdmits]);
+  }, [alerts, displayAlerts, extraAdmits, selectedState]);
 
   const latestJobAlerts = useMemo(() => {
-    const list = displayAlerts.filter(a => a.category === 'Latest Job' || a.category === 'Latest Jobs' || a.category === 'Jobs' || a.category === 'Recruitment' || /recruitment|vacancy|apply online|officer|constable|teacher/i.test(a.title));
+    let pool = displayAlerts;
+    if (selectedState !== 'all') {
+      pool = alerts.filter(a => isAlertMatchingState(a, selectedState));
+    }
+    const list = pool.filter(a => (a.category === 'Latest Job' || a.category === 'Latest Jobs' || a.category === 'Jobs' || a.category === 'Recruitment' || /recruitment|vacancy|apply online|officer|constable|teacher/i.test(a.title)));
     return getStrictChronological(list, 8);
-  }, [displayAlerts]);
+  }, [alerts, displayAlerts, selectedState]);
 
   // Guarantee that Admit Cards and Results columns have full 8 items without polluting main stream
   useEffect(() => {

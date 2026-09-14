@@ -933,9 +933,45 @@ const CARD_PALETTES = [
   }
 ];
 
-const getCardStyles = (item, index) => {
-  return CARD_PALETTES[index % CARD_PALETTES.length];
+const STATE_ALIASES = {
+  'up': ['uttar pradesh', 'up', 'upsssc', 'uppsc', 'uppbpb', 'lucknow', 'allahabad'],
+  'uttar pradesh': ['uttar pradesh', 'up', 'upsssc', 'uppsc', 'uppbpb', 'lucknow', 'allahabad'],
+  'bihar': ['bihar', 'bpsc', 'csbc', 'bpssc', 'bssc', 'bcece', 'patna'],
+  'mp': ['madhya pradesh', 'mp', 'mppsc', 'mpesb', 'mp peb', 'mpvyapam', 'bhopal', 'indore'],
+  'madhya pradesh': ['madhya pradesh', 'mp', 'mppsc', 'mpesb', 'mp peb', 'mpvyapam', 'bhopal', 'indore'],
+  'delhi': ['delhi', 'dsssb', 'dhc', 'delhi high court'],
+  'rajasthan': ['rajasthan', 'rpsc', 'rsmssb', 'rssb', 'jaipur'],
+  'haryana': ['haryana', 'hssc', 'hpsc'],
+  'punjab': ['punjab', 'ppsc', 'psssb'],
+  'jharkhand': ['jharkhand', 'jpsc', 'jssc', 'ranchi'],
+  'uttarakhand': ['uttarakhand', 'ukpsc', 'uksssc', 'dehradun'],
+  'chhattisgarh': ['chhattisgarh', 'cgpsc', 'cgvyapam', 'raipur'],
+  'gujarat': ['gujarat', 'gpsc', 'gsssb'],
+  'maharashtra': ['maharashtra', 'mpsc', 'mumbai', 'pune'],
+  'west bengal': ['west bengal', 'wbpsc', 'kolkata'],
+  'odisha': ['odisha', 'opsc', 'osssc'],
+  'andhra pradesh': ['andhra pradesh', 'appsc'],
+  'telangana': ['telangana', 'tspsc', 'hyderabad'],
+  'tamil nadu': ['tamil nadu', 'tnpsc', 'chennai'],
+  'himachal pradesh': ['himachal pradesh', 'hp', 'hppsc', 'hpsssb', 'shimla'],
+  'hp': ['himachal pradesh', 'hp', 'hppsc', 'hpsssb', 'shimla']
 };
+
+function isAlertMatchingState(alert, stateQuery) {
+  if (!alert || !stateQuery || stateQuery === 'all' || stateQuery === 'All States') return true;
+  const q = stateQuery.toLowerCase().trim();
+  const aliases = STATE_ALIASES[q] || [q];
+
+  const alertState = (alert.state || '').toLowerCase();
+  const alertTitle = (alert.title || '').toLowerCase();
+  const alertBoard = (alert.boardName || '').toLowerCase();
+
+  return aliases.some(alias => 
+    alertState.includes(alias) || 
+    alertTitle.includes(alias) || 
+    alertBoard.includes(alias)
+  );
+}
 
 export default function PublicLiveAlertsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1051,6 +1087,22 @@ export default function PublicLiveAlertsPage() {
   }, [searchQuery]);
 
   useEffect(() => {
+    if (selectedState && selectedState !== 'All States') {
+      request(`/api/public/live-alerts?state=${encodeURIComponent(selectedState)}&limit=100`)
+        .then(res => {
+          if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+            setAlerts(prev => {
+              const existingIds = new Set(prev.map(a => a._id));
+              const newItems = res.data.filter(a => !existingIds.has(a._id));
+              return [...newItems, ...prev];
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [selectedState]);
+
+  useEffect(() => {
     if (!alertIdParam || openedAlertIdRef.current === alertIdParam) return;
 
     openedAlertIdRef.current = alertIdParam;
@@ -1070,9 +1122,11 @@ export default function PublicLiveAlertsPage() {
 
   const filteredAlerts = useMemo(() => {
     return alerts.filter(alert => {
-      const titleMatch = alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (alert.boardName || '').toLowerCase().includes(searchQuery.toLowerCase());
-      const stateMatch = selectedState === 'All States' || (alert.state || 'Central/All India') === selectedState;
+      const q = searchQuery.toLowerCase().trim();
+      const titleMatch = !q ||
+                         alert.title.toLowerCase().includes(q) ||
+                         (alert.boardName || '').toLowerCase().includes(q);
+      const stateMatch = isAlertMatchingState(alert, selectedState);
       return titleMatch && stateMatch;
     });
   }, [alerts, searchQuery, selectedState]);
