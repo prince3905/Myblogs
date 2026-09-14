@@ -6,90 +6,77 @@ const BlogPost = mongoose.model('BlogPost');
 const WebStory = mongoose.model('WebStory');
 
 const UNSPLASH_PORTRAIT_PHOTOS = [
-  'photo-1542831371-29b0f74f9713',
-  'photo-1499750310107-5fef28a66643',
-  'photo-1498050108023-c5249f4df085',
-  'photo-1517694712202-14dd9538aa97',
-  'photo-1461749280684-dccba630e2f6',
-  'photo-1504384308090-c894fdcc538d',
-  'photo-1486312338219-ce68d2c6f44d',
-  'photo-1526374965328-7f61d4dc18c5',
-  'photo-1497366216548-37526070297c',
-  'photo-1504639725590-34d0984388bd',
-  'photo-1507003211169-0a1dd7228f2d',
-  'photo-1517245386807-bb43f82c33c4',
-  'photo-1559526324-593bc073d938',
-  'photo-1522071820081-009f0129c71c',
-  'photo-1516321497487-e288fb19713f',
-  'photo-1454165804606-c3d57bc86b40',
-  'photo-1513258496099-48168024aec0',
-  'photo-1434030216411-0b793f4b4173',
-  'photo-1427504494785-3a9ca7044f45',
-  'photo-1523240795612-9a054b0db644',
-  'photo-1524178232363-1fb2b075b655',
-  'photo-1580582932707-520aed937b7b',
-  'photo-1577896851231-70ef18881754',
-  'photo-1509062522246-3755977927d7',
-  'photo-1531482615713-2afd69097998',
-  'photo-1521791136064-7986c2920216',
-  'photo-1556761175-5973dc0f32e7',
-  'photo-1551836022-d5d88e9218df',
-  'photo-1573496359142-b8d87734a5a2',
-  'photo-1573497019940-1c28c88b4f3e',
-  'photo-1507679799987-c73779587ccf',
-  'photo-1519085360753-af0119f7cbe7',
-  'photo-1486406146926-c627a92ad1ab',
-  'photo-1497215728101-856f4ea42174',
-  'photo-1541888946425-d0fbb186a5b3',
-  'photo-1516321318423-f06f85e504b3',
-  'photo-1526948128573-703ee1aeb6fa',
-  'photo-1557804506-669a67965ba0',
-  'photo-1517048676732-d65bc937f952',
-  'photo-1531403009284-440f080d1e12',
-  'photo-1553877522-43269d4ea984',
-  'photo-1522202176988-66273c2fd55f',
-  'photo-1450133064473-71024230f91b',
-  'photo-1501504905252-473c47e087f8',
-  'photo-1497633762265-9d179a990aa6',
-  'photo-1513542789411-b6a5d4f31634',
-  'photo-1456513080510-7bf3a84b82f8',
-  'photo-1495446815901-a7297e633e8d'
+  'photo-1542831371-29b0f74f9713', 'photo-1499750310107-5fef28a66643', 'photo-1498050108023-c5249f4df085',
+  'photo-1517694712202-14dd9538aa97', 'photo-1461749280684-dccba630e2f6', 'photo-1504384308090-c894fdcc538d',
+  'photo-1486312338219-ce68d2c6f44d', 'photo-1526374965328-7f61d4dc18c5', 'photo-1497366216548-37526070297c',
+  'photo-1504639725590-34d0984388bd', 'photo-1507003211169-0a1dd7228f2d', 'photo-1517245386807-bb43f82c33c4',
+  'photo-1559526324-593bc073d938', 'photo-1522071820081-009f0129c71c', 'photo-1516321497487-e288fb19713f',
+  'photo-1454165804606-c3d57bc86b40', 'photo-1513258496099-48168024aec0', 'photo-1434030216411-0b793f4b4173',
+  'photo-1427504494785-3a9ca7044f45', 'photo-1523240795612-9a054b0db644', 'photo-1524178232363-1fb2b075b655',
+  'photo-1580582932707-520aed937b7b', 'photo-1577896851231-70ef18881754', 'photo-1509062522246-3755977927d7',
+  'photo-1531482615713-2afd69097998', 'photo-1521791136064-7986c2920216', 'photo-1556761175-5973dc0f32e7',
+  'photo-1551836022-d5d88e9218df', 'photo-1573496359142-b8d87734a5a2', 'photo-1573497019940-1c28c88b4f3e',
+  'photo-1507679799987-c73779587ccf', 'photo-1519085360753-af0119f7cbe7', 'photo-1486406146926-c627a92ad1ab',
+  'photo-1497215728101-856f4ea42174', 'photo-1541888946425-d0fbb186a5b3', 'photo-1516321318423-f06f85e504b3',
+  'photo-1526948128573-703ee1aeb6fa', 'photo-1557804506-669a67965ba0', 'photo-1517048676732-d65bc937f952',
+  'photo-1531403009284-440f080d1e12', 'photo-1553877522-43269d4ea984', 'photo-1522202176988-66273c2fd55f',
+  'photo-1450133064473-71024230f91b', 'photo-1501504905252-473c47e087f8', 'photo-1497633762265-9d179a990aa6',
+  'photo-1513542789411-b6a5d4f31634', 'photo-1456513080510-7bf3a84b82f8', 'photo-1495446815901-a7297e633e8d',
+  'photo-1523050854058-8df90110c9f1', 'photo-1544717305-2782549b5136', 'photo-1524995997946-a1c2e315a42f',
+  'photo-1568602471122-7832951cc4c5', 'photo-1492562080023-ab3db95bfbce', 'photo-1519452635265-7b1fbfd1e4e0',
+  'photo-1534528741775-53994a69daeb', 'photo-1506794778202-cad84cf45f1d', 'photo-1517841905240-472988babdf9',
+  'photo-1539571696357-5a69c17a67c6', 'photo-1501196354995-cbb51c65aaea', 'photo-1494790108377-be9c29b29330'
 ];
 
-function getUniqueUnsplashImage(title = '', slideIdx = 0) {
+function getUniqueUnsplashImage(title = '', slideIdx = 0, usedImages = new Set()) {
   const str = `${title}_slide_${slideIdx}`;
-  let hash = 0;
+  let baseHash = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = (hash * 31 + str.charCodeAt(i)) % UNSPLASH_PORTRAIT_PHOTOS.length;
+    baseHash = (baseHash * 31 + str.charCodeAt(i)) % UNSPLASH_PORTRAIT_PHOTOS.length;
   }
-  const photoId = UNSPLASH_PORTRAIT_PHOTOS[Math.abs(hash)];
-  return `https://images.unsplash.com/${photoId}?w=720&h=1280&fit=crop&q=80`;
+
+  for (let attempt = 0; attempt < UNSPLASH_PORTRAIT_PHOTOS.length; attempt++) {
+    const photoId = UNSPLASH_PORTRAIT_PHOTOS[(Math.abs(baseHash) + attempt + slideIdx * 7) % UNSPLASH_PORTRAIT_PHOTOS.length];
+    const url = `https://images.unsplash.com/${photoId}?w=720&h=1280&fit=crop&q=80`;
+    if (!usedImages.has(url)) {
+      return url;
+    }
+  }
+
+  const fallbackId = UNSPLASH_PORTRAIT_PHOTOS[(Math.abs(baseHash) + slideIdx * 13) % UNSPLASH_PORTRAIT_PHOTOS.length];
+  return `https://images.unsplash.com/${fallbackId}?w=720&h=1280&fit=crop&q=80`;
 }
 
-async function fetchPortraitImage(query, title = '', slideIdx = 0) {
+async function fetchPortraitImage(query, title = '', slideIdx = 0, usedImages = new Set()) {
   const apiKey = process.env.PEXELS_API_KEY;
-  const cleanQuery = (query || title || 'job').trim();
+  const cleanQuery = (query || title || 'education career office').trim();
 
   if (apiKey) {
     try {
       const response = await axios.get('https://api.pexels.com/v1/search', {
-        params: { query: cleanQuery, per_page: 10, orientation: 'portrait' },
+        params: { query: cleanQuery, per_page: 20, orientation: 'portrait' },
         headers: { Authorization: apiKey },
         timeout: 6000
       });
 
       const photos = response.data?.photos;
       if (photos && photos.length > 0) {
-        const photo = photos[slideIdx % photos.length] || photos[0];
-        return (photo.src.portrait || photo.src.large || photo.src.medium)
-          .split('?')[0] + '?w=720&h=1280&fit=crop&q=80';
+        for (let i = 0; i < photos.length; i++) {
+          const candidateIdx = (slideIdx + i) % photos.length;
+          const photo = photos[candidateIdx];
+          const url = (photo.src.portrait || photo.src.large || photo.src.medium)
+            .split('?')[0] + '?w=720&h=1280&fit=crop&q=80';
+          if (!usedImages.has(url)) {
+            return url;
+          }
+        }
       }
     } catch (err) {
-      console.warn(`[WebStory Sourcing] Pexels API image fetch failed for "${cleanQuery}":`, err.message);
+      console.warn(`[WebStory Sourcing] Pexels API image fetch notice for "${cleanQuery}":`, err.message);
     }
   }
 
-  return getUniqueUnsplashImage(title || cleanQuery, slideIdx);
+  return getUniqueUnsplashImage(title || cleanQuery, slideIdx, usedImages);
 }
 
 async function callAiJson(prompt) {
@@ -224,24 +211,28 @@ Each slide MUST contain a descriptive 'imageQuery' to fetch the background.
       throw new Error('AI generator failed to return exactly 5 slides.');
     }
 
-    // 4. Fetch background portrait images for each slide in parallel (Use featuredImage for Cover Slide if available)
-    console.log('[WebStory Sourcing] Sourcing portrait background images...');
-    const slidePromises = result.slides.map(async (slide, idx) => {
-      let imageUrl;
-      if (idx === 0 && post.featuredImage && post.featuredImage.startsWith('http') && !post.featuredImage.includes('data:image') && !post.featuredImage.includes('pollinations')) {
+    // 4. Fetch background portrait images for each slide with guaranteed zero duplicates
+    console.log('[WebStory Sourcing] Sourcing unique portrait background images...');
+    const usedImages = new Set();
+    const finalSlides = [];
+
+    for (let idx = 0; idx < result.slides.length; idx++) {
+      const slide = result.slides[idx];
+      let imageUrl = null;
+      if (idx === 0 && post.featuredImage && post.featuredImage.startsWith('http') && !post.featuredImage.includes('data:image') && !post.featuredImage.includes('pollinations') && !usedImages.has(post.featuredImage)) {
         imageUrl = post.featuredImage;
+        usedImages.add(imageUrl);
         console.log(`[WebStory Sourcing] Using post featured image for Cover Slide: ${imageUrl}`);
       } else {
-        imageUrl = await fetchPortraitImage(slide.imageQuery || post.title, post.title, idx);
+        imageUrl = await fetchPortraitImage(slide.imageQuery || post.title, post.title, idx, usedImages);
+        usedImages.add(imageUrl);
       }
-      return {
+      finalSlides.push({
         heading: slide.heading,
         text: slide.text,
         image: imageUrl
-      };
-    });
-
-    const finalSlides = await Promise.all(slidePromises);
+      });
+    }
 
     // 5. Create Mongoose WebStory Document
     // Delete any existing WebStory with same slug to avoid index conflicts
