@@ -211,7 +211,11 @@ async function buildHomepageHtml() {
 
     const [storiesRes, alertsRes, sarkariRes, caRes] = await Promise.allSettled([
       WebStory.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean(),
-      LiveAlert.find({ status: { $in: ['active', 'published'] } }).sort({ parsedPostDate: -1, createdAt: -1 }).limit(32).lean(),
+      LiveAlert.find({ status: { $in: ['active', 'published'] } })
+        .select('-detailsText')
+        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .limit(60)
+        .lean(),
       BlogPost.find({ status: 'published', category: 'Sarkari Jobs & Exams' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean(),
       CurrentAffairs.find({ status: 'published' }).sort({ publishDate: -1, createdAt: -1 }).limit(6).lean()
     ]);

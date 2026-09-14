@@ -112,7 +112,7 @@ async function autoFetchFeaturedImage(query) {
 // Fetch alerts sorted by date descending (without detailsText payload) with full search support
 async function getAlerts(req, res) {
   try {
-    const { status, limit, page, search, q } = req.query;
+    const { status, limit, page, search, q, category, state } = req.query;
     const filter = {};
     if (status && status === 'expired') {
       filter.status = 'expired';
@@ -122,6 +122,50 @@ async function getAlerts(req, res) {
       filter.status = { $in: ['active', 'published'] };
     } else {
       filter.status = { $in: ['active', 'published'] };
+    }
+
+    if (category && category !== 'all') {
+      const catLower = category.toLowerCase();
+      if (catLower === 'result' || catLower === 'results') {
+        filter.$or = [
+          { category: { $in: ['Result', 'Results'] } },
+          { title: { $regex: /result|score\s*card|merit\s*list/i } }
+        ];
+      } else if (catLower === 'admit card' || catLower === 'admit-card' || catLower === 'admit cards') {
+        filter.$or = [
+          { category: { $in: ['Admit Card', 'Admit Cards'] } },
+          { title: { $regex: /admit\s*card|hall\s*ticket|call\s*letter/i } }
+        ];
+      } else if (catLower === 'answer key' || catLower === 'answer-key' || catLower === 'answer keys') {
+        filter.$or = [
+          { category: { $in: ['Answer Key', 'Answer Keys'] } },
+          { title: { $regex: /answer\s*key|objection/i } }
+        ];
+      } else if (catLower === 'latest job' || catLower === 'latest jobs') {
+        filter.$or = [
+          { category: { $in: ['Latest Job', 'Latest Jobs', 'Recruitment'] } },
+          { title: { $regex: /recruitment|vacancy|apply\s*online/i } }
+        ];
+      } else {
+        filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
+      }
+    }
+
+    if (state && state !== 'all') {
+      const stateRegex = new RegExp(state, 'i');
+      if (filter.$or) {
+        filter.$and = [
+          { $or: filter.$or },
+          { $or: [{ state: stateRegex }, { title: stateRegex }, { boardName: stateRegex }] }
+        ];
+        delete filter.$or;
+      } else {
+        filter.$or = [
+          { state: stateRegex },
+          { title: stateRegex },
+          { boardName: stateRegex }
+        ];
+      }
     }
 
     const cleanYearCondition = [
@@ -172,7 +216,11 @@ async function getAlerts(req, res) {
           };
         });
 
-        filter.$and = andConditions;
+        if (filter.$and) {
+          filter.$and.push(...andConditions);
+        } else {
+          filter.$and = andConditions;
+        }
       }
     }
 
@@ -180,15 +228,16 @@ async function getAlerts(req, res) {
     const pageNum = page ? parseInt(page, 10) : 1;
     const skip = (pageNum - 1) * queryLimit;
 
-    console.log(`[LiveAlert API] getAlerts called: searchQuery="${searchQuery}", pageNum=${pageNum}, limit=${queryLimit}`);
+    console.log(`[LiveAlert API] getAlerts called: category="${category || ''}", state="${state || ''}", searchQuery="${searchQuery}", pageNum=${pageNum}, limit=${queryLimit}`);
 
     let alerts = [];
 
-    // For Homepage widget requests (e.g. limit=32): return pure latest-first active alerts in strict chronological order
-    if (!searchQuery && queryLimit <= 50 && pageNum === 1) {
+    // If explicit category or state or small query: return pure latest matching alerts
+    if (category || state || (!searchQuery && queryLimit <= 50 && pageNum === 1)) {
       alerts = await LiveAlert.find(filter)
         .select('-detailsText')
         .sort({ parsedPostDate: -1, createdAt: -1 })
+        .skip(skip)
         .limit(queryLimit)
         .lean();
     } else if (!searchQuery && pageNum === 1) {
@@ -314,15 +363,34 @@ async function getAlerts(req, res) {
   }
 }
 
+const mongoose = require('mongoose');
+
 // Fetch a single alert by ID (with detailsText payload)
 async function getAlertById(req, res) {
   try {
     const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(404).json({ success: false, message: 'Invalid alert ID' });
+    }
     const alert = await LiveAlert.findById(id);
     if (!alert) {
       return res.status(404).json({ success: false, message: 'Alert not found' });
     }
     res.json({ success: true, data: sanitizeAlertResponse(alert) });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+// Fetch active alert category counts
+async function getAlertCategories(req, res) {
+  try {
+    const counts = await LiveAlert.aggregate([
+      { $match: { status: { $in: ['active', 'published'] } } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    res.json({ success: true, data: counts });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -791,4 +859,4 @@ async function draftPostFromAlert(req, res) {
   }
 }
 
-module.exports = { getAlerts, getAlertById, triggerScrape, draftPostFromAlert, draftAlertToPostDoc };
+module.exports = { getAlerts, getAlertById, getAlertCategories, triggerScrape, draftPostFromAlert, draftAlertToPostDoc };

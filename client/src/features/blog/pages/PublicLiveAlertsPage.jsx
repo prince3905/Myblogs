@@ -151,10 +151,26 @@ function getDynamicActions(alert) {
 
   const actions = [];
 
+  const isResult = /result|score card|merit list/i.test(alert.category || alertTitle);
+  const isAdmit = /admit card|hall ticket|call letter|exam city/i.test(alert.category || alertTitle);
+  const isKey = /answer key|objection/i.test(alert.category || alertTitle);
+  const isSyllabus = /syllabus|pattern|scheme/i.test(alert.category || alertTitle);
+
+  let pdfLabel = 'Download Notification PDF';
+  if (isResult) pdfLabel = 'Download Result / Cutoff PDF';
+  else if (isAdmit) pdfLabel = 'Download Exam Notice / City PDF';
+  else if (isSyllabus) pdfLabel = 'Download Syllabus PDF';
+
+  let applyLabel = 'Apply Online Now';
+  if (isResult) applyLabel = 'Check Result / Score Card';
+  else if (isAdmit) applyLabel = 'Download Admit Card / City Slip';
+  else if (isKey) applyLabel = 'Check Answer Key / Objections';
+  else if (isSyllabus) applyLabel = 'Check Syllabus & Exam Pattern';
+
   // 1. PDF Link
-  const pdfUrl = sanitizeClientUrl(alert.officialPdfUrl || findParsedLink(['notification', 'pdf', 'advertisement', 'notice']), alertTitle, alertBoard);
+  const pdfUrl = sanitizeClientUrl(alert.officialPdfUrl || findParsedLink(['result pdf', 'cutoff', 'notification', 'pdf', 'advertisement', 'notice']), alertTitle, alertBoard);
   actions.push({
-    label: 'Download Notification PDF',
+    label: pdfLabel,
     url: pdfUrl,
     icon: <PdfIcon />,
     color: '#DC2626',
@@ -162,15 +178,22 @@ function getDynamicActions(alert) {
     borderColor: '#FCA5A5'
   });
 
-  // 2. Apply URL
-  const applyUrl = sanitizeClientUrl(alert.officialApplyUrl || findParsedLink(['apply online', 'online form', 'apply', 'admit card', 'hall ticket', 'result', 'score card', 'answer key', 'key']), alertTitle, alertBoard);
+  // 2. Main Direct Action URL (Apply, Result, Admit Card, Answer Key)
+  const applyUrl = sanitizeClientUrl(
+    alert.officialApplyUrl || findParsedLink([
+      'result', 'score card', 'merit list', 'admit card', 'hall ticket', 'exam city', 
+      'apply online', 'online form', 'apply', 'answer key', 'key'
+    ]), 
+    alertTitle, 
+    alertBoard
+  );
   actions.push({
-    label: 'Apply Online Now',
+    label: applyLabel,
     url: applyUrl,
     icon: <ApplyIcon />,
-    color: '#16A34A',
-    hoverBg: '#ECFDF5',
-    borderColor: '#A7F3D0'
+    color: isResult ? '#059669' : (isAdmit ? '#4F46E5' : '#16A34A'),
+    hoverBg: isResult ? '#ECFDF5' : (isAdmit ? '#EEF2FF' : '#ECFDF5'),
+    borderColor: isResult ? '#A7F3D0' : (isAdmit ? '#C7D2FE' : '#A7F3D0')
   });
 
   // 3. Official Web URL
@@ -1520,13 +1543,13 @@ export default function PublicLiveAlertsPage() {
               id="alerts-lists-grid"
               sx={{
                 display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: 3.5,
-              width: '100%',
-              maxWidth: '1200px',
-              mx: 'auto'
-            }}
-          >
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: { xs: 2.5, md: 3 },
+                width: '100%',
+                maxWidth: '1360px',
+                mx: 'auto'
+              }}
+            >
             {/* Column 1: Latest Jobs */}
             <Paper
               elevation={0}
@@ -1537,7 +1560,7 @@ export default function PublicLiveAlertsPage() {
                 overflow: 'hidden',
                 bgcolor: 'background.paper',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
-                height: { xs: '450px', sm: '520px', md: '580px' },
+                height: { xs: '520px', sm: '640px', md: '720px' },
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
@@ -1589,7 +1612,7 @@ export default function PublicLiveAlertsPage() {
                 overflow: 'hidden',
                 bgcolor: 'background.paper',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
-                height: { xs: '450px', sm: '520px', md: '580px' },
+                height: { xs: '520px', sm: '640px', md: '720px' },
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
@@ -1641,7 +1664,7 @@ export default function PublicLiveAlertsPage() {
                 overflow: 'hidden',
                 bgcolor: 'background.paper',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
-                height: { xs: '450px', sm: '520px', md: '580px' },
+                height: { xs: '520px', sm: '640px', md: '720px' },
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
@@ -1693,7 +1716,7 @@ export default function PublicLiveAlertsPage() {
                 overflow: 'hidden',
                 bgcolor: 'background.paper',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
-                height: { xs: '450px', sm: '520px', md: '580px' },
+                height: { xs: '520px', sm: '640px', md: '720px' },
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
@@ -1745,7 +1768,7 @@ export default function PublicLiveAlertsPage() {
                 overflow: 'hidden',
                 bgcolor: 'background.paper',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
-                height: { xs: '450px', sm: '520px', md: '580px' },
+                height: { xs: '520px', sm: '640px', md: '720px' },
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
@@ -1797,7 +1820,7 @@ export default function PublicLiveAlertsPage() {
                 overflow: 'hidden',
                 bgcolor: 'background.paper',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
-                height: { xs: '450px', sm: '520px', md: '580px' },
+                height: { xs: '520px', sm: '640px', md: '720px' },
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',

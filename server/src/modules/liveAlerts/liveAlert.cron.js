@@ -482,14 +482,62 @@ async function scrapeDetailedUrls(pageUrl) {
             labelText.includes('online apply') ||
             labelText === 'apply online' ||
             labelText.includes('online form') ||
-            labelText.includes('apply link')
+            labelText.includes('apply link') ||
+            labelText.includes('registration')
           ) {
             if (!officialApplyUrl && !isCompetitorDomain(href)) {
               officialApplyUrl = href;
             }
           }
 
-          // 2. Row: Download Notification / Exam Notice / PDF
+          // 2. Row: Download Result / Score Card / Merit List / Cutoff
+          if (
+            labelText.includes('result') ||
+            labelText.includes('score card') ||
+            labelText.includes('merit list') ||
+            labelText.includes('cut off') ||
+            labelText.includes('cutoff')
+          ) {
+            if (!officialApplyUrl && !isCompetitorDomain(href)) {
+              officialApplyUrl = href;
+            }
+            if (!officialPdfUrl && href.toLowerCase().endsWith('.pdf') && !isCompetitorDomain(href)) {
+              officialPdfUrl = href;
+            }
+          }
+
+          // 3. Row: Download Admit Card / Hall Ticket / Exam City Details
+          if (
+            labelText.includes('admit card') ||
+            labelText.includes('hall ticket') ||
+            labelText.includes('call letter') ||
+            labelText.includes('exam city') ||
+            labelText.includes('city details') ||
+            labelText.includes('exam date')
+          ) {
+            if (!officialApplyUrl && !isCompetitorDomain(href)) {
+              officialApplyUrl = href;
+            }
+            if (!officialPdfUrl && href.toLowerCase().endsWith('.pdf') && !isCompetitorDomain(href)) {
+              officialPdfUrl = href;
+            }
+          }
+
+          // 4. Row: Answer Key / Objection Tracker
+          if (
+            labelText.includes('answer key') ||
+            labelText.includes('answer-key') ||
+            labelText.includes('objection')
+          ) {
+            if (!officialApplyUrl && !isCompetitorDomain(href)) {
+              officialApplyUrl = href;
+            }
+            if (!officialPdfUrl && href.toLowerCase().endsWith('.pdf') && !isCompetitorDomain(href)) {
+              officialPdfUrl = href;
+            }
+          }
+
+          // 5. Row: Download Notification / Exam Notice / PDF
           if (
             labelText.includes('notification') ||
             labelText.includes('exam notice') ||
@@ -502,7 +550,7 @@ async function scrapeDetailedUrls(pageUrl) {
             }
           }
 
-          // 3. Row: Official Website / Portal
+          // 6. Row: Official Website / Portal
           if (
             labelText.includes('official website') ||
             labelText.includes('official portal') ||

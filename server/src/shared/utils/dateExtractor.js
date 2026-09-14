@@ -38,8 +38,9 @@ function extractDateFromSlugOrText(href = '', text = '', bodyText = '') {
       const monthIndex = MONTH_MAP[monthStr];
       if (monthIndex !== undefined) {
         let d;
-        // If current month & year, use current date instead of arbitrary 15th
-        if (yearNum === now.getFullYear() && monthIndex === now.getMonth()) {
+        const isNoticeUpdate = /\b(result|admit card|score card|hall ticket|merit list|exam date|answer key|city)\b/i.test(text || href);
+        // If current month & year or if it is an active notice announcement, use current date
+        if (isNoticeUpdate || (yearNum === now.getFullYear() && monthIndex === now.getMonth())) {
           d = new Date();
         } else {
           d = new Date(yearNum, monthIndex, 1);

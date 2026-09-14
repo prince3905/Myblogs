@@ -1,5 +1,6 @@
-import { lazy, Suspense } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { Navigate, Route, Routes, useParams, useLocation } from 'react-router-dom';
+import { Box, Typography } from '@mui/material';
 import ToastProvider from '../components/Toast';
 import AdminRoute from '../features/auth/components/AdminRoute';
 

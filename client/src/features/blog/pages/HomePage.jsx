@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Typography, Button, Box, Chip, Avatar, IconButton, CircularProgress } from '@mui/material';
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
@@ -580,6 +580,604 @@ const AlertCard = ({ alert, idx }) => {
         </Box>
       </Box>
     </Link>
+  );
+};
+
+const QUICK_PILLARS = [
+  {
+    title: 'Latest Jobs',
+    subtitle: 'Govt & State Vacancies',
+    category: 'Latest Jobs',
+    url: '/job-alerts?category=Latest+Jobs',
+    icon: '💼',
+    gradient: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+    borderColor: '#3B82F6',
+    accentColor: '#1D4ED8',
+    countBadge: '500+ Active',
+    badgeBg: '#DBEAFE',
+    badgeColor: '#1E40AF'
+  },
+  {
+    title: 'Results',
+    subtitle: 'Scorecards & Merit Lists',
+    category: 'Results',
+    url: '/job-alerts?category=Results',
+    icon: '🏆',
+    gradient: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+    borderColor: '#10B981',
+    accentColor: '#047857',
+    countBadge: '30+ Live',
+    badgeBg: '#D1FAE5',
+    badgeColor: '#065F46'
+  },
+  {
+    title: 'Admit Card',
+    subtitle: 'Hall Tickets & Call Letters',
+    category: 'Admit Card',
+    url: '/job-alerts?category=Admit+Card',
+    icon: '🎫',
+    gradient: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
+    borderColor: '#6366F1',
+    accentColor: '#4338CA',
+    countBadge: '20+ Active',
+    badgeBg: '#E0E7FF',
+    badgeColor: '#3730A3'
+  },
+  {
+    title: 'Answer Key',
+    subtitle: 'Keys & Objections',
+    category: 'Answer Key',
+    url: '/job-alerts?category=Answer+Key',
+    icon: '🔑',
+    gradient: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+    borderColor: '#F59E0B',
+    accentColor: '#B45309',
+    countBadge: '25+ Keys',
+    badgeBg: '#FEF3C7',
+    badgeColor: '#92400E'
+  }
+];
+
+const QuickActionPillars = ({ categoryCounts = {} }) => {
+  return (
+    <Box sx={{ mb: 3 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+          gap: { xs: 1.5, sm: 2, md: 2.2 }
+        }}
+      >
+        {QUICK_PILLARS.map((pillar, i) => {
+          const count = categoryCounts[pillar.category] || categoryCounts[pillar.title];
+          const displayBadge = count ? `${count} Active` : pillar.countBadge;
+          return (
+            <Box
+              key={i}
+              component={Link}
+              to={pillar.url}
+              sx={{
+                textDecoration: 'none',
+                p: { xs: 1.5, sm: 1.8, md: 2 },
+                borderRadius: '16px',
+                background: pillar.gradient,
+                border: `1.5px solid ${pillar.borderColor}35`,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                position: 'relative',
+                overflow: 'hidden',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: `0 10px 20px ${pillar.borderColor}25`,
+                  borderColor: pillar.borderColor
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.2 }}>
+                <Box
+                  sx={{
+                    width: { xs: 36, md: 42 },
+                    height: { xs: 36, md: 42 },
+                    borderRadius: '12px',
+                    bgcolor: '#FFFFFF',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: { xs: '1.2rem', md: '1.35rem' }
+                  }}
+                >
+                  {pillar.icon}
+                </Box>
+                <Chip
+                  label={displayBadge}
+                  size="small"
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: { xs: '0.62rem', md: '0.68rem' },
+                    height: { xs: 20, md: 22 },
+                    bgcolor: pillar.badgeBg,
+                    color: pillar.badgeColor,
+                    border: `1px solid ${pillar.borderColor}40`,
+                    borderRadius: '6px'
+                  }}
+                />
+              </Box>
+              <Box>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: { xs: '0.92rem', sm: '1.02rem', md: '1.1rem' },
+                    color: '#0F172A',
+                    lineHeight: 1.25,
+                    mb: 0.3
+                  }}
+                >
+                  {pillar.title}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: '#64748B',
+                    fontWeight: 600,
+                    fontSize: { xs: '0.68rem', md: '0.74rem' },
+                    display: 'block'
+                  }}
+                >
+                  {pillar.subtitle}
+                </Typography>
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
+  );
+};
+
+const POPULAR_STATES = [
+  { label: 'All India', code: 'all', icon: '🇮🇳' },
+  { label: 'Uttar Pradesh', code: 'up', icon: '🏛️' },
+  { label: 'Bihar', code: 'bihar', icon: '🏛️' },
+  { label: 'Rajasthan', code: 'rajasthan', icon: '🏛️' },
+  { label: 'Madhya Pradesh', code: 'mp', icon: '🏛️' },
+  { label: 'Maharashtra', code: 'maharashtra', icon: '🏛️' },
+  { label: 'Haryana', code: 'haryana', icon: '🏛️' },
+  { label: 'Delhi / NCR', code: 'delhi', icon: '🏛️' },
+  { label: 'West Bengal', code: 'wb', icon: '🏛️' },
+  { label: 'Jharkhand', code: 'jharkhand', icon: '🏛️' },
+  { label: 'Gujarat', code: 'gujarat', icon: '🏛️' },
+  { label: 'Uttarakhand', code: 'uttarakhand', icon: '🏛️' },
+  { label: 'Punjab', code: 'punjab', icon: '🏛️' },
+  { label: 'Chhattisgarh', code: 'cg', icon: '🏛️' },
+  { label: 'Karnataka', code: 'karnataka', icon: '🏛️' },
+  { label: 'Tamil Nadu', code: 'tn', icon: '🏛️' },
+  { label: 'Telangana', code: 'telangana', icon: '🏛️' },
+  { label: 'Andhra Pradesh', code: 'ap', icon: '🏛️' },
+  { label: 'Odisha', code: 'odisha', icon: '🏛️' },
+  { label: 'Assam', code: 'assam', icon: '🏛️' },
+  { label: 'Himachal', code: 'hp', icon: '🏛️' },
+  { label: 'J&K', code: 'jk', icon: '🏛️' }
+];
+
+const StateFilterStrip = ({ activeState = 'all', onSelectState }) => {
+  return (
+    <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+            color: '#64748B',
+            fontSize: '0.72rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.6
+          }}
+        >
+          📍 Explore Jobs & Results By State
+        </Typography>
+        <Link
+          to="/job-alerts"
+          style={{ textDecoration: 'none', color: '#2563EB', fontSize: '0.75rem', fontWeight: 700 }}
+        >
+          All 28 States →
+        </Link>
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          overflowX: 'auto',
+          py: 0.5,
+          userSelect: 'none',
+          WebkitOverflowScrolling: 'touch',
+          '&::-webkit-scrollbar': { height: '4px' },
+          '&::-webkit-scrollbar-thumb': { bgcolor: '#CBD5E1', borderRadius: '10px' },
+          '&::-webkit-scrollbar-track': { bgcolor: 'rgba(0,0,0,0.02)' }
+        }}
+      >
+        {POPULAR_STATES.map((st) => {
+          const isSelected = activeState === st.code;
+          return (
+            <Chip
+              key={st.code}
+              label={`${st.icon} ${st.label}`}
+              onClick={() => onSelectState(st.code)}
+              clickable
+              sx={{
+                fontWeight: isSelected ? 800 : 600,
+                fontSize: '0.75rem',
+                py: 1.8,
+                px: 1.2,
+                borderRadius: '24px',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                bgcolor: isSelected ? '#1E40AF' : '#F8FAFC',
+                color: isSelected ? '#FFFFFF' : '#334155',
+                border: isSelected ? '1.5px solid #1E40AF' : '1px solid #E2E8F0',
+                boxShadow: isSelected ? '0 4px 10px rgba(30, 64, 175, 0.25)' : 'none',
+                '&:hover': {
+                  bgcolor: isSelected ? '#1D4ED8' : '#F1F5F9',
+                  borderColor: isSelected ? '#1D4ED8' : '#CBD5E1'
+                }
+              }}
+            />
+          );
+        })}
+      </Box>
+    </Box>
+  );
+};
+
+const HubAlertItem = ({ alert, accentColor }) => {
+  const isNew = new Date() - new Date(alert.createdAt) < 7 * 24 * 60 * 60 * 1000;
+  return (
+    <Link
+      to={`/job-alerts?alert=${alert._id}`}
+      style={{ textDecoration: 'none', display: 'block' }}
+    >
+      <Box
+        sx={{
+          py: 1.2,
+          px: 1.4,
+          borderRadius: '8px',
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0.5,
+          borderBottom: '1px solid #F1F5F9',
+          '&:last-child': { borderBottom: 'none' },
+          '&:hover': {
+            bgcolor: '#F8FAFC',
+            transform: 'translateX(3px)',
+            '& .hub-item-title': { color: accentColor }
+          }
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 800,
+              fontSize: '0.62rem',
+              color: '#64748B',
+              textTransform: 'uppercase',
+              letterSpacing: 0.3,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '70%'
+            }}
+          >
+            {alert.boardName || 'Official'}
+          </Typography>
+          {isNew && (
+            <Box
+              sx={{
+                bgcolor: '#EF4444',
+                color: '#fff',
+                fontSize: '0.52rem',
+                fontWeight: 900,
+                px: 0.6,
+                py: 0.1,
+                borderRadius: '4px',
+                letterSpacing: 0.2
+              }}
+            >
+              NEW 🔥
+            </Box>
+          )}
+        </Box>
+        <Typography
+          className="hub-item-title"
+          sx={{
+            fontWeight: 650,
+            fontSize: { xs: '0.78rem', md: '0.82rem' },
+            color: '#1E293B',
+            lineHeight: 1.35,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            transition: 'color 0.2s ease'
+          }}
+        >
+          {alert.title}
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.2 }}>
+          <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: '0.64rem', fontWeight: 600 }}>
+            📅 {new Date(alert.parsedPostDate || alert.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+          </Typography>
+          {alert.lastDate && alert.lastDate !== 'N/A' && alert.lastDate !== 'Check Detail Page' ? (
+            <Typography variant="caption" sx={{ color: '#DC2626', fontSize: '0.64rem', fontWeight: 700, bgcolor: '#FEE2E2', px: 0.6, py: 0.1, borderRadius: '4px' }}>
+              ⏳ {alert.lastDate}
+            </Typography>
+          ) : (
+            <Typography variant="caption" sx={{ color: accentColor, fontSize: '0.64rem', fontWeight: 700 }}>
+              View ↗
+            </Typography>
+          )}
+        </Box>
+      </Box>
+    </Link>
+  );
+};
+
+const AdaptiveHighlightsHub = ({ results = [], admitCards = [], latestJobs = [] }) => {
+  const [mobileTab, setMobileTab] = useState(0);
+
+  const columns = [
+    {
+      title: 'Latest Jobs',
+      icon: '💼',
+      category: 'Latest Jobs',
+      url: '/job-alerts?category=Latest+Jobs',
+      items: latestJobs,
+      headerBg: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)',
+      accentColor: '#DC2626',
+      borderColor: '#FECACA'
+    },
+    {
+      title: 'Results',
+      icon: '🏆',
+      category: 'Results',
+      url: '/job-alerts?category=Results',
+      items: results,
+      headerBg: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+      accentColor: '#059669',
+      borderColor: '#A7F3D0'
+    },
+    {
+      title: 'Admit Cards',
+      icon: '🎫',
+      category: 'Admit Card',
+      url: '/job-alerts?category=Admit+Card',
+      items: admitCards,
+      headerBg: 'linear-gradient(135deg, #4F46E5 0%, #4338CA 100%)',
+      accentColor: '#4F46E5',
+      borderColor: '#C7D2FE'
+    }
+  ];
+
+  return (
+    <Box sx={{ mb: 4 }}>
+      {/* Desktop & Tablet: 3 Side-by-Side Professional Highlight Columns */}
+      <Box
+        sx={{
+          display: { xs: 'none', md: 'grid' },
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 2.5
+        }}
+      >
+        {columns.map((col, idx) => (
+          <Box
+            key={idx}
+            sx={{
+              borderRadius: '16px',
+              bgcolor: '#FFFFFF',
+              border: `1.5px solid #E2E8F0`,
+              overflow: 'hidden',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+              display: 'flex',
+              flexDirection: 'column',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                boxShadow: `0 10px 25px ${col.accentColor}20`,
+                borderColor: col.borderColor
+              }
+            }}
+          >
+            {/* Column Header */}
+            <Box
+              sx={{
+                background: col.headerBg,
+                color: '#FFFFFF',
+                py: 1.4,
+                px: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography sx={{ fontSize: '1.2rem' }}>{col.icon}</Typography>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.01em', color: '#FFFFFF' }}>
+                  {col.title}
+                </Typography>
+              </Box>
+              <Chip
+                label={`${col.items.length} Live`}
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.22)',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: '0.68rem',
+                  height: 22
+                }}
+              />
+            </Box>
+
+            {/* Column List */}
+            <Box sx={{ p: 1.2, flexGrow: 1, minHeight: '280px', display: 'flex', flexDirection: 'column' }}>
+              {col.items.length === 0 ? (
+                <Box sx={{ py: 4, textAlign: 'center', color: '#94A3B8', fontStyle: 'italic', fontSize: '0.85rem' }}>
+                  No active {col.title.toLowerCase()} updates right now.
+                </Box>
+              ) : (
+                col.items.map(item => (
+                  <HubAlertItem key={item._id} alert={item} accentColor={col.accentColor} />
+                ))
+              )}
+            </Box>
+
+            {/* Column Footer */}
+            <Box sx={{ p: 1.4, bgcolor: '#F8FAFC', borderTop: '1px solid #E2E8F0', textAlign: 'center' }}>
+              <Button
+                component={Link}
+                to={col.url}
+                size="small"
+                sx={{
+                  fontWeight: 750,
+                  fontSize: '0.78rem',
+                  color: col.accentColor,
+                  textTransform: 'none',
+                  '&:hover': { bgcolor: `${col.accentColor}12` }
+                }}
+              >
+                View All {col.title} →
+              </Button>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+
+      {/* Mobile: 3-Tab Segmented Thumb-Friendly Switcher */}
+      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+        <Box
+          sx={{
+            display: 'flex',
+            bgcolor: '#F1F5F9',
+            p: 0.5,
+            borderRadius: '14px',
+            mb: 2,
+            gap: 0.5
+          }}
+        >
+          {columns.map((col, idx) => {
+            const isTabActive = mobileTab === idx;
+            return (
+              <Box
+                key={idx}
+                onClick={() => setMobileTab(idx)}
+                sx={{
+                  flex: 1,
+                  py: 1,
+                  px: 0.8,
+                  borderRadius: '10px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  bgcolor: isTabActive ? '#FFFFFF' : 'transparent',
+                  boxShadow: isTabActive ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                  color: isTabActive ? col.accentColor : '#64748B'
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontWeight: isTabActive ? 800 : 600,
+                    fontSize: '0.76rem',
+                    lineHeight: 1.2
+                  }}
+                >
+                  {col.icon} {col.title}
+                </Typography>
+              </Box>
+            );
+          })}
+        </Box>
+
+        {/* Mobile Active Tab Content Box */}
+        {(() => {
+          const activeCol = columns[mobileTab];
+          return (
+            <Box
+              sx={{
+                borderRadius: '16px',
+                bgcolor: '#FFFFFF',
+                border: '1.5px solid #E2E8F0',
+                overflow: 'hidden',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.04)'
+              }}
+            >
+              <Box
+                sx={{
+                  background: activeCol.headerBg,
+                  color: '#FFFFFF',
+                  py: 1.2,
+                  px: 1.8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <Typography sx={{ fontWeight: 800, fontSize: '0.92rem', color: '#FFFFFF' }}>
+                  {activeCol.icon} Latest {activeCol.title}
+                </Typography>
+                <Chip
+                  label={`${activeCol.items.length} Live`}
+                  size="small"
+                  sx={{
+                    bgcolor: 'rgba(255,255,255,0.22)',
+                    color: '#FFFFFF',
+                    fontWeight: 850,
+                    fontSize: '0.65rem',
+                    height: 20
+                  }}
+                />
+              </Box>
+              <Box sx={{ p: 1, minHeight: '220px' }}>
+                {activeCol.items.length === 0 ? (
+                  <Box sx={{ py: 3, textAlign: 'center', color: '#94A3B8', fontStyle: 'italic', fontSize: '0.8rem' }}>
+                    No active updates right now.
+                  </Box>
+                ) : (
+                  activeCol.items.map(item => (
+                    <HubAlertItem key={item._id} alert={item} accentColor={activeCol.accentColor} />
+                  ))
+                )}
+              </Box>
+              <Box sx={{ p: 1.2, bgcolor: '#F8FAFC', borderTop: '1px solid #E2E8F0', textAlign: 'center' }}>
+                <Button
+                  component={Link}
+                  to={activeCol.url}
+                  size="small"
+                  fullWidth
+                  sx={{
+                    fontWeight: 750,
+                    fontSize: '0.78rem',
+                    color: activeCol.accentColor,
+                    textTransform: 'none'
+                  }}
+                >
+                  View All {activeCol.title} →
+                </Button>
+              </Box>
+            </Box>
+          );
+        })()}
+      </Box>
+    </Box>
   );
 };
 
@@ -1614,6 +2212,15 @@ const DailyCurrentAffairsSlider = ({ items = [], loading = false }) => {
   );
 };
 
+function getStrictChronological(items = [], max = 8) {
+  if (!items || items.length === 0) return [];
+  return [...items].sort((a, b) => {
+    const dateA = new Date(a.parsedPostDate || a.createdAt || 0).getTime();
+    const dateB = new Date(b.parsedPostDate || b.createdAt || 0).getTime();
+    return dateB - dateA;
+  }).slice(0, max);
+}
+
 export default function HomePage() {
   const { posts, loading, error } = usePosts({ category: 'Sarkari Jobs & Exams', limit: 6 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
@@ -1622,6 +2229,8 @@ export default function HomePage() {
   const [alerts, setAlerts] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_ALERTS__) && window.__INITIAL_ALERTS__.length > 0) ? window.__INITIAL_ALERTS__ : []);
   const [loadingAlerts, setLoadingAlerts] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_ALERTS__) && window.__INITIAL_ALERTS__.length > 0) ? false : true);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedState, setSelectedState] = useState('all');
+  const [categoryCounts, setCategoryCounts] = useState({});
   const mobileScrollRef = useRef(null);
   const mobileStoriesScrollRef = useRef(null);
 
@@ -1666,6 +2275,81 @@ export default function HomePage() {
     }
   };
 
+  const handleSelectState = async (stateCode) => {
+    setSelectedState(stateCode);
+    if (stateCode !== 'all') {
+      try {
+        const res = await request(`/api/public/live-alerts?state=${stateCode}&limit=32`);
+        if (res.success && res.data?.length > 0) {
+          setAlerts(prev => {
+            const existingIds = new Set(prev.map(a => a._id));
+            const newItems = res.data.filter(a => !existingIds.has(a._id));
+            return [...newItems, ...prev];
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const displayAlerts = useMemo(() => {
+    let list = alerts;
+    if (selectedState !== 'all') {
+      const sc = selectedState.toLowerCase();
+      const filtered = alerts.filter(a => {
+        const st = a.state ? a.state.toLowerCase() : '';
+        const tit = a.title ? a.title.toLowerCase() : '';
+        const brd = a.boardName ? a.boardName.toLowerCase() : '';
+        return st === sc || tit.includes(sc) || brd.includes(sc);
+      });
+      list = filtered.length > 0 ? filtered : alerts;
+    }
+    return getStrictChronological(list, 100);
+  }, [alerts, selectedState]);
+
+  const [extraResults, setExtraResults] = useState([]);
+  const [extraAdmits, setExtraAdmits] = useState([]);
+
+  const resultsAlerts = useMemo(() => {
+    const fromMain = displayAlerts.filter(a => a.category === 'Results' || a.category === 'Result' || /result|merit list|score card/i.test(a.title));
+    const combined = [...fromMain, ...extraResults];
+    const unique = Array.from(new Map(combined.map(item => [item._id, item])).values());
+    return getStrictChronological(unique, 8);
+  }, [displayAlerts, extraResults]);
+
+  const admitCardAlerts = useMemo(() => {
+    const fromMain = displayAlerts.filter(a => a.category === 'Admit Card' || a.category === 'Admit Cards' || /admit card|hall ticket|call letter/i.test(a.title));
+    const combined = [...fromMain, ...extraAdmits];
+    const unique = Array.from(new Map(combined.map(item => [item._id, item])).values());
+    return getStrictChronological(unique, 8);
+  }, [displayAlerts, extraAdmits]);
+
+  const latestJobAlerts = useMemo(() => {
+    const list = displayAlerts.filter(a => a.category === 'Latest Job' || a.category === 'Latest Jobs' || a.category === 'Jobs' || a.category === 'Recruitment' || /recruitment|vacancy|apply online|officer|constable|teacher/i.test(a.title));
+    return getStrictChronological(list, 8);
+  }, [displayAlerts]);
+
+  // Guarantee that Admit Cards and Results columns are populated without polluting main stream
+  useEffect(() => {
+    const needResults = resultsAlerts.length < 3;
+    const needAdmitCards = admitCardAlerts.length < 3;
+
+    if (needResults || needAdmitCards) {
+      Promise.allSettled([
+        needResults ? request('/api/public/live-alerts?category=Result&limit=8') : Promise.resolve(null),
+        needAdmitCards ? request('/api/public/live-alerts?category=Admit+Card&limit=8') : Promise.resolve(null),
+      ]).then(([resData, admitData]) => {
+        if (resData.status === 'fulfilled' && resData.value?.data?.length > 0) {
+          setExtraResults(resData.value.data);
+        }
+        if (admitData.status === 'fulfilled' && admitData.value?.data?.length > 0) {
+          setExtraAdmits(admitData.value.data);
+        }
+      }).catch(err => console.error(err));
+    }
+  }, [resultsAlerts.length, admitCardAlerts.length]);
+
   const loadMoreStories = async () => {
     if (loadingMoreStories || !hasMoreStories) return 0;
     setLoadingMoreStories(true);
@@ -1693,44 +2377,12 @@ export default function HomePage() {
     }
   };
 
-
-  const handleNext = async () => {
-    const maxSlide = Math.max(0, Math.ceil(alerts.length / 8) - 1);
-    if (currentSlide < maxSlide) {
-      setCurrentSlide(prev => prev + 1);
-      if (currentSlide >= maxSlide - 1 && hasMoreAlerts && !loadingMoreAlerts) {
-        loadMoreAlerts();
-      }
-    } else if (hasMoreAlerts && !loadingMoreAlerts) {
-      const added = await loadMoreAlerts();
-      if (added > 0) {
-        setCurrentSlide(prev => prev + 1);
-      }
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentSlide > 0) {
-      setCurrentSlide(prev => prev - 1);
-    }
-  };
-
-  const desktopPages = [];
-  for (let i = 0; i < alerts.length; i += 8) {
-    desktopPages.push(alerts.slice(i, i + 8));
-  }
-
-  const mobilePairs = [];
-  for (let i = 0; i < alerts.length; i += 2) {
-    mobilePairs.push(alerts.slice(i, i + 2));
-  }
-
   const [currentAffairsList, setCurrentAffairsList] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_CURRENT_AFFAIRS__)) ? window.__INITIAL_CURRENT_AFFAIRS__ : []);
   const [loadingCA, setLoadingCA] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_CURRENT_AFFAIRS__) && window.__INITIAL_CURRENT_AFFAIRS__.length > 0) ? false : true);
 
   useEffect(() => {
     if (alerts.length > 0) return;
-    request('/api/public/live-alerts?status=active&limit=32')
+    request('/api/public/live-alerts?status=active&limit=60')
       .then(res => {
         if (res.success) {
           setAlerts(res.data || []);
@@ -1739,6 +2391,21 @@ export default function HomePage() {
       .catch(err => console.error(err))
       .finally(() => setLoadingAlerts(false));
   }, []);
+
+  useEffect(() => {
+    request('/api/public/live-alerts/categories')
+      .then(res => {
+        if (res.success && Array.isArray(res.data)) {
+          const counts = {};
+          res.data.forEach(item => {
+            counts[item._id] = item.count;
+          });
+          setCategoryCounts(counts);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (stories.length > 0) return;
     request('/api/public/web-stories?limit=8')
@@ -1749,6 +2416,7 @@ export default function HomePage() {
       .catch(err => console.error(err))
       .finally(() => setLoadingStories(false));
   }, []);
+
   useEffect(() => {
     if (currentAffairsList.length > 0) return;
     request('/api/current-affairs?limit=6')
@@ -1760,10 +2428,10 @@ export default function HomePage() {
       .catch(err => console.error(err))
       .finally(() => setLoadingCA(false));
   }, []);
+
   useEffect(() => {
     if (categoriesData['Sarkari Jobs & Exams']?.length > 0) return;
     setLoadingCategories(true);
-    // 1. Fetch Sarkari Jobs & Exams only if not present in SSR
     request(`/api/posts?category=${encodeURIComponent('Sarkari Jobs & Exams')}&limit=6`)
       .then(res => {
         setCategoriesData({
@@ -1799,17 +2467,31 @@ export default function HomePage() {
       <Box 
         component="section" 
         sx={{ 
-          pt: { xs: 2.5, md: 3 }, 
-          pb: { xs: 2.5, md: 3.5 }, 
+          pt: { xs: 2, md: 2.5 }, 
+          pb: { xs: 3, md: 4 }, 
           borderBottom: '1px solid #ECECEC',
           bgcolor: '#FFFFFF'
         }}
       >
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
-          {/* 1-Click Fast Exam & Board Filter Pills Hub with Interactive Smart Marquee (Top Ticker) */}
+          {/* 1. Fast Exam & Board Filter Marquee */}
           <InteractivePillMarquee />
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+          {/* 2. Top 4 Quick-Action Pillar Cards */}
+          <QuickActionPillars categoryCounts={categoryCounts} />
+
+          {/* 3. Interactive State Filter Strip */}
+          <StateFilterStrip activeState={selectedState} onSelectState={handleSelectState} />
+
+          {/* 4. Adaptive Highlights Hub (3 Columns on Desktop / 3-Tab Selector on Mobile) */}
+          <AdaptiveHighlightsHub
+            results={resultsAlerts}
+            admitCards={admitCardAlerts}
+            latestJobs={latestJobAlerts}
+          />
+
+          {/* 5. Live Stream Marquee Header */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box 
                 sx={{ 
@@ -1829,7 +2511,7 @@ export default function HomePage() {
                 variant="h2"
                 sx={{
                   fontWeight: 800, color: '#111827', letterSpacing: '-0.02em',
-                  fontSize: { xs: '1.4rem', md: '1.8rem' }
+                  fontSize: { xs: '1.3rem', md: '1.6rem' }
                 }}
               >
                 Live Job Alerts & Updates
@@ -1848,18 +2530,18 @@ export default function HomePage() {
             </Button>
           </Box>
 
-          <Box sx={{ minHeight: { xs: '220px', sm: '210px' }, width: '100%' }}>
+          <Box sx={{ minHeight: { xs: '200px', sm: '190px' }, width: '100%' }}>
             {loadingAlerts ? (
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 2, py: 1 }}>
                 {[1, 2, 3, 4].map(i => (
                   <Box key={i} sx={{ height: 95, borderRadius: '12px', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0', animation: 'pulse 1.5s infinite ease-in-out' }} />
                 ))}
               </Box>
-            ) : alerts.length === 0 ? (
+            ) : displayAlerts.length === 0 ? (
               <Typography variant="body2" sx={{ color: 'text.secondary', py: 4, fontStyle: 'italic', textAlign: 'center' }}>No active updates at the moment.</Typography>
             ) : (
               <InteractiveAlertsMarquee 
-                alerts={alerts} 
+                alerts={displayAlerts} 
                 onLoadMore={loadMoreAlerts} 
                 hasMore={hasMoreAlerts} 
                 loadingMore={loadingMoreAlerts} 
