@@ -1122,7 +1122,8 @@ async function scrapeFeeds() {
 
       const detectedCat = detectCategory(title, href);
       const finalCategory = (detectedCat === 'Latest Job' && listing.defaultCategory) ? listing.defaultCategory : detectedCat;
-      const isExpired = isOldOrExpiredAlert(title, parsedDate, finalLastDate, finalCategory);
+      const safeParsedDate = (parsedDate && !isNaN(new Date(parsedDate).getTime())) ? parsedDate : new Date();
+      const isExpired = isOldOrExpiredAlert(title, safeParsedDate, finalLastDate, finalCategory);
       const computedStatus = isExpired ? 'expired' : 'active';
 
       // Save or update to DB
@@ -1134,7 +1135,7 @@ async function scrapeFeeds() {
             boardName,
             lastDate: finalLastDate,
             postDate: finalPostDate,
-            parsedPostDate: parsedDate,
+            parsedPostDate: safeParsedDate,
             officialUrl: finalOfficialUrl,
             officialPdfUrl: finalOfficialPdfUrl,
             officialApplyUrl: finalOfficialApplyUrl,
