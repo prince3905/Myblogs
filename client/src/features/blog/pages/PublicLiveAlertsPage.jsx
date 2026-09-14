@@ -850,92 +850,91 @@ const QUICK_EXAM_FILTERS = [
   { label: '🛠️ Free Student Tools', query: '__tools__', color: '#2563EB', icon: '🛠️' }
 ];
 
-const HOT_LINKS_CONFIG = [
+const CARD_PALETTES = [
   {
-    displayName: "IBPS RRB 15th Gramin Bank Online Form 2026",
-    searchKeywords: ["ibps rrb", "ibps gramin", "rrb 15th"],
-    postCount: "Scale I, II, III & OA",
-    type: "alert"
+    borderColor: '#6366F1',
+    textColor: '#312E81',
+    bgColor: '#EEF2FF',
+    bgGradient: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
+    hoverBg: '#E0E7FF',
+    hoverBgGradient: 'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%)',
+    shadowColor: 'rgba(99, 102, 241, 0.12)',
+    accentColor: '#4F46E5'
   },
   {
-    displayName: "UKSSSC Group C Various Post Form 2026",
-    searchKeywords: ["uksssc group c", "uksssc"],
-    postCount: "Group C Vacancies",
-    type: "alert"
+    borderColor: '#10B981',
+    textColor: '#065F46',
+    bgColor: '#ECFDF5',
+    bgGradient: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+    hoverBg: '#D1FAE5',
+    hoverBgGradient: 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)',
+    shadowColor: 'rgba(16, 185, 129, 0.12)',
+    accentColor: '#059669'
   },
   {
-    displayName: "UCO Bank Specialist Officer SO Form 2026",
-    searchKeywords: ["uco", "uco bank"],
-    postCount: "Specialist Officer",
-    type: "alert"
+    borderColor: '#F43F5E',
+    textColor: '#9F1239',
+    bgColor: '#FFF1F2',
+    bgGradient: 'linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%)',
+    hoverBg: '#FFE4E6',
+    hoverBgGradient: 'linear-gradient(135deg, #FFE4E6 0%, #FECDD3 100%)',
+    shadowColor: 'rgba(244, 63, 94, 0.12)',
+    accentColor: '#E11D48'
   },
   {
-    displayName: "ISRO ICRB Scientist Engineer SC Form 2026",
-    searchKeywords: ["isro", "isro icrb"],
-    postCount: "Scientist / Engineer",
-    type: "alert"
+    borderColor: '#0284C7',
+    textColor: '#075985',
+    bgColor: '#F0F9FF',
+    bgGradient: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)',
+    hoverBg: '#E0F2FE',
+    hoverBgGradient: 'linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%)',
+    shadowColor: 'rgba(2, 132, 199, 0.12)',
+    accentColor: '#0284C7'
   },
   {
-    displayName: "Bihar Secondary Teacher STET Online Form 2026",
-    searchKeywords: ["bihar stet", "bseb stet", "stet"],
-    postCount: "Teacher Eligibility",
-    type: "alert"
+    borderColor: '#D97706',
+    textColor: '#92400E',
+    bgColor: '#FFFBEB',
+    bgGradient: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+    hoverBg: '#FEF3C7',
+    hoverBgGradient: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+    shadowColor: 'rgba(217, 119, 6, 0.12)',
+    accentColor: '#D97706'
   },
   {
-    displayName: "India Post GDS Schedule II July 2026",
-    searchKeywords: ["india post", "gds"],
-    postCount: "44,228+ Posts",
-    type: "alert"
+    borderColor: '#8B5CF6',
+    textColor: '#5B21B6',
+    bgColor: '#F5F3FF',
+    bgGradient: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
+    hoverBg: '#EDE9FE',
+    hoverBgGradient: 'linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)',
+    shadowColor: 'rgba(139, 92, 246, 0.12)',
+    accentColor: '#7C3AED'
   },
   {
-    displayName: "HPPSC HPAS Online Form 2026",
-    searchKeywords: ["hppsc", "hpas"],
-    postCount: "Administrative Service",
-    type: "alert"
+    borderColor: '#0D9488',
+    textColor: '#115E59',
+    bgColor: '#F0FDFA',
+    bgGradient: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
+    hoverBg: '#CCFBF1',
+    hoverBgGradient: 'linear-gradient(135deg, #CCFBF1 0%, #99F6E4 100%)',
+    shadowColor: 'rgba(13, 148, 136, 0.12)',
+    accentColor: '#0D9488'
   },
   {
-    displayName: "MPESB Group 3 Sub Engineer Form 2026",
-    searchKeywords: ["mpesb", "group 3"],
-    postCount: "Sub Engineer",
-    type: "alert"
+    borderColor: '#E11D48',
+    textColor: '#881337',
+    bgColor: '#FFF1F2',
+    bgGradient: 'linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%)',
+    hoverBg: '#FFE4E6',
+    hoverBgGradient: 'linear-gradient(135deg, #FFE4E6 0%, #FECDD3 100%)',
+    shadowColor: 'rgba(225, 29, 72, 0.12)',
+    accentColor: '#E11D48'
   }
 ];
 
 const getCardStyles = (item, index) => {
-  const isFeatured = index === 0;
-  if (isFeatured) {
-    return {
-      borderColor: '#6366F1',
-      textColor: '#312E81',
-      bgColor: '#EEF2FF',
-      bgGradient: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
-      hoverBg: '#E0E7FF',
-      hoverBgGradient: 'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%)',
-      shadowColor: 'rgba(99, 102, 241, 0.12)'
-    };
-  }
-  const isRed = index % 2 !== 0;
-  if (isRed) {
-    return {
-      borderColor: '#F87171',
-      textColor: '#991B1B',
-      bgColor: '#FEF2F2',
-      bgGradient: 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)',
-      hoverBg: '#FEE2E2',
-      hoverBgGradient: 'linear-gradient(135deg, #FEE2E2 0%, #FCA5A5 100%)',
-      shadowColor: 'rgba(239, 68, 68, 0.08)'
-    };
-  } else {
-    return {
-      borderColor: '#60A5FA',
-      textColor: '#1E40AF',
-      bgColor: '#EFF6FF',
-      bgGradient: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
-      hoverBg: '#DBEAFE',
-      hoverBgGradient: 'linear-gradient(135deg, #DBEAFE 0%, #93C5FD 100%)',
-      shadowColor: 'rgba(59, 130, 246, 0.08)'
-    };
-  }
+  return CARD_PALETTES[index % CARD_PALETTES.length];
 };
 
 export default function PublicLiveAlertsPage() {
@@ -998,32 +997,26 @@ export default function PublicLiveAlertsPage() {
   const navigate = useNavigate();
 
   const hotLinks = useMemo(() => {
-    return HOT_LINKS_CONFIG.map(config => {
-      if (config.isStatic) {
-        return { ...config, targetAlert: null };
-      }
-      const match = alerts.find(a => {
-        const titleLower = a.title.toLowerCase();
-        return config.searchKeywords.some(kw => titleLower.includes(kw));
-      });
-      return { ...config, targetAlert: match || null };
+    if (!alerts || alerts.length === 0) return [];
+
+    // Filter and strictly sort by parsedPostDate descending
+    const sorted = [...alerts].sort((a, b) => {
+      const dateA = new Date(a.parsedPostDate || a.createdAt || 0).getTime();
+      const dateB = new Date(b.parsedPostDate || b.createdAt || 0).getTime();
+      return dateB - dateA;
     });
+
+    return sorted.slice(0, 8).map(alert => ({
+      displayName: alert.title,
+      boardName: alert.boardName || 'Official Board',
+      type: 'alert',
+      targetAlert: alert
+    }));
   }, [alerts]);
 
   const handleHotLinkClick = (item) => {
-    if (item.isStatic) {
-      navigate(item.link);
-    } else if (item.targetAlert) {
+    if (item.targetAlert) {
       setSelectedAlert(item.targetAlert);
-    } else {
-      setSearchQuery(item.searchKeywords[0]);
-      setSelectedState('All States');
-      setTimeout(() => {
-        const element = document.getElementById('search-filter-section') || document.getElementById('alerts-lists-grid');
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
     }
   };
 
@@ -1417,37 +1410,49 @@ export default function PublicLiveAlertsPage() {
               }}>
                 {hotLinks.map((item, idx) => {
                   const styles = getCardStyles(item, idx);
-                  const isLive = !item.isStatic && item.targetAlert;
-                  const isNew = isLive && (new Date() - new Date(item.targetAlert.createdAt) < 3 * 24 * 60 * 60 * 1000);
-                  const accentColor = idx % 2 === 0 ? '#4F46E5' : '#EF4444';
-                  const board = item.targetAlert?.boardName || item.displayName.split(' ')[0] || 'Govt Portal';
-                  const lastDate = item.targetAlert?.lastDate;
-                  const hasLastDate = lastDate && lastDate !== 'N/A' && lastDate !== 'Check Detail Page' && lastDate !== 'अधिसूचना देखें';
+                  const alert = item.targetAlert;
+                  if (!alert) return null;
+                  const isNew = idx < 4 || (new Date() - new Date(alert.createdAt || 0) < 3 * 24 * 60 * 60 * 1000);
+                  const accentColor = styles.accentColor || '#4F46E5';
+                  const board = alert.boardName || 'Govt Board';
+                  const lastDate = alert.lastDate;
+                  const hasLastDate = lastDate && lastDate !== 'N/A' && lastDate !== 'Check Detail Page' && lastDate !== 'अधिसूचना देखें' && lastDate !== 'Check Result List' && lastDate !== 'Download Score Card' && lastDate !== 'Check PDF List';
+
+                  let actionText = 'Apply ↗';
+                  if (alert.category === 'Result' || /result|score card/i.test(alert.title)) {
+                    actionText = 'Result ↗';
+                  } else if (alert.category === 'Admit Card' || /admit card|hall ticket/i.test(alert.title)) {
+                    actionText = 'Admit Card ↗';
+                  } else if (alert.category === 'Syllabus' || /syllabus/i.test(alert.title)) {
+                    actionText = 'Syllabus ↗';
+                  } else if (alert.category === 'Answer Key' || /answer key/i.test(alert.title)) {
+                    actionText = 'Answer Key ↗';
+                  }
 
                   return (
                     <Box
-                      key={idx}
+                      key={alert._id || idx}
                       onClick={() => handleHotLinkClick(item)}
                       sx={{
-                        p: 1.5,
+                        p: 1.6,
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
-                        minHeight: '125px',
+                        minHeight: '128px',
                         height: '100%',
                         bgcolor: styles.bgColor,
                         background: styles.bgGradient || styles.bgColor,
                         border: isNew ? `1.5px solid ${accentColor}` : `1px solid ${styles.borderColor}`,
-                        borderRadius: '12px',
+                        borderRadius: '14px',
                         cursor: 'pointer',
                         position: 'relative',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transition: 'all 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
                         boxShadow: isNew 
-                          ? `0 2px 8px ${idx % 2 === 0 ? 'rgba(79, 70, 229, 0.15)' : 'rgba(239, 68, 68, 0.15)'}`
-                          : `0 2px 4px -1px ${styles.shadowColor || 'rgba(0,0,0,0.03)'}`,
+                          ? `0 3px 10px ${accentColor}25`
+                          : `0 2px 5px -1px ${styles.shadowColor || 'rgba(0,0,0,0.03)'}`,
                         '&:hover': {
                           transform: 'translateY(-3px)',
-                          boxShadow: `0 8px 16px -3px ${styles.shadowColor || 'rgba(0,0,0,0.08)'}`,
+                          boxShadow: `0 10px 20px -3px ${styles.shadowColor || 'rgba(0,0,0,0.12)'}`,
                           background: styles.hoverBgGradient || styles.hoverBg,
                           borderColor: accentColor,
                           '& .hot-link-title': {
@@ -1464,7 +1469,7 @@ export default function PublicLiveAlertsPage() {
                             fontWeight: 850, 
                             color: styles.textColor, 
                             textTransform: 'uppercase', 
-                            fontSize: '0.62rem',
+                            fontSize: '0.64rem',
                             letterSpacing: 0.4
                           }}
                         >
@@ -1502,10 +1507,10 @@ export default function PublicLiveAlertsPage() {
                       <Typography
                         className="hot-link-title"
                         sx={{
-                          fontWeight: 800,
-                          fontSize: '0.78rem',
-                          color: '#1F2937',
-                          lineHeight: 1.3,
+                          fontWeight: 750,
+                          fontSize: '0.80rem',
+                          color: '#1E293B',
+                          lineHeight: 1.35,
                           display: '-webkit-box',
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: 'vertical',
@@ -1515,21 +1520,21 @@ export default function PublicLiveAlertsPage() {
                           transition: 'color 0.15s ease'
                         }}
                       >
-                        {item.displayName}
+                        {alert.title}
                       </Typography>
 
-                      {/* Bottom Row: Post Date & Last Date / Apply Badge */}
+                      {/* Bottom Row: Post Date & Action / Last Date Badge */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, pt: 0.6, borderTop: '1px dashed rgba(0,0,0,0.08)' }}>
-                        <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.62rem', fontWeight: 700 }}>
-                          📅 {new Date(item.targetAlert?.parsedPostDate || item.targetAlert?.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.64rem', fontWeight: 700 }}>
+                          📅 {new Date(alert.parsedPostDate || alert.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                         </Typography>
                         {hasLastDate ? (
-                          <Typography variant="caption" sx={{ color: '#DC2626', fontSize: '0.6rem', fontWeight: 800, bgcolor: '#FEE2E2', px: 0.6, py: 0.15, borderRadius: '4px' }}>
+                          <Typography variant="caption" sx={{ color: '#DC2626', fontSize: '0.62rem', fontWeight: 800, bgcolor: '#FEE2E2', px: 0.6, py: 0.15, borderRadius: '4px' }}>
                             ⏳ {lastDate}
                           </Typography>
                         ) : (
-                          <Typography variant="caption" sx={{ color: styles.textColor, fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2 }}>
-                            Apply ↗
+                          <Typography variant="caption" sx={{ color: styles.textColor, fontSize: '0.62rem', fontWeight: 850, textTransform: 'uppercase', letterSpacing: 0.2 }}>
+                            {actionText}
                           </Typography>
                         )}
                       </Box>

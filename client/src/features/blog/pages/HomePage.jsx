@@ -2308,8 +2308,8 @@ export default function HomePage() {
     return getStrictChronological(list, 100);
   }, [alerts, selectedState]);
 
-  const [extraResults, setExtraResults] = useState([]);
-  const [extraAdmits, setExtraAdmits] = useState([]);
+  const [extraResults, setExtraResults] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_RESULTS__) && window.__INITIAL_RESULTS__.length > 0) ? window.__INITIAL_RESULTS__ : []);
+  const [extraAdmits, setExtraAdmits] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_ADMITS__) && window.__INITIAL_ADMITS__.length > 0) ? window.__INITIAL_ADMITS__ : []);
 
   const resultsAlerts = useMemo(() => {
     const fromMain = displayAlerts.filter(a => a.category === 'Results' || a.category === 'Result' || /result|merit list|score card/i.test(a.title));
@@ -2330,15 +2330,15 @@ export default function HomePage() {
     return getStrictChronological(list, 8);
   }, [displayAlerts]);
 
-  // Guarantee that Admit Cards and Results columns are populated without polluting main stream
+  // Guarantee that Admit Cards and Results columns have full 8 items without polluting main stream
   useEffect(() => {
-    const needResults = resultsAlerts.length < 3;
-    const needAdmitCards = admitCardAlerts.length < 3;
+    const needResults = extraResults.length < 8;
+    const needAdmitCards = extraAdmits.length < 8;
 
     if (needResults || needAdmitCards) {
       Promise.allSettled([
-        needResults ? request('/api/public/live-alerts?category=Result&limit=8') : Promise.resolve(null),
-        needAdmitCards ? request('/api/public/live-alerts?category=Admit+Card&limit=8') : Promise.resolve(null),
+        needResults ? request('/api/public/live-alerts?category=Result&limit=10') : Promise.resolve(null),
+        needAdmitCards ? request('/api/public/live-alerts?category=Admit+Card&limit=10') : Promise.resolve(null),
       ]).then(([resData, admitData]) => {
         if (resData.status === 'fulfilled' && resData.value?.data?.length > 0) {
           setExtraResults(resData.value.data);
@@ -2348,7 +2348,7 @@ export default function HomePage() {
         }
       }).catch(err => console.error(err));
     }
-  }, [resultsAlerts.length, admitCardAlerts.length]);
+  }, [extraResults.length, extraAdmits.length]);
 
   const loadMoreStories = async () => {
     if (loadingMoreStories || !hasMoreStories) return 0;

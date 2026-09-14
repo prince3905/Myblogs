@@ -31,10 +31,10 @@ liveAlertSchema.pre('save', function (next) {
 
   // Strict Date Clamp: Never allow a future parsedPostDate in the database
   if (this.parsedPostDate && this.parsedPostDate > now) {
-    this.parsedPostDate = this.createdAt ? new Date(this.createdAt) : now;
+    this.parsedPostDate = now;
   }
   if (!this.parsedPostDate) {
-    this.parsedPostDate = this.createdAt ? new Date(this.createdAt) : now;
+    this.parsedPostDate = now;
   }
 
   // Pre-save guard: Automatic expiration of past-year alerts for JOB VACANCIES only

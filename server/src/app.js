@@ -209,12 +209,25 @@ async function buildHomepageHtml() {
     const BlogPost = mongoose.models.BlogPost || mongoose.model('BlogPost');
     const CurrentAffairs = mongoose.models.CurrentAffairs || mongoose.model('CurrentAffairs');
 
-    const [storiesRes, alertsRes, sarkariRes, caRes] = await Promise.allSettled([
+    let initialResults = [];
+    let initialAdmits = [];
+
+    const [storiesRes, alertsRes, resultsRes, admitsRes, sarkariRes, caRes] = await Promise.allSettled([
       WebStory.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean(),
       LiveAlert.find({ status: { $in: ['active', 'published'] } })
         .select('-detailsText')
         .sort({ parsedPostDate: -1, createdAt: -1 })
         .limit(60)
+        .lean(),
+      LiveAlert.find({ status: { $in: ['active', 'published'] }, category: { $regex: /^Result/i } })
+        .select('-detailsText')
+        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .limit(10)
+        .lean(),
+      LiveAlert.find({ status: { $in: ['active', 'published'] }, category: { $regex: /^Admit/i } })
+        .select('-detailsText')
+        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .limit(10)
         .lean(),
       BlogPost.find({ status: 'published', category: 'Sarkari Jobs & Exams' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean(),
       CurrentAffairs.find({ status: 'published' }).sort({ publishDate: -1, createdAt: -1 }).limit(6).lean()
@@ -222,13 +235,20 @@ async function buildHomepageHtml() {
 
     initialStories = storiesRes.status === 'fulfilled' ? (storiesRes.value || []) : [];
     const rawAlerts = alertsRes.status === 'fulfilled' ? (alertsRes.value || []) : [];
+    const rawResults = resultsRes.status === 'fulfilled' ? (resultsRes.value || []) : [];
+    const rawAdmits = admitsRes.status === 'fulfilled' ? (admitsRes.value || []) : [];
     const nowTime = Date.now();
-    initialAlerts = rawAlerts.map(a => {
+    
+    const clampDate = (a) => {
       if (a.parsedPostDate && new Date(a.parsedPostDate).getTime() > nowTime) {
         return { ...a, parsedPostDate: a.createdAt || new Date(nowTime) };
       }
       return a;
-    });
+    };
+
+    initialAlerts = rawAlerts.map(clampDate);
+    initialResults = rawResults.map(clampDate);
+    initialAdmits = rawAdmits.map(clampDate);
     sarkariPosts = sarkariRes.status === 'fulfilled' ? (sarkariRes.value || []) : [];
     initialCurrentAffairs = caRes.status === 'fulfilled' ? (caRes.value || []) : [];
 
@@ -241,7 +261,7 @@ async function buildHomepageHtml() {
     }
 
     const initialPostsPayload = { posts: sarkariPosts, total: sarkariPosts.length, page: 1, pages: 1 };
-    const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(initialPostsPayload).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories || []).replace(/</g, '\\u003c')}; window.__INITIAL_ALERTS__ = ${JSON.stringify(initialAlerts || []).replace(/</g, '\\u003c')}; window.__INITIAL_SARKARI_POSTS__ = ${JSON.stringify(sarkariPosts || []).replace(/</g, '\\u003c')}; window.__INITIAL_CURRENT_AFFAIRS__ = ${JSON.stringify(initialCurrentAffairs || []).replace(/</g, '\\u003c')};</script>`;
+    const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(initialPostsPayload).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories || []).replace(/</g, '\\u003c')}; window.__INITIAL_ALERTS__ = ${JSON.stringify(initialAlerts || []).replace(/</g, '\\u003c')}; window.__INITIAL_RESULTS__ = ${JSON.stringify(initialResults || []).replace(/</g, '\\u003c')}; window.__INITIAL_ADMITS__ = ${JSON.stringify(initialAdmits || []).replace(/</g, '\\u003c')}; window.__INITIAL_SARKARI_POSTS__ = ${JSON.stringify(sarkariPosts || []).replace(/</g, '\\u003c')}; window.__INITIAL_CURRENT_AFFAIRS__ = ${JSON.stringify(initialCurrentAffairs || []).replace(/</g, '\\u003c')};</script>`;
     html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
   } catch (ssrErr) {
     console.warn('Failed to pre-fetch initial SSR data:', ssrErr.message);

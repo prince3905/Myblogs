@@ -49,10 +49,10 @@ function sanitizeAlertResponse(alert) {
   // Strictly clamp parsedPostDate: never expose future dates to client
   const now = new Date();
   if (obj.parsedPostDate && new Date(obj.parsedPostDate) > now) {
-    obj.parsedPostDate = obj.createdAt ? new Date(obj.createdAt) : now;
+    obj.parsedPostDate = now;
   }
   if (!obj.parsedPostDate) {
-    obj.parsedPostDate = obj.createdAt ? new Date(obj.createdAt) : now;
+    obj.parsedPostDate = now;
   }
 
   // Never expose sourceUrl to public client (keep for admin reference)
