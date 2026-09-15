@@ -1080,11 +1080,18 @@ async function scrapeStateHubFeeds() {
 }
 
 async function scrapeFeeds() {
-  console.log('[LiveAlert Scraper] Starting multi-source DOM scraping...');
-  // Clean up any old listings from other sources
-  await LiveAlert.deleteMany({ source: { $nin: ['SarkariResult', 'Official Portal'] } });
-
-
+  console.log('[LiveAlert Scraper] Starting multi-source DOM scraping (1-week fresh gate active)...');
+  
+  // Clean up any old listings from other sources & prune expired / older than 7 days records
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  await LiveAlert.deleteMany({
+    $or: [
+      { source: { $nin: ['SarkariResult', 'Official Portal'] } },
+      { status: 'expired' },
+      { createdAt: { $lt: sevenDaysAgo }, parsedPostDate: { $lt: sevenDaysAgo } }
+    ]
+  });
 
   let totalSaved = 0;
   const listLinks = [];
@@ -1247,8 +1254,19 @@ async function scrapeFeeds() {
       const detectedCat = detectCategory(title, href);
       const finalCategory = (detectedCat === 'Latest Job' && listing.defaultCategory) ? listing.defaultCategory : detectedCat;
       const safeParsedDate = (parsedDate && !isNaN(new Date(parsedDate).getTime())) ? parsedDate : new Date();
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      // Strict 1-Week Gate: Only ingest fresh notices published/posted in the last 7 days
+      if (safeParsedDate && safeParsedDate < sevenDaysAgo) {
+        continue;
+      }
+
       const isExpired = isOldOrExpiredAlert(title, safeParsedDate, finalLastDate, finalCategory);
-      const computedStatus = isExpired ? 'expired' : 'active';
+      if (isExpired) {
+        continue; // Skip expired notices
+      }
+      const computedStatus = 'active';
 
       // Save or update to DB
       await LiveAlert.updateOne(
