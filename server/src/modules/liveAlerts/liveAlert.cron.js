@@ -796,6 +796,121 @@ function cleanDetailsText(text) {
   return stripSarkariResultMentionsAndLinks(cleanedLines.join('\n'));
 }
 
+function extractDomainFromUrl(url = '') {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) return '';
+  try {
+    const u = new URL(url);
+    return `${u.protocol}//${u.host}`;
+  } catch (e) {
+    return '';
+  }
+}
+
+async function scrapeArticleOfficialLinks(articleUrl) {
+  if (!articleUrl || typeof articleUrl !== 'string' || !articleUrl.startsWith('http')) {
+    return { applyUrl: '', pdfUrl: '', webUrl: '' };
+  }
+
+  try {
+    const res = await axios.get(articleUrl, {
+      timeout: 8000,
+      headers: {
+        'User-Agent': getRandomUA(),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      }
+    });
+
+    const $ = cheerio.load(res.data);
+    let applyUrl = '';
+    let pdfUrl = '';
+    let webUrl = '';
+
+    const isCompetitor = (url = '') => {
+      if (!url || typeof url !== 'string') return true;
+      const lower = url.toLowerCase();
+      return (
+        !lower.startsWith('http') ||
+        lower.includes('sarkariresult') ||
+        lower.includes('freejobalert') ||
+        lower.includes('sarkariexam') ||
+        lower.includes('jobalerts') ||
+        lower.includes('digitalhomeblog.in') ||
+        lower.includes('facebook.com') ||
+        lower.includes('twitter.com') ||
+        lower.includes('t.me') ||
+        lower.includes('telegram.me') ||
+        lower.includes('whatsapp.com') ||
+        lower.includes('instagram.com') ||
+        lower.includes('youtube.com') ||
+        lower.includes('threads.net') ||
+        lower.includes('play.google.com')
+      );
+    };
+
+    $('article, .entry-content, main, table').find('a').each((i, el) => {
+      const href = ($(el).attr('href') || '').trim();
+      if (!href || isCompetitor(href)) return;
+
+      const aText = $(el).text().replace(/\s+/g, ' ').trim().toLowerCase();
+      const parentText = $(el).parent().text().replace(/\s+/g, ' ').trim().toLowerCase();
+      const combined = `${aText} ${parentText}`;
+
+      // 1. Apply Online
+      if (
+        (combined.includes('apply online') ||
+         combined.includes('online application') ||
+         combined.includes('registration') ||
+         combined.includes('online form') ||
+         aText === 'apply' ||
+         aText === 'apply online') &&
+        !combined.includes('offline')
+      ) {
+        if (!applyUrl) applyUrl = href;
+      }
+
+      // 2. Notification PDF / Notice
+      if (
+        combined.includes('notification') ||
+        combined.includes('advertisement') ||
+        combined.includes('advt') ||
+        combined.includes('notice') ||
+        combined.includes('rule book') ||
+        combined.includes('rulebook') ||
+        href.toLowerCase().endsWith('.pdf')
+      ) {
+        if (!pdfUrl) pdfUrl = href;
+      }
+
+      // 3. Official Website
+      if (
+        combined.includes('official website') ||
+        combined.includes('official portal') ||
+        combined.includes('board website') ||
+        combined.includes('commission website')
+      ) {
+        if (!webUrl) webUrl = href;
+      }
+    });
+
+    // If webUrl is missing, derive it from pdfUrl or applyUrl if valid domain
+    if (!webUrl) {
+      if (pdfUrl && !isCompetitor(pdfUrl)) {
+        webUrl = extractDomainFromUrl(pdfUrl);
+      } else if (applyUrl && !isCompetitor(applyUrl) && !applyUrl.includes('google.com/forms')) {
+        webUrl = extractDomainFromUrl(applyUrl);
+      }
+    }
+
+    if (!applyUrl && webUrl) {
+      applyUrl = webUrl;
+    }
+
+    return { applyUrl, pdfUrl, webUrl };
+  } catch (err) {
+    return { applyUrl: '', pdfUrl: '', webUrl: '' };
+  }
+}
+
 async function scrapeStateHubFeeds() {
   console.log('[Multi-State Scraper] Ingesting state-level vacancies from official state commission hubs...');
   let savedCount = 0;
@@ -896,9 +1011,6 @@ async function scrapeStateHubFeeds() {
             continue;
           }
 
-          // Resolve Official Govt Portal URL (100% official gov.in/nic.in)
-          const officialPortalUrl = resolveOfficialGovtPortal(cleanTitle, boardName, '');
-
           // Check if already in DB (by sourceUrl or cleanTitle)
           const uniqueKey = rawLink || `state-${target.state}-${boardName}-${postName}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           const existing = await LiveAlert.findOne({
@@ -912,6 +1024,17 @@ async function scrapeStateHubFeeds() {
             continue;
           }
 
+          // Deep Scrape Official Links directly from the vacancy article page
+          let extracted = { applyUrl: '', pdfUrl: '', webUrl: '' };
+          if (rawLink && rawLink.startsWith('http')) {
+            extracted = await scrapeArticleOfficialLinks(rawLink);
+          }
+
+          // Resolve Official Govt Portal URL (100% official gov.in/nic.in/edu.in/ac.in)
+          const officialWebUrl = resolveOfficialGovtPortal(cleanTitle, boardName, extracted.webUrl, target.state);
+          const officialApplyUrl = extracted.applyUrl || officialWebUrl;
+          const officialPdfUrl = extracted.pdfUrl || officialWebUrl;
+
           const detailsText = [
             `Organization: ${boardName}`,
             `Post Name: ${postName}`,
@@ -919,8 +1042,8 @@ async function scrapeStateHubFeeds() {
             `Application Last Date: ${lastDateStr || 'Refer Official Portal'}`,
             `State: ${target.state}`,
             `Category: Latest Job`,
-            `Official Govt Portal: ${officialPortalUrl}`,
-            `Direct Apply Link: ${officialPortalUrl}`
+            `Official Govt Portal: ${officialWebUrl}`,
+            `Direct Apply Link: ${officialApplyUrl}`
           ].join('\n');
 
           await LiveAlert.create({
@@ -929,8 +1052,9 @@ async function scrapeStateHubFeeds() {
             sourceUrl: uniqueKey,
             lastDate: lastDateStr,
             parsedPostDate: parsedDate,
-            officialUrl: officialPortalUrl,
-            officialApplyUrl: officialPortalUrl,
+            officialUrl: officialWebUrl,
+            officialApplyUrl: officialApplyUrl,
+            officialPdfUrl: officialPdfUrl,
             source: 'Official Portal',
             state: target.state,
             category: 'Latest Job',
@@ -940,7 +1064,7 @@ async function scrapeStateHubFeeds() {
 
           savedCount++;
           pageCount++;
-          console.log(`[Multi-State Scraper] Ingested ${target.state} alert: "${cleanTitle}" -> ${officialPortalUrl}`);
+          console.log(`[Multi-State Scraper] Ingested ${target.state} alert: "${cleanTitle}" -> Portal: ${officialWebUrl} | Apply: ${officialApplyUrl}`);
         }
       }
 

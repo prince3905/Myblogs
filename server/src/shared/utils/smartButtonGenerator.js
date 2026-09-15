@@ -8,12 +8,15 @@
  * - Vacancy / Job -> "Apply Online Form (यहाँ क्लिक करें ✍️)"
  */
 
+const { resolveOfficialGovtPortal } = require('./govtPortalMap');
+
 function generateSmartActionButtons(title = '', urls = {}) {
   const lowerTitle = (title || '').toLowerCase();
+  const fallbackPortal = resolveOfficialGovtPortal(title);
 
-  const applyUrl = urls.apply || 'https://www.india.gov.in/';
-  const pdfUrl = urls.pdf || urls.web || 'https://www.india.gov.in/';
-  const webUrl = urls.web || 'https://www.india.gov.in/';
+  const applyUrl = (urls.apply && !urls.apply.includes('india.gov.in')) ? urls.apply : fallbackPortal;
+  const pdfUrl = (urls.pdf && !urls.pdf.includes('india.gov.in')) ? urls.pdf : (urls.web && !urls.web.includes('india.gov.in')) ? urls.web : fallbackPortal;
+  const webUrl = (urls.web && !urls.web.includes('india.gov.in')) ? urls.web : fallbackPortal;
 
   let btn1Text = 'Apply Online Form (यहाँ क्लिक करें ✍️)';
   let btn2Text = 'Download Official Notification (PDF 📄)';
