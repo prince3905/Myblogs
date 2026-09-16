@@ -711,14 +711,15 @@ function renderAlertListItem(alert, setSelectedAlert, themeColor) {
         p: 2,
         cursor: 'pointer',
         borderBottom: '1px solid #F1F5F9',
-        borderLeft: `3.5px solid transparent`,
+        borderLeft: alert.isHighlight ? '3.5px solid #F59E0B' : '3.5px solid transparent',
+        bgcolor: alert.isHighlight ? 'rgba(254, 243, 199, 0.25)' : 'transparent',
         transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         display: 'flex',
         flexDirection: 'column',
         gap: 0.8,
         '&:hover': {
-          bgcolor: '#F8FAFC',
-          borderLeftColor: themeColor,
+          bgcolor: alert.isHighlight ? 'rgba(254, 243, 199, 0.45)' : '#F8FAFC',
+          borderLeftColor: alert.isHighlight ? '#D97706' : themeColor,
           pl: 2.5,
           '& .alert-title': {
             color: themeColor
@@ -743,6 +744,22 @@ function renderAlertListItem(alert, setSelectedAlert, themeColor) {
           {alert.boardName || 'Official Board'}
         </Typography>
         <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+          {alert.isHighlight && (
+            <Chip 
+              label="⚡ TOP" 
+              size="small" 
+              sx={{ 
+                height: 16, 
+                fontSize: '0.55rem', 
+                fontWeight: 900, 
+                bgcolor: '#F59E0B', 
+                color: 'white',
+                borderRadius: '4px',
+                boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)',
+                '& .MuiChip-label': { px: 0.6 }
+              }} 
+            />
+          )}
           {isNew && (
             <Chip 
               label="NEW" 
@@ -1059,8 +1076,10 @@ export default function PublicLiveAlertsPage() {
   const hotLinks = useMemo(() => {
     if (!alerts || alerts.length === 0) return [];
 
-    // Filter and strictly sort by parsedPostDate descending
+    // Filter and strictly sort by parsedPostDate descending (with isHighlight prioritized at top)
     const sorted = [...alerts].sort((a, b) => {
+      if (a.isHighlight && !b.isHighlight) return -1;
+      if (!a.isHighlight && b.isHighlight) return 1;
       const dateA = new Date(a.parsedPostDate || a.createdAt || 0).getTime();
       const dateB = new Date(b.parsedPostDate || b.createdAt || 0).getTime();
       return dateB - dateA;
@@ -1183,7 +1202,11 @@ export default function PublicLiveAlertsPage() {
       }
     });
 
-    const sortByDate = (a, b) => new Date(b.parsedPostDate || b.createdAt) - new Date(a.parsedPostDate || a.createdAt);
+    const sortByDate = (a, b) => {
+      if (a.isHighlight && !b.isHighlight) return -1;
+      if (!a.isHighlight && b.isHighlight) return 1;
+      return new Date(b.parsedPostDate || b.createdAt) - new Date(a.parsedPostDate || a.createdAt);
+    };
     jobs.sort(sortByDate);
     admitCards.sort(sortByDate);
     results.sort(sortByDate);
