@@ -1354,26 +1354,27 @@ async function scrapeFeeds() {
       return score;
     }
 
-    // Strict Daily Post Cap: Ensure website never publishes more than 6 posts per day to protect Google SEO
+    // Strict Daily Post Cap for Sarkari Jobs: Exactly 4 heavy-traffic posts per day to dominate search rankings safely
     const BlogPost = require('../posts/post.model');
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
-    const todayPublishedCount = await BlogPost.countDocuments({
+    const todaySarkariCount = await BlogPost.countDocuments({
       createdAt: { $gte: startOfToday },
+      category: 'Sarkari Jobs & Exams',
       status: 'published'
     });
 
-    const MAX_DAILY_POSTS = 6;
-    if (todayPublishedCount >= MAX_DAILY_POSTS) {
-      console.log(`[Autopilot] Daily quota reached (${todayPublishedCount}/${MAX_DAILY_POSTS} posts published today). Halting auto-publishing to protect Google SEO and avoid spam detection.`);
+    const MAX_DAILY_SARKARI_POSTS = 4;
+    if (todaySarkariCount >= MAX_DAILY_SARKARI_POSTS) {
+      console.log(`[Autopilot] Daily Sarkari Jobs quota reached (${todaySarkariCount}/${MAX_DAILY_SARKARI_POSTS} posts published today). Halting to protect Google SEO and maintain high authority.`);
       return totalSaved;
     }
 
-    // Natural Stagger Cooldown: Must have at least 2 hours gap between automated blog post publications
-    const lastPost = await BlogPost.findOne({ status: 'published' }).sort({ createdAt: -1 });
-    if (lastPost && (Date.now() - new Date(lastPost.createdAt).getTime()) < 2 * 60 * 60 * 1000) {
-      const minutesAgo = Math.round((Date.now() - new Date(lastPost.createdAt).getTime()) / 60000);
-      console.log(`[Autopilot] Stagger cooldown active (Last post published ${minutesAgo}m ago, minimum gap is 120m). Spacing posts naturally across the day for Googlebot.`);
+    // Natural Stagger Cooldown: At least 2.5 hours (150 minutes) gap between Sarkari job posts for organic crawling
+    const lastSarkariPost = await BlogPost.findOne({ category: 'Sarkari Jobs & Exams', status: 'published' }).sort({ createdAt: -1 });
+    if (lastSarkariPost && (Date.now() - new Date(lastSarkariPost.createdAt).getTime()) < 2.5 * 60 * 60 * 1000) {
+      const minutesAgo = Math.round((Date.now() - new Date(lastSarkariPost.createdAt).getTime()) / 60000);
+      console.log(`[Autopilot] Sarkari Jobs stagger active (Last post ${minutesAgo}m ago, minimum gap 150m). Spacing 4 posts naturally across the day.`);
       return totalSaved;
     }
 
