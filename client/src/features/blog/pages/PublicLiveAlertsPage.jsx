@@ -451,13 +451,13 @@ function renderBlogContent(alert) {
   const parsed = parseDetails(alert.detailsText, alert);
 
   return (
-    <Box sx={{ color: '#374151', fontSize: '0.9rem', lineHeight: 1.6 }}>
+    <Box sx={{ color: '#E2E8F0', fontSize: '0.9rem', lineHeight: 1.6 }}>
       {parsed.shortInfo && (
-        <Box sx={{ mb: 3, p: 2, bgcolor: '#EFF6FF', borderRadius: 2, borderLeft: '4px solid #3B82F6' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1E40AF', mb: 0.5, textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: 0.5 }}>
+        <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(56, 189, 248, 0.12)', borderRadius: 2, borderLeft: '4px solid #38BDF8', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#38BDF8', mb: 0.5, textTransform: 'uppercase', fontSize: '0.72rem', letterSpacing: 0.8 }}>
             Short Information
           </Typography>
-          <Typography variant="body2" sx={{ color: '#1E3A8A', lineHeight: 1.5, fontSize: '0.85rem' }}>
+          <Typography variant="body2" sx={{ color: '#F1F5F9', lineHeight: 1.6, fontSize: '0.88rem' }}>
             {parsed.shortInfo}
           </Typography>
         </Box>
@@ -473,25 +473,25 @@ function renderBlogContent(alert) {
           const isDateFee = titleLower.includes('date') || titleLower.includes('fee') || titleLower.includes('age limit');
 
           let icon = '⚡';
-          let bgColor = '#F3F4F6';
-          let textColor = '#1F2937';
-          let borderLeftColor = '#9CA3AF';
+          let bgColor = 'rgba(255, 255, 255, 0.05)';
+          let textColor = '#F1F5F9';
+          let borderLeftColor = '#64748B';
 
           if (isWarning) {
             icon = '⚠️';
-            bgColor = '#FFFBEB';
-            textColor = '#B45309';
+            bgColor = 'rgba(245, 158, 11, 0.15)';
+            textColor = '#FBBF24';
             borderLeftColor = '#F59E0B';
           } else if (isLink) {
             icon = '🔗';
-            bgColor = '#EFF6FF';
-            textColor = '#1E40AF';
-            borderLeftColor = '#3B82F6';
+            bgColor = 'rgba(56, 189, 248, 0.15)';
+            textColor = '#38BDF8';
+            borderLeftColor = '#38BDF8';
           } else if (isDateFee) {
             icon = '📅';
-            bgColor = '#F0FDF4';
-            textColor = '#15803D';
-            borderLeftColor = '#22C55E';
+            bgColor = 'rgba(16, 185, 129, 0.15)';
+            textColor = '#34D399';
+            borderLeftColor = '#10B981';
           }
 
           return (
@@ -512,9 +512,9 @@ function renderBlogContent(alert) {
               <Typography 
                 variant="subtitle2" 
                 sx={{ 
-                  fontWeight: 800, 
+                  fontWeight: 850, 
                   color: textColor, 
-                  fontSize: '0.85rem',
+                  fontSize: '0.88rem',
                   textTransform: 'uppercase',
                   letterSpacing: 0.5
                 }}
@@ -532,18 +532,18 @@ function renderBlogContent(alert) {
                 <Box 
                   key={itIdx} 
                   sx={{ 
-                    p: 1.2, 
-                    bgcolor: '#F9FAFB', 
+                    p: 1.4, 
+                    bgcolor: 'rgba(30, 41, 59, 0.65)', 
                     borderRadius: 2, 
-                    border: '1px solid #ECECEC',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     gap: 1
                   }}
                 >
-                  <Typography sx={{ fontWeight: 600, color: '#4B5563', fontSize: '0.75rem' }}>{it.key}</Typography>
-                  <Typography sx={{ fontWeight: 700, color: '#1F2937', fontSize: '0.78rem', textAlign: 'right' }}>
+                  <Typography sx={{ fontWeight: 600, color: '#94A3B8', fontSize: '0.78rem' }}>{it.key}</Typography>
+                  <Typography sx={{ fontWeight: 800, color: '#FFFFFF', fontSize: '0.82rem', textAlign: 'right' }}>
                     {renderTextWithLinks(it.value)}
                   </Typography>
                 </Box>
@@ -554,7 +554,7 @@ function renderBlogContent(alert) {
 
         if (sect.type === 'table') {
           return (
-            <TableContainer key={idx} component={Paper} variant="outlined" sx={{ mb: 2.5, borderRadius: 2, overflowX: 'auto' }}>
+            <TableContainer key={idx} component={Paper} variant="outlined" sx={{ mb: 2.5, borderRadius: 2, overflowX: 'auto', bgcolor: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
               <Table size="small">
                 <TableBody>
                   {sect.rows.map((row, rowIdx) => {
@@ -563,18 +563,19 @@ function renderBlogContent(alert) {
                       <TableRow 
                         key={rowIdx} 
                         sx={{ 
-                          bgcolor: isHeader ? '#F3F4F6' : (rowIdx % 2 === 0 ? 'white' : '#F9FAFB'),
-                          '& td': { py: 1, px: { xs: 1, sm: 1.5 } } 
+                          bgcolor: isHeader ? 'rgba(30, 41, 59, 0.95)' : (rowIdx % 2 === 0 ? 'rgba(15, 23, 42, 0.6)' : 'rgba(30, 41, 59, 0.35)'),
+                          '& td': { py: 1.2, px: { xs: 1, sm: 1.5 } } 
                         }}
                       >
                         {row.map((col, colIdx) => (
                           <TableCell 
                             key={colIdx} 
                             sx={{ 
-                              fontWeight: isHeader ? 700 : 500,
-                              fontSize: '0.78rem',
-                              color: isHeader ? '#374151' : '#4B5563',
-                              borderRight: '1px solid #E5E7EB',
+                              fontWeight: isHeader ? 800 : 500,
+                              fontSize: '0.8rem',
+                              color: isHeader ? '#38BDF8' : '#E2E8F0',
+                              borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+                              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
                               '&:last-child': { borderRight: 'none' }
                             }}
                           >
@@ -595,7 +596,7 @@ function renderBlogContent(alert) {
             <Box key={idx} sx={{ mb: 2 }}>
               {sect.paragraphs.map((para, pIdx) => {
                 return (
-                  <Typography key={pIdx} variant="body2" sx={{ color: '#4B5563', mb: 0.8, fontSize: '0.85rem', lineHeight: 1.5 }}>
+                  <Typography key={pIdx} variant="body2" sx={{ color: '#CBD5E1', mb: 1, fontSize: '0.88rem', lineHeight: 1.65 }}>
                     {renderTextWithLinks(para)}
                   </Typography>
                 );
@@ -608,8 +609,8 @@ function renderBlogContent(alert) {
       })}
 
       {/* Digital Home Student Tools & Fast Community Banner */}
-      <Box sx={{ mt: 3, p: 2.5, bgcolor: '#F8FAFC', borderRadius: 3, border: '1.5px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1E293B', mb: 1, display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.88rem' }}>
+      <Box sx={{ mt: 3, p: 2.5, bgcolor: 'rgba(15, 23, 42, 0.85)', borderRadius: 3, border: '1.5px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#FFFFFF', mb: 1.2, display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.9rem' }}>
           🛠️ Free Student Tools for Application Form:
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
@@ -617,16 +618,16 @@ function renderBlogContent(alert) {
             href="/tools"
             target="_blank"
             sx={{
-              fontWeight: 700,
-              color: '#4338CA',
-              bgcolor: '#EEF2FF',
-              border: '1px solid #C7D2FE',
+              fontWeight: 750,
+              color: '#818CF8',
+              bgcolor: 'rgba(99, 102, 241, 0.15)',
+              border: '1px solid rgba(99, 102, 241, 0.35)',
               px: 1.5,
               py: 0.6,
               borderRadius: '6px',
-              fontSize: '0.75rem',
+              fontSize: '0.78rem',
               textDecoration: 'none',
-              '&:hover': { bgcolor: '#E0E7FF', textDecoration: 'none' }
+              '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.25)', textDecoration: 'none' }
             }}
           >
             📸 Photo & Signature Resizer
@@ -635,16 +636,16 @@ function renderBlogContent(alert) {
             href="/tools"
             target="_blank"
             sx={{
-              fontWeight: 700,
-              color: '#047857',
-              bgcolor: '#ECFDF5',
-              border: '1px solid #A7F3D0',
+              fontWeight: 750,
+              color: '#34D399',
+              bgcolor: 'rgba(16, 185, 129, 0.15)',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
               px: 1.5,
               py: 0.6,
               borderRadius: '6px',
-              fontSize: '0.75rem',
+              fontSize: '0.78rem',
               textDecoration: 'none',
-              '&:hover': { bgcolor: '#D1FAE5', textDecoration: 'none' }
+              '&:hover': { bgcolor: 'rgba(16, 185, 129, 0.25)', textDecoration: 'none' }
             }}
           >
             📄 PDF & Image Compressor
@@ -653,23 +654,23 @@ function renderBlogContent(alert) {
             href="/tools"
             target="_blank"
             sx={{
-              fontWeight: 700,
-              color: '#B45309',
-              bgcolor: '#FEF3C7',
-              border: '1px solid #FDE68A',
+              fontWeight: 750,
+              color: '#FBBF24',
+              bgcolor: 'rgba(245, 158, 11, 0.15)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
               px: 1.5,
               py: 0.6,
               borderRadius: '6px',
-              fontSize: '0.75rem',
+              fontSize: '0.78rem',
               textDecoration: 'none',
-              '&:hover': { bgcolor: '#FDE68A', textDecoration: 'none' }
+              '&:hover': { bgcolor: 'rgba(245, 158, 11, 0.25)', textDecoration: 'none' }
             }}
           >
             🎂 Age Calculator & Eligibility
           </MuiLink>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1, pt: 1.5, borderTop: '1px dashed #E2E8F0' }}>
-          <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, fontSize: '0.72rem' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1, pt: 1.5, borderTop: '1px dashed rgba(255, 255, 255, 0.1)' }}>
+          <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, fontSize: '0.75rem' }}>
             ⚡ Real-time updates delivered straight to your phone.
           </Typography>
           <MuiLink
@@ -683,15 +684,12 @@ function renderBlogContent(alert) {
               px: 1.8,
               py: 0.5,
               borderRadius: '6px',
-              fontSize: '0.75rem',
+              fontSize: '0.78rem',
               textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 0.5,
               '&:hover': { bgcolor: '#0369A1', textDecoration: 'none' }
             }}
           >
-            ✈️ Join Telegram Alerts
+            Join Telegram Alert ➔
           </MuiLink>
         </Box>
       </Box>
@@ -1980,24 +1978,38 @@ export default function PublicLiveAlertsPage() {
           maxWidth="md"
           fullWidth
           scroll="paper"
+          BackdropProps={{
+            sx: {
+              bgcolor: 'rgba(0, 0, 0, 0.85) !important',
+              backgroundColor: 'rgba(0, 0, 0, 0.85) !important',
+              backdropFilter: 'blur(10px)'
+            }
+          }}
           PaperProps={{
             sx: {
-              borderRadius: { xs: '16px', sm: '24px' },
-              p: { xs: 0, sm: 1.5 },
-              bgcolor: '#FFFFFF',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-              margin: { xs: 1.5, sm: 4 }
+              borderRadius: { xs: '18px', sm: '28px' },
+              p: { xs: 0, sm: 0.5 },
+              bgcolor: '#070B18 !important',
+              backgroundColor: '#070B18 !important',
+              backgroundImage: 'linear-gradient(180deg, #0D1629 0%, #060A14 100%) !important',
+              color: '#FFFFFF !important',
+              border: '1px solid rgba(255, 255, 255, 0.14)',
+              borderTop: '6px solid #38BDF8',
+              boxShadow: '0 35px 90px rgba(0, 0, 0, 0.95)',
+              margin: { xs: 1.5, sm: 4 },
+              overflow: 'hidden'
             }
           }}
         >
           <DialogTitle 
             sx={{ 
               m: 0, 
-              p: { xs: 2, sm: 2.5 }, 
+              p: { xs: 2, sm: 2.8 }, 
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center',
-              borderBottom: '1px solid #F1F5F9'
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              bgcolor: 'rgba(15, 23, 42, 0.85)'
             }}
           >
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, pr: 4 }}>
@@ -2005,15 +2017,15 @@ export default function PublicLiveAlertsPage() {
                 <Chip 
                   label={selectedAlert.boardName || 'Official Board'} 
                   size="small" 
-                  sx={{ fontWeight: 800, fontSize: '0.68rem', bgcolor: '#EEF2FF', color: '#4F46E5', borderRadius: '8px' }} 
+                  sx={{ fontWeight: 800, fontSize: '0.68rem', bgcolor: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '8px' }} 
                 />
                 <Chip 
                   label={selectedAlert.state || 'All India'} 
                   size="small" 
-                  sx={{ fontWeight: 700, fontSize: '0.68rem', bgcolor: '#F3F4F6', color: '#374151', borderRadius: '8px' }} 
+                  sx={{ fontWeight: 700, fontSize: '0.68rem', bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#E2E8F0', borderRadius: '8px' }} 
                 />
               </Box>
-              <Typography sx={{ fontWeight: 800, color: '#111827', mt: 1, lineHeight: 1.3, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
+              <Typography sx={{ fontWeight: 850, color: '#FFFFFF', mt: 1, lineHeight: 1.35, fontSize: { xs: '1.05rem', sm: '1.3rem' } }}>
                 {selectedAlert.title}
               </Typography>
             </Box>
@@ -2021,24 +2033,26 @@ export default function PublicLiveAlertsPage() {
               aria-label="close"
               onClick={() => setSelectedAlert(null)}
               sx={{
-                color: '#9CA3AF',
-                '&:hover': { color: '#111827', bgcolor: '#F3F4F6' }
+                color: '#94A3B8',
+                bgcolor: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                '&:hover': { color: '#EF4444', bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.4)' }
               }}
             >
               <CloseIcon />
             </IconButton>
           </DialogTitle>
 
-          <DialogContent dividers sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, bgcolor: '#F8FAFC' }}>
+          <DialogContent dividers sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#080D1A !important', backgroundColor: '#080D1A !important', color: '#FFFFFF !important', borderColor: 'rgba(255, 255, 255, 0.08)' }}>
             {detailsLoading ? (
               <Box sx={{ py: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
-                <Typography variant="body2" sx={{ color: '#6B7280', fontWeight: 600 }}>
+                <CircularProgress size={40} sx={{ color: '#38BDF8' }} />
+                <Typography variant="body2" sx={{ color: '#94A3B8', fontWeight: 600 }}>
                   Fetching official notification details factsheet...
                 </Typography>
               </Box>
             ) : errorLoadingDetails ? (
-              <Alert severity="error" sx={{ borderRadius: 2 }}>{errorLoadingDetails}</Alert>
+              <Alert severity="error" sx={{ borderRadius: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#F87171' }}>{errorLoadingDetails}</Alert>
             ) : (
               renderBlogContent(selectedAlert)
             )}
@@ -2046,8 +2060,9 @@ export default function PublicLiveAlertsPage() {
 
           <DialogActions 
             sx={{ 
-              p: { xs: 1.5, sm: 2.5 }, 
-              borderTop: '1px solid #F1F5F9',
+              p: { xs: 2, sm: 2.5 }, 
+              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+              bgcolor: 'rgba(15, 23, 42, 0.95)',
               display: { xs: 'grid', sm: 'flex' },
               gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'none' },
               gap: 1.2,
@@ -2079,14 +2094,15 @@ export default function PublicLiveAlertsPage() {
                       sx={{ 
                         textTransform: 'none', 
                         borderRadius: 2, 
-                        fontWeight: 700, 
-                        fontSize: '0.8rem',
-                        color: '#DC2626',
-                        borderColor: '#FCA5A5',
+                        fontWeight: 750, 
+                        fontSize: '0.82rem',
+                        color: '#F87171',
+                        borderColor: 'rgba(239, 68, 68, 0.4)',
+                        bgcolor: 'rgba(239, 68, 68, 0.1)',
                         px: 2.5,
                         py: { xs: 1, sm: 1 },
                         width: { xs: '100%', sm: 'auto' },
-                        '&:hover': { bgcolor: '#FEF2F2', borderColor: '#DC2626' }
+                        '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: '#EF4444' }
                       }}
                     >
                       Official PDF
@@ -2105,8 +2121,8 @@ export default function PublicLiveAlertsPage() {
                       sx={{ 
                         textTransform: 'none', 
                         borderRadius: 2, 
-                        fontWeight: 700, 
-                        fontSize: '0.8rem',
+                        fontWeight: 800, 
+                        fontSize: '0.82rem',
                         bgcolor: '#16A34A',
                         px: 2.5,
                         py: { xs: 1, sm: 1 },
@@ -2131,14 +2147,15 @@ export default function PublicLiveAlertsPage() {
                       sx={{ 
                         textTransform: 'none', 
                         borderRadius: 2, 
-                        fontWeight: 700, 
-                        fontSize: '0.8rem',
-                        color: '#2563EB',
-                        borderColor: '#93C5FD',
+                        fontWeight: 750, 
+                        fontSize: '0.82rem',
+                        color: '#38BDF8',
+                        borderColor: 'rgba(56, 189, 248, 0.4)',
+                        bgcolor: 'rgba(56, 189, 248, 0.1)',
                         px: 2.5,
                         py: { xs: 1, sm: 1 },
                         width: { xs: '100%', sm: 'auto' },
-                        '&:hover': { bgcolor: '#EFF6FF', borderColor: '#2563EB' }
+                        '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.2)', borderColor: '#38BDF8' }
                       }}
                     >
                       Official Website
@@ -2148,15 +2165,18 @@ export default function PublicLiveAlertsPage() {
                   <Button 
                     onClick={() => setSelectedAlert(null)} 
                     variant="outlined" 
-                    color="inherit"
                     sx={{ 
                       borderRadius: 2, 
                       textTransform: 'none', 
-                      fontWeight: 600,
+                      fontWeight: 700,
+                      color: '#E2E8F0',
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                      bgcolor: 'rgba(255, 255, 255, 0.05)',
                       py: { xs: 1, sm: 1 },
                       width: { xs: '100%', sm: 'auto' },
                       ml: { sm: 'auto' },
-                      gridColumn: closeSpansTwo ? { xs: 'span 2', sm: 'auto' } : 'auto'
+                      gridColumn: closeSpansTwo ? { xs: 'span 2', sm: 'auto' } : 'auto',
+                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)', borderColor: '#FFFFFF', color: '#FFFFFF' }
                     }}
                   >
                     Close

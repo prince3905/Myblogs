@@ -864,14 +864,23 @@ export default function LiveTrendingPulseHub() {
         onClose={() => setSelectedTrend(null)}
         maxWidth="md"
         fullWidth
+        BackdropProps={{
+          sx: {
+            bgcolor: 'rgba(0, 0, 0, 0.85) !important',
+            backgroundColor: 'rgba(0, 0, 0, 0.85) !important',
+            backdropFilter: 'blur(12px)'
+          }
+        }}
         PaperProps={{
           sx: {
             borderRadius: { xs: '22px', sm: '32px' },
-            background: 'linear-gradient(180deg, #0B132B 0%, #060A17 100%)',
-            color: '#FFFFFF',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderTop: `6px solid ${selectedTrend?.color || '#38BDF8'}`,
-            boxShadow: `0 35px 90px -10px rgba(0, 0, 0, 0.95), 0 0 60px ${selectedTrend?.color || '#38BDF8'}35`,
+            bgcolor: '#070B18 !important',
+            backgroundColor: '#070B18 !important',
+            backgroundImage: 'linear-gradient(180deg, #0D1629 0%, #060A14 100%) !important',
+            color: '#FFFFFF !important',
+            border: '1px solid rgba(255, 255, 255, 0.14) !important',
+            borderTop: `6px solid ${selectedTrend?.color || '#38BDF8'} !important`,
+            boxShadow: `0 35px 90px -10px rgba(0, 0, 0, 0.95), 0 0 60px ${selectedTrend?.color || '#38BDF8'}35 !important`,
             backdropFilter: 'blur(30px)',
             overflow: 'hidden',
             maxHeight: '92vh',
@@ -881,7 +890,7 @@ export default function LiveTrendingPulseHub() {
         }}
       >
         {selectedTrend && report && (
-          <DialogContent sx={{ p: { xs: 2.5, sm: 4.5 }, overflowY: 'auto' }}>
+          <DialogContent sx={{ p: { xs: 2.5, sm: 4.5 }, overflowY: 'auto', bgcolor: '#070B18 !important', backgroundColor: '#070B18 !important', color: '#FFFFFF !important' }}>
             
             {/* Top Meta Bar */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5, flexWrap: 'wrap', gap: 1 }}>
