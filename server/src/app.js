@@ -216,17 +216,17 @@ async function buildHomepageHtml() {
       WebStory.find({ status: 'published' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean(),
       LiveAlert.find({ status: { $in: ['active', 'published'] } })
         .select('-detailsText')
-        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 })
         .limit(60)
         .lean(),
       LiveAlert.find({ status: { $in: ['active', 'published'] }, category: { $regex: /^Result/i } })
         .select('-detailsText')
-        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 })
         .limit(10)
         .lean(),
       LiveAlert.find({ status: { $in: ['active', 'published'] }, category: { $regex: /^Admit/i } })
         .select('-detailsText')
-        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 })
         .limit(10)
         .lean(),
       BlogPost.find({ status: 'published', category: 'Sarkari Jobs & Exams' }).sort({ publishedAt: -1, createdAt: -1 }).limit(6).lean(),

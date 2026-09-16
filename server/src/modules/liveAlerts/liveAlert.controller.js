@@ -236,7 +236,7 @@ async function getAlerts(req, res) {
     if (category || state || (!searchQuery && queryLimit <= 50 && pageNum === 1)) {
       alerts = await LiveAlert.find(filter)
         .select('-detailsText')
-        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 })
         .skip(skip)
         .limit(queryLimit)
         .lean();
@@ -249,7 +249,7 @@ async function getAlerts(req, res) {
             { title: { $not: /admit card|hall ticket|call letter|exam city|result|score card|merit list|answer key|objection|syllabus/i } },
             { category: { $not: /Admit Card|Result|Answer Key|Syllabus/i } }
           ]
-        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
+        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -257,7 +257,7 @@ async function getAlerts(req, res) {
             { category: 'Admit Card' },
             { title: { $regex: /admit card|hall ticket|call letter|exam city/i } }
           ]
-        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
+        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -265,7 +265,7 @@ async function getAlerts(req, res) {
             { category: 'Result' },
             { title: { $regex: /result|score card|merit list/i } }
           ]
-        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
+        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -273,23 +273,23 @@ async function getAlerts(req, res) {
             { category: 'Answer Key' },
             { title: { $regex: /answer key|answer-key|objection tracker/i } }
           ]
-        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(50).lean(),
+        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
 
         LiveAlert.find({
           ...filter,
           $or: [
             { category: 'Admission' },
-            { title: { $regex: /admission|counselling|seat allotment/i } }
+            { title: { $regex: /admission|entrance exam|counseling|counselling/i } }
           ]
-        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(50).lean(),
+        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
 
         LiveAlert.find({
           ...filter,
           $or: [
             { category: 'Syllabus' },
-            { title: { $regex: /syllabus|exam pattern|curriculum/i } }
+            { title: { $regex: /syllabus|exam pattern/i } }
           ]
-        }).select('-detailsText').sort({ parsedPostDate: -1, createdAt: -1 }).limit(50).lean()
+        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean()
       ]);
 
       alerts = [...jobs, ...admitCards, ...results, ...answerKeys, ...admissions, ...syllabus];

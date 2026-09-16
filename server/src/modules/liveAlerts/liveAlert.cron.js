@@ -1366,8 +1366,31 @@ async function scrapeFeeds() {
     });
 
     const MAX_DAILY_SARKARI_POSTS = 4;
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    // Auto-Highlight Handler: When daily blog limit (4 posts) is reached or staggering,
+    // prominently highlight all other high-traffic vacancies on Homepage & Live Alerts feed!
+    const candidateAlerts = await LiveAlert.find({ 
+      status: 'active',
+      createdAt: { $gte: threeDaysAgo }
+    }).limit(60);
+
+    const highTrafficAlerts = candidateAlerts
+      .map(alert => ({ alert, score: calculateSearchTrafficScore(alert) }))
+      .filter(item => item.score >= 30);
+
+    const unhighlighted = highTrafficAlerts
+      .filter(item => !item.alert.isHighlight)
+      .map(item => item.alert._id);
+
+    if (unhighlighted.length > 0) {
+      await LiveAlert.updateMany({ _id: { $in: unhighlighted } }, { $set: { isHighlight: true } });
+      console.log(`[Autopilot Highlights] Daily blog limit active: Highlighted ${unhighlighted.length} hot vacancies on Homepage & Live Alerts feed.`);
+    }
+
     if (todaySarkariCount >= MAX_DAILY_SARKARI_POSTS) {
-      console.log(`[Autopilot] Daily Sarkari Jobs quota reached (${todaySarkariCount}/${MAX_DAILY_SARKARI_POSTS} posts published today). Halting to protect Google SEO and maintain high authority.`);
+      console.log(`[Autopilot] Daily Sarkari Jobs quota reached (${todaySarkariCount}/${MAX_DAILY_SARKARI_POSTS} posts published today). Rest of the top vacancies are highlighted for users!`);
       return totalSaved;
     }
 
@@ -1375,15 +1398,12 @@ async function scrapeFeeds() {
     const lastSarkariPost = await BlogPost.findOne({ category: 'Sarkari Jobs & Exams', status: 'published' }).sort({ createdAt: -1 });
     if (lastSarkariPost && (Date.now() - new Date(lastSarkariPost.createdAt).getTime()) < 2.5 * 60 * 60 * 1000) {
       const minutesAgo = Math.round((Date.now() - new Date(lastSarkariPost.createdAt).getTime()) / 60000);
-      console.log(`[Autopilot] Sarkari Jobs stagger active (Last post ${minutesAgo}m ago, minimum gap 150m). Spacing 4 posts naturally across the day.`);
+      console.log(`[Autopilot] Sarkari Jobs stagger active (Last post ${minutesAgo}m ago, minimum gap 150m). Remaining vacancies highlighted on live feed.`);
       return totalSaved;
     }
 
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-    console.log(`[Autopilot] Scanning for active alerts (created after: ${threeDaysAgo.toISOString()})...`);
-    const candidateAlerts = await LiveAlert.find({ 
+    console.log(`[Autopilot] Scanning for unattempted high-priority alerts for auto-drafting...`);
+    const unattemptedAlerts = await LiveAlert.find({ 
       status: 'active',
       createdAt: { $gte: threeDaysAgo },
       autopilotAttemptedAt: { $exists: false }
@@ -1391,7 +1411,7 @@ async function scrapeFeeds() {
 
     // Filter and sort candidates by Search Traffic Priority Score
     // STRICT RULE: Only select High Demand & Heavy Traffic vacancies (score >= 35: SSC, RRB, Police, UPSC, Bank, Selection Boards)
-    const activeAlerts = candidateAlerts
+    const activeAlerts = unattemptedAlerts
       .map(alert => ({ alert, score: calculateSearchTrafficScore(alert) }))
       .filter(item => item.score >= 35) // Only high-demand, heavy-traffic vacancies
       .sort((a, b) => b.score - a.score) // Highest search demand first

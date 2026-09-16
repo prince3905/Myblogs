@@ -15,6 +15,7 @@ const liveAlertSchema = new mongoose.Schema(
     state: { type: String, default: 'Central/All India', trim: true },
     category: { type: String, default: 'Latest Job', trim: true },
     detailsText: { type: String, default: '', trim: true },
+    isHighlight: { type: Boolean, default: false },
     status: { type: String, enum: ['active', 'drafted', 'published', 'expired'], default: 'active' }
   },
   { timestamps: true }

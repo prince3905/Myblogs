@@ -854,10 +854,12 @@ const HubAlertItem = ({ alert, accentColor }) => {
           display: 'flex',
           flexDirection: 'column',
           gap: 0.5,
+          bgcolor: alert.isHighlight ? '#FFFDF5' : 'transparent',
+          borderLeft: alert.isHighlight ? '3px solid #F59E0B' : '3px solid transparent',
           borderBottom: '1px solid #F1F5F9',
           '&:last-child': { borderBottom: 'none' },
           '&:hover': {
-            bgcolor: '#F8FAFC',
+            bgcolor: alert.isHighlight ? '#FEF3C7' : '#F8FAFC',
             transform: 'translateX(3px)',
             '& .hub-item-title': { color: accentColor }
           }
@@ -869,33 +871,52 @@ const HubAlertItem = ({ alert, accentColor }) => {
             sx={{
               fontWeight: 800,
               fontSize: '0.62rem',
-              color: '#64748B',
+              color: alert.isHighlight ? '#B45309' : '#64748B',
               textTransform: 'uppercase',
               letterSpacing: 0.3,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              maxWidth: '70%'
+              maxWidth: '65%'
             }}
           >
             {alert.boardName || 'Official'}
           </Typography>
-          {isNew && (
-            <Box
-              sx={{
-                bgcolor: '#EF4444',
-                color: '#fff',
-                fontSize: '0.52rem',
-                fontWeight: 900,
-                px: 0.6,
-                py: 0.1,
-                borderRadius: '4px',
-                letterSpacing: 0.2
-              }}
-            >
-              NEW 🔥
-            </Box>
-          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            {alert.isHighlight && (
+              <Box
+                sx={{
+                  background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                  color: '#fff',
+                  fontSize: '0.52rem',
+                  fontWeight: 900,
+                  px: 0.6,
+                  py: 0.1,
+                  borderRadius: '4px',
+                  letterSpacing: 0.2,
+                  boxShadow: '0 2px 6px rgba(245,158,11,0.35)'
+                }}
+              >
+                ⚡ TOP
+              </Box>
+            )}
+            {isNew && (
+              <Box
+                sx={{
+                  bgcolor: '#EF4444',
+                  color: '#fff',
+                  fontSize: '0.52rem',
+                  fontWeight: 900,
+                  px: 0.6,
+                  py: 0.1,
+                  borderRadius: '4px',
+                  letterSpacing: 0.2
+                }}
+              >
+                NEW 🔥
+              </Box>
+            )}
+          </Box>
         </Box>
         <Typography
           className="hub-item-title"
