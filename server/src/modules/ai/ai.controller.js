@@ -727,13 +727,17 @@ ${categoryFrameworkInstr}
 - HUMAN-CENTRIC ANTI-FLUFF CONSTRAINTS (Pure Readability):
   - BANNED ROBOTIC PATTERNS: You are strictly forbidden from generating template filler texts anywhere in the post, such as "X is a topic that many people search for online..." or "In today's digital world...".
   - DIRECT VALUE DELIVERY: Lead every single heading section with an immediate, answer-first, authoritative Hinglish/English summary block.
-- CREATIVE TITLE OPTIMIZATION (HIGH-IMPACT COPYWRITING):
-  - Generate a professional, standard, and highly engaging article title (and store it in the "title" JSON field).
-  - DO NOT use generic, plain AI query structures or question-based headings/titles (e.g. avoid words/phrases like "Do you know what is", "What is", "When to", "How to", "Why you need").
-  - Rephrase the user's initial input topic/keyword into a powerful, click-worthy copywriting statement that keeps the exact original meaning but changes the wording and structure completely to ensure it does not look like a direct copy of search engine results or other websites.
-  - For 'Sarkari Jobs & Exams' category, you MUST write a highly urgent, click-magnet Title inside the "title" JSON field (incorporating key phrases like "Vacancy 2026", "Apply Online Now", "Direct Link", or seat counts dynamically. Example format: "[Job/Board Name] Recruitment 2026: [Vacancy Count/Post Name] Apply Online Now | Direct Link").
-  - *Example*: Convert a query like "Do you know what is prompt engineering?" to "Prompt Engineering May Change Your Life" or similar high-impact copywriting statements.
-  - The title must look professional, human-crafted, premium, and authoritative.
+- CREATIVE TITLE OPTIMIZATION (HIGH-IMPACT, EYE-CATCHING COPYWRITING):
+  - Generate a professional, magnetic, and HIGH-CTR eye-catching article title (stored in the "title" JSON field).
+  - DO NOT use generic, plain AI query structures or boring robotic titles (e.g. avoid dull phrasing like "Overview of...", "A Guide to...", "What is...", "Understanding...", "Exploring...").
+  - Transform the topic into a powerful, human-crafted headline that creates instant curiosity, high value, and strong click-through rates (CTR):
+    * For 'Finance & Business' (e.g., UPI, Banking, Tax, Investments): Highlight financial impact, new RBI/NPCI rules, limits, or wealth protection. (Example formats: "New UPI Payment Rules 2026: Limits, Charges & Crucial Changes Every User Must Know", "Post Office vs Bank FD: Where Will You Get Maximum Interest & Safety in 2026?").
+    * For 'Tech & Tutorials': Highlight speed, secret settings, or guaranteed solutions with zero hassle. (Example formats: "5 Hidden Windows 11 Settings That Boost Speed Instantly (2026 Guide)", "How to Transfer WhatsApp from Android to iPhone in 5 Minutes (Zero Data Loss)").
+    * For 'AI & Web Tools': Highlight 10x productivity gains, free vs paid comparisons, or breakthrough utilities. (Example formats: "Top 7 Free AI Tools That Can Replace Expensive Paid Software in 2026", "ChatGPT vs Claude: Which AI Assistant Is Truly Smarter for Daily Work?").
+    * For 'Health & Wellness': Highlight warning signs, natural remedies, or doctor-approved steps without being alarmist. (Example formats: "Constant Fatigue & Lethargy? 5 Early Warning Signs Your Body Is Giving You", "High Uric Acid & Joint Pain: 4 Natural Daily Habits That Actually Work").
+    * For 'Sarkari Jobs & Exams': Write an urgent, click-magnet headline with vacancy count and direct link. (Example formats: "[Board/Exam Name] Recruitment 2026: [Vacancy Count] पदों पर बंपर भर्ती! Apply Online Now | Direct Link").
+    * For 'News & Trends': Highlight ground reality, milestones, and major public impacts.
+  - The title must look premium, human-written, highly engaging, and authoritative.
 - LOCAL HINDI TOUCH (MANDATORY FOR JOBS/EXAMS):
   - In the very first paragraph of the post (the introduction), and right above the main vacancy summary table, you MUST write 1-2 lines in pure, conversational Devanagari Hindi or natural Hinglish explaining the core update (e.g., "उत्तर प्रदेश डेयरी विकास विभाग में Data Entry Operator (DEO) की संविदा भर्ती 2026 का नोटिफिकेशन जारी हो गया है..." or similar context). This localized touch captures local search queries and ranks much higher in Google India.
 - FOCUS KEYWORD PLACEMENT: The exact focus keyword provided must be injected naturally in the generated Title, the first 2-3 lines of the Introduction paragraph, inside at least one H2 subheading, and maintain a natural density of 1.0% to 1.5% throughout the text body.

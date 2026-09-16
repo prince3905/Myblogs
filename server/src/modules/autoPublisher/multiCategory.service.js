@@ -10,42 +10,43 @@ cloudinary.config({
   api_secret: '_J0pP4VbLy-TL5vAVoRpaFjJFxg',
 });
 
-// Fallback high-intent seed topics if RSS feed is unreachable
+// High-CTR, eye-catching seed topics for multi-category auto-publishing
 const CATEGORY_SEEDS = {
   'Tech & Tutorials': [
-    'How to Speed Up Windows 11 PC Performance in 2026: Top Settings and Tweaks',
-    'Best Free Coding Platforms to Learn Python and JavaScript in 2026',
-    'How to Secure Your Android Smartphone from Malware and Data Leaks',
-    'Cloud Storage Comparison 2026: Google Drive vs OneDrive vs Mega',
-    'Top Productivity Chrome Extensions Every Professional Needs in 2026'
+    '5 Hidden Windows 11 Settings That Boost PC Speed Instantly (2026 Guide)',
+    'How to Transfer WhatsApp from Android to iPhone in 5 Minutes (Zero Data Loss)',
+    'Top Free Coding Platforms to Master Python & JavaScript in 2026',
+    'How to Lock Down Your Android Phone & Stop Secret Data Tracking in 2026',
+    'Cloud Storage Face-Off 2026: Google Drive vs OneDrive vs Mega (Best Free Storage)',
+    'Top 7 Must-Have Chrome Extensions That Will 10x Your Productivity in 2026'
   ],
   'AI & Web Tools': [
-    'Top 10 Free AI Tools for Students and Content Creators in 2026',
-    'How to Use ChatGPT and Gemini for Fast Research and Study Notes',
-    'Best Free AI Image and Graphic Design Generators in 2026',
-    'Prompt Engineering Essentials: How to Get 10x Better Results from AI',
-    'Top Web Utilities for PDF Editing, Image Compression and File Conversion'
+    'Top 7 Free AI Tools That Can Replace Expensive Software in 2026',
+    'ChatGPT vs Claude: Which AI Model Is Truly Smarter for Daily Work in 2026?',
+    'Prompt Engineering Blueprint: How to Get 10x Smarter Answers from Any AI Tool',
+    'Best Free AI Image & Poster Generators in 2026 (No Watermarks & 4K Export)',
+    'Top 5 Free Web Utilities to Compress, Merge and Edit PDF Files Instantly'
   ],
   'Finance & Business': [
-    'How to Start SIP and Mutual Fund Investment in 2026: Complete Beginner Guide',
-    'Income Tax Saving Options Under New and Old Tax Regime 2026',
-    'Top High Return Post Office Savings Schemes for Indian Families',
-    'How to Check and Improve Your CIBIL Credit Score Fast in 2026',
-    'Smart Budgeting Rules: 50-30-20 Formula for Financial Freedom'
+    'New UPI Payment Rules 2026: Transaction Limits, Charges & New RBI Guidelines You Must Know',
+    'Post Office vs Bank FD: Where Will You Get Maximum Interest & Safety in 2026?',
+    'How to Start SIP with Just ₹500 in 2026: Step-by-Step Wealth Creation Guide',
+    'New Tax Regime vs Old Tax Regime 2026: Which One Saves Maximum Income Tax for You?',
+    'Fast CIBIL Score Booster: 5 Legal Ways to Raise Your Credit Score Above 750',
+    'The 50-30-20 Money Rule: How Smart People Manage Salary & Build Wealth Fast'
   ],
   'Health & Wellness': [
-    'Best Daily Morning Routine for High Energy, Mental Focus and Wellness',
-    'How to Maintain Healthy Eyes and Prevent Digital Eye Strain in 2026',
-    'Balanced Indian Diet Chart for Weight Management and Immunity',
-    'Simple Daily Yoga Asanas for Relieving Back Pain and Stress',
-    'Healthy Sleep Habits: How to Fix Your Sleep Cycle Naturally'
+    'Constant Fatigue & Brain Fog? 5 Early Warning Signs Your Body Is Giving You',
+    'High Uric Acid & Joint Pain: 4 Doctor-Approved Natural Habits That Actually Work',
+    'Digital Eye Strain Relief: The 20-20-20 Rule & 4 Simple Steps to Protect Vision',
+    'Best Daily Indian Diet Plan for High Energy, Immunity & Natural Weight Control',
+    'Struggling to Fall Asleep? 5 Clinically Proven Ways to Reset Your Sleep Cycle Naturally'
   ],
   'News & Trends': [
-    'Digital India 2026: Key Government Tech Initiatives and Citizen Benefits',
-    'Renewable Energy & Electric Vehicles in India: Major Trends and Growth',
-    'Online Cyber Safety Guidelines: How to Protect Yourself from Digital Frauds',
-    'New Education Policy (NEP) Key Highlights and Skill Development Programs',
-    'Space Technology & ISRO Upcoming Missions 2026: Key Highlights'
+    'Major Digital India 2026 Initiatives: 5 Big Tech Upgrades Every Citizen Should Know',
+    'Electric Vehicles (EV) in India 2026: Subsidies, Battery Life & Running Cost Reality',
+    'Online Cyber Fraud Alert: 4 Dangerous New Scams Happening in India & How to Stay Safe',
+    'ISRO Next-Gen Missions 2026: Gaganyaan Updates & India’s Giant Leap in Space Tech'
   ]
 };
 
