@@ -1354,6 +1354,29 @@ async function scrapeFeeds() {
       return score;
     }
 
+    // Strict Daily Post Cap: Ensure website never publishes more than 6 posts per day to protect Google SEO
+    const BlogPost = require('../posts/post.model');
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const todayPublishedCount = await BlogPost.countDocuments({
+      createdAt: { $gte: startOfToday },
+      status: 'published'
+    });
+
+    const MAX_DAILY_POSTS = 6;
+    if (todayPublishedCount >= MAX_DAILY_POSTS) {
+      console.log(`[Autopilot] Daily quota reached (${todayPublishedCount}/${MAX_DAILY_POSTS} posts published today). Halting auto-publishing to protect Google SEO and avoid spam detection.`);
+      return totalSaved;
+    }
+
+    // Natural Stagger Cooldown: Must have at least 2 hours gap between automated blog post publications
+    const lastPost = await BlogPost.findOne({ status: 'published' }).sort({ createdAt: -1 });
+    if (lastPost && (Date.now() - new Date(lastPost.createdAt).getTime()) < 2 * 60 * 60 * 1000) {
+      const minutesAgo = Math.round((Date.now() - new Date(lastPost.createdAt).getTime()) / 60000);
+      console.log(`[Autopilot] Stagger cooldown active (Last post published ${minutesAgo}m ago, minimum gap is 120m). Spacing posts naturally across the day for Googlebot.`);
+      return totalSaved;
+    }
+
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
@@ -1365,11 +1388,12 @@ async function scrapeFeeds() {
     }).limit(30);
 
     // Filter and sort candidates by Search Traffic Priority Score
+    // STRICT RULE: Only select High Demand & Heavy Traffic vacancies (score >= 35: SSC, RRB, Police, UPSC, Bank, Selection Boards)
     const activeAlerts = candidateAlerts
       .map(alert => ({ alert, score: calculateSearchTrafficScore(alert) }))
-      .filter(item => item.score >= 0) // Skip low-traffic micro/niche college vacancies
+      .filter(item => item.score >= 35) // Only high-demand, heavy-traffic vacancies
       .sort((a, b) => b.score - a.score) // Highest search demand first
-      .slice(0, 3)
+      .slice(0, 1) // Strictly 1 single post per cycle (never dump multiple at once)
       .map(item => item.alert);
 
     if (activeAlerts.length > 0) {

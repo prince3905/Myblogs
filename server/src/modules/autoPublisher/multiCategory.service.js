@@ -276,6 +276,20 @@ async function publishMultiCategoryPost(targetCategory, manualTopic = null) {
 
   console.log(`[MultiCategory Auto] Starting publication process for category: "${category}"...`);
 
+  // Strict Daily Post Cap Check (Max 6 posts per day site-wide)
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const todayPublishedCount = await BlogPost.countDocuments({
+    createdAt: { $gte: startOfToday },
+    status: 'published'
+  });
+
+  const MAX_DAILY_POSTS = 6;
+  if (!manualTopic && todayPublishedCount >= MAX_DAILY_POSTS) {
+    console.log(`[MultiCategory Auto] Daily limit reached (${todayPublishedCount}/${MAX_DAILY_POSTS} posts published today). Skipping automated slot to protect Google SEO.`);
+    return null;
+  }
+
   // 1. Pick a unique, fresh topic
   let selectedTopic = manualTopic;
   if (!selectedTopic) {
