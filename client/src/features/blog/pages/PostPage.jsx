@@ -258,16 +258,33 @@ export default function PostPage() {
     }
   }, [post]);
 
+  useEffect(() => {
+    if (!loading && (!post || error)) {
+      const cat = (category || '').toLowerCase();
+      const isSarkari = cat.includes('sarkari') || cat.includes('job') || cat.includes('result') || cat.includes('admit');
+      const target = isSarkari ? '/job-alerts' : (category ? `/category/${category}` : '/blog');
+      const timer = setTimeout(() => {
+        window.location.replace(target);
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, post, error, category]);
+
   if (loading) {
     return <Layout><Container sx={{ py: 8, textAlign: 'center' }}><CircularProgress size={60} /></Container></Layout>;
   }
 
-  if (error) {
-    return <Layout><Container sx={{ py: 4 }}><Alert severity="error">{error}</Alert></Container></Layout>;
-  }
-
-  if (!post) {
-    return <Layout><Container sx={{ py: 4 }}><Alert severity="warning">Post not found</Alert></Container></Layout>;
+  if (error || !post) {
+    return (
+      <Layout>
+        <Container sx={{ py: 8, textAlign: 'center' }}>
+          <Alert severity="info" sx={{ maxWidth: 600, mx: 'auto', mb: 3, justifyContent: 'center' }}>
+            यह आर्टिकल एक्सपायर या अपडेट हो चुका है। आपको लेटेस्ट लाइव अलर्ट्स पर रिडायरेक्ट किया जा रहा है...
+          </Alert>
+          <CircularProgress size={40} />
+        </Container>
+      </Layout>
+    );
   }
 
   const heroImage = optimizeImage(post.featuredImage || pickHero(post.title), 1000, 600);

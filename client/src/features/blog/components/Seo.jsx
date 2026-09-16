@@ -14,9 +14,9 @@ export default function Seo({ title, description, image, url, canonical, keyword
     : (cleanTitle ? `${cleanTitle} | ${siteName}` : siteName);
   const desc = description || 'Sarkari Result, Admit Card, Latest Jobs, Vacancies, Sarkari Result Tools, Kids Games (बचो का गेम), Health, Education, Tech, and Career Insights from Digital Home Blog.';
   
-  const currentHref = typeof window !== 'undefined' ? window.location.href : 'https://www.digitalhomeblog.in';
-  const pageUrl = normalizeCanonicalUrl(url || currentHref);
-  const canonicalUrl = normalizeCanonicalUrl(canonical || url || currentHref);
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+  const pageUrl = normalizeCanonicalUrl(url || currentPath);
+  const canonicalUrl = normalizeCanonicalUrl(canonical || url || currentPath);
   const keys = keywords || 'Digital Home, Sarkari Result, सरकारी रिजल्ट 2026, Latest Jobs, सरकारी नौकरी, Live Job Alerts, Admit Card, प्रवेश पत्र, Sarkari Exam, Online Form, Govt Vacancies, Sarkari Result Tools, Kids Games, Bacho Ka Game, Health Tips, Education, Tech Tutorials, All Insights Blog';
 
   const isValidSchema = (s) => {

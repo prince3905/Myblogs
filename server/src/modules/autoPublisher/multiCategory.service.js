@@ -201,34 +201,17 @@ async function isTopicAlreadyPublished(topic, category) {
  * Fetch or Generate a 100% topic-relevant high-resolution landscape banner image
  */
 async function getCategoryBannerImage(category, topic = '') {
-  // 1. First priority: Generate 100% topic-tailored AI banner and upload to Cloudinary CDN
-  if (topic) {
-    try {
-      console.log(`[MultiCategory Image] Generating AI Banner for "${topic}" in category: "${category}"...`);
-      let visualPrompt = '';
-      try {
-        visualPrompt = await generateImagePrompt(topic, category);
-      } catch (err) {
-        visualPrompt = `cinematic photography of ${topic.replace(/[^a-zA-Z0-9\s]/g, '')}, ${category}, 8k resolution, shallow depth of field, dramatic studio lighting, masterpiece, no text`;
-      }
-
-      const seed = Math.floor(Math.random() * 1000000);
-      const pollinationsUrl = `https://image.pollinations.ai/p/${encodeURIComponent(visualPrompt)}?width=1200&height=675&nologo=true&seed=${seed}&model=flux`;
-      
-      console.log(`[MultiCategory Image] Uploading generated AI banner to Cloudinary...`);
-      const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
-        folder: 'myblogs',
-        transformation: [{ width: 1200, height: 675, crop: 'fill', gravity: 'auto', quality: 'auto', fetch_format: 'auto' }],
-        timeout: 20000
-      });
-
-      if (uploadResult && uploadResult.secure_url) {
-        console.log(`[MultiCategory Image] AI Banner uploaded successfully: ${uploadResult.secure_url}`);
-        return uploadResult.secure_url;
-      }
-    } catch (aiErr) {
-      console.warn(`[MultiCategory Image] AI image generation notice: ${aiErr.message}. Trying Pexels/Fallbacks...`);
+  // 1. First priority: Generate high-CTR, high-resolution magazine-grade canvas banner
+  const { generateAutoBanner } = require('../../shared/utils/autoBannerGenerator');
+  try {
+    console.log(`[MultiCategory Image] Generating Magazine Canvas Banner for "${topic}" in category: "${category}"...`);
+    const banner = await generateAutoBanner(topic, category);
+    if (banner) {
+      console.log(`[MultiCategory Image] Canvas Banner generated successfully for: "${topic}"`);
+      return banner;
     }
+  } catch (bannerErr) {
+    console.warn(`[MultiCategory Image] Canvas banner notice: ${bannerErr.message}. Trying fallbacks...`);
   }
 
   // 2. Fallback: Search Pexels with clean contextual query

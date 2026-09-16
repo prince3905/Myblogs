@@ -28,6 +28,7 @@ function normalizeCanonicalUrl(inputUrl) {
     let pathname = urlObj.pathname.toLowerCase();
     pathname = pathname.replace(/\/digitalhomeblog\.in/gi, '');
     pathname = pathname.replace(/sarkari-jobs-(&|%26)-exams/gi, 'sarkari-jobs-exams');
+    pathname = pathname.replace(/\/index\.html?$/i, '');
     pathname = pathname.replace(/\/{2,}/g, '/');
     if (pathname.length > 1 && pathname.endsWith('/')) {
       pathname = pathname.slice(0, -1);

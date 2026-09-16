@@ -61,6 +61,25 @@ async function fetchLandscapePhoto(query = '', category = '') {
 
 function detectOrgEmblem(titleStr = '', catStr = '') {
   const t = (titleStr + ' ' + catStr).toLowerCase();
+
+  // Category specific emblems
+  if (t.includes('ai') || t.includes('web tool') || t.includes('chatgpt') || t.includes('bot')) {
+    return { code: 'AI & TECH INSIGHTS', symbol: '🤖', primaryColor: '#38bdf8', bgCircle: '#1e1b4b' };
+  }
+  if (t.includes('finance') || t.includes('business') || t.includes('market') || t.includes('upi') || t.includes('tax') || t.includes('stock') || t.includes('money')) {
+    return { code: 'FINANCE & MARKET', symbol: '📈', primaryColor: '#10b981', bgCircle: '#022c22' };
+  }
+  if (t.includes('health') || t.includes('wellness') || t.includes('fitness') || t.includes('diet') || t.includes('medical') || t.includes('doctor')) {
+    return { code: 'HEALTH & WELLNESS', symbol: '🩺', primaryColor: '#2dd4bf', bgCircle: '#042f2e' };
+  }
+  if (t.includes('tech') || t.includes('tutorial') || t.includes('coding') || t.includes('software') || t.includes('windows') || t.includes('android')) {
+    return { code: 'TECH GUIDE & TIPS', symbol: '💻', primaryColor: '#60a5fa', bgCircle: '#0f172a' };
+  }
+  if (t.includes('news') || t.includes('trend')) {
+    return { code: 'TRENDING NEWS', symbol: '🔥', primaryColor: '#fb923c', bgCircle: '#431407' };
+  }
+
+  // Sarkari Jobs & Exams emblems
   if (t.includes('rrb') || t.includes('railway')) {
     return { code: 'RRB GOVT', symbol: '🚂', primaryColor: '#facc15', bgCircle: '#1e3a8a' };
   }
@@ -90,22 +109,96 @@ function detectOrgEmblem(titleStr = '', catStr = '') {
 
 function detectThemeColors(titleStr = '', catStr = '') {
   const t = (titleStr + ' ' + catStr).toLowerCase();
+
+  // Category specific themes
+  if (t.includes('ai') || t.includes('web tool') || t.includes('chatgpt')) {
+    return { 
+      stop0: '#090d16', stop1: '#1e1b4b', accentGlow: '#38bdf8', pillBg: '#c084fc',
+      headerTag: 'DIGITAL HOME • AI & TECH INTELLIGENCE • 2026',
+      subtitle: 'कंप्यूटर & AI टूल्स का आसान और पूरा गाइड',
+      badge1: '✔ 100% WORKING GUIDE', badge2: '⚡ STEP BY STEP', badge3: '🚀 PRO TIPS'
+    };
+  }
+  if (t.includes('finance') || t.includes('business') || t.includes('upi') || t.includes('tax') || t.includes('stock') || t.includes('money')) {
+    return { 
+      stop0: '#022c22', stop1: '#064e3b', accentGlow: '#10b981', pillBg: '#fef08a',
+      headerTag: 'DIGITAL HOME • FINANCE & WEALTH INSIGHTS • 2026',
+      subtitle: 'नियम, प्रभाव और बचत/निवेश की जरूरी बातें',
+      badge1: '✔ EXPERT ANALYSIS', badge2: '📊 MARKET IMPACT', badge3: '💡 MONEY TIPS'
+    };
+  }
+  if (t.includes('health') || t.includes('wellness') || t.includes('fitness') || t.includes('diet') || t.includes('medical') || t.includes('doctor')) {
+    return { 
+      stop0: '#042f2e', stop1: '#0f766e', accentGlow: '#2dd4bf', pillBg: '#ccfbf1',
+      headerTag: 'DIGITAL HOME • HEALTH & WELLNESS GUIDE • 2026',
+      subtitle: 'लक्षण, कारण और बचाव के असरदार उपाय',
+      badge1: '✔ DOCTOR INSIGHTS', badge2: '🌿 100% PRACTICAL', badge3: '🩺 HEALTH CARE'
+    };
+  }
+  if (t.includes('tech') || t.includes('tutorial') || t.includes('coding') || t.includes('software') || t.includes('windows') || t.includes('android')) {
+    return { 
+      stop0: '#0a192f', stop1: '#1e3a8a', accentGlow: '#60a5fa', pillBg: '#fde047',
+      headerTag: 'DIGITAL HOME • TECH TIPS & STEP-BY-STEP • 2026',
+      subtitle: 'आसान भाषा में पूरा समाधान और सेटिंग्स',
+      badge1: '✔ TESTED SOLUTION', badge2: '⚡ FAST FIX', badge3: '💻 STEP BY STEP'
+    };
+  }
+  if (t.includes('news') || t.includes('trend')) {
+    return { 
+      stop0: '#1c1917', stop1: '#431407', accentGlow: '#fb923c', pillBg: '#fed7aa',
+      headerTag: 'DIGITAL HOME • TOP TRENDS & ANALYSIS • 2026',
+      subtitle: 'पूरी ग्राउंड रिपोर्ट और जरूरी मुख्य बिंदु',
+      badge1: '✔ VERIFIED REPORT', badge2: '⚡ KEY FACTS', badge3: '🌐 IN-DEPTH INSIGHT'
+    };
+  }
+
+  // Sarkari Jobs & Exams themes
   if (t.includes('police') || t.includes('constable')) {
-    return { stop0: '#450a0a', stop1: '#991b1b', accentGlow: '#f87171', pillBg: '#fef08a' };
+    return { 
+      stop0: '#450a0a', stop1: '#991b1b', accentGlow: '#f87171', pillBg: '#fef08a',
+      headerTag: 'DIGITAL HOME BLOG • POLICE RECRUITMENT • 2026',
+      subtitle: 'पात्रता, तिथियां व डायरेक्ट अप्लाई लिंक',
+      badge1: '✔ OFFICIAL FORM', badge2: '⚡ DIRECT LINK', badge3: '📄 NOTIFICATION PDF'
+    };
   }
   if (t.includes('bank') || t.includes('ibps') || t.includes('sbi')) {
-    return { stop0: '#0f172a', stop1: '#1e3a8a', accentGlow: '#38bdf8', pillBg: '#facc15' };
+    return { 
+      stop0: '#0f172a', stop1: '#1e3a8a', accentGlow: '#38bdf8', pillBg: '#facc15',
+      headerTag: 'DIGITAL HOME BLOG • BANKING RECRUITMENT • 2026',
+      subtitle: 'पात्रता, तिथियां व डायरेक्ट अप्लाई लिंक',
+      badge1: '✔ OFFICIAL FORM', badge2: '⚡ DIRECT LINK', badge3: '📄 NOTIFICATION PDF'
+    };
   }
   if (t.includes('army') || t.includes('navy') || t.includes('air force') || t.includes('defence')) {
-    return { stop0: '#1e1b4b', stop1: '#3730a3', accentGlow: '#c084fc', pillBg: '#e0e7ff' };
+    return { 
+      stop0: '#1e1b4b', stop1: '#3730a3', accentGlow: '#c084fc', pillBg: '#e0e7ff',
+      headerTag: 'DIGITAL HOME BLOG • DEFENCE RECRUITMENT • 2026',
+      subtitle: 'पात्रता, तिथियां व डायरेक्ट अप्लाई लिंक',
+      badge1: '✔ OFFICIAL FORM', badge2: '⚡ DIRECT LINK', badge3: '📄 NOTIFICATION PDF'
+    };
   }
   if (t.includes('upsc') || t.includes('rpsc') || t.includes('mppsc')) {
-    return { stop0: '#451a03', stop1: '#78350f', accentGlow: '#fbbf24', pillBg: '#fef3c7' };
+    return { 
+      stop0: '#451a03', stop1: '#78350f', accentGlow: '#fbbf24', pillBg: '#fef3c7',
+      headerTag: 'DIGITAL HOME BLOG • CIVIL SERVICES UPDATES • 2026',
+      subtitle: 'पात्रता, तिथियां व डायरेक्ट अप्लाई लिंक',
+      badge1: '✔ OFFICIAL FORM', badge2: '⚡ DIRECT LINK', badge3: '📄 NOTIFICATION PDF'
+    };
   }
   if (t.includes('nta') || t.includes('cuet') || t.includes('admission') || t.includes('jee')) {
-    return { stop0: '#064e3b', stop1: '#047857', accentGlow: '#34d399', pillBg: '#d1fae5' };
+    return { 
+      stop0: '#064e3b', stop1: '#047857', accentGlow: '#34d399', pillBg: '#d1fae5',
+      headerTag: 'DIGITAL HOME BLOG • ENTRANCE & ADMISSION • 2026',
+      subtitle: 'पात्रता, तिथियां व डायरेक्ट अप्लाई लिंक',
+      badge1: '✔ OFFICIAL FORM', badge2: '⚡ DIRECT LINK', badge3: '📄 NOTIFICATION PDF'
+    };
   }
-  return { stop0: '#0a192f', stop1: '#1e293b', accentGlow: '#38bdf8', pillBg: '#e0f2fe' };
+  return { 
+    stop0: '#0a192f', stop1: '#1e293b', accentGlow: '#38bdf8', pillBg: '#e0f2fe',
+    headerTag: 'DIGITAL HOME BLOG • OFFICIAL PORTAL UPDATES • 2026',
+    subtitle: 'पात्रता, तिथियां व डायरेक्ट अप्लाई लिंक',
+    badge1: '✔ OFFICIAL FORM', badge2: '⚡ DIRECT LINK', badge3: '📄 NOTIFICATION PDF'
+  };
 }
 
 function escapeXml(str = '') {
@@ -151,8 +244,14 @@ function generateExactCanvasSvg(title = '', category = 'Sarkari Jobs & Exams') {
 
   const escapedEmblemSymbol = escapeXml(emblem.symbol);
   const escapedEmblemCode = escapeXml(emblem.code);
-  const escapedLine1 = escapeXml((titleLines[0] || 'SARKARI JOB ONLINE FORM').toUpperCase());
-  const escapedLine2 = escapeXml((titleLines[1] || '2026 APPLY NOW ONLINE').toUpperCase());
+  const escapedHeaderTag = escapeXml(theme.headerTag);
+  const escapedSubtitle = escapeXml(theme.subtitle);
+  const escapedBadge1 = escapeXml(theme.badge1);
+  const escapedBadge2 = escapeXml(theme.badge2);
+  const escapedBadge3 = escapeXml(theme.badge3);
+
+  const escapedLine1 = escapeXml((titleLines[0] || 'DIGITAL HOME SPECIAL UPDATE').toUpperCase());
+  const escapedLine2 = escapeXml((titleLines[1] || '2026 COMPLETE GUIDE').toUpperCase());
 
   const hasTwoLines = Boolean(titleLines[1]);
   const line1Y = hasTwoLines ? 315 : 355;
@@ -180,7 +279,7 @@ function generateExactCanvasSvg(title = '', category = 'Sarkari Jobs & Exams') {
   <circle cx="1080" cy="120" r="160" fill="${theme.accentGlow}" opacity="0.08" />
   <circle cx="120" cy="580" r="220" fill="${theme.accentGlow}" opacity="0.05" />
 
-  <text x="60" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="24" fill="${theme.accentGlow}" letter-spacing="3">DIGITAL HOME BLOG • OFFICIAL PORTAL UPDATES • 2026</text>
+  <text x="60" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="24" fill="${theme.accentGlow}" letter-spacing="3">${escapedHeaderTag}</text>
 
   <g transform="translate(730, 48)" filter="url(#badgeGlow)">
     <rect x="0" y="0" width="410" height="62" rx="31" ry="31" fill="${emblem.bgCircle}" stroke="${emblem.primaryColor}" stroke-width="2" />
@@ -192,21 +291,21 @@ function generateExactCanvasSvg(title = '', category = 'Sarkari Jobs & Exams') {
   <text x="60" y="${line1Y}" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="58" fill="#ffffff" letter-spacing="-0.5">${escapedLine1}</text>
   ${hasTwoLines ? `<text x="60" y="${line2Y}" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="58" fill="${theme.pillBg}" letter-spacing="-0.5">${escapedLine2}</text>` : ''}
 
-  <text x="60" y="${subtitleY}" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hind', 'Noto Sans Devanagari', sans-serif" font-weight="700" font-size="30" fill="#cbd5e1">पात्रता, तिथियां व डायरेक्ट अप्लाई लिंक</text>
+  <text x="60" y="${subtitleY}" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hind', 'Noto Sans Devanagari', sans-serif" font-weight="700" font-size="30" fill="#cbd5e1">${escapedSubtitle}</text>
 
   <g transform="translate(60, ${badgesY})">
-    <rect x="0" y="0" width="250" height="52" rx="14" ry="14" fill="${theme.accentGlow}" />
-    <text x="125" y="34" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="23" fill="#0f172a" text-anchor="middle">✔ OFFICIAL FORM</text>
+    <rect x="0" y="0" width="280" height="52" rx="14" ry="14" fill="${theme.accentGlow}" />
+    <text x="140" y="34" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="22" fill="#0f172a" text-anchor="middle">${escapedBadge1}</text>
   </g>
 
-  <g transform="translate(325, ${badgesY})">
+  <g transform="translate(360, ${badgesY})">
     <rect x="0" y="0" width="260" height="52" rx="14" ry="14" fill="#ef4444" />
-    <text x="130" y="34" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="23" fill="#ffffff" text-anchor="middle">⚡ DIRECT LINK</text>
+    <text x="130" y="34" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="22" fill="#ffffff" text-anchor="middle">${escapedBadge2}</text>
   </g>
 
-  <g transform="translate(605, ${badgesY})">
-    <rect x="0" y="0" width="310" height="52" rx="14" ry="14" fill="rgba(255, 255, 255, 0.22)" />
-    <text x="155" y="34" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="23" fill="#ffffff" text-anchor="middle">📄 NOTIFICATION PDF</text>
+  <g transform="translate(640, ${badgesY})">
+    <rect x="0" y="0" width="290" height="52" rx="14" ry="14" fill="rgba(255, 255, 255, 0.22)" />
+    <text x="145" y="34" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="22" fill="#ffffff" text-anchor="middle">${escapedBadge3}</text>
   </g>
 </svg>`;
 
@@ -215,23 +314,14 @@ function generateExactCanvasSvg(title = '', category = 'Sarkari Jobs & Exams') {
 }
 
 /**
- * Main exported function: Generates Canvas SVG ONLY for Sarkari Jobs & Exams!
- * For Non-Sarkari categories (Health, Tech, AI, Finance, News), returns real 16:9 stock photos!
+ * Main exported function: Generates High-CTR Canvas SVG Banners for ALL Categories!
  */
 async function generateAutoBanner(title, category = 'Sarkari Jobs & Exams') {
-  const catLower = (category || '').toLowerCase();
-  const isSarkari = catLower.includes('sarkari') || catLower.includes('job') || catLower.includes('exam');
-
-  if (isSarkari) {
-    try {
-      return generateExactCanvasSvg(title, category);
-    } catch (err) {
-      return generateExactCanvasSvg('SARKARI JOB ONLINE FORM 2026', category);
-    }
+  try {
+    return generateExactCanvasSvg(title, category);
+  } catch (err) {
+    return generateExactCanvasSvg(title || 'DIGITAL HOME UPDATE 2026', category);
   }
-
-  // Non-Sarkari category: Fetch real 16:9 HD landscape photo!
-  return await fetchLandscapePhoto(title, category);
 }
 
 module.exports = { generateAutoBanner, generateExactCanvasSvg, fetchLandscapePhoto };

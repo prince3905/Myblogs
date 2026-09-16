@@ -513,22 +513,30 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
       return res.status(200).send(html);
     } else {
-      // 404 HTTP Status Code for missing/draft/deleted posts (Prevents Soft 404s!)
-      const noindexMeta = `
-    <title>404 Page Not Found | Digital Home Sarkari Result</title>
-    <meta name="robots" content="noindex, nofollow" />
-    <meta name="description" content="The requested article was not found or has been removed." />
-      `;
-      html = html.replace(/<title>.*?<\/title>/, '');
-      html = html.replace(/<meta name="description" .*?\/>/, '');
-      html = html.replace('</head>', `${noindexMeta}\n</head>`);
+      // Smart 301 Permanent Redirect for missing/deleted/pruned posts:
+      // Eliminates 404 Not Found errors for users & Googlebot!
+      // Passes link authority to active category hubs and de-indexes cleanly in GSC.
+      const cat = (req.params.category || '').toLowerCase();
+      let targetRedirect = 'https://www.digitalhomeblog.in/job-alerts';
 
-      if (!isLocal) {
-        postSsrCache.set(cacheKey, { status: 404, html, time: Date.now() });
+      if (cat.includes('sarkari') || cat.includes('job') || cat.includes('result') || cat.includes('admit')) {
+        targetRedirect = 'https://www.digitalhomeblog.in/job-alerts';
+      } else if (cat.includes('tech') || cat.includes('tutorial')) {
+        targetRedirect = 'https://www.digitalhomeblog.in/category/tech-tutorials';
+      } else if (cat.includes('ai') || cat.includes('tool')) {
+        targetRedirect = 'https://www.digitalhomeblog.in/category/ai-web-tools';
+      } else if (cat.includes('finance') || cat.includes('business')) {
+        targetRedirect = 'https://www.digitalhomeblog.in/category/finance-business';
+      } else if (cat.includes('health') || cat.includes('wellness')) {
+        targetRedirect = 'https://www.digitalhomeblog.in/category/health-wellness';
+      } else if (cat.includes('news') || cat.includes('trend')) {
+        targetRedirect = 'https://www.digitalhomeblog.in/category/news-trends';
+      } else {
+        targetRedirect = 'https://www.digitalhomeblog.in/blog';
       }
 
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(404).send(html);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.redirect(301, targetRedirect);
     }
   } catch (err) {
     next(err);
