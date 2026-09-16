@@ -1342,6 +1342,7 @@ async function scrapeFeeds() {
       if (/\b(army|navy|air force|agniveer|bsf|crpf|cisf|itbp|ssb|coast guard)\b/i.test(text)) score += 40;
       if (/\b(upsssc|uppsc|bpsc|bssc|mppsc|mpesb|rpsc|rsmssb|dsssb|mpsc|kpsc|tnpsc|tspsc|appsc|hssc|hpsc)\b/i.test(text)) score += 35;
       if (/\b(teacher|tet|ctet|reet|tgt|pgt|prt|bed|deled|assistant teacher|shikshak)\b/i.test(text)) score += 35;
+      if (/\b(yojna|yojana|kaushal|kushal|vikas mission|rojgar|outsourcing|anganwadi|samagra shiksha|gram panchayat|dairy development|block program|prabandhak)\b/i.test(text)) score += 40;
       if (/\b(high court|supreme court|district court|patwari|lekhpal|amin|vdo|gram sachiv)\b/i.test(text)) score += 30;
       if (/\b(isro|drdo|barc|iocl|ongc|sail|bhel|ntpc|powergrid|coal india)\b/i.test(text)) score += 30;
       if (/\b(staff nurse|anm|gnm|pharmacist|cho|medical officer|lab technician)\b/i.test(text)) score += 25;
