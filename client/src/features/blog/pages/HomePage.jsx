@@ -11,6 +11,7 @@ import { usePosts } from '../../../hooks/usePosts';
 import { postUrl, catSlug } from '../../../shared/lib/category';
 import { optimizeImage } from '../../../shared/lib/images';
 import { request } from '../../../shared/lib/api';
+import LiveTrendingPulseHub from '../components/LiveTrendingPulseHub';
 
 const QUICK_EXAM_FILTERS = [
   { label: '🌟 All Updates', query: '', color: '#4F46E5', icon: '⚡' },
@@ -2751,6 +2752,9 @@ export default function HomePage() {
           ))}
         </Container>
       </Box>
+
+      {/* 24x7 Multi-Category Live Trends & News Radar (Zero Index Bloat, 100% User Engagement) */}
+      <LiveTrendingPulseHub />
 
       {/* Explore Tools & Games Section (H2) */}
       <Box 
