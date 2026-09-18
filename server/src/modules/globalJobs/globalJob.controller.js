@@ -219,9 +219,47 @@ async function triggerSupervisor(req, res) {
   }
 }
 
+/**
+ * GET /api/global-jobs/detect-geo
+ * Detects visitor country from headers (Cloudflare cf-ipcountry, x-country-code)
+ */
+async function detectVisitorGeo(req, res) {
+  try {
+    const country = (req.headers['cf-ipcountry'] || req.headers['x-country-code'] || '').toUpperCase() || 'IN';
+    
+    // Country to primary language mapping
+    const COUNTRY_LANG_MAP = {
+      IN: 'hi',
+      AE: 'ar', SA: 'ar', QA: 'ar', OM: 'ar', KW: 'ar', BH: 'ar', EG: 'ar',
+      ES: 'es', MX: 'es', AR: 'es', CO: 'es', CL: 'es', PE: 'es',
+      FR: 'fr', BE: 'fr', SN: 'fr',
+      DE: 'de', AT: 'de', CH: 'de',
+      US: 'en', GB: 'en', CA: 'en', AU: 'en', NZ: 'en', SG: 'en',
+      RU: 'ru',
+      BR: 'pt', PT: 'pt',
+      JP: 'ja',
+      KR: 'ko',
+      BD: 'bn',
+      PK: 'ur',
+      ID: 'id'
+    };
+
+    const suggestedLang = COUNTRY_LANG_MAP[country] || 'en';
+
+    return res.json({
+      success: true,
+      detectedCountry: country,
+      suggestedLanguage: suggestedLang
+    });
+  } catch (err) {
+    return res.json({ success: true, detectedCountry: 'IN', suggestedLanguage: 'hi' });
+  }
+}
+
 module.exports = {
   getGlobalJobs,
   getGlobalJobStats,
   getGlobalJobById,
-  triggerSupervisor
+  triggerSupervisor,
+  detectVisitorGeo
 };

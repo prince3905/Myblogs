@@ -4,12 +4,14 @@ const {
   getGlobalJobs,
   getGlobalJobStats,
   getGlobalJobById,
-  triggerSupervisor
+  triggerSupervisor,
+  detectVisitorGeo
 } = require('./globalJob.controller');
 
 // Public endpoints
 router.get('/', getGlobalJobs);
 router.get('/stats', getGlobalJobStats);
+router.get('/detect-geo', detectVisitorGeo);
 router.get('/:id', getGlobalJobById);
 
 // Trigger supervisor manually (for testing or cron webhook)

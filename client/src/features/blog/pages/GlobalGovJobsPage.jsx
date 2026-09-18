@@ -97,6 +97,36 @@ const TIMELINE_TABS = [
   { id: 'closing_soon', label: '⏳ अंतिम तिथि निकट (Urgent)', icon: '🔴' }
 ];
 
+// Timezone to Country code mapping for instant zero-latency geo-detection
+const TIMEZONE_TO_COUNTRY = {
+  'Asia/Kolkata': 'IN', 'Asia/Calcutta': 'IN',
+  'Asia/Dubai': 'AE', 'Asia/Muscat': 'OM', 'Asia/Riyadh': 'SA', 'Asia/Qatar': 'QA', 'Asia/Kuwait': 'KW', 'Asia/Bahrain': 'BH',
+  'Europe/London': 'GB',
+  'America/New_York': 'US', 'America/Chicago': 'US', 'America/Los_Angeles': 'US', 'America/Denver': 'US',
+  'America/Toronto': 'CA', 'America/Vancouver': 'CA',
+  'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU',
+  'Europe/Berlin': 'DE', 'Europe/Paris': 'FR', 'Europe/Madrid': 'ES', 'Europe/Rome': 'IT',
+  'Asia/Tokyo': 'JP', 'Asia/Seoul': 'KR', 'Asia/Singapore': 'SG',
+  'Africa/Johannesburg': 'ZA', 'America/Sao_Paulo': 'BR', 'Asia/Dhaka': 'BD', 'Asia/Karachi': 'PK'
+};
+
+// Country code to primary official language mapping
+const COUNTRY_TO_PRIMARY_LANG = {
+  IN: 'hi',
+  AE: 'ar', SA: 'ar', QA: 'ar', OM: 'ar', KW: 'ar', BH: 'ar', EG: 'ar',
+  ES: 'es', MX: 'es', AR: 'es', CO: 'es', CL: 'es',
+  FR: 'fr', BE: 'fr', SN: 'fr',
+  DE: 'de', AT: 'de', CH: 'de',
+  US: 'en', GB: 'en', CA: 'en', AU: 'en', NZ: 'en', SG: 'en',
+  RU: 'ru',
+  BR: 'pt', PT: 'pt',
+  JP: 'ja',
+  KR: 'ko',
+  BD: 'bn',
+  PK: 'ur',
+  ID: 'id'
+};
+
 export default function GlobalGovJobsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -110,7 +140,7 @@ export default function GlobalGovJobsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Active language
+  // Active language & Geo-detection state
   const [selectedLanguage, setSelectedLanguage] = useState('hi');
   const [userDetectedCountry, setUserDetectedCountry] = useState('IN');
 
@@ -126,18 +156,59 @@ export default function GlobalGovJobsPage() {
   const [modalViewMode, setModalViewMode] = useState('translated'); // 'translated' | 'original'
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
 
-  // Detect visitor locale on mount
+  // 1. Automatic Geo & Language Detection on Mount (with LocalStorage Memory)
   useEffect(() => {
     try {
-      const browserLang = navigator.language || '';
-      if (browserLang.startsWith('ar')) setSelectedLanguage('ar');
-      else if (browserLang.startsWith('es')) setSelectedLanguage('es');
-      else if (browserLang.startsWith('fr')) setSelectedLanguage('fr');
-      else if (browserLang.startsWith('de')) setSelectedLanguage('de');
-      else if (browserLang.startsWith('en')) setSelectedLanguage('en');
-      else setSelectedLanguage('hi'); // Default Hindi for Indian audience
+      const savedCountry = localStorage.getItem('dh_user_country');
+      const savedLang = localStorage.getItem('dh_user_lang');
+
+      let detectedC = savedCountry;
+      let detectedL = savedLang;
+
+      // Detect country via Timezone if not saved
+      if (!detectedC) {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        detectedC = TIMEZONE_TO_COUNTRY[tz] || 'IN';
+      }
+
+      // Auto-assign matching language if not explicitly locked
+      if (!detectedL) {
+        detectedL = COUNTRY_TO_PRIMARY_LANG[detectedC];
+        if (!detectedL) {
+          const browserLang = (navigator.language || '').slice(0, 2);
+          detectedL = SUPPORTED_LANGUAGES.some(l => l.code === browserLang) ? browserLang : 'hi';
+        }
+      }
+
+      setUserDetectedCountry(detectedC);
+      setSelectedLanguage(detectedL || 'hi');
+
+      // Async server GeoIP verification in background
+      if (!savedCountry) {
+        request('/api/global-jobs/detect-geo')
+          .then(res => {
+            if (res?.success && res.detectedCountry) {
+              setUserDetectedCountry(res.detectedCountry);
+              if (!savedLang && res.suggestedLanguage) {
+                setSelectedLanguage(res.suggestedLanguage);
+              }
+            }
+          })
+          .catch(() => {});
+      }
+
+      // Global sync listener when changed via navbar picker
+      const handleSync = (e) => {
+        if (e.detail?.lang) setSelectedLanguage(e.detail.lang);
+        if (e.detail?.country) {
+          setUserDetectedCountry(e.detail.country);
+          setActiveCountry(e.detail.country);
+        }
+      };
+      window.addEventListener('dh_language_changed', handleSync);
+      return () => window.removeEventListener('dh_language_changed', handleSync);
     } catch (e) {
-      // Fallback to Hindi
+      // Safe fallback
     }
   }, []);
 
@@ -199,6 +270,32 @@ export default function GlobalGovJobsPage() {
     if (activeCitizenship !== 'ALL') params.citizenship = activeCitizenship;
     setSearchParams(params, { replace: true });
   }, [activeContinent, activeCountry, activeCategory, activeTimeline, activeCitizenship, setSearchParams]);
+
+  // Manual Country Change Handler
+  const handleCountryChange = (countryCode) => {
+    setActiveCountry(countryCode);
+    setUserDetectedCountry(countryCode);
+    setCountryPickerOpen(false);
+    setCurrentPage(1);
+    try {
+      localStorage.setItem('dh_user_country', countryCode);
+      // Auto-switch language to this country's primary language if user hasn't explicitly locked another language
+      const targetLang = COUNTRY_TO_PRIMARY_LANG[countryCode];
+      const isLangLocked = localStorage.getItem('dh_user_lang_locked') === 'true';
+      if (targetLang && !isLangLocked) {
+        setSelectedLanguage(targetLang);
+      }
+    } catch (e) {}
+  };
+
+  // Manual Language Change Handler
+  const handleLanguageChange = (langCode) => {
+    setSelectedLanguage(langCode);
+    try {
+      localStorage.setItem('dh_user_lang', langCode);
+      localStorage.setItem('dh_user_lang_locked', 'true');
+    } catch (e) {}
+  };
 
   // Handle open job modal from URL param or direct click
   const openJobModal = (job) => {
@@ -306,7 +403,7 @@ export default function GlobalGovJobsPage() {
                 '&:hover': { bgcolor: '#334155' }
               }}
             >
-              📍 देश: {COUNTRY_CATALOG.find(c => c.code === activeCountry)?.flag || '🌐'} {COUNTRY_CATALOG.find(c => c.code === activeCountry)?.name || 'All Countries'}
+              📍 देश: {COUNTRY_CATALOG.find(c => c.code === (activeCountry !== 'ALL' ? activeCountry : userDetectedCountry))?.flag || '🌐'} {COUNTRY_CATALOG.find(c => c.code === (activeCountry !== 'ALL' ? activeCountry : userDetectedCountry))?.name || 'All Countries'} 🔄
             </Button>
 
             {/* Language Selector */}
@@ -315,7 +412,7 @@ export default function GlobalGovJobsPage() {
               <Select
                 size="small"
                 value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
+                onChange={(e) => handleLanguageChange(e.target.value)}
                 sx={{
                   color: '#F8FAFC',
                   bgcolor: '#1E293B',
@@ -1238,11 +1335,7 @@ export default function GlobalGovJobsPage() {
               <Button
                 key={c.code}
                 variant={activeCountry === c.code ? 'contained' : 'outlined'}
-                onClick={() => {
-                  setActiveCountry(c.code);
-                  setCountryPickerOpen(false);
-                  setCurrentPage(1);
-                }}
+                onClick={() => handleCountryChange(c.code)}
                 sx={{
                   textTransform: 'none',
                   fontSize: '0.82rem',

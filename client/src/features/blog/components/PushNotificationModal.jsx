@@ -14,10 +14,111 @@ import FlashOnIcon from '@mui/icons-material/FlashOn';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import QuizIcon from '@mui/icons-material/Quiz';
 
+// Multilingual translations for the Push & Subscribe Notification Modal
+const POPUP_TRANSLATIONS = {
+  hi: {
+    pill: '🔥 LIVE सरकारी जॉब अपडेट्स • 100% FREE',
+    title: 'सरकारी नौकरी, भर्ती गजट और आधिकारिक रिजल्ट कभी मिस न हों! 🔔',
+    desc: 'UPSC, SSC, Railway, Police, Defence और राज्य सरकार की नौकरियों के Live Alerts, Direct Official Links सीधे अपने फोन पर पाएं।',
+    feat1: '⚡ Direct Official Gazette & Apply Links (100% सत्यापित)',
+    feat2: '⏳ Last Date & Deadline Reminders (फॉर्म कभी न छूटे)',
+    feat3: '📚 Daily Current Affairs & Career Updates (रोजाना)',
+    btnAllow: '🔔 हाँ, मुझे फ्री अलर्ट भेजें (Allow Free Alerts)',
+    btnLater: 'बाद में (Later)',
+    note: '🔒 100% Free Lifetime • 1-क्लिक में कभी भी बंद कर सकते हैं'
+  },
+  en: {
+    pill: '🔥 LIVE GOV JOB ALERTS • 100% FREE',
+    title: 'Never Miss Official Vacancies, Federal Gazettes & Civil Service Alerts! 🔔',
+    desc: 'Instant notifications for Federal, Civil Service, United Nations, Defense & Public Sector circulars directly on your device.',
+    feat1: '⚡ Direct Official .gov & PDF Gazette Links (Zero Spam)',
+    feat2: '⏳ Application Deadlines & Urgent Notice Reminders',
+    feat3: '📚 Daily International Affairs & Policy Updates',
+    btnAllow: '🔔 Yes, Send Me Free Gov Alerts',
+    btnLater: 'Later',
+    note: '🔒 100% Free Lifetime • Unsubscribe anytime in 1 click'
+  },
+  ar: {
+    pill: '🔥 تنبيهات الوظائف الحكومية المباشرة • مجاناً 100%',
+    title: 'لا تفوّت أحدث إعلانات الوظائف الحكومية والجريدة الرسمية! 🔔',
+    desc: 'احصل على إشعارات فورية للوظائف الشاغرة في الوزارات والهيئات الاتحادية والأمم المتحدة مباشرة على جهازك.',
+    feat1: '⚡ روابط تقديم رسمية معتمدة والجريدة الرسمية PDF',
+    feat2: '⏳ تنبيهات مواعيد إغلاق التسجيل وآخر موعد للتقديم',
+    feat3: '📚 ملخص يومي لأهم الشؤون الدولية والسياسات الرسمية',
+    btnAllow: '🔔 نعم، أرسل لي التنبيهات مجاناً',
+    btnLater: 'لاحقاً',
+    note: '🔒 خدمة مجانية 100% مدى الحياة • يمكنك الإلغاء بنقرة واحدة'
+  },
+  es: {
+    pill: '🔥 ALERTAS DE EMPLEO PÚBLICO • 100% GRATIS',
+    title: '¡No te pierdas las oposiciones oficiales y boletines del estado! 🔔',
+    desc: 'Recibe alertas inmediatas de empleo público, convocatorias ministeriales y vacantes oficiales directamente en tu teléfono.',
+    feat1: '⚡ Enlaces directos a boletines oficiales (.gob / PDF)',
+    feat2: '⏳ Recordatorios de plazos de inscripción urgentes',
+    feat3: '📚 Actualizaciones diarias de asuntos internacionales',
+    btnAllow: '🔔 Sí, recibir alertas gratuitas',
+    btnLater: 'Más tarde',
+    note: '🔒 100% Gratuito de por vida • Cancela cuando quieras en 1 clic'
+  },
+  fr: {
+    pill: '🔥 ALERTES CONCOURS PUBLICS • 100% GRATUIT',
+    title: 'Ne manquez aucun avis de recrutement de la fonction publique! 🔔',
+    desc: 'Alertes instantanées pour les postes gouvernementaux, ministères et organisations internationales directement sur votre appareil.',
+    feat1: '⚡ Liens officiels vers le Journal Officiel et PDF vérifiés',
+    feat2: '⏳ Rappels des dates limites de candidature',
+    feat3: '📚 Actualités internationales et politiques publiques',
+    btnAllow: '🔔 Oui, m\'envoyer des alertes gratuites',
+    btnLater: 'Plus tard',
+    note: '🔒 100% Gratuit à vie • Désabonnement en 1 clic'
+  },
+  de: {
+    pill: '🔥 LIVE ÖFFENTLICHER DIENST ALERTS • 100% KOSTENLOS',
+    title: 'Verpassen Sie keine Stellenausschreibungen des Bundes & der Länder! 🔔',
+    desc: 'Sofortige Benachrichtigungen über offizielle Ausschreibungen und Stellen im öffentlichen Dienst direkt auf Ihr Gerät.',
+    feat1: '⚡ Direkte Links zu Bund.de & offiziellen Amtsblättern',
+    feat2: '⏳ Fristerinnerungen für Bewerbungsschlüsse',
+    feat3: '📚 Tägliche internationale Nachrichten & Analysen',
+    btnAllow: '🔔 Ja, kostenlose Benachrichtigungen aktivieren',
+    btnLater: 'Später',
+    note: '🔒 100% Kostenlos • Jederzeit mit 1 Klick abbestellbar'
+  }
+};
+
 export default function PushNotificationModal() {
   const [open, setOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [currentLang, setCurrentLang] = useState('hi');
   const timerRef = useRef(null);
+
+  // Sync language with user preference or timezone on mount
+  useEffect(() => {
+    try {
+      const savedLang = localStorage.getItem('dh_user_lang');
+      if (savedLang && POPUP_TRANSLATIONS[savedLang]) {
+        setCurrentLang(savedLang);
+      } else {
+        const browserLang = (navigator.language || '').slice(0, 2);
+        if (POPUP_TRANSLATIONS[browserLang]) {
+          setCurrentLang(browserLang);
+        } else {
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+          if (tz.includes('Dubai') || tz.includes('Riyadh') || tz.includes('Qatar') || tz.includes('Kuwait')) {
+            setCurrentLang('ar');
+          } else if (tz.includes('Madrid')) {
+            setCurrentLang('es');
+          } else if (tz.includes('Paris')) {
+            setCurrentLang('fr');
+          } else if (tz.includes('Berlin')) {
+            setCurrentLang('de');
+          } else if (tz.includes('London') || tz.includes('New_York') || tz.includes('Chicago') || tz.includes('Los_Angeles') || tz.includes('Toronto')) {
+            setCurrentLang('en');
+          } else {
+            setCurrentLang('hi');
+          }
+        }
+      }
+    } catch (e) {}
+  }, [open]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -109,12 +210,16 @@ export default function PushNotificationModal() {
 
   if (isSubscribed) return null;
 
+  const t = POPUP_TRANSLATIONS[currentLang] || POPUP_TRANSLATIONS.en;
+  const isRTL = currentLang === 'ar';
+
   return (
     <Dialog
       open={open}
       onClose={handleLater}
       TransitionComponent={Zoom}
       keepMounted
+      dir={isRTL ? 'rtl' : 'ltr'}
       PaperProps={{
         sx: {
           borderRadius: '20px',
@@ -152,7 +257,8 @@ export default function PushNotificationModal() {
         size="small"
         sx={{
           position: 'absolute',
-          right: 12,
+          right: isRTL ? 'auto' : 12,
+          left: isRTL ? 12 : 'auto',
           top: 12,
           color: '#94A3B8',
           bgcolor: 'rgba(0,0,0,0.04)',
@@ -184,7 +290,7 @@ export default function PushNotificationModal() {
           }}
         >
           <Box sx={{ width: 6, height: 6, bgcolor: '#DC2626', borderRadius: '50%', animation: 'pulse 1.5s infinite' }} />
-          🔥 LIVE SARKARI UPDATES • 100% FREE
+          {t.pill}
         </Box>
 
         {/* Animated Bell Icon */}
@@ -225,7 +331,7 @@ export default function PushNotificationModal() {
             lineHeight: 1.3
           }}
         >
-          सरकारी नौकरी के फॉर्म, Admit Card & करेंट अफेयर्स कभी मिस न हों! 🔔
+          {t.title}
         </Typography>
 
         <Typography
@@ -238,7 +344,7 @@ export default function PushNotificationModal() {
             px: { xs: 0.5, sm: 1 }
           }}
         >
-          UP TET, SSC, Railway, Police, UPSC और State Jobs के <strong>Live Alerts, Direct Apply Link & Daily GK Quiz</strong> सबसे पहले अपने फोन पर पाएं।
+          {t.desc}
         </Typography>
 
         {/* Feature Highlights */}
@@ -251,26 +357,26 @@ export default function PushNotificationModal() {
             bgcolor: 'rgba(241, 245, 249, 0.85)',
             p: 1.5,
             borderRadius: '12px',
-            textAlign: 'left',
+            textAlign: isRTL ? 'right' : 'left',
             border: '1px solid rgba(226, 232, 240, 0.8)'
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <FlashOnIcon sx={{ fontSize: 17, color: '#EAB308' }} />
             <Typography variant="caption" sx={{ fontWeight: 750, color: '#1E293B', fontSize: '0.8rem' }}>
-              ⚡ Direct Official Apply & PDF Link (कोई फेक लिंक नहीं)
+              {t.feat1}
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CheckCircleIcon sx={{ fontSize: 17, color: '#16A34A' }} />
             <Typography variant="caption" sx={{ fontWeight: 750, color: '#1E293B', fontSize: '0.8rem' }}>
-              ⏳ Last Date & Result Reminder (फॉर्म छूटने से बचें)
+              {t.feat2}
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <QuizIcon sx={{ fontSize: 17, color: '#4F46E5' }} />
             <Typography variant="caption" sx={{ fontWeight: 750, color: '#1E293B', fontSize: '0.8rem' }}>
-              📚 Daily Current Affairs & 10 GK MCQs Quiz (रोजाना सुबह)
+              {t.feat3}
             </Typography>
           </Box>
         </Box>
@@ -297,11 +403,11 @@ export default function PushNotificationModal() {
               }
             }}
           >
-            🔔 हाँ, मुझे फ्री अलर्ट भेजें (Allow Free Alerts)
+            {t.btnAllow}
           </Button>
 
           <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: '0.72rem', fontWeight: 600, mt: 0.2 }}>
-            🔒 100% Free Lifetime • 1-Click में कभी भी बंद कर सकते हैं
+            {t.note}
           </Typography>
 
           <Button
@@ -316,7 +422,7 @@ export default function PushNotificationModal() {
               '&:hover': { bgcolor: 'transparent', color: '#1E293B' }
             }}
           >
-            बाद में (Later)
+            {t.btnLater}
           </Button>
         </Box>
       </DialogContent>

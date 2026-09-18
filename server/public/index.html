@@ -74,6 +74,15 @@
     <style>
       body { margin: 0; padding: 0; background-color: #FFFFFF; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
       #root { min-height: 100vh; display: flex; flex-direction: column; }
+      /* Clean styling: hide ugly Google Translate banners and tooltips */
+      .goog-te-banner-frame.skiptranslate, .goog-te-banner-frame { display: none !important; }
+      body { top: 0px !important; }
+      .goog-tooltip, .goog-tooltip:hover { display: none !important; }
+      .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
+      #goog-gt-tt { display: none !important; }
+      .goog-te-balloon-frame { display: none !important; }
+      #google_translate_element { display: none !important; }
+      .skiptranslate iframe { display: none !important; }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,10 +90,21 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;700;800&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;700;800&display=swap"></noscript>
     <meta name="google-adsense-account" content="ca-pub-7044184444698366">
-    <script type="module" crossorigin src="/assets/index-DFsWKzF4.js"></script>
+    <!-- Global Full-Website Headless Translation Engine -->
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+          pageLanguage: 'auto',
+          autoDisplay: false
+        }, 'google_translate_element');
+      }
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" defer></script>
+    <script type="module" crossorigin src="/assets/index-xs32UeRi.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-BelXacNR.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" crossorigin href="/assets/index-BelXacNR.css"></noscript>
   </head>
   <body>
+    <div id="google_translate_element"></div>
     <div id="root"></div>
   </body>
 </html>

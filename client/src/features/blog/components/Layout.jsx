@@ -10,6 +10,7 @@ import BreadcrumbsNav from '../../../components/Breadcrumbs';
 import TelegramStickyBanner from '../../../components/TelegramStickyBanner';
 import FloatingQuickShare, { ShareModalProvider } from '../../../components/FloatingQuickShare';
 import PushNotificationModal from './PushNotificationModal';
+import GlobalLanguagePicker from '../../../components/GlobalLanguagePicker';
 
 function useDeferredMount(delay = 2500) {
   const [mounted, setMounted] = useState(false);
@@ -217,8 +218,9 @@ export default function Layout({ children }) {
                ))}
               </Box>
             
-            {/* Search + Dark mode toggle */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, md: 0.5 } }}>
+            {/* Language Picker + Search + Dark mode toggle */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1 } }}>
+              <GlobalLanguagePicker />
               <IconButton
                 component={Link}
                 to="/search"
@@ -239,14 +241,19 @@ export default function Layout({ children }) {
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
         PaperProps={{
-          sx: { bgcolor: theme.palette.mode === 'dark' ? '#111827' : '#ffffff', minWidth: 200 }
+          sx: { bgcolor: theme.palette.mode === 'dark' ? '#111827' : '#ffffff', minWidth: 240 }
         }}
       >
-        <Box component={Link} to="/" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none' }}>
-          <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: '0.75rem', fontWeight: 800, color: 'white' }}>D</Avatar>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111' }}>
-            Digital Home
-          </Typography>
+        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none' }}>
+            <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: '0.75rem', fontWeight: 800, color: 'white' }}>D</Avatar>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111' }}>
+              Digital Home
+            </Typography>
+          </Box>
+          <Box sx={{ pt: 0.5 }}>
+            <GlobalLanguagePicker isMobile={true} />
+          </Box>
         </Box>
         <List>
           <ListItem disablePadding>
