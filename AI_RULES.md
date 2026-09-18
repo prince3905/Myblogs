@@ -27,6 +27,10 @@ To prevent Google AdSense bans, Google Search "Scaled Content Abuse" penalties, 
 3. **Zero AI Boilerplate / Fluff:**
    - **STRICTLY PROHIBITED:** Phrases like *"In this digital era...", "Technology is evolving rapidly...", "As an AI...", "As we all know..."*.
    - Output must be 100% factual: Official Department, Gazette Notification Reference ID, Pay Scale, Education, Age Limit, and Direct Official Link.
+4. **Zero Faltu / Zero Promotional Links (STRICT RULE):**
+   - **ABSOLUTELY NO SPAM OR PROMOTIONAL REDIRECTS:** No affiliate spam, no betting/loan links, no fake third-party consultant portals, no shady middleman redirects.
+   - **100% PURE OFFICIAL LINKS ONLY:** Every external apply link must go directly to the verified official government portal (`.gov`, `.gob`, `.gouv`, `.go.*`, `.nic.in`) or official multilateral domain (`un.org`, `who.int`, `worldbank.org`).
+   - Pure official PDF gazette downloads only. Maintain 100% user trust and authority.
 
 ---
 
