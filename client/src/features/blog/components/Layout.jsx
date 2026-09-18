@@ -64,24 +64,19 @@ export default function Layout({ children }) {
   }, []);
 
   const categories = [
-    { label: 'Sarkari Jobs & Exams', path: '/category/sarkari-jobs-exams' },
-    { label: 'Health & Wellness', path: '/category/health-wellness' },
-    { label: 'Tech & Tutorials', path: '/category/tech-tutorials' },
-    { label: 'AI & Web Tools', path: '/category/ai-web-tools' },
-    { label: 'News & Trends', path: '/category/news-trends' },
-    { label: 'Finance & Business', path: '/category/finance-business' },
+    { label: '🌐 Global Gov Jobs (195 Countries)', path: '/global-jobs' },
+    { label: '🇮🇳 India Sarkari Jobs (UPSC/SSC/State)', path: '/job-alerts' },
+    { label: '🇺🇳 UN & Multilateral Careers', path: '/global-jobs?continent=Multilateral' },
+    { label: '🕌 Gulf & MENA Government Jobs', path: '/global-jobs?continent=Asia' },
+    { label: '📰 Global News & World Affairs', path: '/current-affairs' },
   ];
 
   const navItems = [
-    { label: 'Blog', path: '/blog' },
-    { label: 'Current Affairs', path: '/current-affairs' },
+    { label: '🌐 Global Jobs', path: '/global-jobs' },
+    { label: '🇮🇳 Sarkari Alerts', path: '/job-alerts' },
+    { label: '📰 Global News', path: '/current-affairs' },
     { label: 'Daily Quiz', path: '/daily-quiz' },
-    { label: 'Job Alerts', path: '/job-alerts' },
-    { label: 'Games', path: '/games' },
     { label: 'Tools', path: '/tools' },
-    { label: 'About', path: '/about' },
-    { label: 'Contact', path: '/contact' },
-    { label: 'Admin', path: '/admin' },
   ];
 
   return (

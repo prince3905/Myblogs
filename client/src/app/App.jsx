@@ -21,6 +21,7 @@ const SearchPage = lazy(() => import('../features/blog/pages/SearchPage'));
 const ToolsPage = lazy(() => import('../features/tools/pages/ToolsPage'));
 const GamesPage = lazy(() => import('../features/games/pages/GamesPage'));
 const PublicLiveAlertsPage = lazy(() => import('../features/blog/pages/PublicLiveAlertsPage'));
+const GlobalGovJobsPage = lazy(() => import('../features/blog/pages/GlobalGovJobsPage'));
 const CurrentAffairsListPage = lazy(() => import('../features/currentAffairs/pages/CurrentAffairsListPage'));
 const CurrentAffairsDetailPage = lazy(() => import('../features/currentAffairs/pages/CurrentAffairsDetailPage'));
 const DailyQuizPage = lazy(() => import('../features/currentAffairs/pages/DailyQuizPage'));
@@ -102,6 +103,7 @@ const SearchPageSuspense = withPublicSuspense(SearchPage);
 const ToolsPageSuspense = withPublicSuspense(ToolsPage);
 const GamesPageSuspense = withPublicSuspense(GamesPage);
 const PublicLiveAlertsPageSuspense = withPublicSuspense(PublicLiveAlertsPage);
+const GlobalGovJobsPageSuspense = withPublicSuspense(GlobalGovJobsPage);
 const CurrentAffairsListPageSuspense = withPublicSuspense(CurrentAffairsListPage);
 const CurrentAffairsDetailPageSuspense = withPublicSuspense(CurrentAffairsDetailPage);
 const DailyQuizPageSuspense = withPublicSuspense(DailyQuizPage);
@@ -144,6 +146,8 @@ export default function App() {
         <Route path="/tools" element={<ToolsPageSuspense />} />
         <Route path="/games" element={<GamesPageSuspense />} />
         <Route path="/job-alerts" element={<PublicLiveAlertsPageSuspense />} />
+        <Route path="/global-jobs" element={<GlobalGovJobsPageSuspense />} />
+        <Route path="/global-jobs/:country" element={<GlobalGovJobsPageSuspense />} />
         <Route path="/admin/login" element={<AdminLoginPageSuspense />} />
         <Route path="/admin" element={<AdminRoute><AdminLayoutSuspense /></AdminRoute>}>
           <Route index element={<AdminDashboardPageSuspense />} />
