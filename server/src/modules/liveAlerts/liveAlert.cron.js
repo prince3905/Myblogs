@@ -1162,9 +1162,49 @@ async function scrapeFeeds() {
 
   console.log(`[LiveAlert Scraper] ${pendingListings.length} of ${listLinks.length} listings are new or pending detail fetch.`);
 
-  // Limit processing to top 30 pending listings per cycle to maintain high speed and prevent MongoDB connection timeout
-  const listingsToProcess = pendingListings.slice(0, 30);
-  console.log(`[LiveAlert Scraper] Processing top ${listingsToProcess.length} pending listings...`);
+  // Stratified selection to ensure Syllabus, Admit Card, Admission, Answer Key, Result, and Latest Jobs are all actively processed
+  const categoryBuckets = {
+    'Syllabus': [],
+    'Admission': [],
+    'Admit Card': [],
+    'Answer Key': [],
+    'Result': [],
+    'Latest Job': [],
+    'Other': []
+  };
+
+  for (const item of pendingListings) {
+    const cat = item.defaultCategory || detectCategory(item.text, item.href);
+    if (categoryBuckets[cat]) {
+      categoryBuckets[cat].push(item);
+    } else {
+      categoryBuckets['Other'].push(item);
+    }
+  }
+
+  const listingsToProcess = [];
+  const priorityCategories = ['Syllabus', 'Admission', 'Admit Card', 'Answer Key', 'Result', 'Latest Job', 'Other'];
+
+  // Take up to 7 items from each category per cycle (guarantees syllabus & admission get ingested immediately)
+  for (let slot = 0; slot < 7; slot++) {
+    for (const cat of priorityCategories) {
+      if (categoryBuckets[cat].length > slot && listingsToProcess.length < 40) {
+        listingsToProcess.push(categoryBuckets[cat][slot]);
+      }
+    }
+  }
+
+  // Fallback to fill up to 35 if some categories have fewer items
+  if (listingsToProcess.length < 35) {
+    for (const item of pendingListings) {
+      if (!listingsToProcess.includes(item)) {
+        listingsToProcess.push(item);
+        if (listingsToProcess.length >= 35) break;
+      }
+    }
+  }
+
+  console.log(`[LiveAlert Scraper] Processing ${listingsToProcess.length} balanced pending listings across all categories (Syllabus: ${categoryBuckets['Syllabus'].length}, Admission: ${categoryBuckets['Admission'].length}, Admit Card: ${categoryBuckets['Admit Card'].length})...`);
 
   for (const listing of listingsToProcess) {
     try {
@@ -1257,8 +1297,17 @@ async function scrapeFeeds() {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      // Strict 1-Week Gate: Only ingest fresh notices published/posted in the last 7 days
-      if (safeParsedDate && safeParsedDate < sevenDaysAgo) {
+      const isNonApp = finalCategory === 'Result' || 
+                       finalCategory === 'Admit Card' || 
+                       finalCategory === 'Answer Key' || 
+                       finalCategory === 'Syllabus' || 
+                       finalCategory === 'Admission' ||
+                       finalCategory === 'Certificate Verification' ||
+                       /\b(admit card|result|answer key|syllabus|counselling|counseling|merit list|score card|exam date|city intimation|cut ?off|allotment)\b/i.test(title);
+
+      // Strict 1-Week Gate: Applies to Job Vacancies only (so old closed forms are skipped).
+      // Reference circulars (Syllabus, Admit Card, Admission, Answer Key, Result) remain active throughout the 2026 exam cycle!
+      if (!isNonApp && safeParsedDate && safeParsedDate < sevenDaysAgo) {
         continue;
       }
 

@@ -146,6 +146,16 @@ async function getAlerts(req, res) {
           { category: { $in: ['Latest Job', 'Latest Jobs', 'Recruitment'] } },
           { title: { $regex: /recruitment|vacancy|apply\s*online/i } }
         ];
+      } else if (catLower === 'syllabus' || catLower === 'syllabuses') {
+        filter.$or = [
+          { category: { $in: ['Syllabus', 'Syllabuses'] } },
+          { title: { $regex: /syllabus|exam\s*pattern/i } }
+        ];
+      } else if (catLower === 'admission' || catLower === 'admissions') {
+        filter.$or = [
+          { category: { $in: ['Admission', 'Admissions'] } },
+          { title: { $regex: /admission|counselling|counseling|entrance\s*exam/i } }
+        ];
       } else {
         filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
       }
