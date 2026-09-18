@@ -204,37 +204,51 @@ export const ALL_LANGUAGES = [
 export function applyFullWebsiteTranslation(langCode) {
   try {
     const domain = window.location.hostname;
-    const cookieVal = (langCode === 'hi' || langCode === 'original') ? '' : `/auto/${langCode}`;
+    const targetLang = (langCode === 'hi' || langCode === 'original') ? '' : langCode;
+    const cookieVal = targetLang ? `/auto/${targetLang}` : '';
 
-    // Set or clear cookie
+    // Set or clear cookie for both host and domain
     if (cookieVal) {
       document.cookie = `googtrans=${cookieVal}; path=/;`;
-      if (domain !== 'localhost') {
+      if (domain && domain !== 'localhost') {
         document.cookie = `googtrans=${cookieVal}; path=/; domain=.${domain};`;
       }
     } else {
       document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      if (domain !== 'localhost') {
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain};`;
+      if (domain && domain !== 'localhost') {
         document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${domain};`;
       }
     }
 
+    const fireChange = (element) => {
+      element.value = targetLang;
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+      if (typeof element.onchange === 'function') {
+        element.onchange();
+      }
+    };
+
     // Attempt instant DOM translation via combo element
     const combo = document.querySelector('.goog-te-combo');
     if (combo) {
-      combo.value = (langCode === 'hi' || langCode === 'original') ? '' : langCode;
-      combo.dispatchEvent(new Event('change'));
+      fireChange(combo);
     } else {
-      // Retry once after 350ms or reload if first load
-      setTimeout(() => {
-        const retryCombo = document.querySelector('.goog-te-combo');
-        if (retryCombo) {
-          retryCombo.value = (langCode === 'hi' || langCode === 'original') ? '' : langCode;
-          retryCombo.dispatchEvent(new Event('change'));
-        } else {
+      // Poll every 80ms for up to 1.5s for instant trigger once Google script finishes mounting
+      let tries = 0;
+      const interval = setInterval(() => {
+        tries++;
+        const el = document.querySelector('.goog-te-combo');
+        if (el) {
+          clearInterval(interval);
+          fireChange(el);
+        } else if (tries > 18) {
+          clearInterval(interval);
+          // Only as last resort if Google script was completely blocked
           window.location.reload();
         }
-      }, 350);
+      }, 80);
     }
   } catch (err) {
     console.warn('[Full Translate Error]:', err);

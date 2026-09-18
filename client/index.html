@@ -81,7 +81,19 @@
       .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
       #goog-gt-tt { display: none !important; }
       .goog-te-balloon-frame { display: none !important; }
-      #google_translate_element { display: none !important; }
+      /* Offscreen placement so Google can initialize combo without being visible to users */
+      #google_translate_element {
+        position: fixed !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -9999 !important;
+      }
+      .goog-te-gadget { font-size: 0px !important; }
+      .goog-te-gadget span { display: none !important; }
       .skiptranslate iframe { display: none !important; }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
