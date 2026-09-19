@@ -87,6 +87,30 @@ const globalJobSchema = new mongoose.Schema({
     experience: { type: String, default: 'As per Service Commission Rules' },
     ageLimit: { type: String, default: 'As per Official Gazette' }
   },
+  officialGazetteSummary: {
+    type: String,
+    trim: true
+  },
+  description: {
+    type: String,
+    trim: true
+  },
+  departmentOverview: {
+    type: String,
+    trim: true
+  },
+  keyResponsibilities: [{
+    type: String,
+    trim: true
+  }],
+  benefits: [{
+    type: String,
+    trim: true
+  }],
+  howToApply: {
+    type: String,
+    trim: true
+  },
   officialNoticeUrl: {
     type: String,
     required: true,

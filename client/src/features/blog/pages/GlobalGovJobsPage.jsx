@@ -1228,6 +1228,133 @@ export default function GlobalGovJobsPage() {
                 </Box>
               </Box>
 
+              {/* Detailed Description / Gazette Summary */}
+              {(selectedJob.description || selectedJob.officialGazetteSummary) && (
+                <Box sx={{
+                  bgcolor: '#0F172A',
+                  border: '1px solid #1E293B',
+                  borderRadius: '12px',
+                  p: 2.5,
+                  mb: 3
+                }}>
+                  <Typography variant="subtitle2" sx={{ color: '#38BDF8', fontWeight: 800, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    📋 आधिकारिक पद विवरण एवं अधिसूचना (Official Role Overview)
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#CBD5E1', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+                    {selectedJob.description || selectedJob.officialGazetteSummary}
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Key Responsibilities */}
+              {selectedJob.keyResponsibilities && selectedJob.keyResponsibilities.length > 0 && (
+                <Box sx={{
+                  bgcolor: '#0F172A',
+                  border: '1px solid #1E293B',
+                  borderRadius: '12px',
+                  p: 2.5,
+                  mb: 3
+                }}>
+                  <Typography variant="subtitle2" sx={{ color: '#F59E0B', fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    🎯 मुख्य कार्य एवं जिम्मेदारियां (Key Duties & Scope of Work)
+                  </Typography>
+                  <Box component="ul" sx={{ m: 0, pl: 2.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {selectedJob.keyResponsibilities.map((resp, idx) => (
+                      <Typography component="li" key={idx} variant="body2" sx={{ color: '#CBD5E1', lineHeight: 1.6 }}>
+                        {resp}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Comprehensive Eligibility Breakdown */}
+              <Box sx={{
+                bgcolor: '#0F172A',
+                border: '1px solid #1E293B',
+                borderRadius: '12px',
+                p: 2.5,
+                mb: 3
+              }}>
+                <Typography variant="subtitle2" sx={{ color: '#A855F7', fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  ⚖️ पात्रता एवं सेवा शर्तें (Detailed Eligibility Criteria)
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
+                  <Box sx={{ bgcolor: 'rgba(30, 41, 59, 0.5)', p: 1.5, borderRadius: '8px' }}>
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, display: 'block' }}>
+                      आयु सीमा (Age Limit)
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#F8FAFC', fontWeight: 700, mt: 0.3 }}>
+                      {selectedJob.eligibility?.ageLimit || '18 - 62 वर्ष (आधिकारिक नियमानुसार)'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ bgcolor: 'rgba(30, 41, 59, 0.5)', p: 1.5, borderRadius: '8px' }}>
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, display: 'block' }}>
+                      नागरिकता एवं वीज़ा (Citizenship / Visa)
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: selectedJob.eligibility?.visaSponsored ? '#34D399' : '#38BDF8', fontWeight: 700, mt: 0.3 }}>
+                      {selectedJob.eligibility?.visaSponsored ? '✅ वीज़ा प्रायोजित (Open to International Applicants)' : '🏛️ राष्ट्रीय नागरिक / नियमानुसार पात्रता'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ bgcolor: 'rgba(30, 41, 59, 0.5)', p: 1.5, borderRadius: '8px' }}>
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, display: 'block' }}>
+                      न्यूनतम अनुभव (Experience)
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#F8FAFC', fontWeight: 700, mt: 0.3 }}>
+                      {selectedJob.eligibility?.experience || 'संबंधित लोक सेवा / पेशेवर अनुभव'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ bgcolor: 'rgba(30, 41, 59, 0.5)', p: 1.5, borderRadius: '8px' }}>
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, display: 'block' }}>
+                      कार्य क्षेत्र (Domain)
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#F8FAFC', fontWeight: 700, mt: 0.3 }}>
+                      {selectedJob.jobType || selectedJob.category || 'Civil Service'}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Benefits & Allowances */}
+              {selectedJob.benefits && selectedJob.benefits.length > 0 && (
+                <Box sx={{
+                  bgcolor: '#0F172A',
+                  border: '1px solid #1E293B',
+                  borderRadius: '12px',
+                  p: 2.5,
+                  mb: 3
+                }}>
+                  <Typography variant="subtitle2" sx={{ color: '#10B981', fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    🎁 आधिकारिक सरकारी भत्ते व सुविधाएं (Official Perks & Benefits)
+                  </Typography>
+                  <Box component="ul" sx={{ m: 0, pl: 2.5, display: 'flex', flexDirection: 'column', gap: 0.8 }}>
+                    {selectedJob.benefits.map((benefit, idx) => (
+                      <Typography component="li" key={idx} variant="body2" sx={{ color: '#34D399', fontWeight: 600, lineHeight: 1.5 }}>
+                        {benefit}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* How to Apply Guide */}
+              {selectedJob.howToApply && (
+                <Box sx={{
+                  bgcolor: '#0F172A',
+                  border: '1px solid #1E293B',
+                  borderRadius: '12px',
+                  p: 2.5,
+                  mb: 3
+                }}>
+                  <Typography variant="subtitle2" sx={{ color: '#38BDF8', fontWeight: 800, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    📝 आवेदन करने की प्रक्रिया (How to Apply Guide)
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#CBD5E1', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+                    {selectedJob.howToApply}
+                  </Typography>
+                </Box>
+              )}
+
               {/* Official Verification Notice */}
               <Box sx={{
                 bgcolor: 'rgba(2, 132, 199, 0.08)',

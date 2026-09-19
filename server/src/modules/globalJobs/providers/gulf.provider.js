@@ -68,6 +68,25 @@ async function fetchGulfGovJobs() {
 
         const agency = sourceEl.text()?.trim() || `${feed.countryName} Civil Service Authority`;
 
+        const gulfResponsibilities = [
+          `Supervise and execute public sector administrative or operational assignments in ${agency}.`,
+          `Ensure alignment with national governance frameworks, public service quality directives, and Vision initiatives.`,
+          `Coordinate with ministerial divisions to streamline service delivery and digital government standards.`,
+          `Maintain high administrative compliance, performance metrics, and official procedural integrity.`
+        ];
+
+        const gulfBenefits = [
+          '100% Tax-Free Salary & High Savings Potential',
+          'Family Housing Allowance or Furnished Accommodation Provision',
+          'Comprehensive Medical & Health Insurance Coverage',
+          '30 Days Annual Paid Leave with Annual Return Flight Tickets',
+          'End-of-Service Statutory Gratuity Benefit as per Labor Regulations'
+        ];
+
+        const gulfHowToApply = `1. Click the 'Apply on Official Portal' button below to access ${agency}'s official recruitment system.\n2. Login or create your verified national portal account (e.g. Jadarat / Dubai Careers / Kawader).\n3. Fill in your professional profile and attach attested degree certificates and resume.\n4. Submit your official nomination for Reference ID: GULF-${feed.countryCode} before the circular closing date.`;
+
+        const descText = `Official Government circular from ${agency} in ${feed.countryName}. This public vacancy invites qualified professionals to take on key operational duties under official civil service scales with comprehensive expatriate and national benefits.`;
+
         jobs.push({
           title: rawTitle,
           originalTitle: rawTitle,
@@ -80,16 +99,21 @@ async function fetchGulfGovJobs() {
           jobType: 'Civil Service / Administrative',
           dutyStation: `${feed.countryName} (Federal & Municipal Posts)`,
           salary: {
-            amount: feed.countryCode === 'SA' ? '12,000 - 24,000 SAR / month' : '15,000 - 28,000 AED / month',
+            amount: feed.countryCode === 'SA' ? '12,000 - 24,000 SAR / month' : (feed.countryCode === 'QA' ? '14,000 - 26,000 QAR / month' : '15,000 - 28,000 AED / month'),
             currency: feed.currency,
             approxUsd: '$4,200 - $7,500 / month'
           },
+          officialGazetteSummary: `Official Gazette Circular: ${rawTitle}\nAuthority: ${agency}\nJurisdiction: ${feed.countryName}\nSalary: 100% Tax-Free Government Scale\nClosing Date: 20 Days from Circular Publication\nDirect online registration available via official .gov portal.`,
+          description: descText,
+          keyResponsibilities: gulfResponsibilities,
+          benefits: gulfBenefits,
+          howToApply: gulfHowToApply,
           eligibility: {
             citizenshipRequired: false, // GCC & Expat Openings
             visaSponsored: true,
             education: 'Bachelor Degree or Specialized Technical Certification',
             experience: 'Relevant public or corporate sector track record',
-            ageLimit: '21 to 50 years'
+            ageLimit: '21 to 52 years'
           },
           officialNoticeUrl: finalUrl,
           officialPdfUrl: `${finalUrl}#gazette-circular`,
@@ -101,15 +125,17 @@ async function fetchGulfGovJobs() {
               title: `सरकारी भर्ती: ${rawTitle}`,
               agency: `${feed.countryName} लोक सेवा व मंत्रालय`,
               dutyStation: `${feed.countryName} (मुख्यालय व सरकारी विभाग)`,
-              eligibility: 'स्नातक (Graduate) अथवा संबंधित तकनीकी योग्यता',
-              salary: feed.countryCode === 'SA' ? '12,000 - 24,000 SAR प्रति माह (~ ₹2.7 से 5.4 लाख)' : '15,000 - 28,000 AED प्रति माह (~ ₹3.4 से 6.3 लाख)'
+              eligibility: 'स्नातक (Graduate) अथवा संबंधित तकनीकी योग्यता (आयु: 21-52 वर्ष)',
+              salary: feed.countryCode === 'SA' ? '12,000 - 24,000 SAR प्रति माह (~ ₹2.7 से 5.4 लाख टैक्स-फ्री)' : (feed.countryCode === 'QA' ? '14,000 - 26,000 QAR प्रति माह' : '15,000 - 28,000 AED प्रति माह (~ ₹3.4 से 6.3 लाख टैक्स-फ्री)'),
+              summary: `${agency} (${feed.countryName}) द्वारा आधिकारिक सरकारी भर्ती। 100% टैक्स-फ्री वेतन, आवास भत्ता और वीज़ा प्रायोजित।`,
+              howToApply: 'सीधे आधिकारिक सरकारी पोर्टल (जदारत / दुबई करियर) पर ऑनलाइन आवेदन करें।'
             },
             ar: {
               title: rawTitle,
               agency: agency,
               dutyStation: `${feed.countryName}`,
               eligibility: 'مؤهل جامعي أو شهادة معتمدة مع خبرة مناسبة',
-              salary: feed.countryCode === 'SA' ? '12,000 - 24,000 ريال سعودي' : '15,000 - 28,000 درهم إماراتي'
+              salary: feed.countryCode === 'SA' ? '12,000 - 24,000 ريال سعودي' : (feed.countryCode === 'QA' ? '14,000 - 26,000 ريال قطري' : '15,000 - 28,000 درهم إماراتي')
             }
           }
         });

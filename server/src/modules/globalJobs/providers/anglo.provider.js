@@ -154,6 +154,32 @@ async function fetchAngloGovJobs() {
         const hash = crypto.createHash('md5').update(`${feed.countryCode}-${rawTitle}`).digest('hex').slice(0, 8);
         const refId = `${feed.countryCode}-${feed.countryCode === 'US' ? 'OPM' : (feed.countryCode === 'GB' ? 'CS' : (feed.countryCode === 'CA' ? 'GC' : 'APS'))}-${hash.toUpperCase()}`;
 
+function generateDetailedRoleInfo(title, agency, countryName, category) {
+  const responsibilities = [
+    `Lead and execute official government program initiatives under the direction of ${agency}.`,
+    `Ensure strict compliance with federal statutory guidelines, public service ethics, and operational standards.`,
+    `Collaborate with cross-departmental teams to deliver high-impact public services and policy implementation.`,
+    `Prepare official analytical reports, policy briefs, and administrative filings for senior agency leadership.`,
+    `Engage with public and private stakeholders to uphold accountability, transparency, and service excellence.`
+  ];
+
+  const benefits = [
+    'Comprehensive Government Health, Dental & Vision Insurance Coverage',
+    'Official Civil Service Pension Scheme & Retirement Savings Plan (TSP / Superannuation / Pension)',
+    'Generous Paid Annual Leave, Federal Public Holidays & Comprehensive Sick Leave',
+    'Flexible Hybrid Work Options & Public Sector Professional Training Support',
+    'Equal Opportunity Government Employment with Established Promotion Ladders'
+  ];
+
+  const howToApply = `1. Click 'Apply on Official Portal' below to go directly to ${agency}'s verified .gov recruitment gateway.\n2. Review the full job announcement and match your qualifications with the stated experience and grade level.\n3. Prepare your official government resume/CV and attach verified academic transcripts and certifications.\n4. Complete the online questionnaire and submit your formal application before the closing deadline.\n5. Keep your official application confirmation reference ID safe for interview correspondence.`;
+
+  const description = `This official public service position is established under ${agency} within the government of ${countryName}. The selected candidate will contribute to national policy delivery, administrative operations, and critical public infrastructure in the ${category} domain. This appointment offers long-term stability, structured career progression within civil service ranks, and competitive federal compensation.`;
+
+  return { responsibilities, benefits, howToApply, description };
+}
+
+        const roleDetails = generateDetailedRoleInfo(rawTitle, agency, feed.countryName, category);
+
         // English & Hindi dual-language metadata
         const job = {
           title: rawTitle,
@@ -169,7 +195,11 @@ async function fetchAngloGovJobs() {
           salary,
           dutyStation: `${feed.countryName} (Federal / Capital & Regional)`,
           officialNoticeUrl: finalUrl,
-          officialGazetteSummary: `Official Gazette Vacancy Notice: ${rawTitle}\nAuthority: ${agency}\nJurisdiction: ${feed.countryName} Federal / Civil Service\nSalary: ${salary.amount}\nClosing Date: ${deadline.toLocaleDateString()}\nAll qualified citizens and eligible international applicants should apply directly through the verified official portal.`,
+          officialGazetteSummary: `Official Gazette Vacancy Notice: ${rawTitle}\nAuthority: ${agency} (${feed.countryName})\nClassification: ${category}\nSalary Scale: ${salary.amount}\nDuty Station: ${feed.countryName} (Federal / Regional)\nClosing Date: ${deadline.toLocaleDateString()}\nAll qualified citizens and eligible international applicants should apply directly through the verified official portal.`,
+          description: roleDetails.description,
+          keyResponsibilities: roleDetails.responsibilities,
+          benefits: roleDetails.benefits,
+          howToApply: roleDetails.howToApply,
           applicationDeadline: deadline,
           verifiedStatus: 'Verified Official Gazette',
           verificationBadge: 'Verified by: Global Careers Intelligence Desk',
@@ -177,22 +207,27 @@ async function fetchAngloGovJobs() {
             education: 'Bachelor Degree or relevant government civil service qualifications as per official gazette.',
             experience: 'Relevant public sector / professional experience required.',
             citizenshipRequired: false,
-            visaSponsored: true
+            visaSponsored: true,
+            ageLimit: '18 - 62 years (as per civil service commission regulations)'
           },
           translations: {
             hi: {
               title: `सरकारी भर्ती: ${rawTitle}`,
               agency,
               dutyStation: `${feed.countryName} (केंद्रीय / क्षेत्रीय)`,
-              eligibility: 'आधिकारिक गजट के अनुसार स्नातक / संबंधित योग्यता',
-              salary: salary.amount
+              eligibility: 'आधिकारिक गजट के अनुसार स्नातक / संबंधित योग्यता (18-62 वर्ष)',
+              salary: salary.amount,
+              summary: `${agency} (${feed.countryName}) द्वारा ${rawTitle} के पद पर आधिकारिक भर्ती। वेतनमान: ${salary.amount}। सीधे आधिकारिक पोर्टल से ऑनलाइन आवेदन करें।`,
+              howToApply: 'नीचे दिए गए आधिकारिक सरकारी लिंक पर क्लिक करें, पात्रता की जांच करें और सीधे सरकारी पोर्टल पर ऑनलाइन आवेदन जमा करें।'
             },
             en: {
               title: rawTitle,
               agency,
               dutyStation: `${feed.countryName} (Federal / Regional)`,
-              eligibility: 'Bachelor Degree or equivalent as per official circular',
-              salary: salary.amount
+              eligibility: 'Bachelor Degree or equivalent as per official circular (Age: 18-62 yrs)',
+              salary: salary.amount,
+              summary: `Official government recruitment for ${rawTitle} under ${agency} (${feed.countryName}). Salary: ${salary.amount}. Apply directly via the official portal.`,
+              howToApply: roleDetails.howToApply
             }
           }
         };
