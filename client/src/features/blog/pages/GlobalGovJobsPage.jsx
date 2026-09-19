@@ -15,7 +15,8 @@ import {
   Search as SearchIcon, Public as GlobeIcon,
   Verified as VerifiedIcon, WhatsApp as WhatsAppIcon,
   Telegram as TelegramIcon, Share as ShareIcon,
-  AttachMoney as MoneyIcon, School as SchoolIcon
+  AttachMoney as MoneyIcon, School as SchoolIcon,
+  Translate as TranslateIcon
 } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
