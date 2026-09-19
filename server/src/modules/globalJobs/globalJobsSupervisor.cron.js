@@ -6,10 +6,11 @@ const { fetchAngloGovJobs } = require('./providers/anglo.provider');
 const AutomationLog = require('../admin/automationLog.model');
 const { OFFICIAL_GOV_TLD_REGEX } = require('./globalJob.model');
 
-// Maximum high-value verified jobs permitted per day to mimic a prestigious human editorial desk
-const MAX_DAILY_JOBS = 25;
+// Dynamic live feed quota: Can safely store up to 250 verified vacancies per day
+// (Individual cards are rendered dynamically in an SPA modal; only the main /global-jobs hub is indexed by search engines)
+const MAX_DAILY_JOBS = 250;
 
-// Helper to add human-like random jitter delay (in ms)
+// Helper to add small delay (in ms)
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
@@ -61,24 +62,6 @@ async function enforceDatabaseHygiene() {
 }
 
 /**
- * Ping Search Engines (IndexNow for Bing, Yandex, Yahoo)
- */
-async function notifySearchEngines(jobUrl) {
-  try {
-    const axios = require('axios');
-    // IndexNow API: Free, instant notification protocol
-    await axios.post('https://api.indexnow.org/indexnow', {
-      host: 'www.digitalhomeblog.in',
-      key: 'digitalhome2026globaljobs',
-      keyLocation: 'https://www.digitalhomeblog.in/digitalhome2026globaljobs.txt',
-      urlList: [jobUrl]
-    }, { timeout: 4000 });
-  } catch (err) {
-    // Non-blocking
-  }
-}
-
-/**
  * Master Supervisor Execution Cycle
  */
 async function runSupervisorCycle() {
@@ -97,8 +80,8 @@ async function runSupervisorCycle() {
     });
 
     if (publishedTodayCount >= MAX_DAILY_JOBS) {
-      console.log(`[Supervisor] Daily publication quota reached (${publishedTodayCount}/${MAX_DAILY_JOBS}). Preserving boutique editorial pace.`);
-      await recordSupervisorLog('SUCCESS', `Daily quota respected (${publishedTodayCount}/${MAX_DAILY_JOBS} jobs). Zero spam threshold maintained.`);
+      console.log(`[Supervisor] Daily publication quota reached (${publishedTodayCount}/${MAX_DAILY_JOBS}).`);
+      await recordSupervisorLog('SUCCESS', `Daily quota reached (${publishedTodayCount}/${MAX_DAILY_JOBS} jobs). Feed fully saturated.`);
       return;
     }
 
@@ -108,28 +91,17 @@ async function runSupervisorCycle() {
     // Step 3: Ingest from ReliefWeb UN & Multilateral Provider (170+ Countries)
     console.log('[Supervisor] Fetching authentic UN / Multilateral vacancies...');
     const unJobs = await fetchReliefWebJobs();
-    await delay(2000); // 2s natural pause
 
     // Step 4: Ingest from Gulf Official Gazette Provider (Saudi, UAE, Qatar)
     console.log('[Supervisor] Fetching verified Gulf official circulars...');
     const gulfJobs = await fetchGulfGovJobs();
-    await delay(1500);
 
     // Step 5: Ingest from Anglo-American Provider (USA, UK, Canada, Australia)
     console.log('[Supervisor] Fetching verified Anglo-American circulars (USA, UK, Canada, Australia)...');
     const angloJobs = await fetchAngloGovJobs();
 
-    // Stratified, balanced candidate pool across UN, Gulf, and Anglo democracies
-    const candidateJobs = [];
-    const maxPerCat = Math.max(3, Math.ceil(remainingQuota / 3));
-    candidateJobs.push(...unJobs.slice(0, maxPerCat));
-    candidateJobs.push(...gulfJobs.slice(0, maxPerCat));
-    candidateJobs.push(...angloJobs.slice(0, maxPerCat * 2));
-
-    // Fallback: append remaining candidates to ensure quota is filled if available
-    for (const j of [...angloJobs, ...unJobs, ...gulfJobs]) {
-      if (!candidateJobs.includes(j)) candidateJobs.push(j);
-    }
+    // Combine all genuine verified official circulars
+    const candidateJobs = [...angloJobs, ...gulfJobs, ...unJobs];
 
     for (const job of candidateJobs) {
       if (newlyAdded >= remainingQuota) break;
@@ -164,12 +136,8 @@ async function runSupervisorCycle() {
         await GlobalJob.create(job);
         newlyAdded++;
 
-        // Notify search engines of new job URL
-        const jobUrl = `https://www.digitalhomeblog.in/global-jobs?id=${job.officialReferenceId}`;
-        notifySearchEngines(jobUrl);
-
-        // Natural jitter delay (1-2 seconds between database writes)
-        await delay(1200);
+        // Brief delay between writes
+        await delay(150);
       }
     }
 
