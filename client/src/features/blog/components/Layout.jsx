@@ -11,6 +11,9 @@ import TelegramStickyBanner from '../../../components/TelegramStickyBanner';
 import FloatingQuickShare, { ShareModalProvider } from '../../../components/FloatingQuickShare';
 import PushNotificationModal from './PushNotificationModal';
 import GlobalLanguagePicker from '../../../components/GlobalLanguagePicker';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import { useAuth } from '../../auth/context/AuthContext';
 
 function useDeferredMount(delay = 2500) {
   const [mounted, setMounted] = useState(false);
@@ -39,6 +42,7 @@ function useDeferredMount(delay = 2500) {
 
 export default function Layout({ children }) {
   const theme = useTheme();
+  const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catAnchor, setCatAnchor] = useState(null);
   const isDeferredMounted = useDeferredMount(2500);
@@ -94,6 +98,7 @@ export default function Layout({ children }) {
     { label: '🇮🇳 India Sarkari Portal (UPSC/SSC/State)', path: '/india/sarkari-jobs' },
     { label: '🇮🇳 भारत समसामयिकी (India Current Affairs)', path: '/india/current-affairs' },
     { label: '🎯 डेली सरकारी क्विज (India GK Quiz)', path: '/india/daily-quiz' },
+    { label: user ? '🛡️ Admin Dashboard' : '🔐 Admin Portal / Login', path: user ? '/admin' : '/admin/login' },
   ];
 
   // Smart Nav items: tailored to visitor's detected country
@@ -260,8 +265,8 @@ export default function Layout({ children }) {
                ))}
               </Box>
             
-            {/* Language Picker + Search + Dark mode toggle */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1 } }}>
+            {/* Language Picker + Search + Dark mode toggle + Admin Link/Login */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 0.8 } }}>
               <GlobalLanguagePicker />
               <IconButton
                 component={Link}
@@ -269,9 +274,50 @@ export default function Layout({ children }) {
                 aria-label="search"
                 sx={{ color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#6B7280', p: { xs: 0.75, md: 1 } }}
               >
-                <SearchIcon sx={{ fontSize: { xs: '1.2rem', md: '1.5rem' } }} />
+                <SearchIcon sx={{ fontSize: { xs: '1.2rem', md: '1.4rem' } }} />
               </IconButton>
               <DarkModeToggle />
+              {user ? (
+                <Button
+                  component={Link}
+                  to="/admin"
+                  variant="contained"
+                  size="small"
+                  startIcon={<AdminPanelSettingsIcon sx={{ fontSize: '1rem !important' }} />}
+                  sx={{
+                    bgcolor: '#6366F1',
+                    color: '#ffffff',
+                    borderRadius: '9999px',
+                    px: { xs: 1.2, md: 1.6 },
+                    py: 0.35,
+                    fontSize: { xs: '0.72rem', md: '0.78rem' },
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    boxShadow: '0 2px 8px rgba(99, 102, 241, 0.35)',
+                    '&:hover': { bgcolor: '#4F46E5' }
+                  }}
+                >
+                  Admin
+                </Button>
+              ) : (
+                <IconButton
+                  component={Link}
+                  to="/admin/login"
+                  aria-label="Admin Login"
+                  title="Admin Login"
+                  sx={{
+                    color: theme.palette.mode === 'dark' ? '#9CA3AF' : '#6B7280',
+                    p: { xs: 0.75, md: 1 },
+                    borderRadius: '9999px',
+                    '&:hover': {
+                      color: '#6366F1',
+                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)'
+                    }
+                  }}
+                >
+                  <LockOutlinedIcon sx={{ fontSize: { xs: '1.15rem', md: '1.35rem' } }} />
+                </IconButton>
+              )}
             </Box>
           </Box>
         </Box>
@@ -345,6 +391,42 @@ export default function Layout({ children }) {
               </ListItemButton>
             </ListItem>
           ))}
+          <ListItem disablePadding>
+            <ListItemText primary="Admin Portal" sx={{ px: 2, pt: 2, '& .MuiListItemText-primary': { fontWeight: 700, fontSize: '0.75rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' } }} />
+          </ListItem>
+          {user ? (
+            <>
+              <ListItem disablePadding>
+                <ListItemButton
+                  component={Link}
+                  to="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  sx={{ pl: 3, color: '#6366F1', fontWeight: 600 }}
+                >
+                  <ListItemText primary="🛡️ Admin Dashboard" />
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={() => { logout(); setMobileOpen(false); }}
+                  sx={{ pl: 3, color: '#EF4444' }}
+                >
+                  <ListItemText primary="🚪 Logout" />
+                </ListItemButton>
+              </ListItem>
+            </>
+          ) : (
+            <ListItem disablePadding>
+              <ListItemButton
+                component={Link}
+                to="/admin/login"
+                onClick={() => setMobileOpen(false)}
+                sx={{ pl: 3, color: theme.palette.mode === 'dark' ? '#E5E7EB' : '#111827', fontWeight: 600 }}
+              >
+                <ListItemText primary="🔐 Admin Login" />
+              </ListItemButton>
+            </ListItem>
+          )}
         </List>
       </Drawer>
       
@@ -405,6 +487,20 @@ export default function Layout({ children }) {
             <Link to="/terms" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Terms & Disclaimer</Link>
             <Link to="/contact" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Contact</Link>
             <Link to="/about" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>About</Link>
+            <Link 
+              to={user ? "/admin" : "/admin/login"} 
+              style={{ 
+                color: user ? '#6366F1' : '#6B7280', 
+                fontSize: '0.85rem', 
+                fontWeight: 600, 
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              {user ? '🛡️ Admin Panel' : '🔐 Admin Login'}
+            </Link>
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontWeight: 500 }}>
             Official Portal • Global Government Vacancies & Verified Public Gazettes
