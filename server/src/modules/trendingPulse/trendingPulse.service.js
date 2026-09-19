@@ -63,6 +63,18 @@ const CATEGORY_FEEDS = {
     queries: [
       'https://news.google.com/rss/headlines/section/topic/NATION?hl=en-IN&gl=IN&ceid=IN:en'
     ]
+  },
+  global: {
+    name: 'Global News & World Affairs',
+    badge: 'WORLD AFFAIRS',
+    color: '#0284C7', // Sky Blue
+    bgColor: '#F0F9FF',
+    borderColor: '#BAE6FD',
+    icon: '🌐',
+    queries: [
+      'https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-US&gl=US&ceid=US:en',
+      'https://news.google.com/rss/search?q=United+Nations+OR+World+Bank+OR+WHO+OR+IMF+global+policy&hl=en-US&gl=US&ceid=US:en'
+    ]
   }
 };
 

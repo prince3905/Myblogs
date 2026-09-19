@@ -216,7 +216,7 @@ export default function DailyQuizPage() {
                 </Button>
                 <Button
                   component={Link}
-                  to={`/current-affairs/${quizData.slug}`}
+                  to={`/india/current-affairs/${quizData.slug}`}
                   variant="contained"
                   startIcon={<ArticleIcon />}
                   sx={{ bgcolor: '#4F46E5', fontWeight: 700, textTransform: 'none' }}

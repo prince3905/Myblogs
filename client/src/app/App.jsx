@@ -22,6 +22,7 @@ const ToolsPage = lazy(() => import('../features/tools/pages/ToolsPage'));
 const GamesPage = lazy(() => import('../features/games/pages/GamesPage'));
 const PublicLiveAlertsPage = lazy(() => import('../features/blog/pages/PublicLiveAlertsPage'));
 const GlobalGovJobsPage = lazy(() => import('../features/blog/pages/GlobalGovJobsPage'));
+const GlobalNewsPage = lazy(() => import('../features/blog/pages/GlobalNewsPage'));
 const CurrentAffairsListPage = lazy(() => import('../features/currentAffairs/pages/CurrentAffairsListPage'));
 const CurrentAffairsDetailPage = lazy(() => import('../features/currentAffairs/pages/CurrentAffairsDetailPage'));
 const DailyQuizPage = lazy(() => import('../features/currentAffairs/pages/DailyQuizPage'));
@@ -104,6 +105,7 @@ const ToolsPageSuspense = withPublicSuspense(ToolsPage);
 const GamesPageSuspense = withPublicSuspense(GamesPage);
 const PublicLiveAlertsPageSuspense = withPublicSuspense(PublicLiveAlertsPage);
 const GlobalGovJobsPageSuspense = withPublicSuspense(GlobalGovJobsPage);
+const GlobalNewsPageSuspense = withPublicSuspense(GlobalNewsPage);
 const CurrentAffairsListPageSuspense = withPublicSuspense(CurrentAffairsListPage);
 const CurrentAffairsDetailPageSuspense = withPublicSuspense(CurrentAffairsDetailPage);
 const DailyQuizPageSuspense = withPublicSuspense(DailyQuizPage);
@@ -133,10 +135,22 @@ export default function App() {
         <Route path="/blog/:slug" element={<BlogRedirectPageSuspense />} />
         <Route path="/tags/:tag" element={<TagPageSuspense />} />
         <Route path="/category/:category" element={<CategoryPageSuspense />} />
+        {/* Dedicated India-Specific Routes */}
+        <Route path="/india/current-affairs" element={<CurrentAffairsListPageSuspense />} />
+        <Route path="/india/current-affairs/:slug" element={<CurrentAffairsDetailPageSuspense />} />
+        <Route path="/india/daily-quiz" element={<DailyQuizPageSuspense />} />
+        <Route path="/india/daily-quiz/:date" element={<DailyQuizPageSuspense />} />
+        <Route path="/india/sarkari-jobs" element={<PublicLiveAlertsPageSuspense />} />
+        {/* Legacy / Direct Aliases for Existing SEO & Bookmarks */}
         <Route path="/current-affairs" element={<CurrentAffairsListPageSuspense />} />
         <Route path="/current-affairs/:slug" element={<CurrentAffairsDetailPageSuspense />} />
         <Route path="/daily-quiz" element={<DailyQuizPageSuspense />} />
         <Route path="/daily-quiz/:date" element={<DailyQuizPageSuspense />} />
+        <Route path="/job-alerts" element={<PublicLiveAlertsPageSuspense />} />
+        {/* Global Portals */}
+        <Route path="/global-jobs" element={<GlobalGovJobsPageSuspense />} />
+        <Route path="/global-jobs/:country" element={<GlobalGovJobsPageSuspense />} />
+        <Route path="/global-news" element={<GlobalNewsPageSuspense />} />
         <Route path="/about" element={<AboutPageSuspense />} />
         <Route path="/contact" element={<ContactPageSuspense />} />
         <Route path="/privacy" element={<PrivacyPageSuspense />} />
@@ -145,9 +159,6 @@ export default function App() {
         <Route path="/search" element={<SearchPageSuspense />} />
         <Route path="/tools" element={<ToolsPageSuspense />} />
         <Route path="/games" element={<GamesPageSuspense />} />
-        <Route path="/job-alerts" element={<PublicLiveAlertsPageSuspense />} />
-        <Route path="/global-jobs" element={<GlobalGovJobsPageSuspense />} />
-        <Route path="/global-jobs/:country" element={<GlobalGovJobsPageSuspense />} />
         <Route path="/admin/login" element={<AdminLoginPageSuspense />} />
         <Route path="/admin" element={<AdminRoute><AdminLayoutSuspense /></AdminRoute>}>
           <Route index element={<AdminDashboardPageSuspense />} />

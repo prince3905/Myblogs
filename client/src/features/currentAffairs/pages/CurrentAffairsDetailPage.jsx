@@ -116,7 +116,7 @@ export default function CurrentAffairsDetailPage() {
   }
 
   const cleanTitle = data.title;
-  const canonicalUrl = `https://www.digitalhomeblog.in/current-affairs/${data.slug}`;
+  const canonicalUrl = `https://www.digitalhomeblog.in/india/current-affairs/${data.slug}`;
   const whatsappShareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${cleanTitle}\n\nआज का डेली करेंट अफेयर्स और 10 MCQs क्विज़ यहाँ पढ़ें:\n${canonicalUrl}`)}`;
   const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(canonicalUrl)}&text=${encodeURIComponent(cleanTitle)}`;
 
@@ -138,7 +138,7 @@ export default function CurrentAffairsDetailPage() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5, fontSize: '0.85rem', color: '#64748B' }}>
           <Link to="/" style={{ color: '#4F46E5', textDecoration: 'none', fontWeight: 600 }}>Home</Link>
           <span>/</span>
-          <Link to="/current-affairs" style={{ color: '#4F46E5', textDecoration: 'none', fontWeight: 600 }}>Current Affairs</Link>
+          <Link to="/india/current-affairs" style={{ color: '#4F46E5', textDecoration: 'none', fontWeight: 600 }}>🇮🇳 India Current Affairs</Link>
           <span>/</span>
           <span style={{ color: '#94A3B8' }}>{data.dateString}</span>
         </Box>

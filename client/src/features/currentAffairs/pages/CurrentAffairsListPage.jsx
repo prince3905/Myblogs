@@ -76,7 +76,7 @@ export default function CurrentAffairsListPage() {
         <Helmet>
           <title>Daily Current Affairs in Hindi 2026: दैनिक समसामयिकी और Daily GK Quiz</title>
           <meta name="description" content="आज का दैनिक करेंट अफेयर्स (Daily Current Affairs in Hindi) पढ़ें। UPSC, SSC, Railway, BPSC, Police व अन्य Sarkari Exam के लिए 10 महत्वपूर्ण डेली GK MCQs और Static GK नोट्स।" />
-          <link rel="canonical" href="https://www.digitalhomeblog.in/current-affairs" />
+          <link rel="canonical" href="https://www.digitalhomeblog.in/india/current-affairs" />
         </Helmet>
 
       <Container maxWidth="lg">
@@ -94,7 +94,7 @@ export default function CurrentAffairsListPage() {
           <Box sx={{ position: 'relative', zIndex: 1 }}>
             <Chip
               icon={<AutoAwesomeIcon sx={{ color: '#FDE047 !important', fontSize: '1rem' }} />}
-              label="⚡ Daily Exam Prep Booster"
+              label="🇮🇳 भारत सरकारी परीक्षा स्पेशल (UPSC, SSC, Railway, State PSC)"
               sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: '#FEF08A', fontWeight: 700, mb: 1.5 }}
             />
             <Typography variant="h3" sx={{ fontWeight: 800, fontSize: { xs: '1.75rem', md: '2.5rem' }, mb: 1.5, letterSpacing: '-0.5px' }}>
@@ -107,7 +107,7 @@ export default function CurrentAffairsListPage() {
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               <Button
                 component={Link}
-                to="/daily-quiz"
+                to="/india/daily-quiz"
                 variant="contained"
                 startIcon={<QuizIcon />}
                 sx={{
@@ -221,7 +221,7 @@ export default function CurrentAffairsListPage() {
                   {/* Title */}
                   <Typography
                     component={Link}
-                    to={`/current-affairs/${item.slug}`}
+                    to={`/india/current-affairs/${item.slug}`}
                     variant="h6"
                     sx={{
                       fontWeight: 700,
