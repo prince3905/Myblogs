@@ -53,7 +53,7 @@ async function fetchGulfGovJobs() {
 
       const $ = cheerio.load(response.data, { xmlMode: true });
 
-      $('item').slice(0, 5).each((i, el) => {
+      $('item').slice(0, 20).each((i, el) => {
         const itemTitle = $(el).find('title').text()?.trim();
         if (!itemTitle) return;
 

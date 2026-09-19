@@ -15,6 +15,15 @@ const ANGLO_OFFICIAL_FEEDS = [
     queryUrl: 'https://news.google.com/rss/search?q=(%22USAJOBS%22+OR+%22federal+job%22+OR+%22vacancy+announcement%22)+site:usajobs.gov+OR+site:opm.gov&hl=en-US&gl=US&ceid=US:en'
   },
   {
+    countryCode: 'US',
+    countryName: 'United States',
+    countryFlag: '🇺🇸',
+    continent: 'Americas',
+    currency: 'USD',
+    defaultAgency: 'US Federal Agencies & Departments',
+    queryUrl: 'https://news.google.com/rss/search?q=(%22careers%22+OR+%22job+opening%22+OR+%22direct+hire%22)+(site:nih.gov+OR+site:cdc.gov+OR+site:defense.gov+OR+site:energy.gov+OR+site:nasa.gov)&hl=en-US&gl=US&ceid=US:en'
+  },
+  {
     countryCode: 'GB',
     countryName: 'United Kingdom',
     countryFlag: '🇬🇧',
@@ -22,6 +31,15 @@ const ANGLO_OFFICIAL_FEEDS = [
     currency: 'GBP',
     defaultAgency: 'HM Civil Service',
     queryUrl: 'https://news.google.com/rss/search?q=(%22Civil+Service+Jobs%22+OR+%22government+vacancy%22)+site:gov.uk+OR+site:service.gov.uk&hl=en-GB&gl=GB&ceid=GB:en'
+  },
+  {
+    countryCode: 'GB',
+    countryName: 'United Kingdom',
+    countryFlag: '🇬🇧',
+    continent: 'Europe',
+    currency: 'GBP',
+    defaultAgency: 'UK Public Sector & Departments',
+    queryUrl: 'https://news.google.com/rss/search?q=(%22public+sector%22+OR+%22civil+service%22)+jobs+site:gov.uk&hl=en-GB&gl=GB&ceid=GB:en'
   },
   {
     countryCode: 'CA',
@@ -39,7 +57,7 @@ const ANGLO_OFFICIAL_FEEDS = [
     continent: 'Oceania',
     currency: 'AUD',
     defaultAgency: 'Australian Public Service (APSjobs)',
-    queryUrl: 'https://news.google.com/rss/search?q=(%22APS+Jobs%22+OR+%22Australian+Public+Service%22)+site:apsjobs.gov.au+OR+site:gov.au&hl=en-AU&gl=AU&ceid=AU:en'
+    queryUrl: 'https://news.google.com/rss/search?q=(%22APS+Jobs%22+OR+%22Australian+Public+Service%22+OR+%22Commonwealth%22)+site:apsjobs.gov.au+OR+site:gov.au&hl=en-AU&gl=AU&ceid=AU:en'
   }
 ];
 
@@ -113,7 +131,7 @@ async function fetchAngloGovJobs() {
 
       const $ = cheerio.load(response.data, { xmlMode: true });
 
-      $('item').slice(0, 5).each((i, el) => {
+      $('item').slice(0, 20).each((i, el) => {
         const itemTitle = $(el).find('title').text()?.trim();
         if (!itemTitle) return;
 
