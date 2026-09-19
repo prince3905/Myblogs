@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Container, Paper, TextField, Button, Typography, Alert, 
   Box, CircularProgress, Avatar 
@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
         bgcolor: 'background.default',
       }}
     >
-      <Seo title="Admin Login | Inkspire Blog" description="Secure admin login for blog content management." />
+      <Seo title="Admin Login | Digital Home" description="Secure admin login for Digital Home management." />
       
       <Container maxWidth="sm">
         <Paper 
@@ -51,24 +51,27 @@ export default function AdminLoginPage() {
           }}
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
-            <Avatar 
-              sx={{ 
-                bgcolor: 'primary.main', 
-                width: 56, 
-                height: 56,
-                mb: 2,
-              }}
+            <Box 
+              component={Link} 
+              to="/" 
+              title="Digital Home - Go to Home / Dashboard"
+              sx={{ display: 'inline-flex', alignItems: 'center', mb: 2, textDecoration: 'none' }}
             >
-              <LockOutlined fontSize="large" />
-            </Avatar>
-            <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2, mb: 1 }}>
-              Admin Access
+              <Box
+                component="img"
+                src="/logo.webp"
+                alt="Digital Home Logo"
+                sx={{ height: 44, width: 'auto', aspectRatio: '66/34' }}
+              />
+            </Box>
+            <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2, mb: 0.5 }}>
+              Digital Home Admin
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               Welcome Back
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Sign in to manage your blog content
+              Sign in to manage your portal and jobs
             </Typography>
           </Box>
 
@@ -122,10 +125,20 @@ export default function AdminLoginPage() {
               variant="caption" 
               color="text.secondary" 
               align="center" 
-              sx={{ display: 'block' }}
+              sx={{ display: 'block', mb: 2 }}
             >
               Default credentials are configured in the server's .env file
             </Typography>
+
+            <Box sx={{ textAlign: 'center' }}>
+              <Button
+                component={Link}
+                to="/"
+                sx={{ textTransform: 'none', color: 'primary.main', fontWeight: 600, fontSize: '0.85rem' }}
+              >
+                ← Back to Main Website / Dashboard
+              </Button>
+            </Box>
           </form>
         </Paper>
       </Container>

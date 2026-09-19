@@ -44,14 +44,27 @@ export default function AdminLayout() {
           p: 3,
         }}
       >
-        <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', mb: 0.5 }}>
-          Inkspire
-        </Typography>
-        <Typography
-          sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', mb: 3 }}
+        <Box 
+          component={Link} 
+          to="/" 
+          title="Digital Home - Go to Main Website / Dashboard"
+          sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none', mb: 3 }}
         >
-          Content Studio
-        </Typography>
+          <Box
+            component="img"
+            src="/logo.webp"
+            alt="Digital Home Logo"
+            sx={{ height: 32, width: 'auto', aspectRatio: '66/34' }}
+          />
+          <Box>
+            <Typography sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff', lineHeight: 1.1 }}>
+              Digital Home
+            </Typography>
+            <Typography sx={{ color: '#38BDF8', fontSize: '0.72rem', fontWeight: 600 }}>
+              Admin Dashboard
+            </Typography>
+          </Box>
+        </Box>
 
         {nav.map((item) => {
           const isActive = item.path === '/admin'
@@ -83,6 +96,27 @@ export default function AdminLayout() {
             </Button>
           );
         })}
+
+        <Box sx={{ mt: 'auto', pt: 2 }}>
+          <Button
+            component={Link}
+            to="/"
+            fullWidth
+            sx={{
+              justifyContent: 'center',
+              py: 1,
+              borderRadius: 2,
+              color: '#38BDF8',
+              bgcolor: 'rgba(56, 189, 248, 0.1)',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.2)' }
+            }}
+          >
+            🌐 View Main Website
+          </Button>
+        </Box>
       </Box>
 
       {/* Main Content */}
@@ -95,6 +129,44 @@ export default function AdminLayout() {
           pb: { xs: '56px', md: 0 },
         }}
       >
+        {/* Mobile Admin Header */}
+        <Box
+          sx={{
+            display: { xs: 'flex', md: 'none' },
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2,
+            py: 1.2,
+            bgcolor: '#111827',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            flexShrink: 0
+          }}
+        >
+          <Box 
+            component={Link} 
+            to="/" 
+            title="Digital Home - Go to Home"
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none' }}
+          >
+            <Box
+              component="img"
+              src="/logo.webp"
+              alt="Digital Home Logo"
+              sx={{ height: 26, width: 'auto', aspectRatio: '66/34' }}
+            />
+            <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
+              Digital Home
+            </Typography>
+          </Box>
+          <Button
+            component={Link}
+            to="/"
+            size="small"
+            sx={{ color: '#38BDF8', fontSize: '0.75rem', textTransform: 'none', fontWeight: 600 }}
+          >
+            🏠 Main Site
+          </Button>
+        </Box>
         <Outlet />
       </Box>
 

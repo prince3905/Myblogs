@@ -141,7 +141,7 @@ export default function Layout({ children }) {
             mx: 'auto',
           }}
         >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', width: '100%' }}>
 
 
             {/* Mobile: Hamburger */}
@@ -149,13 +149,23 @@ export default function Layout({ children }) {
               onClick={() => setMobileOpen(true)}
               size="small"
               aria-label="menu"
-              sx={{ display: { md: 'none' }, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111827' }}
+              sx={{ display: { md: 'none' }, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111827', flexShrink: 0 }}
             >
               <MenuIcon />
             </IconButton>
 
             {/* Logo */}
-            <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Box 
+              component={Link} 
+              to="/" 
+              title="Digital Home - Home & Dashboard"
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                textDecoration: 'none',
+                flexShrink: 0
+              }}
+            >
               <Box 
                 component="img"
                 src="/logo.webp"
@@ -166,7 +176,8 @@ export default function Layout({ children }) {
                   height: { xs: 28, md: 34 }, 
                   width: 'auto',
                   aspectRatio: '66/34',
-                  display: 'block'
+                  display: 'block',
+                  flexShrink: 0
                 }}
               />
             </Box>
@@ -276,9 +287,26 @@ export default function Layout({ children }) {
         }}
       >
         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none' }}>
-            <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: '0.75rem', fontWeight: 800, color: 'white' }}>D</Avatar>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111' }}>
+          <Box 
+            component={Link} 
+            to="/" 
+            onClick={() => setMobileOpen(false)}
+            title="Digital Home - Dashboard & Home"
+            sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none' }}
+          >
+            <Box 
+              component="img"
+              src="/logo.webp"
+              alt="Digital Home Logo"
+              sx={{ 
+                height: 32, 
+                width: 'auto',
+                aspectRatio: '66/34',
+                display: 'block',
+                flexShrink: 0
+              }}
+            />
+            <Typography variant="h6" sx={{ fontWeight: 800, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111111' }}>
               Digital Home
             </Typography>
           </Box>
@@ -340,6 +368,37 @@ export default function Layout({ children }) {
         }}
       >
         <Container maxWidth="lg">
+          <Box 
+            component={Link} 
+            to="/" 
+            title="Digital Home - Go to Home / Dashboard"
+            sx={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: 1.5, 
+              textDecoration: 'none', 
+              mb: 2,
+              p: 0.5,
+              borderRadius: '8px',
+              transition: 'opacity 0.2s',
+              '&:hover': { opacity: 0.85 }
+            }}
+          >
+            <Box 
+              component="img"
+              src="/logo.webp"
+              alt="Digital Home Logo"
+              sx={{ 
+                height: 30, 
+                width: 'auto',
+                aspectRatio: '66/34',
+                display: 'block'
+              }}
+            />
+            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: theme.palette.mode === 'dark' ? '#F9FAFB' : '#111827' }}>
+              Digital Home
+            </Typography>
+          </Box>
           <Box sx={{ display: 'flex', gap: { xs: 2, md: 3 }, justifyContent: 'center', mt: 1, flexWrap: 'wrap', alignItems: 'center' }}>
             <a href="https://t.me/SarkariJob_DigitalHome" target="_blank" rel="noopener noreferrer" style={{ color: '#0284c7', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>✈️ Telegram Channel</a>
             <Link to="/privacy" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Privacy Policy</Link>
@@ -348,7 +407,7 @@ export default function Layout({ children }) {
             <Link to="/about" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>About</Link>
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontWeight: 500 }}>
-            Built with MERN Stack • Modern Blogging Platform
+            Official Portal • Global Government Vacancies & Verified Public Gazettes
           </Typography>
         </Container>
       </Box>
