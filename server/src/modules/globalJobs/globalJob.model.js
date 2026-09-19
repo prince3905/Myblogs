@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
  * Official verified government TLDs & multilateral domains.
  * STRICT RULE: No promotional, affiliate, or third-party links permitted.
  */
-const OFFICIAL_GOV_TLD_REGEX = /(\.gov|\.gob|\.gouv|\.go\.[a-z]{2}|\.gov\.[a-z]{2}|\.govt\.[a-z]{2}|\.nic\.in|un\.org|who\.int|worldbank\.org|reliefweb\.int|europa\.eu|imf\.org|oecd\.org|interpol\.int)/i;
+const OFFICIAL_GOV_TLD_REGEX = /(\.gov|\.gob|\.gouv|\.go\.[a-z]{2}|\.gov\.[a-z]{2}|\.govt\.[a-z]{2}|\.nic\.in|\.gc\.ca|canada\.ca|un\.org|who\.int|worldbank\.org|reliefweb\.int|europa\.eu|imf\.org|oecd\.org|interpol\.int)/i;
 
 function validateOfficialUrl(val) {
   if (!val) return true;

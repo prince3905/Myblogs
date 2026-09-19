@@ -5,7 +5,7 @@
 
 const MONTH_MAP = {
   jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
-  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+  jul: 6, aug: 7, sep: 8, sept: 8, oct: 9, nov: 10, dec: 11,
   january: 0, february: 1, march: 2, april: 3, june: 5,
   july: 6, august: 7, september: 8, october: 9, november: 10, december: 11
 };
@@ -13,12 +13,12 @@ const MONTH_MAP = {
 function extractDateFromSlugOrText(href = '', text = '', bodyText = '') {
   const now = new Date();
 
-  // 1. Try extracting from detail page text (e.g. "Post Date / Update : 08 June 2026 | 02:45 PM")
+  // 1. Try extracting from detail page text (e.g. "Post Date / Update : 17 September 2026 | 10:25 AM")
   if (bodyText) {
-    const postDateMatch = bodyText.match(/Post Date\s*\/?\s*Update\s*:\s*([0-9]{1,2}\s+[a-zA-Z]+\s+[0-9]{4})/i) ||
-                          bodyText.match(/Post Date\s*\/?\s*Update\s*:\s*([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{4})/i) ||
-                          bodyText.match(/Post Date\s*:\s*([0-9]{1,2}\s+[a-zA-Z]+\s+[0-9]{4})/i) ||
-                          bodyText.match(/Post Date\s*:\s*([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{4})/i);
+    const postDateMatch = bodyText.match(/Post Date\s*\/?\s*Update\s*:?\s*([0-9]{1,2}\s+[a-zA-Z]+\s+[0-9]{4})/i) ||
+                          bodyText.match(/Post Date\s*\/?\s*Update\s*:?\s*([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{4})/i) ||
+                          bodyText.match(/Post Date\s*:?\s*([0-9]{1,2}\s+[a-zA-Z]+\s+[0-9]{4})/i) ||
+                          bodyText.match(/Post Date\s*:?\s*([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{4})/i);
     if (postDateMatch) {
       const rawDateStr = postDateMatch[1].trim();
       const parsed = parseFlexibleDate(rawDateStr);
@@ -28,9 +28,9 @@ function extractDateFromSlugOrText(href = '', text = '', bodyText = '') {
     }
   }
 
-  // 2. Try extracting from URL slug (e.g. "/2026/hppsc-hpas-june26/" or "/2026/rpsc-apo-aug26/")
+  // 2. Try extracting from URL slug (e.g. "/2026/up-suda-mis-assistant-sept26/")
   if (href) {
-    const slugMatch = href.match(/(jan|feb|mar|apr|may|jun|june|jul|july|aug|sep|oct|nov|dec)(\d{2,4})/i);
+    const slugMatch = href.match(/(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|sept|september|oct|october|nov|november|dec|december)[-_]?(\d{2,4})/i);
     if (slugMatch) {
       const monthStr = slugMatch[1].toLowerCase();
       let yearNum = parseInt(slugMatch[2], 10);

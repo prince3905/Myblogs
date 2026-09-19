@@ -108,23 +108,30 @@ async function getGlobalJobs(req, res) {
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const take = parseInt(limit, 10);
 
-    const [total, rawJobs] = await Promise.all([
-      GlobalJob.countDocuments(query),
-      GlobalJob.find(query)
+    const total = await GlobalJob.countDocuments(query);
+    const targetCountry = (userCountry || '').toUpperCase();
+    let sortedJobs = [];
+
+    // True Geo-Priority Pinning on Page 1
+    if (targetCountry && !country && skip === 0) {
+      const countryJobs = await GlobalJob.find({ ...query, countryCode: targetCountry })
+        .sort({ createdAt: -1 })
+        .limit(take)
+        .lean();
+
+      const countryJobIds = countryJobs.map(j => j._id);
+      const otherJobs = await GlobalJob.find({ ...query, _id: { $nin: countryJobIds } })
+        .sort({ createdAt: -1 })
+        .limit(take)
+        .lean();
+
+      sortedJobs = [...countryJobs, ...otherJobs].slice(0, take);
+    } else {
+      sortedJobs = await GlobalJob.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(take)
-        .lean()
-    ]);
-
-    // Apply Smart Geo-Priority Re-Ranking if userCountry is provided
-    let sortedJobs = rawJobs;
-    if (userCountry) {
-      sortedJobs = [...rawJobs].sort((a, b) => {
-        const scoreA = scoreJobForUser(a, userCountry);
-        const scoreB = scoreJobForUser(b, userCountry);
-        return scoreB - scoreA;
-      });
+        .lean();
     }
 
     return res.json({

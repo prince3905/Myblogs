@@ -353,29 +353,29 @@ async function scrapeDetailedUrls(pageUrl) {
     let postDate = '';
     let lastDate = '';
 
-    // 1. Extract Post Date
-    $('tr, li, p, td, div').each((i, el) => {
-      if (postDate) return;
-      const text = $(el).text();
-      if (text.includes('Post Date / Update :') || text.includes('Post Date:') || text.includes('Post Date / Update:')) {
-        const val = $(el).find('td').last().text().trim();
-        if (val && /\d{1,2}/.test(val)) {
-          postDate = val;
-        } else {
-          const parts = text.split(':');
-          if (parts.length > 1) {
-            postDate = parts.slice(1).join(':').trim();
+    // 1. Extract Post Date with clean regex from whole body & table text
+    const fullBodyText = $('body').text();
+    const dateRegexMatch = fullBodyText.match(/Post Date\s*\/?\s*Update\s*:?\s*([0-9]{1,2}\s+[a-zA-Z]+\s+[0-9]{4}(?:\s*\|?\s*[0-9]{1,2}[:\s][0-9]{2}\s*(?:AM|PM)?)?)/i) ||
+                           fullBodyText.match(/Post Date\s*:?\s*([0-9]{1,2}\s+[a-zA-Z]+\s+[0-9]{4})/i) ||
+                           fullBodyText.match(/Post Date\s*\/?\s*Update\s*:?\s*([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{4})/i);
+    if (dateRegexMatch) {
+      postDate = dateRegexMatch[1].trim();
+    } else {
+      $('tr, li, p, td').each((i, el) => {
+        if (postDate) return;
+        const text = $(el).text();
+        if (text.includes('Post Date / Update') || text.includes('Post Date:')) {
+          const val = $(el).find('td').last().text().trim();
+          if (val && /\d{1,2}/.test(val)) {
+            postDate = val;
+          } else {
+            const parts = text.split(':');
+            if (parts.length > 1) {
+              postDate = parts.slice(1).join(':').trim();
+            }
           }
         }
-      }
-    });
-
-    if (!postDate) {
-      const bodyText = $('body').text();
-      const match = bodyText.match(/Post Date\s*\/?\s*Update\s*:\s*([^\n|]+)/i);
-      if (match) {
-        postDate = match[1].trim();
-      }
+      });
     }
 
     if (postDate) {
@@ -1173,6 +1173,19 @@ async function scrapeFeeds() {
     'Other': []
   };
 
+  // Freshness score helper to prioritize current month/year listings
+  const getListingFreshnessScore = (item) => {
+    const combined = `${item.href || ''} ${item.text || ''}`.toLowerCase();
+    let score = 0;
+    if (/sept|sep|09[-_]2026|september/i.test(combined)) score += 1000;
+    else if (/aug|august|08[-_]2026/i.test(combined)) score += 600;
+    else if (/jul|july|07[-_]2026/i.test(combined)) score += 400;
+    else if (/jun|june|06[-_]2026/i.test(combined)) score += 300;
+    else if (/2026/i.test(combined)) score += 200;
+    else if (/2025/i.test(combined)) score += 50;
+    return score;
+  };
+
   for (const item of pendingListings) {
     const cat = item.defaultCategory || detectCategory(item.text, item.href);
     if (categoryBuckets[cat]) {
@@ -1180,6 +1193,11 @@ async function scrapeFeeds() {
     } else {
       categoryBuckets['Other'].push(item);
     }
+  }
+
+  // Sort each bucket by freshness score so September 2026 (आज & कल) notices are always processed first
+  for (const cat of Object.keys(categoryBuckets)) {
+    categoryBuckets[cat].sort((a, b) => getListingFreshnessScore(b) - getListingFreshnessScore(a));
   }
 
   const listingsToProcess = [];
@@ -1308,11 +1326,22 @@ async function scrapeFeeds() {
       // Strict 1-Week Gate: Applies to Job Vacancies only (so old closed forms are skipped).
       // Reference circulars (Syllabus, Admit Card, Admission, Answer Key, Result) remain active throughout the 2026 exam cycle!
       if (!isNonApp && safeParsedDate && safeParsedDate < sevenDaysAgo) {
+        // Mark as archived so it doesn't repeatedly choke pendingListings
+        await LiveAlert.updateOne(
+          { sourceUrl: href },
+          { $set: { title: cleanTitle, status: 'archived', detailsText: finalDetailsText || 'Archived Vacancy', parsedPostDate: safeParsedDate, category: finalCategory, state } },
+          { upsert: true }
+        );
         continue;
       }
 
       const isExpired = isOldOrExpiredAlert(title, safeParsedDate, finalLastDate, finalCategory);
       if (isExpired) {
+        await LiveAlert.updateOne(
+          { sourceUrl: href },
+          { $set: { title: cleanTitle, status: 'archived', detailsText: finalDetailsText || 'Archived Notice', parsedPostDate: safeParsedDate, category: finalCategory, state } },
+          { upsert: true }
+        );
         continue; // Skip expired notices
       }
       const computedStatus = 'active';

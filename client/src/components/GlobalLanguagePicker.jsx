@@ -16,15 +16,15 @@ import TranslateIcon from '@mui/icons-material/Translate';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PublicIcon from '@mui/icons-material/Public';
 
-// Country list with regional languages
+// Country list with regional languages: Native language first, English common to all
 export const COUNTRY_REGIONS = [
   {
     code: 'IN',
     name: 'India (भारत)',
     flag: '🇮🇳',
     languages: [
-      { code: 'hi', label: 'हिंदी (Hindi)', flag: '🇮🇳' },
-      { code: 'en', label: 'English', flag: '🌐' },
+      { code: 'hi', label: 'हिंदी (Hindi - Native)', flag: '🇮🇳' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' },
       { code: 'bn', label: 'বাংলা (Bengali)', flag: '🇧🇩' },
       { code: 'ta', label: 'தமிழ் (Tamil)', flag: '🇮🇳' },
       { code: 'te', label: 'తెలుగు (Telugu)', flag: '🇮🇳' },
@@ -37,24 +37,24 @@ export const COUNTRY_REGIONS = [
     ]
   },
   {
-    code: 'AE',
-    name: 'UAE (Dubai / Abu Dhabi)',
-    flag: '🇦🇪',
-    languages: [
-      { code: 'ar', label: 'العربية (Arabic)', flag: '🇦🇪' },
-      { code: 'en', label: 'English', flag: '🌐' },
-      { code: 'ur', label: 'اردو (Urdu)', flag: '🇵🇰' },
-      { code: 'hi', label: 'हिंदी (Hindi Expat)', flag: '🇮🇳' }
-    ]
-  },
-  {
     code: 'SA',
     name: 'Saudi Arabia (السعودية)',
     flag: '🇸🇦',
     languages: [
-      { code: 'ar', label: 'العربية (Arabic)', flag: '🇸🇦' },
-      { code: 'en', label: 'English', flag: '🌐' },
-      { code: 'ur', label: 'اردو (Urdu)', flag: '🇵🇰' }
+      { code: 'ar', label: 'العربية (Arabic - Native)', flag: '🇸🇦' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' },
+      { code: 'ur', label: 'اردو (Urdu Expat)', flag: '🇵🇰' }
+    ]
+  },
+  {
+    code: 'AE',
+    name: 'UAE (Dubai / Abu Dhabi)',
+    flag: '🇦🇪',
+    languages: [
+      { code: 'ar', label: 'العربية (Arabic - Native)', flag: '🇦🇪' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' },
+      { code: 'ur', label: 'اردو (Urdu Expat)', flag: '🇵🇰' },
+      { code: 'hi', label: 'हिंदी (Hindi Expat)', flag: '🇮🇳' }
     ]
   },
   {
@@ -62,8 +62,44 @@ export const COUNTRY_REGIONS = [
     name: 'Qatar (قطر)',
     flag: '🇶🇦',
     languages: [
-      { code: 'ar', label: 'العربية (Arabic)', flag: '🇶🇦' },
-      { code: 'en', label: 'English', flag: '🌐' }
+      { code: 'ar', label: 'العربية (Arabic - Native)', flag: '🇶🇦' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'KW',
+    name: 'Kuwait (الكويت)',
+    flag: '🇰🇼',
+    languages: [
+      { code: 'ar', label: 'العربية (Arabic - Native)', flag: '🇰🇼' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'OM',
+    name: 'Oman (عُمان)',
+    flag: '🇴🇲',
+    languages: [
+      { code: 'ar', label: 'العربية (Arabic - Native)', flag: '🇴🇲' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'BH',
+    name: 'Bahrain (البحرين)',
+    flag: '🇧🇭',
+    languages: [
+      { code: 'ar', label: 'العربية (Arabic - Native)', flag: '🇧🇭' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'EG',
+    name: 'Egypt (مصر)',
+    flag: '🇪🇬',
+    languages: [
+      { code: 'ar', label: 'العربية (Arabic - Native)', flag: '🇪🇬' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
     ]
   },
   {
@@ -71,7 +107,7 @@ export const COUNTRY_REGIONS = [
     name: 'United States',
     flag: '🇺🇸',
     languages: [
-      { code: 'en', label: 'English (US)', flag: '🇺🇸' },
+      { code: 'en', label: 'English (US - Native)', flag: '🇺🇸' },
       { code: 'es', label: 'Español (Spanish)', flag: '🇪🇸' }
     ]
   },
@@ -80,7 +116,8 @@ export const COUNTRY_REGIONS = [
     name: 'United Kingdom',
     flag: '🇬🇧',
     languages: [
-      { code: 'en', label: 'English (UK)', flag: '🇬🇧' }
+      { code: 'en', label: 'English (UK - Native)', flag: '🇬🇧' },
+      { code: 'cy', label: 'Cymraeg (Welsh)', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿' }
     ]
   },
   {
@@ -88,7 +125,7 @@ export const COUNTRY_REGIONS = [
     name: 'Canada',
     flag: '🇨🇦',
     languages: [
-      { code: 'en', label: 'English', flag: '🇨🇦' },
+      { code: 'en', label: 'English (Native)', flag: '🇨🇦' },
       { code: 'fr', label: 'Français (French)', flag: '🇫🇷' }
     ]
   },
@@ -97,7 +134,25 @@ export const COUNTRY_REGIONS = [
     name: 'Australia',
     flag: '🇦🇺',
     languages: [
-      { code: 'en', label: 'English (AU)', flag: '🇦🇺' }
+      { code: 'en', label: 'English (AU - Native)', flag: '🇦🇺' }
+    ]
+  },
+  {
+    code: 'NZ',
+    name: 'New Zealand',
+    flag: '🇳🇿',
+    languages: [
+      { code: 'en', label: 'English (NZ - Native)', flag: '🇳🇿' },
+      { code: 'mi', label: 'Te Reo Māori', flag: '🇳🇿' }
+    ]
+  },
+  {
+    code: 'IE',
+    name: 'Ireland',
+    flag: '🇮🇪',
+    languages: [
+      { code: 'en', label: 'English (IE - Native)', flag: '🇮🇪' },
+      { code: 'ga', label: 'Gaeilge (Irish)', flag: '🇮🇪' }
     ]
   },
   {
@@ -105,8 +160,8 @@ export const COUNTRY_REGIONS = [
     name: 'Germany (Deutschland)',
     flag: '🇩🇪',
     languages: [
-      { code: 'de', label: 'Deutsch (German)', flag: '🇩🇪' },
-      { code: 'en', label: 'English', flag: '🌐' }
+      { code: 'de', label: 'Deutsch (German - Native)', flag: '🇩🇪' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
     ]
   },
   {
@@ -114,8 +169,8 @@ export const COUNTRY_REGIONS = [
     name: 'France',
     flag: '🇫🇷',
     languages: [
-      { code: 'fr', label: 'Français (French)', flag: '🇫🇷' },
-      { code: 'en', label: 'English', flag: '🌐' }
+      { code: 'fr', label: 'Français (French - Native)', flag: '🇫🇷' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
     ]
   },
   {
@@ -123,17 +178,74 @@ export const COUNTRY_REGIONS = [
     name: 'Spain (España)',
     flag: '🇪🇸',
     languages: [
-      { code: 'es', label: 'Español (Spanish)', flag: '🇪🇸' },
-      { code: 'en', label: 'English', flag: '🌐' }
+      { code: 'es', label: 'Español (Spanish - Native)', flag: '🇪🇸' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' },
+      { code: 'ca', label: 'Català (Catalan)', flag: '🇪🇸' }
     ]
   },
   {
-    code: 'JP',
-    name: 'Japan (日本)',
-    flag: '🇯🇵',
+    code: 'IT',
+    name: 'Italy (Italia)',
+    flag: '🇮🇹',
     languages: [
-      { code: 'ja', label: '日本語 (Japanese)', flag: '🇯🇵' },
-      { code: 'en', label: 'English', flag: '🌐' }
+      { code: 'it', label: 'Italiano (Italian - Native)', flag: '🇮🇹' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'NL',
+    name: 'Netherlands (Nederland)',
+    flag: '🇳🇱',
+    languages: [
+      { code: 'nl', label: 'Nederlands (Dutch - Native)', flag: '🇳🇱' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'CH',
+    name: 'Switzerland (Schweiz)',
+    flag: '🇨🇭',
+    languages: [
+      { code: 'de', label: 'Deutsch (German - Native)', flag: '🇨🇭' },
+      { code: 'fr', label: 'Français (French)', flag: '🇫🇷' },
+      { code: 'it', label: 'Italiano (Italian)', flag: '🇮🇹' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'SE',
+    name: 'Sweden (Sverige)',
+    flag: '🇸🇪',
+    languages: [
+      { code: 'sv', label: 'Svenska (Swedish - Native)', flag: '🇸🇪' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'NO',
+    name: 'Norway (Norge)',
+    flag: '🇳🇴',
+    languages: [
+      { code: 'no', label: 'Norsk (Norwegian - Native)', flag: '🇳🇴' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'PL',
+    name: 'Poland (Polska)',
+    flag: '🇵🇱',
+    languages: [
+      { code: 'pl', label: 'Polski (Polish - Native)', flag: '🇵🇱' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'PT',
+    name: 'Portugal',
+    flag: '🇵🇹',
+    languages: [
+      { code: 'pt', label: 'Português (Portuguese - Native)', flag: '🇵🇹' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
     ]
   },
   {
@@ -141,17 +253,35 @@ export const COUNTRY_REGIONS = [
     name: 'Russia (Россия)',
     flag: '🇷🇺',
     languages: [
-      { code: 'ru', label: 'Русский (Russian)', flag: '🇷🇺' },
-      { code: 'en', label: 'English', flag: '🌐' }
+      { code: 'ru', label: 'Русский (Russian - Native)', flag: '🇷🇺' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
     ]
   },
   {
-    code: 'BR',
-    name: 'Brazil (Brasil)',
-    flag: '🇧🇷',
+    code: 'JP',
+    name: 'Japan (日本)',
+    flag: '🇯🇵',
     languages: [
-      { code: 'pt', label: 'Português (Portuguese)', flag: '🇧🇷' },
-      { code: 'en', label: 'English', flag: '🌐' }
+      { code: 'ja', label: '日本語 (Japanese - Native)', flag: '🇯🇵' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'KR',
+    name: 'South Korea (대한민국)',
+    flag: '🇰🇷',
+    languages: [
+      { code: 'ko', label: '한국어 (Korean - Native)', flag: '🇰🇷' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'CN',
+    name: 'China (中国)',
+    flag: '🇨🇳',
+    languages: [
+      { code: 'zh-CN', label: '中文 (Chinese - Native)', flag: '🇨🇳' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
     ]
   },
   {
@@ -159,17 +289,160 @@ export const COUNTRY_REGIONS = [
     name: 'Singapore',
     flag: '🇸🇬',
     languages: [
-      { code: 'en', label: 'English', flag: '🇸🇬' },
-      { code: 'zh', label: '中文 (Chinese)', flag: '🇨🇳' },
+      { code: 'en', label: 'English (Common)', flag: '🇸🇬' },
+      { code: 'zh-CN', label: '中文 (Chinese)', flag: '🇨🇳' },
+      { code: 'ms', label: 'Bahasa Melayu', flag: '🇲🇾' },
       { code: 'ta', label: 'தமிழ் (Tamil)', flag: '🇮🇳' }
+    ]
+  },
+  {
+    code: 'ID',
+    name: 'Indonesia',
+    flag: '🇮🇩',
+    languages: [
+      { code: 'id', label: 'Bahasa Indonesia (Native)', flag: '🇮🇩' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'MY',
+    name: 'Malaysia',
+    flag: '🇲🇾',
+    languages: [
+      { code: 'ms', label: 'Bahasa Melayu (Native)', flag: '🇲🇾' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' },
+      { code: 'zh-CN', label: '中文 (Chinese)', flag: '🇨🇳' },
+      { code: 'ta', label: 'தமிழ் (Tamil)', flag: '🇮🇳' }
+    ]
+  },
+  {
+    code: 'TH',
+    name: 'Thailand (ไทย)',
+    flag: '🇹🇭',
+    languages: [
+      { code: 'th', label: 'ไทย (Thai - Native)', flag: '🇹🇭' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'VN',
+    name: 'Vietnam (Việt Nam)',
+    flag: '🇻🇳',
+    languages: [
+      { code: 'vi', label: 'Tiếng Việt (Vietnamese - Native)', flag: '🇻🇳' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'PH',
+    name: 'Philippines (Pilipinas)',
+    flag: '🇵🇭',
+    languages: [
+      { code: 'tl', label: 'Filipino / Tagalog (Native)', flag: '🇵🇭' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'TR',
+    name: 'Turkey (Türkiye)',
+    flag: '🇹🇷',
+    languages: [
+      { code: 'tr', label: 'Türkçe (Turkish - Native)', flag: '🇹🇷' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'BR',
+    name: 'Brazil (Brasil)',
+    flag: '🇧🇷',
+    languages: [
+      { code: 'pt', label: 'Português (Portuguese - Native)', flag: '🇧🇷' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'MX',
+    name: 'Mexico (México)',
+    flag: '🇲🇽',
+    languages: [
+      { code: 'es', label: 'Español (Spanish - Native)', flag: '🇲🇽' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'ZA',
+    name: 'South Africa',
+    flag: '🇿🇦',
+    languages: [
+      { code: 'en', label: 'English (Common)', flag: '🇿🇦' },
+      { code: 'af', label: 'Afrikaans', flag: '🇿🇦' },
+      { code: 'zu', label: 'isiZulu', flag: '🇿🇦' }
+    ]
+  },
+  {
+    code: 'NG',
+    name: 'Nigeria',
+    flag: '🇳🇬',
+    languages: [
+      { code: 'en', label: 'English (Common)', flag: '🇳🇬' },
+      { code: 'yo', label: 'Yorùbá', flag: '🇳🇬' },
+      { code: 'ha', label: 'Hausa', flag: '🇳🇬' }
+    ]
+  },
+  {
+    code: 'KE',
+    name: 'Kenya',
+    flag: '🇰🇪',
+    languages: [
+      { code: 'sw', label: 'Kiswahili (Native)', flag: '🇰🇪' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'PK',
+    name: 'Pakistan (پاکستان)',
+    flag: '🇵🇰',
+    languages: [
+      { code: 'ur', label: 'اردو (Urdu - Native)', flag: '🇵🇰' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' },
+      { code: 'pa', label: 'ਪੰਜਾਬੀ (Punjabi)', flag: '🇵🇰' }
+    ]
+  },
+  {
+    code: 'BD',
+    name: 'Bangladesh (বাংলাদেশ)',
+    flag: '🇧🇩',
+    languages: [
+      { code: 'bn', label: 'বাংলা (Bengali - Native)', flag: '🇧🇩' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
+    ]
+  },
+  {
+    code: 'NP',
+    name: 'Nepal (नेपाल)',
+    flag: '🇳🇵',
+    languages: [
+      { code: 'ne', label: 'नेपाली (Nepali - Native)', flag: '🇳🇵' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' },
+      { code: 'hi', label: 'हिंदी (Hindi)', flag: '🇮🇳' }
+    ]
+  },
+  {
+    code: 'LK',
+    name: 'Sri Lanka (ශ්‍රී ලංකා)',
+    flag: '🇱🇰',
+    languages: [
+      { code: 'si', label: 'සිංහල (Sinhala - Native)', flag: '🇱🇰' },
+      { code: 'ta', label: 'தமிழ் (Tamil)', flag: '🇱🇰' },
+      { code: 'en', label: 'English (Common)', flag: '🌐' }
     ]
   }
 ];
 
-// All 33 global languages fallback
+// All 33+ global languages fallback
 export const ALL_LANGUAGES = [
   { code: 'hi', label: 'हिंदी (Hindi)', flag: '🇮🇳' },
-  { code: 'en', label: 'English (US/UK)', flag: '🌐' },
+  { code: 'en', label: 'English (Global)', flag: '🌐' },
   { code: 'ar', label: 'العربية (Arabic)', flag: '🇸🇦' },
   { code: 'es', label: 'Español (Spanish)', flag: '🇪🇸' },
   { code: 'fr', label: 'Français (French)', flag: '🇫🇷' },
@@ -187,69 +460,77 @@ export const ALL_LANGUAGES = [
   { code: 'pt', label: 'Português (Portuguese)', flag: '🇧🇷' },
   { code: 'ja', label: '日本語 (Japanese)', flag: '🇯🇵' },
   { code: 'ko', label: '한국어 (Korean)', flag: '🇰🇷' },
-  { code: 'zh', label: '中文 (Chinese)', flag: '🇨🇳' },
+  { code: 'zh-CN', label: '中文 (Chinese 简体)', flag: '🇨🇳' },
   { code: 'id', label: 'Bahasa Indonesia', flag: '🇮🇩' },
   { code: 'ms', label: 'Bahasa Melayu', flag: '🇲🇾' },
   { code: 'tr', label: 'Türkçe (Turkish)', flag: '🇹🇷' },
   { code: 'it', label: 'Italiano (Italian)', flag: '🇮🇹' },
   { code: 'nl', label: 'Nederlands (Dutch)', flag: '🇳🇱' },
   { code: 'pl', label: 'Polski (Polish)', flag: '🇵🇱' },
+  { code: 'sv', label: 'Svenska (Swedish)', flag: '🇸🇪' },
+  { code: 'no', label: 'Norsk (Norwegian)', flag: '🇳🇴' },
   { code: 'th', label: 'ไทย (Thai)', flag: '🇹🇭' },
   { code: 'vi', label: 'Tiếng Việt (Vietnamese)', flag: '🇻🇳' },
-  { code: 'fa', label: 'فارسی (Persian)', flag: '🇮🇷' },
+  { code: 'tl', label: 'Filipino (Tagalog)', flag: '🇵🇭' },
+  { code: 'ne', label: 'नेपाली (Nepali)', flag: '🇳🇵' },
+  { code: 'si', label: 'සිංහල (Sinhala)', flag: '🇱🇰' },
   { code: 'sw', label: 'Kiswahili (Swahili)', flag: '🇰🇪' }
 ];
 
-// Full Website Headless Translation Controller
+// Full Website Seamless Translation Controller
+// Sets cookie and triggers Google Translate combo WITHOUT harsh page reloads
 export function applyFullWebsiteTranslation(langCode) {
   try {
+    if (!langCode) return;
+    const isOriginal = langCode === 'original';
+    const targetLang = isOriginal ? '' : langCode;
+    const cookieVal = isOriginal ? '' : `/auto/${targetLang}`;
     const domain = window.location.hostname;
-    const targetLang = (langCode === 'hi' || langCode === 'original') ? '' : langCode;
-    const cookieVal = targetLang ? `/auto/${targetLang}` : '';
 
-    // Set or clear cookie for both host and domain
-    if (cookieVal) {
-      document.cookie = `googtrans=${cookieVal}; path=/;`;
-      if (domain && domain !== 'localhost') {
-        document.cookie = `googtrans=${cookieVal}; path=/; domain=.${domain};`;
-      }
-    } else {
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain};`;
-      if (domain && domain !== 'localhost') {
-        document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${domain};`;
+    // 1. Write cookies
+    const expires = isOriginal ? 'expires=Thu, 01 Jan 1970 00:00:00 UTC;' : 'max-age=31536000;';
+    document.cookie = `googtrans=${cookieVal}; path=/; ${expires}`;
+    if (domain && domain !== 'localhost' && !domain.startsWith('127.')) {
+      document.cookie = `googtrans=${cookieVal}; path=/; domain=.${domain}; ${expires}`;
+      const rootDomain = domain.replace(/^www\./, '');
+      if (rootDomain !== domain) {
+        document.cookie = `googtrans=${cookieVal}; path=/; domain=.${rootDomain}; ${expires}`;
       }
     }
 
-    const fireChange = (element) => {
-      element.value = targetLang;
-      element.dispatchEvent(new Event('change', { bubbles: true }));
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-      if (typeof element.onchange === 'function') {
-        element.onchange();
+    // 2. Dispatch event to combo element
+    const triggerCombo = () => {
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        if (combo.value !== targetLang) {
+          combo.value = targetLang;
+          combo.dispatchEvent(new Event('change', { bubbles: true }));
+          combo.dispatchEvent(new Event('input', { bubbles: true }));
+          if (typeof combo.onchange === 'function') {
+            combo.onchange();
+          }
+        }
+        return true;
       }
+      return false;
     };
 
-    // Attempt instant DOM translation via combo element
-    const combo = document.querySelector('.goog-te-combo');
-    if (combo) {
-      fireChange(combo);
-    } else {
-      // Poll every 80ms for up to 1.5s for instant trigger once Google script finishes mounting
+    // Instant trigger attempt
+    if (!triggerCombo()) {
+      // Poll smoothly for combo ready (without ever reloading the page!)
       let tries = 0;
       const interval = setInterval(() => {
         tries++;
-        const el = document.querySelector('.goog-te-combo');
-        if (el) {
+        if (triggerCombo() || tries > 25) {
           clearInterval(interval);
-          fireChange(el);
-        } else if (tries > 18) {
-          clearInterval(interval);
-          // Only as last resort if Google script was completely blocked
-          window.location.reload();
         }
-      }, 80);
+      }, 100);
     }
+
+    // 3. Re-sweep passes to translate dynamic React DOM nodes as they render
+    [250, 650, 1300].forEach((delay) => {
+      setTimeout(triggerCombo, delay);
+    });
   } catch (err) {
     console.warn('[Full Translate Error]:', err);
   }
@@ -272,20 +553,47 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
       if (savedCountry) return savedCountry;
 
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-      if (tz.includes('Dubai')) return 'AE';
+      if (tz.includes('Dubai') || tz.includes('Muscat')) return 'AE';
       if (tz.includes('Riyadh')) return 'SA';
       if (tz.includes('Qatar')) return 'QA';
+      if (tz.includes('Kuwait')) return 'KW';
+      if (tz.includes('Cairo')) return 'EG';
       if (tz.includes('London')) return 'GB';
-      if (tz.includes('New_York') || tz.includes('Chicago') || tz.includes('Los_Angeles')) return 'US';
-      if (tz.includes('Toronto') || tz.includes('Vancouver')) return 'CA';
-      if (tz.includes('Sydney') || tz.includes('Melbourne')) return 'AU';
-      if (tz.includes('Berlin')) return 'DE';
+      if (tz.includes('New_York') || tz.includes('Chicago') || tz.includes('Los_Angeles') || tz.includes('Denver') || tz.includes('Phoenix')) return 'US';
+      if (tz.includes('Toronto') || tz.includes('Vancouver') || tz.includes('Montreal')) return 'CA';
+      if (tz.includes('Sydney') || tz.includes('Melbourne') || tz.includes('Brisbane') || tz.includes('Perth')) return 'AU';
+      if (tz.includes('Auckland')) return 'NZ';
+      if (tz.includes('Dublin')) return 'IE';
+      if (tz.includes('Berlin') || tz.includes('Frankfurt')) return 'DE';
       if (tz.includes('Paris')) return 'FR';
       if (tz.includes('Madrid')) return 'ES';
+      if (tz.includes('Rome')) return 'IT';
+      if (tz.includes('Amsterdam')) return 'NL';
+      if (tz.includes('Zurich') || tz.includes('Geneva')) return 'CH';
+      if (tz.includes('Stockholm')) return 'SE';
+      if (tz.includes('Oslo')) return 'NO';
+      if (tz.includes('Warsaw')) return 'PL';
+      if (tz.includes('Lisbon')) return 'PT';
       if (tz.includes('Tokyo')) return 'JP';
+      if (tz.includes('Seoul')) return 'KR';
+      if (tz.includes('Shanghai') || tz.includes('Beijing')) return 'CN';
       if (tz.includes('Moscow')) return 'RU';
       if (tz.includes('Sao_Paulo')) return 'BR';
+      if (tz.includes('Mexico_City')) return 'MX';
       if (tz.includes('Singapore')) return 'SG';
+      if (tz.includes('Jakarta')) return 'ID';
+      if (tz.includes('Kuala_Lumpur')) return 'MY';
+      if (tz.includes('Bangkok')) return 'TH';
+      if (tz.includes('Ho_Chi_Minh')) return 'VN';
+      if (tz.includes('Manila')) return 'PH';
+      if (tz.includes('Istanbul')) return 'TR';
+      if (tz.includes('Johannesburg')) return 'ZA';
+      if (tz.includes('Lagos')) return 'NG';
+      if (tz.includes('Nairobi')) return 'KE';
+      if (tz.includes('Karachi')) return 'PK';
+      if (tz.includes('Dhaka')) return 'BD';
+      if (tz.includes('Kathmandu')) return 'NP';
+      if (tz.includes('Colombo')) return 'LK';
       return 'IN';
     } catch (e) {
       return 'IN';
@@ -297,19 +605,26 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
     setSelectedCountry(c);
 
     const savedL = localStorage.getItem('dh_user_lang');
-    if (savedL) {
-      setSelectedLang(savedL);
-      if (savedL !== 'hi' && !document.cookie.includes(`googtrans=/auto/${savedL}`)) {
-        applyFullWebsiteTranslation(savedL);
-      }
-    } else {
-      // Default to the first language of this country
+    const isLocked = localStorage.getItem('dh_user_lang_locked') === 'true';
+
+    // Auto-pick the native language of user's detected country if not explicitly locked
+    let activeL = savedL;
+    if (!activeL || !isLocked) {
       const matched = COUNTRY_REGIONS.find(item => item.code === c);
-      const defaultL = matched?.languages?.[0]?.code || 'hi';
-      setSelectedLang(defaultL);
-      if (defaultL !== 'hi' && !document.cookie.includes(`googtrans=/auto/${defaultL}`)) {
-        applyFullWebsiteTranslation(defaultL);
-      }
+      activeL = matched?.languages?.[0]?.code || 'hi';
+    }
+
+    setSelectedLang(activeL);
+
+    // Apply translation seamlessly
+    if (!document.cookie.includes(`googtrans=/auto/${activeL}`)) {
+      applyFullWebsiteTranslation(activeL);
+    }
+
+    // Set HTML lang and dir
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = activeL;
+      document.documentElement.dir = (activeL === 'ar' || activeL === 'ur' || activeL === 'fa') ? 'rtl' : 'ltr';
     }
 
     // Listen for custom change events from other components
@@ -318,7 +633,9 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
         setSelectedLang(e.detail.lang);
         applyFullWebsiteTranslation(e.detail.lang);
       }
-      if (e.detail?.country) setSelectedCountry(e.detail.country);
+      if (e.detail?.country) {
+        setSelectedCountry(e.detail.country);
+      }
     };
     window.addEventListener('dh_language_changed', handleSync);
     return () => window.removeEventListener('dh_language_changed', handleSync);

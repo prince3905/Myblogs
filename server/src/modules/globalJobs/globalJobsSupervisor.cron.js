@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const GlobalJob = require('./globalJob.model');
 const { fetchReliefWebJobs } = require('./providers/reliefweb.provider');
 const { fetchGulfGovJobs } = require('./providers/gulf.provider');
+const { fetchAngloGovJobs } = require('./providers/anglo.provider');
 const AutomationLog = require('../admin/automationLog.model');
 const { OFFICIAL_GOV_TLD_REGEX } = require('./globalJob.model');
 
@@ -112,8 +113,23 @@ async function runSupervisorCycle() {
     // Step 4: Ingest from Gulf Official Gazette Provider (Saudi, UAE, Qatar)
     console.log('[Supervisor] Fetching verified Gulf official circulars...');
     const gulfJobs = await fetchGulfGovJobs();
+    await delay(1500);
 
-    const candidateJobs = [...unJobs, ...gulfJobs];
+    // Step 5: Ingest from Anglo-American Provider (USA, UK, Canada, Australia)
+    console.log('[Supervisor] Fetching verified Anglo-American circulars (USA, UK, Canada, Australia)...');
+    const angloJobs = await fetchAngloGovJobs();
+
+    // Stratified, balanced candidate pool across UN, Gulf, and Anglo democracies
+    const candidateJobs = [];
+    const maxPerCat = Math.max(3, Math.ceil(remainingQuota / 3));
+    candidateJobs.push(...unJobs.slice(0, maxPerCat));
+    candidateJobs.push(...gulfJobs.slice(0, maxPerCat));
+    candidateJobs.push(...angloJobs.slice(0, maxPerCat * 2));
+
+    // Fallback: append remaining candidates to ensure quota is filled if available
+    for (const j of [...angloJobs, ...unJobs, ...gulfJobs]) {
+      if (!candidateJobs.includes(j)) candidateJobs.push(j);
+    }
 
     for (const job of candidateJobs) {
       if (newlyAdded >= remainingQuota) break;

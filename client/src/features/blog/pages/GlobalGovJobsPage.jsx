@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Typography, Button, Box, Alert, CircularProgress,
-  IconButton, TextField, Select, MenuItem, FormControl,
+  IconButton, TextField,
   Chip, Dialog, DialogContent, DialogTitle,
   Pagination, Divider
 } from '@mui/material';
@@ -15,32 +15,12 @@ import {
   Search as SearchIcon, Public as GlobeIcon,
   Verified as VerifiedIcon, WhatsApp as WhatsAppIcon,
   Telegram as TelegramIcon, Share as ShareIcon,
-  AttachMoney as MoneyIcon, School as SchoolIcon,
-  Translate as TranslateIcon
+  AttachMoney as MoneyIcon, School as SchoolIcon
 } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
 import { request } from '../../../shared/lib/api';
-
-// Supported 33+ Global & Indian Languages
-const SUPPORTED_LANGUAGES = [
-  { code: 'hi', label: 'हिंदी (Hindi)', flag: '🇮🇳' },
-  { code: 'en', label: 'English (US/UK)', flag: '🌐' },
-  { code: 'ar', label: 'العربية (Arabic)', flag: '🇸🇦' },
-  { code: 'es', label: 'Español (Spanish)', flag: '🇪🇸' },
-  { code: 'fr', label: 'Français (French)', flag: '🇫🇷' },
-  { code: 'de', label: 'Deutsch (German)', flag: '🇩🇪' },
-  { code: 'bn', label: 'বাংলা (Bengali)', flag: '🇧🇩' },
-  { code: 'ta', label: 'தமிழ் (Tamil)', flag: '🇮🇳' },
-  { code: 'te', label: 'తెలుగు (Telugu)', flag: '🇮🇳' },
-  { code: 'mr', label: 'मराठी (Marathi)', flag: '🇮🇳' },
-  { code: 'ja', label: '日本語 (Japanese)', flag: '🇯🇵' },
-  { code: 'ko', label: '한국어 (Korean)', flag: '🇰🇷' },
-  { code: 'pt', label: 'Português (Portuguese)', flag: '🇧🇷' },
-  { code: 'ru', label: 'Русский (Russian)', flag: '🇷🇺' },
-  { code: 'id', label: 'Bahasa Indonesia', flag: '🇮🇩' },
-  { code: 'ur', label: 'اردو (Urdu)', flag: '🇵🇰' }
-];
+import { applyFullWebsiteTranslation, ALL_LANGUAGES } from '../../../components/GlobalLanguagePicker';
 
 // Continents for filtering
 const CONTINENTS = [
@@ -176,7 +156,7 @@ export default function GlobalGovJobsPage() {
         detectedL = COUNTRY_TO_PRIMARY_LANG[detectedC];
         if (!detectedL) {
           const browserLang = (navigator.language || '').slice(0, 2);
-          detectedL = SUPPORTED_LANGUAGES.some(l => l.code === browserLang) ? browserLang : 'hi';
+          detectedL = ALL_LANGUAGES.some(l => l.code === browserLang) ? browserLang : 'hi';
         }
       }
 
@@ -280,20 +260,19 @@ export default function GlobalGovJobsPage() {
     try {
       localStorage.setItem('dh_user_country', countryCode);
       // Auto-switch language to this country's primary language if user hasn't explicitly locked another language
-      const targetLang = COUNTRY_TO_PRIMARY_LANG[countryCode];
+      const targetLang = COUNTRY_TO_PRIMARY_LANG[countryCode] || 'en';
       const isLangLocked = localStorage.getItem('dh_user_lang_locked') === 'true';
       if (targetLang && !isLangLocked) {
         setSelectedLanguage(targetLang);
+        applyFullWebsiteTranslation(targetLang);
+        window.dispatchEvent(new CustomEvent('dh_language_changed', {
+          detail: { country: countryCode, lang: targetLang }
+        }));
+      } else {
+        window.dispatchEvent(new CustomEvent('dh_language_changed', {
+          detail: { country: countryCode }
+        }));
       }
-    } catch (e) {}
-  };
-
-  // Manual Language Change Handler
-  const handleLanguageChange = (langCode) => {
-    setSelectedLanguage(langCode);
-    try {
-      localStorage.setItem('dh_user_lang', langCode);
-      localStorage.setItem('dh_user_lang_locked', 'true');
     } catch (e) {}
   };
 
@@ -345,12 +324,85 @@ export default function GlobalGovJobsPage() {
     return `⏳ ${days} दिन शेष`;
   };
 
+  // Dynamic Google for Jobs JSON-LD Structured Data Schema
+  const jobSchema = useMemo(() => {
+    if (selectedJob) {
+      return {
+        '@context': 'https://schema.org/',
+        '@type': 'JobPosting',
+        title: selectedJob.title,
+        description: selectedJob.officialGazetteSummary || selectedJob.title,
+        identifier: {
+          '@type': 'PropertyValue',
+          name: selectedJob.agencyOrMinistry || 'Official Government Body',
+          value: selectedJob.officialReferenceId || selectedJob._id
+        },
+        datePosted: selectedJob.createdAt ? new Date(selectedJob.createdAt).toISOString() : new Date().toISOString(),
+        validThrough: selectedJob.applicationDeadline ? new Date(selectedJob.applicationDeadline).toISOString() : undefined,
+        employmentType: 'FULL_TIME',
+        hiringOrganization: {
+          '@type': 'Organization',
+          name: selectedJob.agencyOrMinistry || selectedJob.countryName,
+          sameAs: selectedJob.officialNoticeUrl
+        },
+        jobLocation: {
+          '@type': 'Place',
+          address: {
+            '@type': 'PostalAddress',
+            addressCountry: selectedJob.countryCode || 'IN',
+            addressLocality: selectedJob.dutyStation || selectedJob.countryName
+          }
+        },
+        baseSalary: selectedJob.salary?.amount ? {
+          '@type': 'MonetaryAmount',
+          currency: selectedJob.salary?.currency || 'USD',
+          value: {
+            '@type': 'QuantitativeValue',
+            value: selectedJob.salary?.amount
+          }
+        } : undefined
+      };
+    }
+
+    if (jobs && jobs.length > 0) {
+      return {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        itemListElement: jobs.slice(0, 10).map((j, idx) => ({
+          '@type': 'ListItem',
+          position: idx + 1,
+          item: {
+            '@type': 'JobPosting',
+            title: j.title,
+            description: j.officialGazetteSummary || j.title,
+            datePosted: j.createdAt ? new Date(j.createdAt).toISOString() : new Date().toISOString(),
+            validThrough: j.applicationDeadline ? new Date(j.applicationDeadline).toISOString() : undefined,
+            hiringOrganization: {
+              '@type': 'Organization',
+              name: j.agencyOrMinistry || j.countryName,
+              sameAs: j.officialNoticeUrl
+            },
+            jobLocation: {
+              '@type': 'Place',
+              address: {
+                '@type': 'PostalAddress',
+                addressCountry: j.countryCode || 'IN'
+              }
+            }
+          }
+        }))
+      };
+    }
+    return null;
+  }, [selectedJob, jobs]);
+
   return (
     <Layout>
       <Seo
-        title="ग्लोबल सरकारी जॉब पोर्टल 2026 | 195 देशों की आधिकारिक भर्तियां व गजट (Global Gov Jobs)"
-        description="विश्व के 195 संप्रभु देशों, संयुक्त राष्ट्र (UN), WHO, खाड़ी देशों व भारत सरकार की सत्यापित सरकारी नौकरियां। 100% आधिकारिक गजट और सीधे आवेदन लिंक।"
+        title={selectedJob ? `${selectedJob.title} - ${selectedJob.countryName} | ग्लोबल सरकारी गजट 2026` : "ग्लोबल सरकारी जॉब पोर्टल 2026 | 195 देशों की आधिकारिक भर्तियां व गजट (Global Gov Jobs)"}
+        description={selectedJob ? `आधिकारिक सरकारी अधिसूचना: ${selectedJob.title} (${selectedJob.agencyOrMinistry}, ${selectedJob.countryName})। वेतन, योग्यता, आवेदन लिंक व गजट PDF।` : "विश्व के 195 संप्रभु देशों, संयुक्त राष्ट्र (UN), WHO, खाड़ी देशों व भारत सरकार की सत्यापित सरकारी नौकरियां। 100% आधिकारिक गजट और सीधे आवेदन लिंक।"}
         keywords={['Global government jobs', 'Sarkari naukri world', 'UN jobs', 'Dubai government careers', 'Saudi civil service', 'UPSC SSC vacancies 2026', 'WHO jobs']}
+        jsonLd={jobSchema}
       />
 
       {/* 🟢 TOP STATUS & LANGUAGE BAR */}
@@ -384,7 +436,7 @@ export default function GlobalGovJobsPage() {
             </Typography>
           </Box>
 
-          {/* Controls: Country Picker & 33-Language Switcher */}
+          {/* Controls: Country Picker Flare (Language is handled centrally in Navbar) */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             {/* Quick Country Flare */}
             <Button
@@ -405,33 +457,6 @@ export default function GlobalGovJobsPage() {
             >
               📍 देश: {COUNTRY_CATALOG.find(c => c.code === (activeCountry !== 'ALL' ? activeCountry : userDetectedCountry))?.flag || '🌐'} {COUNTRY_CATALOG.find(c => c.code === (activeCountry !== 'ALL' ? activeCountry : userDetectedCountry))?.name || 'All Countries'} 🔄
             </Button>
-
-            {/* Language Selector */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <TranslateIcon sx={{ color: '#A855F7', fontSize: 18 }} />
-              <Select
-                size="small"
-                value={selectedLanguage}
-                onChange={(e) => handleLanguageChange(e.target.value)}
-                sx={{
-                  color: '#F8FAFC',
-                  bgcolor: '#1E293B',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  height: 32,
-                  borderRadius: '8px',
-                  '.MuiOutlinedInput-notchedOutline': { borderColor: '#334155' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#64748B' },
-                  '.MuiSvgIcon-root': { color: '#94A3B8' }
-                }}
-              >
-                {SUPPORTED_LANGUAGES.map(lang => (
-                  <MenuItem key={lang.code} value={lang.code} sx={{ fontSize: '0.85rem' }}>
-                    {lang.flag} {lang.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Box>
           </Box>
         </Box>
       </Box>
