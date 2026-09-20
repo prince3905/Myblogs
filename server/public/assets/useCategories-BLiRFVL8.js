@@ -1,1 +1,0 @@
-import{r as e}from"./vendor-B93flA-z.js";import{i as n}from"./index-BqIAPXfM.js";function l(){const[a,o]=e.useState([]),[c,s]=e.useState(!0),[i,r]=e.useState(null);return e.useEffect(()=>{(async()=>{try{s(!0),r(null);const t=await n.getCategories();o(t)}catch(t){r(t.message)}finally{s(!1)}})()},[]),{categories:a,loading:c,error:i}}export{l as u};

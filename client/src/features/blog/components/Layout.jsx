@@ -136,9 +136,9 @@ export default function Layout({ children }) {
               : 'rgba(255, 255, 255, 0.6)',
             borderRadius: '9999px',
             boxShadow: '0 8px 30px rgba(0, 0, 0, 0.05)',
-            width: { xs: '100%', md: '940px' },
-            maxWidth: '940px',
-            px: { xs: 1, md: 2 },
+            width: { xs: 'calc(100% - 20px)', md: 'fit-content' },
+            maxWidth: '1200px',
+            px: { xs: 1.5, md: 2.5 },
             py: 0.5,
             mx: 'auto',
           }}

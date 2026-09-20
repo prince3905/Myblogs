@@ -326,7 +326,7 @@ export default function BlogListPage() {
           </Collapse>
 
       {/* Main Content + Sidebar */}
-      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+      <Box sx={{ mt: 2 }}>
         {/* Interactive Category Switcher Strip */}
         <Box sx={{ mb: 3.5 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.2 }}>
@@ -586,7 +586,7 @@ export default function BlogListPage() {
 
           </Box>
         </Box>
-      </Container>
+      </Box>
     </Container>
   </Box>
 </Layout>
