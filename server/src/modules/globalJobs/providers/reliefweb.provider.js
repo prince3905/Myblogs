@@ -71,24 +71,37 @@ function resolveCountryInfo(rawText) {
 
 function categorizeJobType(title = '', desc = '') {
   const combined = (title + ' ' + desc).toLowerCase();
-  if (combined.includes('health') || combined.includes('medical') || combined.includes('nurse') || combined.includes('doctor') || combined.includes('epidemiolog')) {
+
+  // 1. Healthcare & Medical
+  if (/\b(health|medical|nurse|doctor|physician|surgeon|clinic|hospital|epidemiolog|pharmacist|pharmacy|midwife|radiology|patholog|dentist|psychiatr|psycholog|nutrition|sanitation|immuniz|vaccination|public health|community health|maternal|neonatal|hiv|malaria|tuberculosis|water sanitation|wash officer|médical|médecin|infirmier|salud|médico|enfermero|gesundheit|arzt|krankenpfleger|saúde|médico|enfermeiro)\b/.test(combined)) {
     return 'Healthcare & Medical';
   }
-  if (combined.includes('software') || combined.includes('data') || combined.includes('engineer') || combined.includes('it officer') || combined.includes('cyber')) {
+
+  // 2. Tech & Engineering
+  if (/\b(software|developer|programmer|it officer|information technology|cyber|network|database|data scientist|data analyst|machine learning|artificial intelligence|cloud|devops|systems administrator|web developer|frontend|backend|fullstack|engineer|technical officer|electrical|mechanical|civil engineer|infrastructure|gis|surveyor|construction|architect|ingénieur|technician|informatik|ingenieur|informatica|sistemas|engenharia|técnico|informática)\b/.test(combined)) {
     return 'Tech & Engineering';
   }
-  if (combined.includes('security') || combined.includes('safety') || combined.includes('police') || combined.includes('defense') || combined.includes('military')) {
+
+  // 3. Defense, Police & Security
+  if (/\b(police|security officer|defense|defence|military|border|patrol|armed forces|guard|warden|constable|inspector|army|navy|air force|intelligence|counter-terrorism|corrections officer|fire|rescue|polizei|sécurité|seguridad|policia|segurança|polisi|tentara)\b/.test(combined)) {
     return 'Defense, Police & Security';
   }
-  if (combined.includes('education') || combined.includes('teacher') || combined.includes('trainer') || combined.includes('professor') || combined.includes('academic')) {
+
+  // 4. Education & Academia
+  if (/\b(teacher|professor|lecturer|education officer|academic|school|university|college|curriculum|training officer|pedagog|faculty|research fellow|scholarship|librarian|headmaster|principal|tuteur|enseignant|éducation|docente|educación|lehrer|bildung|hochschule|professor|educação|pesquisador|académico)\b/.test(combined)) {
     return 'Education & Academia';
   }
-  if (combined.includes('finance') || combined.includes('audit') || combined.includes('accountant') || combined.includes('revenue') || combined.includes('budget')) {
+
+  // 5. Finance, Revenue & Audit
+  if (/\b(finance|financial|audit|auditor|accountant|revenue|budget|treasury|tax|fiscal|comptroller|economics|economist|procurement|supply chain|grants|loans|customs|excise|internal control|finanzen|steuer|hacienda|finanzas|auditoría|financement|finances|économiste|auditor|contabilidade|fazenda|economia|customs officer)\b/.test(combined)) {
     return 'Finance, Revenue & Audit';
   }
-  if (combined.includes('diplomat') || combined.includes('liaison') || combined.includes('relations') || combined.includes('policy') || combined.includes('advocacy')) {
+
+  // 6. Diplomatic & International Relations
+  if (/\b(diplomat|ambassador|consular|foreign service|international relations|policy analyst|advocacy|liaison|humanitarian|legal officer|law officer|attorney|counsel|rights officer|protection officer|refugee|migration|geopolitics|multilateral|treaty|protocol officer|international law|ouswärtig|européen|affaires étrangères|relaciones internacionales|direito|relações internacionais|hukum|kebijakan)\b/.test(combined)) {
     return 'Diplomatic & International Relations';
   }
+
   return 'Civil Service / Administrative';
 }
 

@@ -82,30 +82,32 @@ function cleanTitle(title = '') {
 }
 
 /**
- * Categorize job role based on multilingual keywords
+ * Categorize job role based on comprehensive multilingual keywords
  */
-function detectJobCategory(title = '') {
-  const lower = title.toLowerCase();
-  if (/doctor|nurse|medical|health|clinical|hospital|gesundheit|médic|saúde/i.test(lower)) {
+function detectJobCategory(title = '', desc = '') {
+  const combined = (title + ' ' + (desc || '')).toLowerCase();
+
+  if (/\b(health|medical|nurse|doctor|physician|surgeon|clinic|hospital|epidemiolog|pharmacist|pharmacy|midwife|radiology|patholog|dentist|psychiatr|psycholog|nutrition|sanitation|immuniz|vaccination|public health|community health|maternal|neonatal|hiv|malaria|tuberculosis|wash officer|médical|médecin|infirmier|salud|médico|enfermero|gesundheit|arzt|krankenpfleger|saúde|enfermeiro)\b/.test(combined)) {
     return 'Healthcare & Medical';
   }
-  if (/engineer|cyber|software|developer|it|technology|data|analyst|ingenieur|technique|informática|sistemas/i.test(lower)) {
+  if (/\b(software|developer|programmer|it officer|information technology|cyber|network|database|data scientist|data analyst|machine learning|artificial intelligence|cloud|devops|systems administrator|web developer|frontend|backend|fullstack|engineer|technical officer|electrical|mechanical|civil engineer|infrastructure|gis|surveyor|construction|architect|ingénieur|technician|informatik|ingenieur|informatica|sistemas|engenharia|técnico|informática)\b/.test(combined)) {
     return 'Tech & Engineering';
   }
-  if (/police|security|defense|border|patrol|polizei|sécurité|seguridad|segurança/i.test(lower)) {
+  if (/\b(police|security officer|defense|defence|military|border|patrol|armed forces|guard|warden|constable|inspector|army|navy|air force|intelligence|counter-terrorism|corrections officer|fire|rescue|polizei|sécurité|seguridad|policia|segurança)\b/.test(combined)) {
     return 'Defense, Police & Security';
   }
-  if (/teacher|professor|education|academic|bildung|lehrer|enseignant|educación|professor/i.test(lower)) {
+  if (/\b(teacher|professor|lecturer|education officer|academic|school|university|college|curriculum|training officer|pedagog|faculty|research fellow|scholarship|librarian|headmaster|principal|tuteur|enseignant|éducation|docente|educación|lehrer|bildung|hochschule|educação|pesquisador)\b/.test(combined)) {
     return 'Education & Academia';
   }
-  if (/finance|revenue|audit|tax|finanzen|steuer|finanzas|hacienda|auditor|economia/i.test(lower)) {
+  if (/\b(finance|financial|audit|auditor|accountant|revenue|budget|treasury|tax|fiscal|comptroller|economics|economist|procurement|supply chain|grants|loans|customs|excise|internal control|finanzen|steuer|hacienda|finanzas|auditoría|financement|économiste|contabilidade|fazenda|economia|customs officer)\b/.test(combined)) {
     return 'Finance, Revenue & Audit';
   }
-  if (/diplomat|foreign|consular|international|auswärtig|européen|internacional|relações/i.test(lower)) {
+  if (/\b(diplomat|ambassador|consular|foreign service|international relations|policy analyst|advocacy|liaison|humanitarian|legal officer|law officer|attorney|counsel|rights officer|protection officer|refugee|migration|geopolitics|multilateral|treaty|protocol officer|international law|affaires étrangères|relaciones internacionales|direito|relações internacionais)\b/.test(combined)) {
     return 'Diplomatic & International Relations';
   }
   return 'Civil Service / Administrative';
 }
+
 
 /**
  * Estimate realistic competitive official pay scale by jurisdiction

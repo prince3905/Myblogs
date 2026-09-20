@@ -37,6 +37,29 @@ function cleanTitle(title = '') {
     .trim();
 }
 
+function detectJobCategory(title = '', desc = '') {
+  const combined = (title + ' ' + (desc || '')).toLowerCase();
+  if (/\b(health|medical|nurse|doctor|physician|surgeon|clinic|hospital|epidemiolog|pharmacist|pharmacy|dentist|psychiatr|psycholog|nutrition|sanitation|immuniz|vaccination|public health|maternal|neonatal|hiv|malaria|طبي|صحة|ممرض|طبيب|صيدلي)\b/.test(combined)) {
+    return 'Healthcare & Medical';
+  }
+  if (/\b(software|developer|programmer|it officer|information technology|cyber|network|database|data scientist|data analyst|machine learning|artificial intelligence|cloud|devops|engineer|technical officer|electrical|mechanical|civil engineer|infrastructure|gis|surveyor|construction|technician|تقني|هندسة|مهندس|برمجة|تقنية)\b/.test(combined)) {
+    return 'Tech & Engineering';
+  }
+  if (/\b(police|security officer|defense|defence|military|border|patrol|armed forces|guard|warden|constable|inspector|army|navy|air force|intelligence|counter-terrorism|fire service|rescue|شرطة|أمن|دفاع|حرس|عسكري)\b/.test(combined)) {
+    return 'Defense, Police & Security';
+  }
+  if (/\b(teacher|professor|lecturer|education officer|academic|school|university|college|curriculum|training officer|faculty|research fellow|scholarship|librarian|headmaster|principal|instructor|تعليم|معلم|أستاذ|تدريب|جامعة)\b/.test(combined)) {
+    return 'Education & Academia';
+  }
+  if (/\b(finance|financial|audit|auditor|accountant|revenue|budget|treasury|tax|fiscal|comptroller|economics|economist|procurement|supply chain|grants|loans|customs|excise|مالية|ضريبة|محاسب|موازنة|جمارك|اقتصاد)\b/.test(combined)) {
+    return 'Finance, Revenue & Audit';
+  }
+  if (/\b(diplomat|ambassador|consular|foreign service|international relations|policy analyst|advocacy|liaison|humanitarian|legal officer|law officer|attorney|counsel|rights officer|protection officer|refugee|migration|multilateral|treaty|دبلوماسي|سفارة|قانون|علاقات دولية)\b/.test(combined)) {
+    return 'Diplomatic & International Relations';
+  }
+  return 'Civil Service / Administrative';
+}
+
 async function fetchGulfGovJobs() {
   const jobs = [];
 
@@ -98,7 +121,7 @@ async function fetchGulfGovJobs() {
           continent: feed.continent,
           agencyOrMinistry: agency,
           officialReferenceId: `GULF-${feed.countryCode}-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`,
-          jobType: 'Civil Service / Administrative',
+          jobType: detectJobCategory(rawTitle, descText),
           dutyStation: `${feed.countryName} (Federal & Municipal Posts)`,
           salary: {
             amount: feed.countryCode === 'SA' ? '12,000 - 24,000 SAR / month' : (feed.countryCode === 'QA' ? '14,000 - 26,000 QAR / month' : '15,000 - 28,000 AED / month'),

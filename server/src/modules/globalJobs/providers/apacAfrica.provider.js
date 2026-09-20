@@ -112,24 +112,25 @@ function cleanTitle(title = '') {
 /**
  * Categorize job role based on multilingual keywords
  */
-function detectJobCategory(title = '') {
-  const lower = title.toLowerCase();
-  if (/doctor|nurse|medical|health|clinical|hospital|医療|看護|보건|perubatan|kesihatan/i.test(lower)) {
+function detectJobCategory(title = '', desc = '') {
+  const combined = (title + ' ' + (desc || '')).toLowerCase();
+
+  if (/\b(health|medical|nurse|doctor|physician|surgeon|clinic|hospital|epidemiolog|pharmacist|pharmacy|midwife|radiology|patholog|dentist|psychiatr|psycholog|nutrition|sanitation|immuniz|vaccination|public health|community health|maternal|neonatal|hiv|malaria|tuberculosis|wash officer|perubatan|kesihatan)\b|医療|看護|보건/.test(combined)) {
     return 'Healthcare & Medical';
   }
-  if (/engineer|cyber|software|developer|it|technology|data|analyst|技術|情報|전산|kejuruteraan|teknologi/i.test(lower)) {
+  if (/\b(software|developer|programmer|it officer|information technology|cyber|network|database|data scientist|data analyst|machine learning|artificial intelligence|cloud|devops|systems administrator|web developer|frontend|backend|fullstack|engineer|technical officer|electrical|mechanical|civil engineer|infrastructure|gis|surveyor|construction|architect|technician|informatik|kejuruteraan|teknologi)\b|技術|情報|전산/.test(combined)) {
     return 'Tech & Engineering';
   }
-  if (/police|security|defense|border|patrol|guard|警察|防衛|경찰|국방|polis|keselamatan/i.test(lower)) {
+  if (/\b(police|security officer|defense|defence|military|border|patrol|armed forces|guard|warden|constable|inspector|army|navy|air force|intelligence|counter-terrorism|corrections officer|fire service|rescue|polis|keselamatan)\b|警察|防衛|경찰|국방/.test(combined)) {
     return 'Defense, Police & Security';
   }
-  if (/teacher|professor|education|academic|教育|교원|교수|pendidikan|guru/i.test(lower)) {
+  if (/\b(teacher|professor|lecturer|education officer|academic|school|university|college|curriculum|training officer|pedagog|faculty|research fellow|scholarship|librarian|headmaster|principal|instructor|pendidikan|guru)\b|教育|교원|교수/.test(combined)) {
     return 'Education & Academia';
   }
-  if (/finance|revenue|audit|tax|treasury|財務|税務|재무|세무|kewangan|cukai|audit/i.test(lower)) {
+  if (/\b(finance|financial|audit|auditor|accountant|revenue|budget|treasury|tax|fiscal|comptroller|economics|economist|procurement|supply chain|grants|loans|customs|excise|internal control|customs officer|kewangan|cukai)\b|財務|税務|재무|세무/.test(combined)) {
     return 'Finance, Revenue & Audit';
   }
-  if (/diplomat|foreign|consular|international|外務|외교|diplomatik|antarabangsa/i.test(lower)) {
+  if (/\b(diplomat|ambassador|consular|foreign service|international relations|policy analyst|advocacy|liaison|humanitarian|legal officer|law officer|attorney|counsel|rights officer|protection officer|refugee|migration|geopolitics|multilateral|treaty|protocol officer|international law|diplomatik|antarabangsa)\b|外務|외교/.test(combined)) {
     return 'Diplomatic & International Relations';
   }
   return 'Civil Service / Administrative';

@@ -92,24 +92,25 @@ function cleanTitle(title = '') {
 /**
  * Categorize job role based on title keywords
  */
-function detectJobCategory(title = '') {
-  const lower = title.toLowerCase();
-  if (/doctor|nurse|medical|health|clinical|hospital|dental|surgeon/i.test(lower)) {
+function detectJobCategory(title = '', desc = '') {
+  const combined = (title + ' ' + (desc || '')).toLowerCase();
+
+  if (/\b(health|medical|nurse|doctor|physician|surgeon|clinic|hospital|epidemiolog|pharmacist|pharmacy|midwife|radiology|patholog|dentist|psychiatr|psycholog|nutrition|sanitation|immuniz|vaccination|public health|community health|maternal|neonatal|hiv|malaria|tuberculosis|wash officer)\b/.test(combined)) {
     return 'Healthcare & Medical';
   }
-  if (/engineer|cyber|software|developer|it|technology|data|analyst|network/i.test(lower)) {
+  if (/\b(software|developer|programmer|it officer|information technology|cyber|network|database|data scientist|data analyst|machine learning|artificial intelligence|cloud|devops|systems administrator|web developer|frontend|backend|fullstack|engineer|technical officer|electrical|mechanical|civil engineer|infrastructure|gis|surveyor|construction|architect|technician)\b/.test(combined)) {
     return 'Tech & Engineering';
   }
-  if (/police|security|defense|border|patrol|guard|intelligence|investigator/i.test(lower)) {
+  if (/\b(police|security officer|defense|defence|military|border|patrol|armed forces|guard|warden|constable|inspector|army|navy|air force|intelligence|counter-terrorism|corrections officer|fire service|rescue|investigator)\b/.test(combined)) {
     return 'Defense, Police & Security';
   }
-  if (/teacher|professor|education|academic|instructor|lecturer/i.test(lower)) {
+  if (/\b(teacher|professor|lecturer|education officer|academic|school|university|college|curriculum|training officer|pedagog|faculty|research fellow|scholarship|librarian|headmaster|principal|instructor)\b/.test(combined)) {
     return 'Education & Academia';
   }
-  if (/finance|revenue|audit|tax|accountant|economist|budget/i.test(lower)) {
+  if (/\b(finance|financial|audit|auditor|accountant|revenue|budget|treasury|tax|fiscal|comptroller|economics|economist|procurement|supply chain|grants|loans|customs|excise|internal control|customs officer)\b/.test(combined)) {
     return 'Finance, Revenue & Audit';
   }
-  if (/diplomat|foreign|consular|international|embassy/i.test(lower)) {
+  if (/\b(diplomat|ambassador|consular|foreign service|international relations|policy analyst|advocacy|liaison|humanitarian|legal officer|law officer|attorney|counsel|rights officer|protection officer|refugee|migration|geopolitics|multilateral|treaty|protocol officer|international law|embassy)\b/.test(combined)) {
     return 'Diplomatic & International Relations';
   }
   return 'Civil Service / Administrative';
