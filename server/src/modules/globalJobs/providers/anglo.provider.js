@@ -65,7 +65,8 @@ const TRASH_PATTERNS = [
   /recalled/i, /recall/i, /tax relief/i, /what is/i, /consultation/i,
   /invests in/i, /press release/i, /summit/i, /facility details/i,
   /register of legislation/i, /sanctions impact/i, /food recall/i,
-  /consumer product/i, /statement on/i, /remarks by/i, /speech by/i
+  /consumer product/i, /statement on/i, /remarks by/i, /speech by/i,
+  /success profiles/i, /behaviours/i
 ];
 
 const HIRING_PATTERNS = [

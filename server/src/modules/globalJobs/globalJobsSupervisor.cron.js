@@ -26,7 +26,9 @@ const TRASH_PATTERNS = [
   /consumer product/i,
   /statement on/i,
   /remarks by/i,
-  /speech by/i
+  /speech by/i,
+  /success profiles/i,
+  /behaviours/i
 ];
 
 // Mandatory hiring keywords
