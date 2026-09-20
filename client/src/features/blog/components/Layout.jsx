@@ -15,6 +15,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../../auth/context/AuthContext';
+import { useVisitorCountry } from '../../../shared/lib/geo';
 
 function useDeferredMount(delay = 2500) {
   const [mounted, setMounted] = useState(false);
@@ -70,32 +71,11 @@ export default function Layout({ children }) {
   }, []);
 
   // Country awareness for navigation (India vs Global Visitors)
-  const [userCountry, setUserCountry] = useState(() => {
-    try {
-      const saved = localStorage.getItem('dh_user_country');
-      if (saved) return saved;
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-      return (tz.includes('Calcutta') || tz.includes('Kolkata') || !tz) ? 'IN' : 'US';
-    } catch (e) {
-      return 'IN';
-    }
-  });
+  const { userCountry, isIndia, countryMeta } = useVisitorCountry();
 
-  useEffect(() => {
-    const handleSync = (e) => {
-      if (e.detail?.country) setUserCountry(e.detail.country);
-    };
-    window.addEventListener('dh_language_changed', handleSync);
-    return () => window.removeEventListener('dh_language_changed', handleSync);
-  }, []);
-
-  const isIndia = userCountry === 'IN';
-
-  const categories = [
+  // Smart Categories: Indian domestic vs Foreign Government & Multilateral
+  const categories = isIndia ? [
     { label: '🌐 Global Gov Jobs (195 Countries)', path: '/global-jobs' },
-    { label: '📰 Global News & World Affairs', path: '/global-news' },
-    { label: '🇺🇳 UN & Multilateral Careers', path: '/global-jobs?continent=Multilateral' },
-    { label: '🕌 Gulf & MENA Government Jobs', path: '/global-jobs?continent=Asia' },
     { label: '🇮🇳 India Sarkari Portal (UPSC/SSC/State)', path: '/india/sarkari-jobs' },
     { label: '🇮🇳 भारत समसामयिकी (India Current Affairs)', path: '/india/current-affairs' },
     { label: '🎯 डेली सरकारी क्विज (India GK Quiz)', path: '/india/daily-quiz' },
@@ -105,10 +85,20 @@ export default function Layout({ children }) {
     { label: '💻 Tech & Tutorials', path: '/category/tech-tutorials' },
     { label: '🌿 Health & Wellness', path: '/category/health-wellness' },
     { label: '💰 Finance & Business', path: '/category/finance-business' },
+    { label: '📰 Global News & World Affairs', path: '/global-news' },
+    { label: user ? '🛡️ Admin Dashboard' : '🔐 Admin Portal / Login', path: user ? '/admin' : '/admin/login' },
+  ] : [
+    { label: `${countryMeta.flag} ${countryMeta.name} Gov Vacancies`, path: `/global-jobs?country=${userCountry}` },
+    { label: '🌐 Global Gov Jobs (195 Countries)', path: '/global-jobs' },
+    { label: '🇺🇳 UN, WHO & World Bank Careers', path: '/global-jobs?continent=Multilateral' },
+    { label: '🕌 Gulf & MENA Government Jobs', path: '/global-jobs?continent=Asia' },
+    { label: '🇪🇺 Europe & UK Civil Services', path: '/global-jobs?continent=Europe' },
+    { label: '🌎 Americas & Canada Federal Jobs', path: '/global-jobs?continent=Americas' },
+    { label: '📰 Global News & International Policy', path: '/global-news' },
     { label: user ? '🛡️ Admin Dashboard' : '🔐 Admin Portal / Login', path: user ? '/admin' : '/admin/login' },
   ];
 
-  // Smart Nav items: tailored to visitor's detected country
+  // Smart Nav items: Strictly separate Indian vs Foreign
   const navItems = isIndia ? [
     { label: '🌐 Global Jobs', path: '/global-jobs' },
     { label: '🇮🇳 Sarkari Alerts', path: '/india/sarkari-jobs' },
@@ -117,12 +107,10 @@ export default function Layout({ children }) {
     { label: '📝 Blog', path: '/blog' },
     { label: '📰 Global News', path: '/global-news' },
   ] : [
-    { label: '🌐 Global Vacancies', path: '/global-jobs' },
+    { label: `${countryMeta.flag} ${countryMeta.name} Jobs`, path: `/global-jobs?country=${userCountry}` },
+    { label: '🌐 195 Countries', path: '/global-jobs' },
+    { label: '🇺🇳 UN Careers', path: '/global-jobs?continent=Multilateral' },
     { label: '📰 Global News & Policy', path: '/global-news' },
-    { label: '📝 Blog & Guides', path: '/blog' },
-    { label: '🇺🇳 UN & Multilateral', path: '/global-jobs?continent=Multilateral' },
-    { label: '📍 My Country Jobs', path: `/global-jobs?country=${userCountry}` },
-    { label: 'Tools', path: '/tools' },
   ];
 
   return (

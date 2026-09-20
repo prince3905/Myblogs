@@ -124,23 +124,38 @@ function WebStoryRedirect() {
   );
 }
 
+import { useVisitorCountry } from '../shared/lib/geo';
+
+function SmartRootPage() {
+  const { isIndia } = useVisitorCountry();
+  return isIndia ? <HomePage /> : <GlobalGovJobsPageSuspense />;
+}
+
+function IndianOnlyRoute({ children }) {
+  const { isIndia, userCountry } = useVisitorCountry();
+  if (!isIndia) {
+    return <Navigate to={`/global-jobs?country=${userCountry}`} replace />;
+  }
+  return children;
+}
+
 export default function App() {
   return (
     <ToastProvider>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<SmartRootPage />} />
         <Route path="/web-stories/:slug" element={<WebStoryRedirect />} />
-        <Route path="/blog" element={<BlogListPageSuspense />} />
+        <Route path="/blog" element={<IndianOnlyRoute><BlogListPageSuspense /></IndianOnlyRoute>} />
         <Route path="/blog/:category/:slug" element={<PostPageSuspense />} />
         <Route path="/blog/:slug" element={<BlogRedirectPageSuspense />} />
         <Route path="/tags/:tag" element={<TagPageSuspense />} />
-        <Route path="/category/:category" element={<CategoryPageSuspense />} />
+        <Route path="/category/:category" element={<IndianOnlyRoute><CategoryPageSuspense /></IndianOnlyRoute>} />
         {/* Dedicated India-Specific Routes */}
-        <Route path="/india/current-affairs" element={<CurrentAffairsListPageSuspense />} />
-        <Route path="/india/current-affairs/:slug" element={<CurrentAffairsDetailPageSuspense />} />
-        <Route path="/india/daily-quiz" element={<DailyQuizPageSuspense />} />
-        <Route path="/india/daily-quiz/:date" element={<DailyQuizPageSuspense />} />
-        <Route path="/india/sarkari-jobs" element={<PublicLiveAlertsPageSuspense />} />
+        <Route path="/india/current-affairs" element={<IndianOnlyRoute><CurrentAffairsListPageSuspense /></IndianOnlyRoute>} />
+        <Route path="/india/current-affairs/:slug" element={<IndianOnlyRoute><CurrentAffairsDetailPageSuspense /></IndianOnlyRoute>} />
+        <Route path="/india/daily-quiz" element={<IndianOnlyRoute><DailyQuizPageSuspense /></IndianOnlyRoute>} />
+        <Route path="/india/daily-quiz/:date" element={<IndianOnlyRoute><DailyQuizPageSuspense /></IndianOnlyRoute>} />
+        <Route path="/india/sarkari-jobs" element={<IndianOnlyRoute><PublicLiveAlertsPageSuspense /></IndianOnlyRoute>} />
         {/* Legacy / Direct Aliases for Existing SEO & Bookmarks */}
         <Route path="/current-affairs" element={<CurrentAffairsListPageSuspense />} />
         <Route path="/current-affairs/:slug" element={<CurrentAffairsDetailPageSuspense />} />
