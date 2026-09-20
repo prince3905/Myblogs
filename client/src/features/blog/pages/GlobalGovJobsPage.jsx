@@ -1361,10 +1361,23 @@ export default function GlobalGovJobsPage() {
                 border: '1px solid rgba(56, 189, 248, 0.2)',
                 borderRadius: '12px',
                 p: 2,
-                mb: 3
+                mb: 2
               }}>
                 <Typography variant="body2" sx={{ color: '#E2E8F0', fontWeight: 500, fontSize: '0.85rem' }}>
                   🛡️ <strong>सत्यापित आधिकारिक भर्ती नीति:</strong> यह सूचना सीधे संबंधित सरकार या संस्था के सार्वजनिक पोर्टल से संकलित की गई है। इस पद हेतु किसी भी मध्यस्थ या एजेंट को शुल्क न दें। सीधे नीचे दिए गए आधिकारिक सरकारी बटन से आवेदन करें।
+                </Typography>
+              </Box>
+
+              {/* Anti-Fraud & Scam Warning Advisory */}
+              <Box sx={{
+                bgcolor: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                borderRadius: '12px',
+                p: 2,
+                mb: 3
+              }}>
+                <Typography variant="body2" sx={{ color: '#FCA5A5', fontWeight: 600, fontSize: '0.82rem', lineHeight: 1.6 }}>
+                  ⚠️ <strong>धोखाधड़ी से सावधान (Anti-Fraud Warning):</strong> सरकारी विभाग कभी भी किसी व्यक्तिगत बैंक खाते, QR कोड या UPI पर भर्ती शुल्क नहीं मांगते। किसी भी फर्जी एजेंट या अनधिकृत मध्यस्थ के झांसे में न आएं। केवल नीचे दिए गए सीधे आधिकारिक .gov पोर्टल से ही आवेदन करें।
                 </Typography>
               </Box>
 
@@ -1377,6 +1390,7 @@ export default function GlobalGovJobsPage() {
                   href={selectedJob.officialNoticeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="आधिकारिक सरकारी पोर्टल पर आवेदन करें"
                   startIcon={<ApplyIcon />}
                   sx={{
                     bgcolor: '#10B981',
@@ -1400,6 +1414,7 @@ export default function GlobalGovJobsPage() {
                     href={selectedJob.officialPdfUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label="आधिकारिक नोटिफिकेशन डाउनलोड करें"
                     startIcon={<PdfIcon />}
                     sx={{
                       color: '#38BDF8',
@@ -1421,6 +1436,7 @@ export default function GlobalGovJobsPage() {
                     fullWidth
                     variant="outlined"
                     onClick={() => handleWhatsAppShare(selectedJob)}
+                    aria-label="WhatsApp पर यह सरकारी नौकरी शेयर करें"
                     startIcon={<WhatsAppIcon />}
                     sx={{
                       color: '#25D366',
@@ -1436,6 +1452,7 @@ export default function GlobalGovJobsPage() {
                     fullWidth
                     variant="outlined"
                     onClick={() => handleTelegramShare(selectedJob)}
+                    aria-label="Telegram चैनल पर यह सरकारी नौकरी भेजें"
                     startIcon={<TelegramIcon />}
                     sx={{
                       color: '#0088cc',

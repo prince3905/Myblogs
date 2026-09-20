@@ -5,6 +5,7 @@ const cors = require('cors');
 const compression = require('compression');
 const env = require('./config/env');
 const requestLogger = require('./middleware/requestLogger');
+const publicApiRateLimiter = require('./middleware/rateLimiter');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./modules/auth/auth.routes');
@@ -131,6 +132,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(requestLogger);
+app.use('/api', publicApiRateLimiter);
 
 // In-Memory API Cache middleware for public read endpoints
 app.use('/api', serverCacheService.apiCacheMiddleware());

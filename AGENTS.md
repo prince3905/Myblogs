@@ -176,3 +176,63 @@ Every country's jobs and global feeds must follow a strict freshness hierarchy:
    - Multi-currency salary display according to the issuing country (`₹ INR`, `$ USD`, `£ GBP`, `€ EUR`, `AED Dirham`, `SAR Riyal`).
    - Full 33-language real-time translation support across the entire interface.
 
+---
+
+## 🚨 15. Real-World Anti-Fraud & Candidate Protection Standard (फर्जी भर्ती व स्कैम रोकथाम)
+1. **Prominent Anti-Fraud Advisory:**
+   - Every job notice modal and page must carry a clear official warning:
+     `⚠️ धोखाधड़ी से सावधान (Anti-Fraud Warning): सरकारी विभाग कभी भी किसी व्यक्तिगत बैंक खाते, QR कोड या UPI पर भर्ती शुल्क नहीं मांगते। केवल आधिकारिक .gov पोर्टल से ही आवेदन करें।`
+2. **100% Direct Official Links Only:**
+   - Direct link to official federal, provincial, or ministry portals (`.gov`, `.gob`, `.gouv`, `.nic.in`) or multilateral agencies (`un.org`, `who.int`).
+   - Absolute ban on third-party consultant redirects, payment aggregators, or fake form collection traps.
+
+---
+
+## 🛡️ 16. Automated DDoS, Rogue Scraper & Bot Defense (सर्वर सुरक्षा व बॉट नियंत्रण)
+1. **API Rate Limiter:**
+   - Public `/api/*` endpoints must enforce an in-memory sliding-window rate limit (180 req/minute per IP).
+   - Blocks aggressive scraper scripts (`python-requests`, headless bots) from scraping the full database or exhausting MongoDB Atlas connection pools.
+2. **Graceful Degradation:**
+   - If MongoDB Atlas experiences an intermittent network disconnect, fallback to memory cache and stale-while-revalidate data rather than throwing unhandled 500 errors to visitors.
+
+---
+
+## ♿ 17. Candidate Accessibility & WCAG 2.1 AA Compliance (दिव्यांग व दृष्टिबाधित सुलभता)
+1. **Screen Reader Optimization:**
+   - All icon buttons (WhatsApp share, Telegram share, modal close, language selector) must have clear, descriptive `aria-label` attributes.
+2. **High Color Contrast:**
+   - Maintain minimum 4.5:1 text-to-background contrast ratio for all text elements.
+3. **Keyboard Navigability:**
+   - Complete keyboard accessibility: Focus rings visible on tab navigation, and modals dismissable via `Esc` key.
+
+---
+
+## ⏳ 18. Graceful Expiry & 404 Prevention Protocol (पुरानी भर्तियों की समाप्ति नीति)
+1. **No Broken 404 Pages:**
+   - Vacancies that have passed their closing deadline must NEVER be deleted immediately or converted into hard 404 errors (which destroy SEO rankings).
+2. **Application Closed Alert:**
+   - Expired notices display an amber/red banner: `⏳ आवेदन की अंतिम तिथि समाप्त (Application Closed)`.
+   - Below the notice, automatically recommend 3 to 5 live active vacancies in the same department or country.
+
+---
+
+## 📲 19. Viral Student Community Engagement (व्हाट्सएप व टेलीग्राम डायरेक्ट शेयरिंग)
+1. **Instant 1-Click Sharing:**
+   - Every job notice card and modal must feature high-converting direct share buttons for WhatsApp and Telegram.
+2. **Pre-Formatted Verified Notification Message:**
+   - Shared text must be crisp, factual, and formatted with emoji bullets:
+     - 🏛️ पद एवं विभाग (Post & Ministry)
+     - 💰 वेतनमान (Pay Scale)
+     - 📍 तैनाती स्थल (Duty Station / Country)
+     - 📅 अंतिम तिथि (Closing Deadline)
+     - 🔗 100% सत्यापित आधिकारिक लिंक (Direct Official Gazette Link)
+
+---
+
+## 🔒 20. Privacy & Legal Compliance (GDPR, DPDP Act & Cookie Standard)
+1. **Cookie & Tracking Consent:**
+   - Third-party tracking scripts (Google Analytics, AdSense) must only activate on user interaction.
+2. **E-E-A-T Transparency:**
+   - Footer must permanently provide working links to: *About Us, Gazette Verification Policy, Editorial Standards, Privacy Policy, Terms of Service, and Contact Desk*.
+
+
