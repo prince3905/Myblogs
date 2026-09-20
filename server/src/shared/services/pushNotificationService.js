@@ -18,7 +18,10 @@ async function sendPushNotification(post) {
     const message = post.excerpt || 'New Sarkari Job alert & admit card released. Click to check full details & direct apply link.';
     const catSlug = (post.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'sarkari-jobs-exams';
     const postUrl = `https://www.digitalhomeblog.in/blog/${catSlug}/${post.slug}`;
-    const imageUrl = post.featuredImage || 'https://www.digitalhomeblog.in/logo.webp';
+    let imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
+    if (post.featuredImage && typeof post.featuredImage === 'string' && post.featuredImage.startsWith('http') && post.featuredImage.length < 1000) {
+      imageUrl = post.featuredImage;
+    }
 
     const payload = {
       app_id: appId,

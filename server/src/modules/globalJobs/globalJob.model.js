@@ -177,6 +177,26 @@ const globalJobSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Pre-validation sanitizer for jobType enum safety
+const VALID_JOB_TYPES = [
+  'Civil Service / Administrative',
+  'Healthcare & Medical',
+  'Tech & Engineering',
+  'Defense, Police & Security',
+  'Education & Academia',
+  'Diplomatic & International Relations',
+  'Finance, Revenue & Audit',
+  'General Public Service'
+];
+
+globalJobSchema.pre('validate', function(next) {
+  if (this.jobType && !VALID_JOB_TYPES.includes(this.jobType)) {
+    this.jobType = 'General Public Service';
+  }
+  next();
+});
+
+
 // 🔥 60-DAY ZERO-COST AUTO-PURGE TTL INDEX
 // Automatically removes entries older than 60 days to keep MongoDB Atlas free tier permanently under 40MB!
 globalJobSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 24 * 60 * 60 });
