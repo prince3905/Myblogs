@@ -346,14 +346,34 @@ export default function GlobalGovJobsPage() {
     return `⏳ ${days} दिन शेष`;
   };
 
+  // Helper to extract clean quantitative salary for Google Jobs schema
+  const parseSalaryValue = (salaryStr, currency = 'USD') => {
+    if (!salaryStr) return undefined;
+    const nums = (salaryStr.match(/\d[\d,]*/g) || []).map(n => parseInt(n.replace(/,/g, ''), 10)).filter(n => !isNaN(n) && n > 0);
+    if (nums.length === 0) return undefined;
+    const isMonth = /month|माह/i.test(salaryStr);
+    const unitText = isMonth ? 'MONTH' : 'YEAR';
+    return {
+      '@type': 'MonetaryAmount',
+      currency: currency || 'USD',
+      value: {
+        '@type': 'QuantitativeValue',
+        minValue: nums[0],
+        maxValue: nums[1] || nums[0],
+        unitText
+      }
+    };
+  };
+
   // Dynamic Google for Jobs JSON-LD Structured Data Schema
   const jobSchema = useMemo(() => {
     if (selectedJob) {
+      const salaryObj = parseSalaryValue(selectedJob.salary?.amount, selectedJob.salary?.currency);
       return {
         '@context': 'https://schema.org/',
         '@type': 'JobPosting',
         title: selectedJob.title,
-        description: selectedJob.officialGazetteSummary || selectedJob.title,
+        description: selectedJob.description || selectedJob.officialGazetteSummary || selectedJob.title,
         identifier: {
           '@type': 'PropertyValue',
           name: selectedJob.agencyOrMinistry || 'Official Government Body',
@@ -375,14 +395,7 @@ export default function GlobalGovJobsPage() {
             addressLocality: selectedJob.dutyStation || selectedJob.countryName
           }
         },
-        baseSalary: selectedJob.salary?.amount ? {
-          '@type': 'MonetaryAmount',
-          currency: selectedJob.salary?.currency || 'USD',
-          value: {
-            '@type': 'QuantitativeValue',
-            value: selectedJob.salary?.amount
-          }
-        } : undefined
+        baseSalary: salaryObj
       };
     }
 

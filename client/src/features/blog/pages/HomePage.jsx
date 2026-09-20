@@ -13,6 +13,7 @@ import { optimizeImage } from '../../../shared/lib/images';
 import { request } from '../../../shared/lib/api';
 import LiveTrendingPulseHub from '../components/LiveTrendingPulseHub';
 import AdSlot from '../../../components/AdSlot';
+import { useVisitorCountry } from '../../../shared/lib/geo';
 
 const QUICK_EXAM_FILTERS = [
   { label: '🌟 All Updates', query: '', color: '#4F46E5', icon: '⚡' },
@@ -2285,6 +2286,7 @@ function getStrictChronological(items = [], max = 8) {
 }
 
 export default function HomePage() {
+  const { userCountry, isIndia, countryMeta } = useVisitorCountry();
   const { posts, loading, error } = usePosts({ category: 'Sarkari Jobs & Exams', limit: 6 });
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = [];
@@ -2570,6 +2572,55 @@ export default function HomePage() {
         }}
       >
         <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+          {/* Foreign Visitor Country Spotlight Banner (SEO-Safe, Non-Intrusive, High CTR) */}
+          {!isIndia && (
+            <Box
+              sx={{
+                mb: 2.5,
+                p: { xs: 2, sm: 2.5 },
+                bgcolor: '#0F172A',
+                borderRadius: '16px',
+                border: '1px solid #1E293B',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 2,
+                boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.3)'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box sx={{ fontSize: '1.8rem', lineHeight: 1 }}>{countryMeta.flag || '🌐'}</Box>
+                <Box>
+                  <Typography variant="subtitle1" sx={{ color: '#F8FAFC', fontWeight: 800, fontSize: { xs: '0.92rem', sm: '1rem' } }}>
+                    Visiting from {countryMeta.name}? View Live Official Government Vacancies
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#94A3B8', fontSize: '0.82rem' }}>
+                    Explore verified {countryMeta.name} civil service circulars, federal roles & UN multilateral careers.
+                  </Typography>
+                </Box>
+              </Box>
+              <Button
+                component={Link}
+                to={`/global-jobs?country=${userCountry}`}
+                variant="contained"
+                sx={{
+                  bgcolor: '#0284C7',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  borderRadius: '10px',
+                  px: 2.5,
+                  py: 1,
+                  fontSize: '0.85rem',
+                  '&:hover': { bgcolor: '#0369A1' }
+                }}
+              >
+                Open {countryMeta.name} Portal →
+              </Button>
+            </Box>
+          )}
+
           {/* 1. Fast Exam & Board Filter Marquee */}
           <InteractivePillMarquee />
 

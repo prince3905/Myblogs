@@ -61,6 +61,22 @@ const ANGLO_OFFICIAL_FEEDS = [
   }
 ];
 
+const TRASH_PATTERNS = [
+  /recalled/i, /recall/i, /tax relief/i, /what is/i, /consultation/i,
+  /invests in/i, /press release/i, /summit/i, /facility details/i,
+  /register of legislation/i, /sanctions impact/i, /food recall/i,
+  /consumer product/i, /statement on/i, /remarks by/i, /speech by/i
+];
+
+const HIRING_PATTERNS = [
+  /recruitment/i, /vacancy/i, /vacancies/i, /officer/i, /specialist/i,
+  /assistant/i, /engineer/i, /analyst/i, /director/i, /manager/i,
+  /associate/i, /internship/i, /fellowship/i, /technician/i, /coordinator/i,
+  /administrator/i, /inspector/i, /advisor/i, /consultant/i, /clerk/i,
+  /nurse/i, /doctor/i, /attorney/i, /counsel/i, /hiring/i, /careers/i,
+  /job/i, /civil service/i, /public service/i
+];
+
 function cleanTitle(title = '') {
   return title
     .replace(/ - [^-]+$/, '') // Remove source suffix
@@ -139,6 +155,8 @@ async function fetchAngloGovJobs() {
         const sourceUrl = sourceEl.attr('url') || '';
         const itemLink = $(el).find('link').text()?.trim() || '';
         const rawTitle = cleanTitle(itemTitle);
+        if (TRASH_PATTERNS.some(rx => rx.test(rawTitle))) return;
+        if (!HIRING_PATTERNS.some(rx => rx.test(rawTitle))) return;
 
         // Strict Domain Verification
         const isValidGovDomain = OFFICIAL_GOV_TLD_REGEX.test(sourceUrl);

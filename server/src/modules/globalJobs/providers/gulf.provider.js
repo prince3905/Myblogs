@@ -61,6 +61,8 @@ async function fetchGulfGovJobs() {
         const sourceUrl = sourceEl.attr('url') || '';
         const itemLink = $(el).find('link').text()?.trim() || '';
         const rawTitle = cleanTitle(itemTitle);
+        if (/recalled|recall|tax relief|what is|consultation|invests in|press release|summit|facility details|register of legislation|sanctions impact|food recall/i.test(rawTitle)) return;
+        if (!/recruitment|vacancy|vacancies|officer|specialist|assistant|engineer|analyst|director|manager|associate|internship|fellowship|technician|coordinator|administrator|inspector|advisor|consultant|clerk|nurse|doctor|attorney|counsel|hiring|careers|job|civil service|public service|ministry/i.test(rawTitle)) return;
 
         // STRICT RULE: Only accept if the source domain matches official government pattern
         const isValidGovDomain = OFFICIAL_GOV_TLD_REGEX.test(sourceUrl);

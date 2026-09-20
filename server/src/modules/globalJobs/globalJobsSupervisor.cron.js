@@ -7,8 +7,66 @@ const AutomationLog = require('../admin/automationLog.model');
 const { OFFICIAL_GOV_TLD_REGEX } = require('./globalJob.model');
 
 // Dynamic live feed quota: Can safely store up to 250 verified vacancies per day
-// (Individual cards are rendered dynamically in an SPA modal; only the main /global-jobs hub is indexed by search engines)
 const MAX_DAILY_JOBS = 250;
+
+// Strict negative check (discard non-vacancies & press releases)
+const TRASH_PATTERNS = [
+  /recalled/i,
+  /recall/i,
+  /tax relief/i,
+  /what is/i,
+  /consultation/i,
+  /invests in/i,
+  /press release/i,
+  /summit/i,
+  /facility details/i,
+  /register of legislation/i,
+  /sanctions impact/i,
+  /food recall/i,
+  /consumer product/i,
+  /statement on/i,
+  /remarks by/i,
+  /speech by/i
+];
+
+// Mandatory hiring keywords
+const HIRING_PATTERNS = [
+  /recruitment/i,
+  /vacancy/i,
+  /vacancies/i,
+  /officer/i,
+  /specialist/i,
+  /assistant/i,
+  /engineer/i,
+  /analyst/i,
+  /director/i,
+  /manager/i,
+  /associate/i,
+  /internship/i,
+  /fellowship/i,
+  /technician/i,
+  /coordinator/i,
+  /administrator/i,
+  /inspector/i,
+  /advisor/i,
+  /consultant/i,
+  /clerk/i,
+  /nurse/i,
+  /doctor/i,
+  /attorney/i,
+  /counsel/i,
+  /hiring/i,
+  /careers/i,
+  /job/i,
+  /civil service/i,
+  /public service/i
+];
+
+function isValidGlobalJob(title = '', description = '') {
+  const isTrash = TRASH_PATTERNS.some(rx => rx.test(title) || rx.test(description));
+  const isHiring = HIRING_PATTERNS.some(rx => rx.test(title) || rx.test(description));
+  return !isTrash && isHiring;
+}
 
 // Helper to add small delay (in ms)
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -43,7 +101,8 @@ async function enforceDatabaseHygiene() {
     const jobPurgeResult = await GlobalJob.deleteMany({
       $or: [
         { createdAt: { $lt: sixtyDaysAgo } },
-        { applicationDeadline: { $lt: thirtyDaysAgo } }
+        { applicationDeadline: { $lt: thirtyDaysAgo } },
+        ...TRASH_PATTERNS.map(rx => ({ title: rx }))
       ]
     });
 
@@ -106,6 +165,12 @@ async function runSupervisorCycle() {
 
     for (const job of candidateJobs) {
       if (newlyAdded >= remainingQuota) break;
+
+      // 🛡️ Data Sanitizer: Reject non-job news, food recalls, and press releases
+      if (!isValidGlobalJob(job.title, job.description || job.officialGazetteSummary || '')) {
+        console.warn(`[Supervisor Guard] Rejected non-vacancy item: "${job.title}"`);
+        continue;
+      }
 
       // 🛡️ STRICT RULE: Zero Promotional / Zero Faltu Links
       if (!OFFICIAL_GOV_TLD_REGEX.test(job.officialNoticeUrl)) {

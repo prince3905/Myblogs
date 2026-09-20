@@ -125,17 +125,11 @@ function WebStoryRedirect() {
   );
 }
 
-// Smart Root: Indian visitors get full Sarkari portal (HomePage), Foreign visitors get GlobalGovJobsPage directly!
-function SmartRootPage() {
-  const { isIndia } = useVisitorCountry();
-  return isIndia ? <HomePage /> : <GlobalGovJobsPageSuspense />;
-}
-
 export default function App() {
   return (
     <ToastProvider>
       <Routes>
-        <Route path="/" element={<SmartRootPage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/web-stories/:slug" element={<WebStoryRedirect />} />
         <Route path="/blog" element={<BlogListPageSuspense />} />
         <Route path="/blog/:category/:slug" element={<PostPageSuspense />} />

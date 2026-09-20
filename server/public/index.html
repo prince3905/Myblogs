@@ -81,19 +81,30 @@
       .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
       #goog-gt-tt { display: none !important; }
       .goog-te-balloon-frame { display: none !important; }
-      /* Offscreen placement so Google can initialize combo without being visible to users */
-      #google_translate_element {
-        position: fixed !important;
+      /* Offscreen & zero-size placement: strict isolation so Google combo never leaks plain text */
+      #google_translate_element,
+      #google_translate_element *,
+      .goog-te-gadget,
+      .goog-te-gadget *,
+      .goog-te-combo,
+      .skiptranslate,
+      body > .skiptranslate {
+        display: none !important;
+        visibility: hidden !important;
+        position: absolute !important;
         left: -9999px !important;
         top: -9999px !important;
-        width: 1px !important;
-        height: 1px !important;
+        width: 0px !important;
+        height: 0px !important;
+        max-width: 0px !important;
+        max-height: 0px !important;
+        overflow: hidden !important;
+        font-size: 0px !important;
+        line-height: 0px !important;
         opacity: 0 !important;
         pointer-events: none !important;
-        z-index: -9999 !important;
+        speak: none !important;
       }
-      .goog-te-gadget { font-size: 0px !important; }
-      .goog-te-gadget span { display: none !important; }
       .skiptranslate iframe { display: none !important; }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -112,11 +123,11 @@
       }
     </script>
     <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" defer></script>
-    <script type="module" crossorigin src="/assets/index-ILu8Ju9p.js"></script>
+    <script type="module" crossorigin src="/assets/index-CNDW334M.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-BelXacNR.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" crossorigin href="/assets/index-BelXacNR.css"></noscript>
   </head>
   <body>
-    <div id="google_translate_element"></div>
     <div id="root"></div>
+    <div id="google_translate_element" aria-hidden="true" style="display:none!important;visibility:hidden!important;position:absolute!important;left:-9999px!important;top:-9999px!important;width:0!important;height:0!important;overflow:hidden!important;font-size:0!important;"></div>
   </body>
 </html>
