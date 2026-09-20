@@ -99,6 +99,12 @@ export default function Layout({ children }) {
     { label: '🇮🇳 India Sarkari Portal (UPSC/SSC/State)', path: '/india/sarkari-jobs' },
     { label: '🇮🇳 भारत समसामयिकी (India Current Affairs)', path: '/india/current-affairs' },
     { label: '🎯 डेली सरकारी क्विज (India GK Quiz)', path: '/india/daily-quiz' },
+    { label: '📝 All Articles & Blog', path: '/blog' },
+    { label: '🏛️ Sarkari Jobs & Exams', path: '/category/sarkari-jobs-exams' },
+    { label: '🤖 AI & Web Tools', path: '/category/ai-web-tools' },
+    { label: '💻 Tech & Tutorials', path: '/category/tech-tutorials' },
+    { label: '🌿 Health & Wellness', path: '/category/health-wellness' },
+    { label: '💰 Finance & Business', path: '/category/finance-business' },
     { label: user ? '🛡️ Admin Dashboard' : '🔐 Admin Portal / Login', path: user ? '/admin' : '/admin/login' },
   ];
 
@@ -108,10 +114,12 @@ export default function Layout({ children }) {
     { label: '🇮🇳 Sarkari Alerts', path: '/india/sarkari-jobs' },
     { label: '🇮🇳 करेंट अफेयर्स', path: '/india/current-affairs' },
     { label: '🎯 डेली क्विज', path: '/india/daily-quiz' },
+    { label: '📝 Blog', path: '/blog' },
     { label: '📰 Global News', path: '/global-news' },
   ] : [
     { label: '🌐 Global Vacancies', path: '/global-jobs' },
     { label: '📰 Global News & Policy', path: '/global-news' },
+    { label: '📝 Blog & Guides', path: '/blog' },
     { label: '🇺🇳 UN & Multilateral', path: '/global-jobs?continent=Multilateral' },
     { label: '📍 My Country Jobs', path: `/global-jobs?country=${userCountry}` },
     { label: 'Tools', path: '/tools' },

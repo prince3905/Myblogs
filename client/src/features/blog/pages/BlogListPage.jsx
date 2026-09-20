@@ -18,6 +18,25 @@ import SearchIcon from '@mui/icons-material/Search';
 import ResetIcon from '@mui/icons-material/RestartAlt';
 import AdSlot from '../../../components/AdSlot';
 
+const CATEGORY_ICONS = {
+  'Sarkari Jobs & Exams': '🏛️',
+  'AI & Web Tools': '🤖',
+  'Tech & Tutorials': '💻',
+  'Health & Wellness': '🌿',
+  'Finance & Business': '💰',
+  'News & Trends': '📰',
+  'Technology': '⚡'
+};
+
+const DEFAULT_CATEGORIES = [
+  'Sarkari Jobs & Exams',
+  'AI & Web Tools',
+  'Tech & Tutorials',
+  'Health & Wellness',
+  'Finance & Business',
+  'News & Trends'
+];
+
 export default function BlogListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -43,6 +62,10 @@ export default function BlogListPage() {
   const { posts, loading: postsLoading, error: postsError, total, page, pages, setPage } = usePosts({ search: debouncedSearch, category, tags, dateFrom, dateTo, sortBy, order, limit: 9 });
   const { categories } = useCategories();
   const theme = useTheme();
+
+  const allCategories = useMemo(() => {
+    return Array.isArray(categories) && categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+  }, [categories]);
 
   const resultText = useMemo(() => `${total} article${total === 1 ? '' : 's'} found`, [total]);
 
@@ -304,6 +327,91 @@ export default function BlogListPage() {
 
       {/* Main Content + Sidebar */}
       <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 } }}>
+        {/* Interactive Category Switcher Strip */}
+        <Box sx={{ mb: 3.5 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.2 }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
+              Quick Filter by Category (श्रेणी चुनें):
+            </Typography>
+            {category && (
+              <Button 
+                size="small" 
+                onClick={() => { setCategory(''); setPage(1); }}
+                sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.78rem', p: 0 }}
+              >
+                Clear filter ✕
+              </Button>
+            )}
+          </Box>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1,
+              overflowX: 'auto',
+              py: 0.5,
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': { display: 'none' }
+            }}
+          >
+            {/* All Articles pill */}
+            <Chip
+              label="✨ All Articles"
+              clickable
+              onClick={() => {
+                setCategory('');
+                setPage(1);
+              }}
+              sx={{
+                fontWeight: !category ? 800 : 600,
+                px: 1.5,
+                py: 2.2,
+                borderRadius: '20px',
+                fontSize: '0.84rem',
+                bgcolor: !category ? '#4F46E5' : '#FFFFFF',
+                color: !category ? '#FFFFFF' : '#374151',
+                border: !category ? '1px solid #4338CA' : '1px solid #E5E7EB',
+                boxShadow: !category ? '0 4px 14px rgba(79, 70, 229, 0.35)' : 'none',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: !category ? '#4338CA' : '#F3F4F6',
+                  transform: 'translateY(-1px)'
+                }
+              }}
+            />
+
+            {allCategories.map((cat) => {
+              const isCurrent = category.toLowerCase() === cat.toLowerCase();
+              return (
+                <Chip
+                  key={cat}
+                  label={`${CATEGORY_ICONS[cat] || '📌'} ${cat}`}
+                  clickable
+                  onClick={() => {
+                    setCategory(isCurrent ? '' : cat);
+                    setPage(1);
+                  }}
+                  sx={{
+                    fontWeight: isCurrent ? 800 : 600,
+                    px: 1.5,
+                    py: 2.2,
+                    borderRadius: '20px',
+                    fontSize: '0.84rem',
+                    bgcolor: isCurrent ? '#4F46E5' : '#FFFFFF',
+                    color: isCurrent ? '#FFFFFF' : '#374151',
+                    border: isCurrent ? '1px solid #4338CA' : '1px solid #E5E7EB',
+                    boxShadow: isCurrent ? '0 4px 14px rgba(79, 70, 229, 0.35)' : 'none',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: isCurrent ? '#4338CA' : '#F3F4F6',
+                      transform: 'translateY(-1px)'
+                    }
+                  }}
+                />
+              );
+            })}
+          </Box>
+        </Box>
+
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2.1fr 0.9fr' }, gap: '24px' }}>
           {/* Left: Posts */}
           <Box sx={{ minWidth: 0 }}>
