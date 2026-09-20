@@ -427,9 +427,9 @@ export default function BlogListPage() {
                   {resultText}
                 </Typography>
                 
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: '20px' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(2, 1fr)', xl: 'repeat(3, 1fr)' }, gap: '20px' }}>
                   {posts.map((post, idx) => (
-                    <Box key={post._id} sx={{ display: 'flex' }}>
+                    <Box key={post._id} sx={{ display: 'flex', minWidth: 0, width: '100%', overflow: 'hidden' }}>
                       <PostCard post={post} index={idx} />
                     </Box>
                   ))}

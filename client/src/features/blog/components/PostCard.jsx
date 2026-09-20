@@ -31,6 +31,9 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
         display: 'flex', 
         flexDirection: 'column',
         height: '100%',
+        width: '100%',
+        minWidth: 0,
+        boxSizing: 'border-box',
         borderRadius: { xs: '16px', md: '28px' },
         overflow: 'hidden',
         border: '1px solid',
@@ -127,6 +130,9 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
             minHeight: { xs: '2.5em', md: '2.5em' },
+            wordBreak: 'break-word',
+            overflowWrap: 'anywhere',
+            minWidth: 0,
             transition: 'color 0.2s ease-in-out',
             '&:hover': {
               color: 'primary.main',
@@ -147,6 +153,9 @@ export default function PostCard({ post, headingLevel = 'h6', index }) {
             WebkitLineClamp: { xs: 2, md: 2 },
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
+            wordBreak: 'break-word',
+            overflowWrap: 'anywhere',
+            minWidth: 0,
             flex: 1,
           }}
         >
