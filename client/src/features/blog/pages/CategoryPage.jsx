@@ -22,12 +22,14 @@ export default function CategoryPage() {
     limit: 12 
   });
 
+  const isJobCategory = category && (category.toLowerCase().includes('job') || category.toLowerCase().includes('sarkari') || category.toLowerCase().includes('exam'));
+
   return (
     <Layout>
       <Seo 
         title={`${category} — Digital Home`} 
         description={`Browse all posts in the ${category} category.`} 
-        noindex={page > 1 || sortOption !== 'date-desc'}
+        noindex={!isJobCategory || page > 1 || sortOption !== 'date-desc'}
       />
 
       <Box sx={{ pt: { xs: 4, md: 6 }, pb: { xs: 8, md: 12 } }}>

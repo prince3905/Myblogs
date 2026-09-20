@@ -649,9 +649,10 @@ async function sitemap(req, res) {
 
     const { normalizeCanonicalUrl } = require('../../shared/utils/urlUtils');
 
-    // Strictly query LIVE, PUBLISHED articles with valid slugs (Excludes drafts, broken shells, soft-404s)
+    // Strictly query LIVE, PUBLISHED Sarkari Job articles (Prevents niche confusion by excluding generic AI/Tech/Health posts)
     const posts = await BlogPost.find({ 
       status: 'published',
+      category: { $regex: /job|sarkari|exam|result|recruitment/i },
       slug: { $exists: true, $type: 'string', $ne: '' }
     })
       .select('canonicalUrl category slug updatedAt publishedAt')
@@ -667,9 +668,9 @@ async function sitemap(req, res) {
       })
       .join('');
 
-    // Strictly INDEXABLE static pages & International Country Hubs only (Excludes noindex pages: /search, /archive, /tags/*)
+    // Strictly INDEXABLE static pages & International Country Hubs only (Excludes tools, games, search, tags)
     const staticPages = [
-      '/about', '/contact', '/privacy', '/terms', '/tools', '/games', '/job-alerts',
+      '/about', '/contact', '/privacy', '/terms', '/job-alerts',
       '/global-jobs', '/global-news',
       '/global-jobs/IN', '/global-jobs/US', '/global-jobs/AE', '/global-jobs/GB',
       '/global-jobs/CA', '/global-jobs/AU', '/global-jobs/SA', '/global-jobs/DE'
@@ -677,8 +678,11 @@ async function sitemap(req, res) {
       return `<url><loc>${normalizeCanonicalUrl(p)}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>`;
     }).join('');
 
-    // Include category pages dynamically with valid ISO lastmod & changefreq
-    const categories = await BlogPost.distinct('category', { status: 'published' });
+    // Only include job-related categories in sitemap.xml
+    const categories = await BlogPost.distinct('category', { 
+      status: 'published',
+      category: { $regex: /job|sarkari|exam|result|recruitment/i }
+    });
     const categoryUrls = categories
       .filter(Boolean)
       .map((cat) => {

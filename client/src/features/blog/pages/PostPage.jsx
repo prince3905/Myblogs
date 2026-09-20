@@ -510,14 +510,18 @@ export default function PostPage() {
   return (
     <Layout>
        <ReadingProgress />
-       <Seo 
-          title={post.seoTitle || post.title} 
-          description={post.seoDescription || post.excerpt}
-          image={post.featuredImage}
-          url={`${window.location.origin}${postUrl(post)}`}
-          canonical={post.canonicalUrl}
-          keywords={(post.seoKeywords || []).join(', ')}
-          jsonLd={(() => {
+       {(() => {
+         const isJobPost = post.category && (post.category.toLowerCase().includes('job') || post.category.toLowerCase().includes('sarkari') || post.category.toLowerCase().includes('exam'));
+         return (
+           <Seo 
+              title={post.seoTitle || post.title} 
+              description={post.seoDescription || post.excerpt}
+              image={post.featuredImage}
+              url={`${window.location.origin}${postUrl(post)}`}
+              canonical={post.canonicalUrl}
+              keywords={(post.seoKeywords || []).join(', ')}
+              noindex={!isJobPost}
+              jsonLd={(() => {
             const blogPostingSchema = {
               '@context': 'https://schema.org',
               '@type': 'BlogPosting',
@@ -702,6 +706,8 @@ export default function PostPage() {
             return schemas;
           })()}
         />
+      );
+    })()}
       
       {/* 1. Clean Editorial Post Header */}
       <Container maxWidth="md" sx={{ pt: { xs: 2, md: 4 }, pb: 1 }}>

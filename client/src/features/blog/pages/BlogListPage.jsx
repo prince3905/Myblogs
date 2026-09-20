@@ -51,7 +51,7 @@ export default function BlogListPage() {
       <Seo 
         title="All Insights & Articles | Digital Home" 
         description="Browse our latest Sarkari jobs, admit cards, tech guides, and health articles." 
-        noindex={page > 1 || Boolean(debouncedSearch) || Boolean(category) || Boolean(tags) || Boolean(dateFrom)}
+        noindex={true}
       />
       
       <Box sx={{ pt: { xs: 2, md: 3 }, pb: { xs: 4, md: 6 } }}>
