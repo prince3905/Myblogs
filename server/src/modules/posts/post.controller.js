@@ -735,8 +735,29 @@ async function sitemap(req, res) {
       console.error('[Sitemap] Failed to append Current Affairs:', caErr.message);
     }
 
+    // Include verified Global Government Vacancies dynamically
+    let globalJobUrls = '';
+    try {
+      const GlobalJob = require('../globalJobs/globalJob.model');
+      const globalJobs = await GlobalJob.find()
+        .select('officialReferenceId createdAt updatedAt')
+        .sort({ createdAt: -1 })
+        .limit(350)
+        .lean();
+
+      globalJobUrls = globalJobs
+        .map((j) => {
+          const ref = j.officialReferenceId || j._id;
+          const lastmod = j.updatedAt ? new Date(j.updatedAt).toISOString() : new Date(j.createdAt).toISOString();
+          return `<url><loc>https://www.digitalhomeblog.in/global-jobs/view/${encodeURIComponent(ref)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>`;
+        })
+        .join('');
+    } catch (jobErr) {
+      console.error('[Sitemap] Failed to append Global Jobs:', jobErr.message);
+    }
+
     const homeMod = new Date().toISOString();
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><lastmod>${homeMod}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><lastmod>${homeMod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>${staticPages}${categoryUrls}${urls}${caUrls}${storyUrls}</urlset>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><lastmod>${homeMod}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><lastmod>${homeMod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>${staticPages}${categoryUrls}${urls}${caUrls}${storyUrls}${globalJobUrls}</urlset>`;
     res.type('application/xml');
     return res.send(xml);
   } catch (err) {

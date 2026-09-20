@@ -147,9 +147,11 @@ export default function App() {
         <Route path="/daily-quiz" element={<DailyQuizPageSuspense />} />
         <Route path="/daily-quiz/:date" element={<DailyQuizPageSuspense />} />
         <Route path="/job-alerts" element={<PublicLiveAlertsPageSuspense />} />
-        {/* Global Portals */}
+        {/* Global Portals & Individual Crawlable Job URLs */}
         <Route path="/global-jobs" element={<GlobalGovJobsPageSuspense />} />
+        <Route path="/global-jobs/view/:id" element={<GlobalGovJobsPageSuspense />} />
         <Route path="/global-jobs/:country" element={<GlobalGovJobsPageSuspense />} />
+        <Route path="/global-jobs/:country/:id" element={<GlobalGovJobsPageSuspense />} />
         <Route path="/global-news" element={<GlobalNewsPageSuspense />} />
         <Route path="/about" element={<AboutPageSuspense />} />
         <Route path="/contact" element={<ContactPageSuspense />} />

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import {
   Typography, Button, Box, Alert, CircularProgress,
   IconButton, TextField,
@@ -111,10 +111,11 @@ const COUNTRY_TO_PRIMARY_LANG = {
 export default function GlobalGovJobsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { country: routeCountry, id: routeJobId } = useParams();
 
   // Selected filters
   const [activeContinent, setActiveContinent] = useState(searchParams.get('continent') || 'ALL');
-  const [activeCountry, setActiveCountry] = useState(searchParams.get('country') || 'ALL');
+  const [activeCountry, setActiveCountry] = useState(routeCountry && routeCountry.length === 2 ? routeCountry.toUpperCase() : (searchParams.get('country') || 'ALL'));
   const [activeCategory, setActiveCategory] = useState(searchParams.get('category') || 'ALL');
   const [activeTimeline, setActiveTimeline] = useState(searchParams.get('timeline') || 'ALL');
   const [activeCitizenship, setActiveCitizenship] = useState(searchParams.get('citizenship') || 'ALL');
@@ -277,14 +278,33 @@ export default function GlobalGovJobsPage() {
     } catch (e) {}
   };
 
-  // Handle open job modal from URL param or direct click
+  // Deep-link auto-opener when visiting direct job URL (/global-jobs/view/:id)
+  useEffect(() => {
+    const targetId = routeJobId || searchParams.get('id');
+    if (targetId) {
+      request(`/api/global-jobs/${encodeURIComponent(targetId)}`)
+        .then(res => {
+          if (res?.success && res.job) {
+            setSelectedJob(res.job);
+            setModalViewMode('translated');
+          }
+        })
+        .catch(err => console.warn('Failed to load deep-linked global job:', err));
+    }
+  }, [routeJobId, searchParams]);
+
+  // Handle open job modal from URL param or direct click with browser history update
   const openJobModal = (job) => {
     setSelectedJob(job);
     setModalViewMode('translated');
+    const ref = job.officialReferenceId || job._id;
+    window.history.pushState(null, '', `/global-jobs/view/${ref}`);
   };
 
   const closeJobModal = () => {
     setSelectedJob(null);
+    const base = activeCountry && activeCountry !== 'ALL' ? `/global-jobs/${activeCountry}` : '/global-jobs';
+    window.history.pushState(null, '', base);
   };
 
   // Helper to get localized title

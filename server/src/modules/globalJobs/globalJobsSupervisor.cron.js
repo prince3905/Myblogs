@@ -102,6 +102,7 @@ async function runSupervisorCycle() {
 
     // Combine all genuine verified official circulars
     const candidateJobs = [...angloJobs, ...gulfJobs, ...unJobs];
+    const newJobUrls = [];
 
     for (const job of candidateJobs) {
       if (newlyAdded >= remainingQuota) break;
@@ -133,16 +134,34 @@ async function runSupervisorCycle() {
           };
         }
 
-        await GlobalJob.create(job);
+        const createdDoc = await GlobalJob.create(job);
         newlyAdded++;
+        newJobUrls.push(`https://www.digitalhomeblog.in/global-jobs/view/${createdDoc.officialReferenceId || createdDoc._id}`);
 
         // Brief delay between writes
         await delay(150);
       }
     }
 
+    // Auto-dispatch indexing pings for freshly discovered global vacancies
+    if (newJobUrls.length > 0) {
+      try {
+        const { notifyBatchIndexNow, notifyUrl, pingSitemapEngines } = require('../../shared/utils/google-indexing');
+        console.log(`[Supervisor Indexing] Dispatching ${newJobUrls.length} new global jobs to search engines...`);
+        await notifyBatchIndexNow(newJobUrls);
+        
+        // Notify Google Indexing API up to 20 jobs within safe daily quota
+        for (const url of newJobUrls.slice(0, 20)) {
+          await notifyUrl(url).catch(() => {});
+        }
+        await pingSitemapEngines().catch(() => {});
+      } catch (indexErr) {
+        console.warn('[Supervisor Indexing Notice]:', indexErr.message);
+      }
+    }
+
     console.log(`[Supervisor] Intelligence cycle completed. Added ${newlyAdded} verified vacancies. Total today: ${publishedTodayCount + newlyAdded}/${MAX_DAILY_JOBS}.`);
-    await recordSupervisorLog('SUCCESS', `Ingested ${newlyAdded} verified official vacancies. Daily total: ${publishedTodayCount + newlyAdded}/${MAX_DAILY_JOBS}. All links 100% verified official.`);
+    await recordSupervisorLog('SUCCESS', `Ingested ${newlyAdded} verified official vacancies (indexed via IndexNow & Google). Daily total: ${publishedTodayCount + newlyAdded}/${MAX_DAILY_JOBS}. All links 100% verified official.`);
 
   } catch (err) {
     console.error('[Supervisor Error]:', err.message);

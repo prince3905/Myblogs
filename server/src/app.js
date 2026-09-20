@@ -655,6 +655,106 @@ app.get('/current-affairs/:slug', async (req, res, next) => {
   }
 });
 
+// Dynamic Server-Side Meta Tag & JobPosting Schema Injection for Individual Global Jobs
+app.get(['/global-jobs/view/:id', '/global-jobs/:country/:id'], async (req, res, next) => {
+  try {
+    const rawId = req.params.id ? String(req.params.id).trim() : '';
+    if (!rawId) return next();
+
+    const indexPath = path.join(publicPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(404).send('index.html not found');
+    }
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    const mongoose = require('mongoose');
+    const GlobalJob = require('./modules/globalJobs/globalJob.model');
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(rawId);
+
+    const job = await GlobalJob.findOne({
+      $or: [
+        { officialReferenceId: rawId },
+        ...(isValidObjectId ? [{ _id: rawId }] : [])
+      ]
+    }).lean();
+
+    if (job) {
+      const siteName = 'Global Careers Intelligence | Digital Home';
+      const cleanTitle = (job.title || '').replace(/\s*\|\s*(Digital Home|Sarkari Result)\s*$/i, '');
+      const fullTitle = `${cleanTitle} (${job.agencyOrMinistry}) - ${job.countryName} | Global Gov Jobs 2026`;
+      const desc = (job.officialGazetteSummary || job.description || `${job.title} vacancy under ${job.agencyOrMinistry} (${job.countryName}). Check salary, qualifications & apply online.`).slice(0, 160);
+      const canonicalRef = job.officialReferenceId || job._id;
+      const canonicalUrl = `https://www.digitalhomeblog.in/global-jobs/view/${canonicalRef}`;
+      const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
+
+      // Official JobPosting Schema for Google for Jobs
+      const jobPostingSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'JobPosting',
+        'title': job.title,
+        'description': job.description || job.officialGazetteSummary || job.title,
+        'datePosted': job.createdAt ? new Date(job.createdAt).toISOString() : new Date().toISOString(),
+        'validThrough': job.applicationDeadline ? new Date(job.applicationDeadline).toISOString() : undefined,
+        'employmentType': 'FULL_TIME',
+        'hiringOrganization': {
+          '@type': 'Organization',
+          'name': job.agencyOrMinistry || job.countryName,
+          'sameAs': job.officialNoticeUrl
+        },
+        'jobLocation': {
+          '@type': 'Place',
+          'address': {
+            '@type': 'PostalAddress',
+            'addressCountry': job.countryCode || 'IN',
+            'addressLocality': job.dutyStation || job.countryName
+          }
+        },
+        ...(job.salary?.amount ? {
+          'baseSalary': {
+            '@type': 'MonetaryAmount',
+            'currency': job.salary?.currency || 'USD',
+            'value': {
+              '@type': 'QuantitativeValue',
+              'value': job.salary.amount,
+              'unitText': 'YEAR'
+            }
+          }
+        } : {})
+      };
+
+      const metaTags = `
+    <title>${fullTitle}</title>
+    <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="${canonicalUrl}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="${siteName}" />
+    <meta property="og:title" content="${fullTitle.replace(/"/g, '&quot;')}" />
+    <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:image" content="${imageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${fullTitle.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:image" content="${imageUrl}" />
+    <script type="application/ld+json">${JSON.stringify(jobPostingSchema)}</script>
+      `;
+
+      html = html.replace(/<title>.*?<\/title>/, '');
+      html = html.replace(/<meta name="description" .*?\/>/, '');
+      html = html.replace('</head>', `${metaTags}\n</head>`);
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+      return res.status(200).send(html);
+    }
+
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Handle client-side routing (React Router) - only if file doesn't exist
 app.get('*', (req, res) => {
   const filePath = path.join(publicPath, req.path);
