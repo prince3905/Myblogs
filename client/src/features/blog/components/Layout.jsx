@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Button, Container, Box, Typography, useTheme, Drawer, List, ListItem, ListItemButton, ListItemText, IconButton, Avatar, Menu, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
@@ -44,6 +44,7 @@ function useDeferredMount(delay = 2500) {
 
 export default function Layout({ children }) {
   const theme = useTheme();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catAnchor, setCatAnchor] = useState(null);
@@ -579,7 +580,7 @@ export default function Layout({ children }) {
       <PushNotificationModal />
 
       {/* Deferred Floating Widgets */}
-      {isDeferredMounted && (
+      {isDeferredMounted && !location.pathname.startsWith('/global') && (
         <>
           <TelegramStickyBanner />
           <FloatingQuickShare />

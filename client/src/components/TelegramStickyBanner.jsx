@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Box, Typography, Button, IconButton } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import ShareIcon from '@mui/icons-material/Share';
@@ -12,6 +13,7 @@ const bounce = keyframes`
 `;
 
 export default function TelegramStickyBanner() {
+  const location = useLocation();
   const shareModal = useShareModal();
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -19,6 +21,10 @@ export default function TelegramStickyBanner() {
     }
     return false;
   });
+
+  // Strict UI rule: Suppress sticky banner completely on global career portal pages
+  const currentPath = location?.pathname || (typeof window !== 'undefined' ? window.location.pathname : '');
+  if (currentPath.startsWith('/global')) return null;
 
   if (dismissed) return null;
 

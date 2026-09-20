@@ -684,8 +684,33 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
     setDialogOpen(false);
   };
 
-  // Current active country details
-  const activeRegion = COUNTRY_REGIONS.find(c => c.code === selectedCountry) || COUNTRY_REGIONS[0];
+  // Default fallback languages for Global / All 195 Countries
+  const FALLBACK_LANGUAGES = [
+    { code: 'en', label: 'English (Global)', flag: '🌐' },
+    { code: 'hi', label: 'हिंदी (Hindi)', flag: '🇮🇳' },
+    { code: 'ar', label: 'العربية (Arabic)', flag: '🇦🇪' },
+    { code: 'es', label: 'Español (Spanish)', flag: '🇪🇸' },
+    { code: 'fr', label: 'Français (French)', flag: '🇫🇷' },
+    { code: 'de', label: 'Deutsch (German)', flag: '🇩🇪' }
+  ];
+
+  const matchedRegion = (selectedCountry && selectedCountry !== 'ALL')
+    ? COUNTRY_REGIONS.find(c => c.code === selectedCountry)
+    : null;
+
+  const activeRegion = matchedRegion
+    ? {
+        ...matchedRegion,
+        languages: (Array.isArray(matchedRegion.languages) && matchedRegion.languages.length > 0)
+          ? matchedRegion.languages
+          : FALLBACK_LANGUAGES
+      }
+    : {
+        code: 'ALL',
+        name: 'Global (विश्व)',
+        flag: '🌐',
+        languages: FALLBACK_LANGUAGES
+      };
   const activeLangObj = ALL_LANGUAGES.find(l => l.code === selectedLang) || ALL_LANGUAGES[0];
 
   return (
@@ -819,7 +844,7 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
               gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
               gap: 1.2
             }}>
-              {activeRegion.languages.map((lang) => {
+              {(activeRegion?.languages || FALLBACK_LANGUAGES).map((lang) => {
                 const isActive = selectedLang === lang.code;
                 return (
                   <Button

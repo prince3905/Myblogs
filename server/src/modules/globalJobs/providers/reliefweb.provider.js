@@ -93,27 +93,31 @@ function categorizeJobType(title = '', desc = '') {
 }
 
 async function fetchReliefWebJobs() {
+  const jobs = [];
   try {
-    const rssUrl = 'https://reliefweb.int/jobs/rss.xml';
-    const response = await axios.get(rssUrl, {
-      timeout: 10000,
-      headers: {
-        'User-Agent': 'curl/8.7.1',
-        'Accept': '*/*'
-      }
-    });
+    for (let page = 0; page < 5; page++) {
+      if (jobs.length >= 100) break;
+      try {
+        const rssUrl = `https://reliefweb.int/jobs/rss.xml?page=${page}`;
+        const response = await axios.get(rssUrl, {
+          timeout: 10000,
+          headers: {
+            'User-Agent': 'curl/8.7.1',
+            'Accept': '*/*'
+          }
+        });
 
-    if (!response.data) return [];
+        if (!response.data) continue;
 
-    const $ = cheerio.load(response.data, { xmlMode: true });
-    const jobs = [];
+        const $ = cheerio.load(response.data, { xmlMode: true });
 
-    $('item').each((i, el) => {
-      const title = $(el).find('title').text()?.trim();
-      const link = $(el).find('link').text()?.trim();
-      const desc = $(el).find('description').text() || '';
+        $('item').each((i, el) => {
+          if (jobs.length >= 100) return false;
+          const title = $(el).find('title').text()?.trim();
+          const link = $(el).find('link').text()?.trim();
+          const desc = $(el).find('description').text() || '';
 
-      if (!title || !link) return;
+          if (!title || !link) return;
 
       // Extract country: <div class="tag country">Country: Yemen</div>
       const countryMatch = desc.match(/Country:\s*([^<&]+)/i);
@@ -205,7 +209,10 @@ async function fetchReliefWebJobs() {
         }
       });
     });
-
+      } catch (pageErr) {
+        console.warn(`[ReliefWeb Page ${page}] Notice:`, pageErr.message);
+      }
+    }
     return jobs;
   } catch (err) {
     console.error('[ReliefWeb Provider Error]:', err.message);

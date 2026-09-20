@@ -3,11 +3,14 @@ const GlobalJob = require('./globalJob.model');
 const { fetchReliefWebJobs } = require('./providers/reliefweb.provider');
 const { fetchGulfGovJobs } = require('./providers/gulf.provider');
 const { fetchAngloGovJobs } = require('./providers/anglo.provider');
+const { fetchContinentalGovJobs } = require('./providers/continental.provider');
+const { fetchApacAfricaGovJobs } = require('./providers/apacAfrica.provider');
+const { fetchUniversalRotatingGovJobs } = require('./providers/universal195.provider');
 const AutomationLog = require('../admin/automationLog.model');
 const { OFFICIAL_GOV_TLD_REGEX } = require('./globalJob.model');
 
-// Dynamic live feed quota: Can safely store up to 250 verified vacancies per day
-const MAX_DAILY_JOBS = 250;
+// Rolling High-Traffic Inventory: Supports up to 1,500 active high-value vacancies (< 5MB storage)
+const MAX_DAILY_JOBS = 1500;
 
 // Strict negative check (discard non-vacancies & press releases)
 const TRASH_PATTERNS = [
@@ -28,7 +31,11 @@ const TRASH_PATTERNS = [
   /remarks by/i,
   /speech by/i,
   /success profiles/i,
-  /behaviours/i
+  /behaviours/i,
+  /innovation competitions/i,
+  /working for/i,
+  /using the civil service/i,
+  /(declaration|statutory|weather|login page|eshop|all products|pension|seniors health card|medicare benefits|relationship authorisation|unclaimed money|immunisation program|definition of|looking for work|have your say|getting it right|helping you navigate|personal information releases)/i
 ];
 
 // Mandatory hiring keywords
@@ -61,7 +68,23 @@ const HIRING_PATTERNS = [
   /careers/i,
   /job/i,
   /civil service/i,
-  /public service/i
+  /public service/i,
+  // German (Bund.de)
+  /(sachbearbeiter|referent|beamter|ingenieur|fachkraft|inspektor)/i,
+  // French (Service-Public / EU EPSO)
+  /(agent|officier|ingénieur|chargé de mission|administrateur|adjoint)/i,
+  // Spanish (Empleo Público)
+  /(funcionario|técnico|auxiliar|especialista|oposición|administrativo)/i,
+  // Portuguese (Concursos Públicos / Brasil)
+  /(analista|auditor|técnico|especialista|concurso|oficial)/i,
+  // Japanese (人事院 NPA / e-Gov)
+  /(採用|国家公務員|職員募集|総合職|一般職|専門官)/,
+  // Korean (인사혁신처 MPM)
+  /(공무원|채용|공채|행정직|주무관)/,
+  // Malay (SPA Malaysia)
+  /(jawatan kosong|suruhanjaya perkhidmatan awam|pegawai|penolong)/i,
+  // Australia APS Statutory
+  /(APS Level|Executive Level|APS\s?[1-6]|EL\s?[1-2]|Cadetship|Graduate Program|Director|Specialist|Officer|Advisor)/i
 ];
 
 function isValidGlobalJob(title = '', description = '') {
@@ -161,8 +184,20 @@ async function runSupervisorCycle() {
     console.log('[Supervisor] Fetching verified Anglo-American circulars (USA, UK, Canada, Australia)...');
     const angloJobs = await fetchAngloGovJobs();
 
+    // Step 6: Ingest from Continental Europe & Latin America Provider (EU, Germany, Spain, Brazil)
+    console.log('[Supervisor] Fetching verified Continental Europe & Latin America circulars...');
+    const continentalJobs = await fetchContinentalGovJobs();
+
+    // Step 7: Ingest from Asia-Pacific & Africa Hub Provider (Singapore, Malaysia, Japan, Korea, South Africa, Nigeria, Kenya)
+    console.log('[Supervisor] Fetching verified Asia-Pacific & Africa circulars...');
+    const apacAfricaJobs = await fetchApacAfricaGovJobs();
+
+    // Step 8: Ingest from Universal 195 Sovereign Nations Rotating Provider
+    console.log('[Supervisor] Fetching verified Universal 195 Rotating circulars...');
+    const universal195Jobs = await fetchUniversalRotatingGovJobs();
+
     // Combine all genuine verified official circulars
-    const candidateJobs = [...angloJobs, ...gulfJobs, ...unJobs];
+    const candidateJobs = [...universal195Jobs, ...apacAfricaJobs, ...continentalJobs, ...angloJobs, ...gulfJobs, ...unJobs];
     const newJobUrls = [];
 
     for (const job of candidateJobs) {
@@ -210,16 +245,58 @@ async function runSupervisorCycle() {
       }
     }
 
-    // Auto-dispatch indexing pings for freshly discovered global vacancies
-    if (newJobUrls.length > 0) {
+    // 🛡️ Rolling Storage Guard: Auto-purge expired deadlines and enforce 800 - 1,500 active window
+    try {
+      const expiredDeleteRes = await GlobalJob.deleteMany({
+        applicationDeadline: { $lt: new Date() }
+      });
+      if (expiredDeleteRes.deletedCount > 0) {
+        console.log(`[Supervisor Storage Guard] Purged ${expiredDeleteRes.deletedCount} expired vacancies past application deadline.`);
+      }
+
+      const totalActiveCount = await GlobalJob.countDocuments();
+      if (totalActiveCount > 1500) {
+        const excessCount = totalActiveCount - 1500;
+        const oldestDocs = await GlobalJob.find().sort({ createdAt: 1 }).limit(excessCount).select('_id');
+        const oldestIds = oldestDocs.map(d => d._id);
+        await GlobalJob.deleteMany({ _id: { $in: oldestIds } });
+        console.log(`[Supervisor Storage Guard] Purged ${excessCount} oldest vacancies to maintain rolling active cap under 1,500 docs (< 5MB).`);
+      }
+    } catch (purgeErr) {
+      console.warn('[Supervisor Storage Guard Notice]:', purgeErr.message);
+    }
+
+    // 🛡️ Hub-First Safe Indexing Protocol (Zero Spam Risk)
+    // Gather unique country & continent hubs that received fresh jobs
+    const affectedCountries = new Set();
+    const affectedContinents = new Set();
+    for (const job of candidateJobs) {
+      if (job.countryCode) affectedCountries.add(job.countryCode);
+      if (job.continent) affectedContinents.add(job.continent);
+    }
+
+    const hubUrlsToIndex = [
+      'https://www.digitalhomeblog.in/global-jobs',
+      ...Array.from(affectedCountries).map(cc => `https://www.digitalhomeblog.in/global-jobs?country=${encodeURIComponent(cc)}`),
+      ...Array.from(affectedContinents).map(ct => `https://www.digitalhomeblog.in/global-jobs?continent=${encodeURIComponent(ct)}`)
+    ];
+
+    // Cap individual job pings to a randomized 5-10 featured circulars per day to protect crawl budget
+    const featuredIndividualJobs = newJobUrls
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 10);
+
+    const safeIndexNowUrls = [...hubUrlsToIndex, ...featuredIndividualJobs];
+
+    if (safeIndexNowUrls.length > 0) {
       try {
         const { notifyBatchIndexNow, notifyUrl, pingSitemapEngines } = require('../../shared/utils/google-indexing');
-        console.log(`[Supervisor Indexing] Dispatching ${newJobUrls.length} new global jobs to search engines...`);
-        await notifyBatchIndexNow(newJobUrls);
-        
-        // Notify Google Indexing API up to 20 jobs within safe daily quota
-        for (const url of newJobUrls.slice(0, 20)) {
-          await notifyUrl(url).catch(() => {});
+        console.log(`[Supervisor Hub-First Indexing] Notifying search engines of ${hubUrlsToIndex.length} authoritative hubs + ${featuredIndividualJobs.length} featured circulars...`);
+        await notifyBatchIndexNow(safeIndexNowUrls);
+
+        // Ping Google Indexing API strictly with high-value hub URLs (safely under quota)
+        for (const hubUrl of hubUrlsToIndex.slice(0, 10)) {
+          await notifyUrl(hubUrl).catch(() => {});
         }
         await pingSitemapEngines().catch(() => {});
       } catch (indexErr) {
@@ -228,7 +305,7 @@ async function runSupervisorCycle() {
     }
 
     console.log(`[Supervisor] Intelligence cycle completed. Added ${newlyAdded} verified vacancies. Total today: ${publishedTodayCount + newlyAdded}/${MAX_DAILY_JOBS}.`);
-    await recordSupervisorLog('SUCCESS', `Ingested ${newlyAdded} verified official vacancies (indexed via IndexNow & Google). Daily total: ${publishedTodayCount + newlyAdded}/${MAX_DAILY_JOBS}. All links 100% verified official.`);
+    await recordSupervisorLog('SUCCESS', `Ingested ${newlyAdded} verified official vacancies (Hub-First indexed via IndexNow & Google). Total active: ${await GlobalJob.countDocuments()}/${MAX_DAILY_JOBS}. All links 100% verified official.`);
 
   } catch (err) {
     console.error('[Supervisor Error]:', err.message);

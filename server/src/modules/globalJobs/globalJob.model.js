@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
  * Official verified government TLDs & multilateral domains.
  * STRICT RULE: No promotional, affiliate, or third-party links permitted.
  */
-const OFFICIAL_GOV_TLD_REGEX = /(\.gov|\.gob|\.gouv|\.go\.[a-z]{2}|\.gov\.[a-z]{2}|\.govt\.[a-z]{2}|\.nic\.in|\.gc\.ca|canada\.ca|un\.org|who\.int|worldbank\.org|reliefweb\.int|europa\.eu|imf\.org|oecd\.org|interpol\.int)/i;
+const OFFICIAL_GOV_TLD_REGEX = /(\.gov|\.gob|\.gouv|\.go\.[a-z]{2}|\.gov\.[a-z]{2}|\.govt\.[a-z]{2}|\.nic\.in|\.gc\.ca|canada\.ca|un\.org|who\.int|worldbank\.org|reliefweb\.int|europa\.eu|\.bund\.de|\.gob\.es|\.gov\.br|\.gov\.sg|\.spa\.gov\.my|\.jinji\.go\.jp|\.go\.jp|\.gosi\.kr|\.mpm\.go\.kr|\.gov\.za|\.gov\.ng|\.go\.ke|\.admin\.ch|\.ch\.ch|\.gv\.at|\.valtiolle\.fi|arbetsformedlingen\.se|\.nav\.no|\.borger\.dk|imf\.org|oecd\.org|interpol\.int)/i;
 
 function validateOfficialUrl(val) {
   if (!val) return true;
@@ -197,9 +197,9 @@ globalJobSchema.pre('validate', function(next) {
 });
 
 
-// 🔥 60-DAY ZERO-COST AUTO-PURGE TTL INDEX
-// Automatically removes entries older than 60 days to keep MongoDB Atlas free tier permanently under 40MB!
-globalJobSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 24 * 60 * 60 });
+// 🔥 30-DAY ZERO-COST AUTO-PURGE TTL INDEX
+// Automatically removes entries older than 30 days to keep MongoDB Atlas free tier permanently under 5MB!
+globalJobSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
 
 // Compound indexes for lightning-fast geo-priority and chronological sorting
 globalJobSchema.index({ countryCode: 1, createdAt: -1 });

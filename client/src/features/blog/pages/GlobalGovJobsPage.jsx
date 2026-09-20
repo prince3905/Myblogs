@@ -23,6 +23,7 @@ import Seo from '../components/Seo';
 import AdSlot from '../../../components/AdSlot';
 import { request } from '../../../shared/lib/api';
 import { applyFullWebsiteTranslation, ALL_LANGUAGES } from '../../../components/GlobalLanguagePicker';
+import { SOVEREIGN_COUNTRIES_195, getCountryByCode } from '../data/sovereignCountries195';
 
 // Continents for filtering
 const CONTINENTS = [
@@ -35,28 +36,26 @@ const CONTINENTS = [
   { id: 'Oceania', label: '🏖 ओशिनिया (14)', short: 'Oceania' }
 ];
 
-// Major Countries Directory
-const COUNTRY_CATALOG = [
-  { code: 'ALL', name: 'All 195 Countries', flag: '🌐' },
-  { code: 'IN', name: 'India (Sarkari)', flag: '🇮🇳' },
-  { code: 'UN', name: 'United Nations / Global', flag: '🇺🇳' },
-  { code: 'AE', name: 'UAE (Dubai / Abu Dhabi)', flag: '🇦🇪' },
-  { code: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' },
-  { code: 'QA', name: 'Qatar', flag: '🇶🇦' },
-  { code: 'OM', name: 'Oman', flag: '🇴🇲' },
-  { code: 'KW', name: 'Kuwait', flag: '🇰🇼' },
-  { code: 'US', name: 'United States (Federal)', flag: '🇺🇸' },
-  { code: 'GB', name: 'United Kingdom (Civil Service)', flag: '🇬🇧' },
-  { code: 'CA', name: 'Canada (GC Jobs)', flag: '🇨🇦' },
-  { code: 'AU', name: 'Australia (APSjobs)', flag: '🇦🇺' },
-  { code: 'DE', name: 'Germany (Bund.de)', flag: '🇩🇪' },
-  { code: 'FR', name: 'France (Service Public)', flag: '🇫🇷' },
-  { code: 'ES', name: 'Spain (Empleo Público)', flag: '🇪🇸' },
-  { code: 'JP', name: 'Japan (Jinji-in)', flag: '🇯🇵' },
-  { code: 'SG', name: 'Singapore (Careers@Gov)', flag: '🇸🇬' },
-  { code: 'ZA', name: 'South Africa (DPSA)', flag: '🇿🇦' },
-  { code: 'BR', name: 'Brazil (Concursos)', flag: '🇧🇷' }
-];
+// Complete 195 Sovereign Countries Directory
+const COUNTRY_CATALOG = SOVEREIGN_COUNTRIES_195;
+
+function getCountryDisplayName(code) {
+  if (!code || code === 'ALL') return 'All Countries';
+  const found = getCountryByCode(code);
+  if (found) return `${found.flag} ${found.name}`;
+  try {
+    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+    const name = regionNames.of(code.toUpperCase());
+    if (name) return name;
+  } catch (e) {}
+  return code;
+}
+
+function getContinentDisplayName(id) {
+  if (!id || id === 'ALL') return null;
+  const found = CONTINENTS.find(c => c.id === id);
+  return found?.short || found?.label || id;
+}
 
 // Category Pills
 const CATEGORIES = [
@@ -138,6 +137,17 @@ export default function GlobalGovJobsPage() {
   const [selectedJob, setSelectedJob] = useState(null);
   const [modalViewMode, setModalViewMode] = useState('translated'); // 'translated' | 'original'
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
+  const [countrySearchQuery, setCountrySearchQuery] = useState('');
+  const [countryModalContinent, setCountryModalContinent] = useState('ALL');
+
+  const filtered195Countries = useMemo(() => {
+    const q = countrySearchQuery.trim().toLowerCase();
+    return SOVEREIGN_COUNTRIES_195.filter(c => {
+      const matchesContinent = countryModalContinent === 'ALL' || c.continent === countryModalContinent || c.code === 'ALL';
+      const matchesQuery = !q || c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.continent.toLowerCase().includes(q);
+      return matchesContinent && matchesQuery;
+    });
+  }, [countrySearchQuery, countryModalContinent]);
 
   // 1. Automatic Geo & Language Detection on Mount (with LocalStorage Memory)
   useEffect(() => {
@@ -254,12 +264,44 @@ export default function GlobalGovJobsPage() {
     setSearchParams(params, { replace: true });
   }, [activeContinent, activeCountry, activeCategory, activeTimeline, activeCitizenship, setSearchParams]);
 
-  // Manual Country Change Handler
+  // Dedicated Continent Change Handler to fix state desynchronization
+  const handleContinentChange = (continentId) => {
+    setActiveContinent(continentId);
+    setActiveCountry('ALL');
+    setCurrentPage(1);
+
+    if (routeCountry) {
+      navigate('/global-jobs', { replace: true });
+    }
+
+    const nextParams = {};
+    if (continentId !== 'ALL') nextParams.continent = continentId;
+    if (activeCategory !== 'ALL') nextParams.category = activeCategory;
+    if (activeTimeline !== 'ALL') nextParams.timeline = activeTimeline;
+    if (activeCitizenship !== 'ALL') nextParams.citizenship = activeCitizenship;
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  // Manual Country Change Handler (195 Nations)
   const handleCountryChange = (countryCode) => {
     setActiveCountry(countryCode);
+    setActiveContinent('ALL'); // Reset continent conflict
     setUserDetectedCountry(countryCode);
     setCountryPickerOpen(false);
+    setCountrySearchQuery('');
     setCurrentPage(1);
+
+    if (routeCountry) {
+      navigate(countryCode === 'ALL' ? '/global-jobs' : `/global-jobs?country=${countryCode}`, { replace: true });
+    } else {
+      const nextParams = {};
+      if (countryCode !== 'ALL') nextParams.country = countryCode;
+      if (activeCategory !== 'ALL') nextParams.category = activeCategory;
+      if (activeTimeline !== 'ALL') nextParams.timeline = activeTimeline;
+      if (activeCitizenship !== 'ALL') nextParams.citizenship = activeCitizenship;
+      setSearchParams(nextParams, { replace: true });
+    }
+
     try {
       localStorage.setItem('dh_user_country', countryCode);
       // Auto-switch language to this country's primary language if user hasn't explicitly locked another language
@@ -490,7 +532,11 @@ export default function GlobalGovJobsPage() {
                 '&:hover': { bgcolor: '#334155' }
               }}
             >
-              📍 देश: {COUNTRY_CATALOG.find(c => c.code === (activeCountry !== 'ALL' ? activeCountry : userDetectedCountry))?.flag || '🌐'} {COUNTRY_CATALOG.find(c => c.code === (activeCountry !== 'ALL' ? activeCountry : userDetectedCountry))?.name || 'All Countries'} 🔄
+              📍 {activeCountry !== 'ALL'
+                ? getCountryDisplayName(activeCountry)
+                : (activeContinent !== 'ALL'
+                    ? `${getContinentDisplayName(activeContinent)} Hub`
+                    : '🌐 Global Careers (195 Nations)')} 🔄
             </Button>
           </Box>
         </Box>
@@ -681,7 +727,7 @@ export default function GlobalGovJobsPage() {
                 key={cont.id}
                 label={cont.label}
                 clickable
-                onClick={() => { setActiveContinent(cont.id); setCurrentPage(1); }}
+                onClick={() => handleContinentChange(cont.id)}
                 sx={{
                   bgcolor: activeContinent === cont.id ? '#0284C7' : '#1E293B',
                   color: activeContinent === cont.id ? '#FFFFFF' : '#CBD5E1',
@@ -694,6 +740,30 @@ export default function GlobalGovJobsPage() {
                 }}
               />
             ))}
+
+            {/* Clean trigger button for 195 Sovereign Countries modal */}
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setCountryPickerOpen(true)}
+              startIcon={<SearchIcon sx={{ fontSize: '15px !important', color: '#38BDF8' }} />}
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                height: 32,
+                px: 1.5,
+                whiteSpace: 'nowrap',
+                color: activeCountry !== 'ALL' ? '#38BDF8' : '#CBD5E1',
+                borderColor: activeCountry !== 'ALL' ? '#0284C7' : '#334155',
+                bgcolor: activeCountry !== 'ALL' ? 'rgba(2, 132, 199, 0.2)' : '#1E293B',
+                borderRadius: '16px',
+                flexShrink: 0,
+                '&:hover': { bgcolor: '#334155', borderColor: '#38BDF8' }
+              }}
+            >
+              {activeCountry !== 'ALL' ? getCountryDisplayName(activeCountry) : '🌍 देश चुनें (195 Nations)'}
+            </Button>
           </Box>
 
           {/* Row 2: Categories / Sector Pills */}
@@ -815,44 +885,100 @@ export default function GlobalGovJobsPage() {
             </Alert>
           )}
 
-          {!loading && jobs.length === 0 && (
-            <Box sx={{
-              textAlign: 'center',
-              py: 8,
-              bgcolor: '#0F172A',
-              borderRadius: '16px',
-              border: '1px solid #1E293B',
-              px: 3
-            }}>
-              <GlobeIcon sx={{ fontSize: 56, color: '#475569', mb: 1.5 }} />
-              <Typography variant="h6" sx={{ color: '#F8FAFC', fontWeight: 700 }}>
-                चुने गए फ़िल्टर के अनुसार कोई सरकारी वेकेंसी नहीं मिली
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#94A3B8', mt: 0.5, mb: 2 }}>
-                कृपया फ़िल्टर रीसेट करें या किसी अन्य देश/श्रेणी का चयन करें।
-              </Typography>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setActiveContinent('ALL');
-                  setActiveCountry('ALL');
-                  setActiveCategory('ALL');
-                  setActiveTimeline('ALL');
-                  setActiveCitizenship('ALL');
-                  setSearchTerm('');
-                  setCurrentPage(1);
-                }}
-                sx={{
-                  color: '#38BDF8',
-                  borderColor: '#0284C7',
-                  textTransform: 'none',
-                  fontWeight: 600
-                }}
-              >
-                सभी फ़िल्टर रीसेट करें
-              </Button>
-            </Box>
-          )}
+          {!loading && jobs.length === 0 && (() => {
+            const activeRegionName = (activeCountry && activeCountry !== 'ALL')
+              ? getCountryDisplayName(activeCountry)
+              : (activeContinent && activeContinent !== 'ALL')
+                ? (getContinentDisplayName(activeContinent) || activeContinent)
+                : null;
+
+            return (
+              <Box sx={{
+                textAlign: 'center',
+                py: 6,
+                px: { xs: 2.5, sm: 4 },
+                bgcolor: '#0F172A',
+                borderRadius: '16px',
+                border: '1px solid #1E293B',
+                maxWidth: 720,
+                mx: 'auto',
+                my: 3
+              }}>
+                <GlobeIcon sx={{ fontSize: 56, color: '#38BDF8', mb: 1.5, opacity: 0.85 }} />
+                <Typography variant="h6" sx={{ color: '#F8FAFC', fontWeight: 800 }}>
+                  {activeRegionName
+                    ? `No direct vacancies in ${activeRegionName} right now.`
+                    : "No government vacancies found as per the selected filter."}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#94A3B8', mt: 1, mb: 3 }}>
+                  {activeRegionName
+                    ? `Official gazette notifications for ${activeRegionName} are being actively tracked. In the meantime, explore verified open international & multilateral vacancies:`
+                    : "Please reset filters or select another country or category."}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      setActiveCountry('UN');
+                      setActiveContinent('ALL');
+                      setActiveCategory('ALL');
+                      setActiveTimeline('ALL');
+                      setActiveCitizenship('ALL');
+                      setSearchTerm('');
+                      setCurrentPage(1);
+                      if (routeCountry) {
+                        navigate('/global-jobs?country=UN', { replace: true });
+                      } else {
+                        setSearchParams({ country: 'UN' }, { replace: true });
+                      }
+                    }}
+                    sx={{
+                      bgcolor: '#0284C7',
+                      color: '#FFFFFF',
+                      fontWeight: 700,
+                      textTransform: 'none',
+                      px: 3,
+                      py: 1.2,
+                      borderRadius: '10px',
+                      boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+                      '&:hover': { bgcolor: '#0369A1' }
+                    }}
+                  >
+                    Explore Multilateral / UN & Remote Global Jobs →
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setActiveContinent('ALL');
+                      setActiveCountry('ALL');
+                      setActiveCategory('ALL');
+                      setActiveTimeline('ALL');
+                      setActiveCitizenship('ALL');
+                      setSearchTerm('');
+                      setCurrentPage(1);
+                      if (routeCountry) {
+                        navigate('/global-jobs', { replace: true });
+                      } else {
+                        setSearchParams({}, { replace: true });
+                      }
+                    }}
+                    sx={{
+                      color: '#CBD5E1',
+                      borderColor: '#334155',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      px: 2.5,
+                      py: 1.2,
+                      borderRadius: '10px',
+                      '&:hover': { borderColor: '#64748B', color: '#F8FAFC', bgcolor: 'rgba(255,255,255,0.03)' }
+                    }}
+                  >
+                    🌐 All 195 Countries
+                  </Button>
+                </Box>
+              </Box>
+            );
+          })()}
 
           {/* High-Yield Top Feed AdSense Unit */}
           <AdSlot format="incontent" style={{ my: 3 }} />
@@ -1514,56 +1640,116 @@ export default function GlobalGovJobsPage() {
         )}
       </Dialog>
 
-      {/* 🗺️ 195-COUNTRY PICKER MODAL */}
+      {/* 🗺️ SEARCHABLE 195-SOVEREIGN COUNTRY PICKER MODAL */}
       <Dialog
         open={countryPickerOpen}
         onClose={() => setCountryPickerOpen(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
             bgcolor: '#0F172A',
-            borderRadius: '16px',
+            borderRadius: '20px',
             border: '1px solid #334155',
             color: '#F8FAFC',
-            p: 1
+            p: { xs: 1, sm: 2 }
           }
         }}
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1E293B' }}>
-          <Typography variant="h6" sx={{ fontWeight: 800 }}>
-            🌍 195 देशों में से अपना देश चुनें
-          </Typography>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1, borderBottom: '1px solid #1E293B' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <GlobeIcon sx={{ color: '#38BDF8', fontSize: 24 }} />
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>
+              🌍 विश्व के 195 संप्रभु देश (Select Sovereign Country)
+            </Typography>
+          </Box>
           <IconButton onClick={() => setCountryPickerOpen(false)} sx={{ color: '#94A3B8' }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
+          {/* Real-time Country Search Input */}
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="देश का नाम, कोड या महाद्वीप खोजें (e.g. Switzerland, Nepal, Philippines, Argentina)..."
+            value={countrySearchQuery}
+            onChange={e => setCountrySearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ color: '#38BDF8', mr: 1, fontSize: 20 }} />
+            }}
+            sx={{
+              mb: 2,
+              bgcolor: '#1E293B',
+              borderRadius: '10px',
+              '& .MuiOutlinedInput-root': {
+                color: '#F8FAFC',
+                '& fieldset': { borderColor: '#334155' },
+                '&:hover fieldset': { borderColor: '#38BDF8' },
+                '&.Mui-focused fieldset': { borderColor: '#38BDF8' }
+              }
+            }}
+          />
+
+          {/* Continent Filter Tabs inside Modal */}
+          <Box sx={{ display: 'flex', gap: 0.8, overflowX: 'auto', pb: 1, mb: 2 }}>
+            {['ALL', 'Asia', 'Europe', 'Americas', 'Africa', 'Oceania'].map(cont => (
+              <Chip
+                key={cont}
+                label={cont === 'ALL' ? '🌐 All (195)' : cont}
+                size="small"
+                clickable
+                onClick={() => setCountryModalContinent(cont)}
+                sx={{
+                  bgcolor: countryModalContinent === cont ? '#0284C7' : '#1E293B',
+                  color: countryModalContinent === cont ? '#FFFFFF' : '#CBD5E1',
+                  fontWeight: countryModalContinent === cont ? 700 : 500,
+                  border: '1px solid',
+                  borderColor: countryModalContinent === cont ? '#38BDF8' : '#334155',
+                  fontSize: '0.78rem'
+                }}
+              />
+            ))}
+          </Box>
+
+          {/* Filtered 195 Country Grid */}
           <Box sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
-            gap: 1.5
+            gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+            gap: 1.2,
+            maxHeight: '52vh',
+            overflowY: 'auto',
+            pr: 0.5,
+            '&::-webkit-scrollbar': { width: 6 },
+            '&::-webkit-scrollbar-thumb': { bgcolor: '#334155', borderRadius: 3 }
           }}>
-            {COUNTRY_CATALOG.map(c => (
+            {filtered195Countries.map(c => (
               <Button
                 key={c.code}
                 variant={activeCountry === c.code ? 'contained' : 'outlined'}
                 onClick={() => handleCountryChange(c.code)}
                 sx={{
                   textTransform: 'none',
-                  fontSize: '0.82rem',
-                  fontWeight: 600,
                   py: 1,
+                  px: 1.5,
                   borderRadius: '10px',
                   justifyContent: 'flex-start',
-                  bgcolor: activeCountry === c.code ? '#0284C7' : 'transparent',
-                  borderColor: '#334155',
+                  bgcolor: activeCountry === c.code ? '#0284C7' : '#1E293B',
+                  borderColor: activeCountry === c.code ? '#38BDF8' : '#334155',
                   color: activeCountry === c.code ? '#FFFFFF' : '#CBD5E1',
-                  '&:hover': { bgcolor: '#1E293B' }
+                  transition: 'all 0.15s ease',
+                  '&:hover': { bgcolor: '#334155', borderColor: '#38BDF8' }
                 }}
               >
-                <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>{c.flag}</span>
-                {c.name}
+                <span style={{ fontSize: '1.3rem', marginRight: '10px' }}>{c.flag}</span>
+                <Box sx={{ textAlign: 'left', overflow: 'hidden' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {c.name}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: activeCountry === c.code ? '#E0F2FE' : '#94A3B8', fontSize: '0.7rem' }}>
+                    {c.continent} • {c.currency}
+                  </Typography>
+                </Box>
               </Button>
             ))}
           </Box>

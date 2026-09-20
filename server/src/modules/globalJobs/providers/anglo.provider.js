@@ -66,7 +66,9 @@ const TRASH_PATTERNS = [
   /invests in/i, /press release/i, /summit/i, /facility details/i,
   /register of legislation/i, /sanctions impact/i, /food recall/i,
   /consumer product/i, /statement on/i, /remarks by/i, /speech by/i,
-  /success profiles/i, /behaviours/i
+  /success profiles/i, /behaviours/i, /innovation competitions/i,
+  /working for/i, /using the civil service/i,
+  /(declaration|statutory|weather|login page|eshop|all products|pension|seniors health card|medicare benefits|relationship authorisation|unclaimed money|immunisation program|definition of|looking for work|have your say|getting it right|helping you navigate|personal information releases)/i
 ];
 
 const HIRING_PATTERNS = [
@@ -75,7 +77,9 @@ const HIRING_PATTERNS = [
   /associate/i, /internship/i, /fellowship/i, /technician/i, /coordinator/i,
   /administrator/i, /inspector/i, /advisor/i, /consultant/i, /clerk/i,
   /nurse/i, /doctor/i, /attorney/i, /counsel/i, /hiring/i, /careers/i,
-  /job/i, /civil service/i, /public service/i
+  /job/i, /civil service/i, /public service/i,
+  /(APS Level|Executive Level|APS\s?[1-6]|EL\s?[1-2]|Cadetship|Graduate Program|Director|Specialist|Officer|Advisor)/i,
+  /(GS-[0-9]{1,2}|Special Agent|Customs|Border Protection|Policy Analyst|Executive Officer|Inspector|Coordinator|Legal Officer|Director)/i
 ];
 
 function cleanTitle(title = '') {
@@ -148,7 +152,7 @@ async function fetchAngloGovJobs() {
 
       const $ = cheerio.load(response.data, { xmlMode: true });
 
-      $('item').slice(0, 20).each((i, el) => {
+      $('item').slice(0, 40).each((i, el) => {
         const itemTitle = $(el).find('title').text()?.trim();
         if (!itemTitle) return;
 
