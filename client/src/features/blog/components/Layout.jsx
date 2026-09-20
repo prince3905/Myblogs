@@ -13,6 +13,7 @@ import PushNotificationModal from './PushNotificationModal';
 import GlobalLanguagePicker from '../../../components/GlobalLanguagePicker';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../../auth/context/AuthContext';
 
 function useDeferredMount(delay = 2500) {
@@ -278,45 +279,77 @@ export default function Layout({ children }) {
               </IconButton>
               <DarkModeToggle />
               {user ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
+                  <Button
+                    component={Link}
+                    to="/admin"
+                    variant="contained"
+                    size="small"
+                    startIcon={<AdminPanelSettingsIcon sx={{ fontSize: '0.95rem !important' }} />}
+                    sx={{
+                      bgcolor: '#6366F1',
+                      color: '#ffffff',
+                      borderRadius: '9999px',
+                      px: { xs: 1, md: 1.5 },
+                      py: 0.35,
+                      fontSize: { xs: '0.72rem', md: '0.78rem' },
+                      fontWeight: 700,
+                      textTransform: 'none',
+                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.35)',
+                      '&:hover': { bgcolor: '#4F46E5' }
+                    }}
+                  >
+                    Admin
+                  </Button>
+                  <Button
+                    onClick={logout}
+                    variant="outlined"
+                    size="small"
+                    startIcon={<LogoutIcon sx={{ fontSize: '0.85rem !important' }} />}
+                    sx={{
+                      color: '#EF4444',
+                      borderColor: 'rgba(239, 68, 68, 0.35)',
+                      borderRadius: '9999px',
+                      px: { xs: 0.8, md: 1.2 },
+                      py: 0.35,
+                      fontSize: { xs: '0.7rem', md: '0.75rem' },
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      '&:hover': {
+                        borderColor: '#DC2626',
+                        bgcolor: 'rgba(239, 68, 68, 0.08)'
+                      }
+                    }}
+                  >
+                    Logout
+                  </Button>
+                </Box>
+              ) : (
                 <Button
                   component={Link}
-                  to="/admin"
-                  variant="contained"
+                  to="/admin/login"
+                  variant="outlined"
                   size="small"
-                  startIcon={<AdminPanelSettingsIcon sx={{ fontSize: '1rem !important' }} />}
+                  startIcon={<LockOutlinedIcon sx={{ fontSize: '0.95rem !important' }} />}
                   sx={{
-                    bgcolor: '#6366F1',
-                    color: '#ffffff',
+                    color: theme.palette.mode === 'dark' ? '#F3F4F6' : '#111827',
+                    borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.2)',
                     borderRadius: '9999px',
                     px: { xs: 1.2, md: 1.6 },
                     py: 0.35,
                     fontSize: { xs: '0.72rem', md: '0.78rem' },
-                    fontWeight: 700,
+                    fontWeight: 600,
                     textTransform: 'none',
-                    boxShadow: '0 2px 8px rgba(99, 102, 241, 0.35)',
-                    '&:hover': { bgcolor: '#4F46E5' }
-                  }}
-                >
-                  Admin
-                </Button>
-              ) : (
-                <IconButton
-                  component={Link}
-                  to="/admin/login"
-                  aria-label="Admin Login"
-                  title="Admin Login"
-                  sx={{
-                    color: theme.palette.mode === 'dark' ? '#9CA3AF' : '#6B7280',
-                    p: { xs: 0.75, md: 1 },
-                    borderRadius: '9999px',
+                    whiteSpace: 'nowrap',
                     '&:hover': {
+                      borderColor: '#6366F1',
                       color: '#6366F1',
                       bgcolor: theme.palette.mode === 'dark' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)'
                     }
                   }}
                 >
-                  <LockOutlinedIcon sx={{ fontSize: { xs: '1.15rem', md: '1.35rem' } }} />
-                </IconButton>
+                  Login
+                </Button>
               )}
             </Box>
           </Box>
@@ -487,20 +520,58 @@ export default function Layout({ children }) {
             <Link to="/terms" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Terms & Disclaimer</Link>
             <Link to="/contact" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>Contact</Link>
             <Link to="/about" style={{ color: '#4B5563', fontSize: '0.85rem', fontWeight: 500, textDecoration: 'none' }}>About</Link>
-            <Link 
-              to={user ? "/admin" : "/admin/login"} 
-              style={{ 
-                color: user ? '#6366F1' : '#6B7280', 
-                fontSize: '0.85rem', 
-                fontWeight: 600, 
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              {user ? '🛡️ Admin Panel' : '🔐 Admin Login'}
-            </Link>
+            {user ? (
+              <>
+                <Link 
+                  to="/admin" 
+                  style={{ 
+                    color: '#6366F1', 
+                    fontSize: '0.85rem', 
+                    fontWeight: 600, 
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  🛡️ Admin Panel
+                </Link>
+                <Box
+                  component="button"
+                  onClick={logout}
+                  sx={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#EF4444',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    p: 0,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    '&:hover': { textDecoration: 'underline' }
+                  }}
+                >
+                  🚪 Logout
+                </Box>
+              </>
+            ) : (
+              <Link 
+                to="/admin/login" 
+                style={{ 
+                  color: '#6B7280', 
+                  fontSize: '0.85rem', 
+                  fontWeight: 600, 
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                🔐 Admin Login
+              </Link>
+            )}
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontWeight: 500 }}>
             Official Portal • Global Government Vacancies & Verified Public Gazettes

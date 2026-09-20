@@ -7,8 +7,9 @@ import {
   Forum as ForumIcon, MonetizationOn as AdIcon,
   TravelExplore as KeywordIcon, NotificationsActive as AlertsIcon,
   Settings as SettingsIcon, Slideshow as StoriesIcon,
-  Terminal as LogsIcon
+  Terminal as LogsIcon, Logout as LogoutIcon
 } from '@mui/icons-material';
+import { useAuth } from '../../auth/context/AuthContext';
 
 const nav = [
   { label: 'Dashboard', path: '/admin', icon: <DashboardIcon /> },
@@ -24,6 +25,7 @@ const nav = [
 
 export default function AdminLayout() {
   const location = useLocation();
+  const { logout } = useAuth();
 
   const activeIndex = nav.findIndex((item) => {
     if (item.path === '/admin') return location.pathname === '/admin';
@@ -97,14 +99,14 @@ export default function AdminLayout() {
           );
         })}
 
-        <Box sx={{ mt: 'auto', pt: 2 }}>
+        <Box sx={{ mt: 'auto', pt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Button
             component={Link}
             to="/"
             fullWidth
             sx={{
               justifyContent: 'center',
-              py: 1,
+              py: 0.9,
               borderRadius: 2,
               color: '#38BDF8',
               bgcolor: 'rgba(56, 189, 248, 0.1)',
@@ -115,6 +117,24 @@ export default function AdminLayout() {
             }}
           >
             🌐 View Main Website
+          </Button>
+          <Button
+            onClick={logout}
+            fullWidth
+            startIcon={<LogoutIcon sx={{ fontSize: '1rem !important' }} />}
+            sx={{
+              justifyContent: 'center',
+              py: 0.9,
+              borderRadius: 2,
+              color: '#F87171',
+              bgcolor: 'rgba(239, 68, 68, 0.1)',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)', color: '#EF4444' }
+            }}
+          >
+            🚪 Logout
           </Button>
         </Box>
       </Box>
@@ -158,14 +178,24 @@ export default function AdminLayout() {
               Digital Home
             </Typography>
           </Box>
-          <Button
-            component={Link}
-            to="/"
-            size="small"
-            sx={{ color: '#38BDF8', fontSize: '0.75rem', textTransform: 'none', fontWeight: 600 }}
-          >
-            🏠 Main Site
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              component={Link}
+              to="/"
+              size="small"
+              sx={{ color: '#38BDF8', fontSize: '0.75rem', textTransform: 'none', fontWeight: 600 }}
+            >
+              🏠 Main Site
+            </Button>
+            <Button
+              onClick={logout}
+              size="small"
+              startIcon={<LogoutIcon sx={{ fontSize: '0.9rem !important' }} />}
+              sx={{ color: '#F87171', fontSize: '0.75rem', textTransform: 'none', fontWeight: 600 }}
+            >
+              Logout
+            </Button>
+          </Box>
         </Box>
         <Outlet />
       </Box>
