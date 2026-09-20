@@ -105,3 +105,74 @@ Every country's jobs and global feeds must follow a strict freshness hierarchy:
 3. **Phase 3:** 🇪🇺 Europe (EU EPSO, Germany, France, Spain) + 🌎 Latin America (Brazil, Mexico)
 4. **Phase 4:** 🌏 Asia-Pacific (Japan, Korea, Singapore) + 🌍 Africa (South Africa, Nigeria, Kenya)
 5. **Phase 5:** Complete 195 Sovereign Countries & Island Nations.
+
+---
+
+## ⚡ 10. PageSpeed Insights 90+ Standard (Performance & Core Web Vitals)
+1. **Target Score:** Mobile Performance ≥ 90/100, Desktop Performance ≥ 95/100, SEO 100/100, Accessibility ≥ 95/100.
+2. **Zero Initial Script Bloat:**
+   - Google AdSense (`adsbygoogle.js`) and Google Analytics (`gtag.js`) must NEVER load during initial page load or timer-based triggers.
+   - They load exclusively on genuine user interactions (`touchstart`, `wheel`, `scroll`).
+3. **Core Web Vitals Optimization:**
+   - **LCP (Largest Contentful Paint ≤ 2.5s):** Hero banners and logos must use modern WebP format with width/height explicitly specified.
+   - **CLS (Cumulative Layout Shift ≤ 0.1):** All ad units, job card containers, and dynamic sections must have fixed `minHeight` reserved in CSS to prevent layout jumping.
+   - **FID / INP (Interaction to Next Paint ≤ 200ms):** Heavy client-side processing must use web workers or requestIdleCallback; keep main thread free.
+4. **Caching & Asset Delivery:**
+   - Static assets (`/assets/*.js`, `/assets/*.css`, fonts, images) must be served with immutable `Cache-Control: public, max-age=31536000, immutable`.
+   - Compression (gzip/brotli) enabled across all text, JSON, and XML responses.
+
+---
+
+## 🛑 11. Indexing Quota & Rate Limit Protection Protocol (Zero Ban / Zero 429)
+1. **Google Indexing API Daily Safety Cap:**
+   - Google allows 200 requests/day per service account.
+   - The system must enforce a hard in-memory/daily cap of **180 requests/day**.
+   - Once 180 requests are reached, further Google Indexing calls are automatically paused until UTC midnight reset.
+2. **Multi-Engine IndexNow Protocol:**
+   - Instant notifications to Bing, Yandex, Seznam, and Naver via IndexNow (no daily quota penalty).
+   - Batch pings supported up to 500 URLs per call.
+3. **Segmented XML Sitemaps:**
+   - Dynamic `sitemap.xml` automatically includes `/global-jobs`, `/global-news`, and major country hubs (`/global-jobs/IN`, `/global-jobs/US`, `/global-jobs/AE`, `/global-jobs/GB`, etc.).
+   - Pure canonical URLs only (HTTP -> HTTPS single-hop normalization, no trailing slash duplication).
+
+---
+
+## 🛡️ 12. Google AdSense Policy Strict Compliance (Anti-Policy Violation)
+1. **Accidental Click Prevention:**
+   - Minimum **28px to 32px vertical margin** around every ad unit (`my: 4`).
+   - No interactive buttons, dropdowns, or navigation links placed directly adjacent to ad units.
+2. **Clear Advertising Label:**
+   - Every ad container must carry an official, visible disclosure label:
+     `Advertisement / विज्ञापन`
+3. **Zero Ads on Invalid or Thin Pages:**
+   - Strictly NO ads on 404 pages, empty search results, login screens, or pages with under 150 words of verified content.
+   - If no ad code is configured in admin, `AdSlot` must return `null` — NEVER display empty dashed boxes or fake "Ad Space" placeholders on live pages.
+4. **Publisher E-E-A-T Disclosures:**
+   - Footer must permanently provide direct links to: *About Us, Contact Us, Privacy Policy, Terms & Conditions, Gazette Verification Policy, Editorial Standards*.
+
+---
+
+## 🔍 13. Enterprise-Grade SEO & Structured Data Architecture
+1. **JSON-LD Schema Markup:**
+   - Every job notice must output valid `JobPosting` schema with: `title`, `description`, `datePosted`, `validThrough`, `hiringOrganization`, `jobLocation` (country ISO code).
+   - Global News pages must output valid `NewsArticle` schema.
+   - Static and category hubs must output `BreadcrumbList` schema.
+2. **Page Architecture:**
+   - Exactly **one `<h1>` tag per page** containing high-intent target keywords.
+   - Descriptive meta title (under 60 characters) and meta description (120–160 characters).
+   - Social meta tags: `og:title`, `og:description`, `og:image`, `twitter:card`.
+   - Dynamic canonical tag self-referencing the normalized URL.
+
+---
+
+## 🌐 14. Dynamic Country-Based Localization & Geo-Targeting Architecture
+1. **Visitor Geo-Priority:**
+   - Auto-detect visitor's country via IP headers / browser timezone.
+   - Pinned Spotlight: `📍 Top Live Vacancies in Your Country: [Country Name]` shown at the very top.
+2. **Multi-Country Hubs:**
+   - Dedicated URLs for every major country (e.g. `/global-jobs/IN`, `/global-jobs/US`, `/global-jobs/AE`, `/global-jobs/GB`).
+3. **Dual-Language & Multi-Currency Engine:**
+   - Instant 1-click toggle: `[🏛️ मूल सरकारी गजट (Original)]` ⇄ `[🌐 मेरी भाषा में अनुवाद (Translated)]`.
+   - Multi-currency salary display according to the issuing country (`₹ INR`, `$ USD`, `£ GBP`, `€ EUR`, `AED Dirham`, `SAR Riyal`).
+   - Full 33-language real-time translation support across the entire interface.
+

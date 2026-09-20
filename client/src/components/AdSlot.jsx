@@ -52,22 +52,28 @@ export default function AdSlot({ format = 'sidebar', style }) {
     return <Box className="ad-slot-container" sx={{ minHeight: minH, width: '100%', my: 3.5, ...style }} />;
   }
 
+  // Google AdSense Compliance: Never display empty dashed placeholder boxes to visitors
   if (!code) {
-    return (
-      <Paper elevation={0} className="ad-slot-container" sx={{
-        borderRadius: 3, border: '1px dashed', borderColor: 'divider',
-        bgcolor: 'action.hover', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', minHeight: minH, textAlign: 'center',
-        overflow: 'hidden', my: 3.5, ...style,
-      }}>
-        <Box sx={{ py: 3, px: 2 }}>
-          <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
-            {labels[format] || 'Ad Space'}
-          </Typography>
-        </Box>
-      </Paper>
-    );
+    return null;
   }
 
-  return <Box ref={ref} className="ad-slot-container" sx={{ minHeight: minH, overflow: 'hidden', my: 3.5, ...style }} />;
+  // Google AdSense Compliance: Mandatory disclosure label & safe margin to prevent accidental clicks
+  return (
+    <Box className="ad-slot-container" sx={{ minHeight: minH, width: '100%', my: 4, textAlign: 'center', ...style }}>
+      <Typography
+        variant="caption"
+        sx={{
+          display: 'block',
+          fontSize: '0.65rem',
+          color: 'text.disabled',
+          letterSpacing: '0.08em',
+          mb: 0.75,
+          textTransform: 'uppercase'
+        }}
+      >
+        Advertisement / विज्ञापन
+      </Typography>
+      <Box ref={ref} sx={{ minHeight: minH - 24, overflow: 'hidden' }} />
+    </Box>
+  );
 }

@@ -91,6 +91,24 @@ async function getAccessToken(credentials) {
   return response.data.access_token;
 }
 
+// Google Indexing API daily quota cap protection (Google limits to 200/day per project)
+const GOOGLE_DAILY_QUOTA_LIMIT = 180;
+let dailyGoogleIndexingCount = 0;
+let lastQuotaResetDate = new Date().toISOString().slice(0, 10);
+
+function hasGoogleQuotaRemaining() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (today !== lastQuotaResetDate) {
+    dailyGoogleIndexingCount = 0;
+    lastQuotaResetDate = today;
+  }
+  return dailyGoogleIndexingCount < GOOGLE_DAILY_QUOTA_LIMIT;
+}
+
+function incrementGoogleQuota() {
+  dailyGoogleIndexingCount++;
+}
+
 /**
  * Notify Google Indexing API that a URL has been updated, created, or deleted.
  * @param {string} url - The canonical URL of the blog post
@@ -101,6 +119,11 @@ async function notifyUrl(url, type = 'URL_UPDATED') {
   if (!credentials) {
     console.warn(`[Google Indexing] Warning: Google Indexing credentials not configured in environment or JSON file. Indexing notice skipped.`);
     return { success: false, message: 'Google Indexing credentials not configured.' };
+  }
+
+  if (!hasGoogleQuotaRemaining()) {
+    console.warn(`[Google Indexing] Daily quota limit reached (${dailyGoogleIndexingCount}/${GOOGLE_DAILY_QUOTA_LIMIT}). Skipping Google API call to prevent quota ban. IndexNow and Sitemaps will handle indexing.`);
+    return { success: false, quotaExceeded: true, message: 'Daily Google indexing quota cap reached.' };
   }
 
   try {
@@ -121,7 +144,8 @@ async function notifyUrl(url, type = 'URL_UPDATED') {
       }
     );
 
-    console.log(`[Google Indexing] Successfully sent API notice: ${url} -> ${type}`);
+    incrementGoogleQuota();
+    console.log(`[Google Indexing] Successfully sent API notice (${dailyGoogleIndexingCount}/${GOOGLE_DAILY_QUOTA_LIMIT}): ${url} -> ${type}`);
     return { success: true, data: response.data };
   } catch (error) {
     console.error(

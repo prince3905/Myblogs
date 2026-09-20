@@ -667,8 +667,13 @@ async function sitemap(req, res) {
       })
       .join('');
 
-    // Strictly INDEXABLE static pages only (Excludes noindex pages: /search, /archive, /tags/*)
-    const staticPages = ['/about', '/contact', '/privacy', '/terms', '/tools', '/games', '/job-alerts'].map(p => {
+    // Strictly INDEXABLE static pages & International Country Hubs only (Excludes noindex pages: /search, /archive, /tags/*)
+    const staticPages = [
+      '/about', '/contact', '/privacy', '/terms', '/tools', '/games', '/job-alerts',
+      '/global-jobs', '/global-news',
+      '/global-jobs/IN', '/global-jobs/US', '/global-jobs/AE', '/global-jobs/GB',
+      '/global-jobs/CA', '/global-jobs/AU', '/global-jobs/SA', '/global-jobs/DE'
+    ].map(p => {
       return `<url><loc>${normalizeCanonicalUrl(p)}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>`;
     }).join('');
 
