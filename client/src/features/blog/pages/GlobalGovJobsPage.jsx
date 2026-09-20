@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
+import AdSlot from '../../../components/AdSlot';
 import { request } from '../../../shared/lib/api';
 import { applyFullWebsiteTranslation, ALL_LANGUAGES } from '../../../components/GlobalLanguagePicker';
 
@@ -840,6 +841,9 @@ export default function GlobalGovJobsPage() {
             </Box>
           )}
 
+          {/* High-Yield Top Feed AdSense Unit */}
+          <AdSlot format="incontent" style={{ my: 3 }} />
+
           {/* Job Cards Grid */}
           {!loading && jobs.length > 0 && (
             <Box sx={{
@@ -1050,6 +1054,9 @@ export default function GlobalGovJobsPage() {
               })}
             </Box>
           )}
+
+          {/* High-Yield In-Feed / After-Feed AdSense Unit */}
+          <AdSlot format="afterpost" style={{ my: 4 }} />
 
           {/* Pagination */}
           {!loading && pagination.totalPages > 1 && (
@@ -1400,6 +1407,9 @@ export default function GlobalGovJobsPage() {
                   ⚠️ <strong>धोखाधड़ी से सावधान (Anti-Fraud Warning):</strong> सरकारी विभाग कभी भी किसी व्यक्तिगत बैंक खाते, QR कोड या UPI पर भर्ती शुल्क नहीं मांगते। किसी भी फर्जी एजेंट या अनधिकृत मध्यस्थ के झांसे में न आएं। केवल नीचे दिए गए सीधे आधिकारिक .gov पोर्टल से ही आवेदन करें।
                 </Typography>
               </Box>
+
+              {/* High-Engagement Job Application In-Modal AdSense Unit */}
+              <AdSlot format="incontent" style={{ my: 2.5 }} />
 
               {/* Action Buttons */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>

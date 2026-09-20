@@ -12,6 +12,7 @@ import { postUrl, catSlug } from '../../../shared/lib/category';
 import { optimizeImage } from '../../../shared/lib/images';
 import { request } from '../../../shared/lib/api';
 import LiveTrendingPulseHub from '../components/LiveTrendingPulseHub';
+import AdSlot from '../../../components/AdSlot';
 
 const QUICK_EXAM_FILTERS = [
   { label: '🌟 All Updates', query: '', color: '#4F46E5', icon: '⚡' },
@@ -2646,6 +2647,11 @@ export default function HomePage() {
         </Container>
       </Box>
 
+      {/* High-Yield In-Content AdSense Unit */}
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 }, my: 2 }}>
+        <AdSlot format="incontent" />
+      </Container>
+
       {/* Daily Current Affairs & GK Quiz Carousel Section */}
       <DailyCurrentAffairsSlider items={currentAffairsList} loading={loadingCA} />
 
@@ -2753,8 +2759,18 @@ export default function HomePage() {
         </Container>
       </Box>
 
+      {/* Mid-Page High-Yield AdSense Unit */}
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 }, my: 2 }}>
+        <AdSlot format="incontent" />
+      </Container>
+
       {/* 24x7 Multi-Category Live Trends & News Radar (Zero Index Bloat, 100% User Engagement) */}
       <LiveTrendingPulseHub />
+
+      {/* Pre-Footer High-Yield AdSense Unit */}
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 6, lg: 6 }, my: 3 }}>
+        <AdSlot format="afterpost" />
+      </Container>
 
       {/* Explore Tools & Games Section (H2) */}
       <Box 

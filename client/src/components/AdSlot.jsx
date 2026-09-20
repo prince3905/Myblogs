@@ -14,6 +14,24 @@ const defaultMinHeights = {
   afterpost: 160,
 };
 
+let cachedAdsData = null;
+let pendingAdsPromise = null;
+
+function fetchAdsData() {
+  if (cachedAdsData) return Promise.resolve(cachedAdsData);
+  if (pendingAdsPromise) return pendingAdsPromise;
+  pendingAdsPromise = request('/api/ads')
+    .then(data => {
+      cachedAdsData = data || {};
+      return cachedAdsData;
+    })
+    .catch(() => {
+      pendingAdsPromise = null;
+      return {};
+    });
+  return pendingAdsPromise;
+}
+
 export default function AdSlot({ format = 'sidebar', style }) {
   const [code, setCode] = useState(null);
   const [loaded, setLoaded] = useState(false);
@@ -22,7 +40,7 @@ export default function AdSlot({ format = 'sidebar', style }) {
   const minH = defaultMinHeights[format] || 250;
 
   useEffect(() => {
-    request('/api/ads')
+    fetchAdsData()
       .then(data => {
         setCode(data[format] || '');
         setLoaded(true);

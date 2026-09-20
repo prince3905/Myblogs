@@ -24,6 +24,7 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Layout from '../../blog/components/Layout';
+import AdSlot from '../../../components/AdSlot';
 
 export default function CurrentAffairsDetailPage() {
   const { slug } = useParams();
@@ -269,6 +270,9 @@ export default function CurrentAffairsDetailPage() {
           />
         </Box>
 
+        {/* High-Yield In-Content Ad Between Article and Daily Quiz */}
+        <AdSlot format="incontent" style={{ my: 3 }} />
+
         {/* Interactive 10-MCQ Practice Quiz Section */}
         {data.quizzes && data.quizzes.length > 0 && (
           <Box sx={{ bgcolor: 'white', p: { xs: 2.5, md: 5 }, borderRadius: 4, border: '1px solid #E2E8F0', mb: 5 }}>
@@ -450,6 +454,9 @@ export default function CurrentAffairsDetailPage() {
             )}
           </Box>
         )}
+
+        {/* Bottom Pre-Footer Ad */}
+        <AdSlot format="afterpost" style={{ my: 4 }} />
       </Container>
     </Box>
   </Layout>

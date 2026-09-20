@@ -5,6 +5,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
+import AdSlot from '../../../components/AdSlot';
 import { usePosts } from '../../../hooks/usePosts';
 import { useCategories } from '../../../hooks/useCategories';
 import { catSlug } from '../../../shared/lib/category';
@@ -223,6 +224,9 @@ export default function CategoryPage() {
             </Box>
           </Box>
 
+          {/* Category Top In-Content Ad */}
+          <AdSlot format="incontent" style={{ my: 3 }} />
+
           {/* Posts Grid or Loading / Empty states */}
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
@@ -251,6 +255,9 @@ export default function CategoryPage() {
                   </Box>
                 ))}
               </Box>
+
+              {/* Category Bottom After-Post Ad */}
+              <AdSlot format="afterpost" style={{ my: 3 }} />
 
               {pages > 1 && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5, mb: 3 }}>

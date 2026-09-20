@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useParams, useLocation } from 'react-router-do
 import { Box, Typography } from '@mui/material';
 import ToastProvider from '../components/Toast';
 import AdminRoute from '../features/auth/components/AdminRoute';
+import { useVisitorCountry } from '../shared/lib/geo';
 
 import HomePage from '../features/blog/pages/HomePage';
 
@@ -124,11 +125,17 @@ function WebStoryRedirect() {
   );
 }
 
+// Smart Root: Indian visitors get full Sarkari portal (HomePage), Foreign visitors get GlobalGovJobsPage directly!
+function SmartRootPage() {
+  const { isIndia } = useVisitorCountry();
+  return isIndia ? <HomePage /> : <GlobalGovJobsPageSuspense />;
+}
+
 export default function App() {
   return (
     <ToastProvider>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<SmartRootPage />} />
         <Route path="/web-stories/:slug" element={<WebStoryRedirect />} />
         <Route path="/blog" element={<BlogListPageSuspense />} />
         <Route path="/blog/:category/:slug" element={<PostPageSuspense />} />

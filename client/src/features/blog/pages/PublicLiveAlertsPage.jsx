@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
+import AdSlot from '../../../components/AdSlot';
 import { request } from '../../../shared/lib/api';
 import TelegramRedirectModal from '../../../components/TelegramRedirectModal';
 import { resolveOfficialGovtPortal } from '../../../shared/lib/govtPortalMap';
@@ -1643,6 +1644,9 @@ export default function PublicLiveAlertsPage() {
               </Box>
             </Box>
 
+            {/* In-Content High-Yield Ad Unit */}
+            <AdSlot format="incontent" style={{ my: 3 }} />
+
             <Box
               id="alerts-lists-grid"
               sx={{
@@ -1968,6 +1972,9 @@ export default function PublicLiveAlertsPage() {
           </Box>
           </Box>
         )}
+
+        {/* Bottom Pre-Footer Ad Unit */}
+        <AdSlot format="afterpost" style={{ my: 4 }} />
       </Box>
 
       {/* Center Details Dialog Popup Modal */}
@@ -2054,7 +2061,10 @@ export default function PublicLiveAlertsPage() {
             ) : errorLoadingDetails ? (
               <Alert severity="error" sx={{ borderRadius: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#F87171' }}>{errorLoadingDetails}</Alert>
             ) : (
-              renderBlogContent(selectedAlert)
+              <>
+                {renderBlogContent(selectedAlert)}
+                <AdSlot format="incontent" style={{ my: 2.5 }} />
+              </>
             )}
           </DialogContent>
 

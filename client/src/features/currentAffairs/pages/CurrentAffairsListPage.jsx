@@ -18,6 +18,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SearchIcon from '@mui/icons-material/Search';
 import Layout from '../../blog/components/Layout';
+import AdSlot from '../../../components/AdSlot';
 
 const CATEGORIES = [
   'All',
@@ -186,7 +187,11 @@ export default function CurrentAffairsListPage() {
             </Typography>
           </Box>
         ) : (
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
+          <>
+            {/* Top In-Content Ad */}
+            <AdSlot format="incontent" style={{ my: 3 }} />
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3 }}>
             {items.map((item) => (
               <Card
                 key={item._id}
@@ -291,6 +296,10 @@ export default function CurrentAffairsListPage() {
               </Card>
             ))}
           </Box>
+
+          {/* Bottom Pre-Pagination Ad */}
+          <AdSlot format="afterpost" style={{ my: 3 }} />
+          </>
         )}
 
         {/* Pagination */}
