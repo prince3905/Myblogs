@@ -759,57 +759,119 @@ export default function PostPage() {
             </Typography>
           )}
 
-          {/* Quick Dates & Facts Summary Highlight Box for Students */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2.2,
-              mb: 3,
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)',
-              border: '1.5px solid #CBD5E1',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)'
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-              <Box sx={{ bgcolor: '#2563EB', color: 'white', px: 1, py: 0.2, borderRadius: '6px', fontSize: '0.68rem', fontWeight: 900, letterSpacing: 0.5 }}>
-                QUICK HIGHLIGHTS
-              </Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 850, color: '#1E293B', fontSize: '0.85rem' }}>
-                💡 त्वरित महत्वपूर्ण तिथियां एवं अपडेट (Key Dates)
-              </Typography>
-            </Box>
+          {/* Quick Dates & Facts Summary Highlight Box: Dynamic based on Category */}
+          {(() => {
+            const catLower = (post.category || '').toLowerCase();
+            const isSarkari = catLower.includes('sarkari') || catLower.includes('job') || catLower.includes('exam') || catLower.includes('admit') || catLower.includes('result') || catLower.includes('recruitment') || catLower.includes('vacancy') || catLower.includes('भर्ती');
 
-            <Grid container spacing={1.5}>
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ p: 1.5, bgcolor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', height: '100%', display: 'flex', alignItems: 'center', gap: 1.2 }}>
-                  <CalendarToday sx={{ color: '#2563EB', fontSize: '1.3rem' }} />
-                  <Box>
-                    <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.62rem', display: 'block' }}>
-                      📅 पोस्ट / विज्ञप्ति जारी तिथि (Post Date)
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 850, color: '#0F172A', fontSize: '0.92rem' }}>
-                      {new Date(post.publishedAt || post.createdAt).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            if (isSarkari) {
+              return (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2.2,
+                    mb: 3,
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)',
+                    border: '1.5px solid #CBD5E1',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)'
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                    <Box sx={{ bgcolor: '#2563EB', color: 'white', px: 1, py: 0.2, borderRadius: '6px', fontSize: '0.68rem', fontWeight: 900, letterSpacing: 0.5 }}>
+                      QUICK HIGHLIGHTS
+                    </Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 850, color: '#1E293B', fontSize: '0.85rem' }}>
+                      💡 त्वरित महत्वपूर्ण तिथियां एवं अपडेट (Key Dates)
                     </Typography>
                   </Box>
-                </Box>
-              </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ p: 1.5, bgcolor: '#FEF2F2', borderRadius: '10px', border: '1px solid #FECACA', height: '100%', display: 'flex', alignItems: 'center', gap: 1.2 }}>
-                  <AccessTime sx={{ color: '#DC2626', fontSize: '1.3rem' }} />
-                  <Box>
-                    <Typography variant="caption" sx={{ color: '#991B1B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.62rem', display: 'block' }}>
-                      ⏳ आवेदन की अंतिम तिथि (Last Date)
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 850, color: '#DC2626', fontSize: '0.92rem' }}>
-                      {post.lastDate || "नीचे दी गई तालिका (Important Dates) देखें"}
-                    </Typography>
+                  <Grid container spacing={1.5}>
+                    <Grid item xs={12} sm={6}>
+                      <Box sx={{ p: 1.5, bgcolor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', height: '100%', display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                        <CalendarToday sx={{ color: '#2563EB', fontSize: '1.3rem' }} />
+                        <Box>
+                          <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.62rem', display: 'block' }}>
+                            📅 पोस्ट / विज्ञप्ति जारी तिथि (Post Date)
+                          </Typography>
+                          <Typography variant="body1" sx={{ fontWeight: 850, color: '#0F172A', fontSize: '0.92rem' }}>
+                            {new Date(post.publishedAt || post.createdAt).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6}>
+                      <Box sx={{ p: 1.5, bgcolor: '#FEF2F2', borderRadius: '10px', border: '1px solid #FECACA', height: '100%', display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                        <AccessTime sx={{ color: '#DC2626', fontSize: '1.3rem' }} />
+                        <Box>
+                          <Typography variant="caption" sx={{ color: '#991B1B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.62rem', display: 'block' }}>
+                            ⏳ आवेदन की अंतिम तिथि (Last Date)
+                          </Typography>
+                          <Typography variant="body1" sx={{ fontWeight: 850, color: '#DC2626', fontSize: '0.92rem' }}>
+                            {post.lastDate || "आधिकारिक अधिसूचना देखें"}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              );
+            }
+
+            return (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2.2,
+                  mb: 3,
+                  borderRadius: '16px',
+                  background: 'linear-gradient(135deg, #F8FAFC 0%, #F0FDF4 100%)',
+                  border: '1.5px solid #CBD5E1',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)'
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                  <Box sx={{ bgcolor: '#10B981', color: 'white', px: 1, py: 0.2, borderRadius: '6px', fontSize: '0.68rem', fontWeight: 900, letterSpacing: 0.5 }}>
+                    ARTICLE OVERVIEW
                   </Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 850, color: '#1E293B', fontSize: '0.85rem' }}>
+                    💡 मुख्य जानकारी एवं गाइड हाइलाइट्स (Key Highlights)
+                  </Typography>
                 </Box>
-              </Grid>
-            </Grid>
-          </Paper>
+
+                <Grid container spacing={1.5}>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ p: 1.5, bgcolor: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', height: '100%', display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                      <CalendarToday sx={{ color: '#10B981', fontSize: '1.3rem' }} />
+                      <Box>
+                        <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.62rem', display: 'block' }}>
+                          📅 प्रकाशित तिथि (Published Date)
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 850, color: '#0F172A', fontSize: '0.92rem' }}>
+                          {new Date(post.publishedAt || post.createdAt).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ p: 1.5, bgcolor: '#F0FDF4', borderRadius: '10px', border: '1px solid #BBF7D0', height: '100%', display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                      <AccessTime sx={{ color: '#059669', fontSize: '1.3rem' }} />
+                      <Box>
+                        <Typography variant="caption" sx={{ color: '#065F46', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.62rem', display: 'block' }}>
+                          ⏱️ पढ़ने का समय (Estimated Read Time)
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 850, color: '#059669', fontSize: '0.92rem' }}>
+                          {post.readingTime || 5} मिनट (विस्तृत गाइड)
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Paper>
+            );
+          })()}
 
           {/* Dedicated Inline Share Box */}
           <PostInlineShare title={post.title} url={`${window.location.origin}${postUrl(post)}`} />

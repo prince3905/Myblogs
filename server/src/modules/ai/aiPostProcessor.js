@@ -351,7 +351,7 @@ function ensureGeoAndAeoCriteria(content, title, category = '') {
   return c;
 }
 
-function ensureFaqSection(content, title, focusKeyword) {
+function ensureFaqSection(content, title, focusKeyword, category = '') {
   if (!content) return content;
 
   const faqRegex = /faq|frequently\s+asked|questions?\s*&\s*answers?|q\s*&\s*a|अक्सर\s+पूछे/i;
@@ -362,9 +362,14 @@ function ensureFaqSection(content, title, focusKeyword) {
   const capitalizedFocus = focusKeyword.charAt(0).toUpperCase() + focusKeyword.slice(1);
   const keywordNoYear = capitalizedFocus.replace(/\b202\d\b/g, '').trim();
 
-  const faqHtml = `
+  const catLower = (category || '').toLowerCase();
+  const isSarkari = catLower.includes('sarkari') || catLower.includes('job') || catLower.includes('admit') || catLower.includes('result') || catLower.includes('exam');
+
+  let faqHtml = '';
+  if (isSarkari) {
+    faqHtml = `
 <h2>अक्सर पूछे जाने वाले सवाल (FAQ)</h2>
-<h3>Question: ${keywordNoYear} Download Kaise Karein?</h3>
+<h3>Question: ${keywordNoYear} Download / Check Kaise Karein?</h3>
 <p>उम्मीदवार आधिकारिक वेबसाइट पर जाकर Direct Link पर क्लिक करें। इसके बाद अपना Application Number और Date of Birth दर्ज करके सबमिट करें। आपका एडमिट कार्ड / रिजल्ट स्क्रीन पर दिखाई देगा, जिसे आप डाउनलोड कर सकते हैं।</p>
 
 <h3>Question: ${keywordNoYear} Ke Liye Required Documents Kya Hain?</h3>
@@ -373,6 +378,28 @@ function ensureFaqSection(content, title, focusKeyword) {
 <h3>Question: ${keywordNoYear} Ki Official Website Kya Hai?</h3>
 <p>इस भर्ती या परीक्षा की आधिकारिक वेबसाइट board की मुख्य साइट है। उम्मीदवार किसी भी अन्य अनौपचारिक स्रोत पर विश्वास न करें और केवल आधिकारिक वेबसाइट पर दिए गए निर्देशों का ही पालन करें।</p>
 `;
+  } else if (catLower.includes('ai') || catLower.includes('tool') || catLower.includes('tech')) {
+    faqHtml = `
+<h2>Frequently Asked Questions (FAQ)</h2>
+<h3>Question: ${keywordNoYear} Kya Hai Aur Iska Use Kaise Karein?</h3>
+<p>यह एक आधुनिक टेक्नोलॉजी और AI टूल गाइड है। इसके फीचर्स को समझने और उपयोग करने के लिए इस आर्टिकल में दिए गए स्टेप्स और गाइडलाइन्स का पालन करें।</p>
+
+<h3>Question: Kya ${keywordNoYear} Free Hai Ya Paid?</h3>
+<p>अधिकांश टूल्स बेसिक उपयोग के लिए फ्री उपलब्ध होते हैं, जबकि एडवांस फीचर्स के लिए प्रीमियम प्लान हो सकते हैं। विस्तृत जानकारी ऊपर तालिका में देखें।</p>
+
+<h3>Question: ${keywordNoYear} Ka Upyog Karte Samay Kin Baaton Ka Dhyan Rakhein?</h3>
+<p>हमेशा आधिकारिक और सुरक्षित प्लेटफॉर्म का ही उपयोग करें और अपनी व्यक्तिगत जानकारी व प्राइवेसी की सुरक्षा सुनिश्चित करें।</p>
+`;
+  } else {
+    faqHtml = `
+<h2>Frequently Asked Questions (FAQ)</h2>
+<h3>Question: ${keywordNoYear} Ke Baare Mein Sabse Zaroori Jankari Kya Hai?</h3>
+<p>इस विषय से जुड़े सभी मुख्य बिंदु, अपडेट्स और विशेषज्ञ सुझाव इस लेख में विस्तार से समझाए गए हैं।</p>
+
+<h3>Question: Is Topic Par Aur Jankari Kahan Se Prapt Karein?</h3>
+<p>ताज़ा और सत्यापित जानकारी प्राप्त करने के लिए हमारे ब्लॉग और आधिकारिक स्रोतों से जुड़े रहें।</p>
+`;
+  }
 
   return content + '\n' + faqHtml;
 }
@@ -757,7 +784,7 @@ async function processAIOutput(data) {
     processedContent = ensureH2Keyword(processedContent, focusKeyword);
   }
   processedContent = ensureGeoAndAeoCriteria(processedContent, processedTitle, category);
-  processedContent = ensureFaqSection(processedContent, processedTitle, focusKeyword);
+  processedContent = ensureFaqSection(processedContent, processedTitle, focusKeyword, category);
 
   // Table Structure Check (SEO)
   // Clean rogue trailing/leading quotes, colons, or punctuation from title
@@ -1005,12 +1032,12 @@ async function processAIOutput(data) {
 
   // Dynamic Category-Based Footer Branding (100% SEO Accuracy)
   if (!processedContent.includes('brand-authority-block') && !processedContent.includes('Digital Home Blog') && !processedContent.includes('डिजिटल होम ब्लॉग')) {
-    const isSarkariCategory = category === 'Sarkari Jobs & Exams';
+    const isSarkariCategory = category === 'Sarkari Jobs & Exams' || category === 'Latest Job' || category === 'Admit Card' || category === 'Result';
     let brandBlock = '';
     if (isSarkariCategory) {
-      brandBlock = `\n<div class="ql-table-embed">\n<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>\n<p>यह महत्वपूर्ण जानकारी <strong><a href="/">Digital Home Blog</a></strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong><a href="/job-alerts">Job Alerts (सरकारी नौकरी लाइव अलर्ट्स)</a></strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और हेल्थ से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong><a href="/">Home</a></strong> और <strong><a href="/blog">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>\n</div>\n</div>\n`;
+      brandBlock = `\n<div class="ql-table-embed">\n<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>\n<p>यह महत्वपूर्ण जानकारी <strong><a href="/">Digital Home Blog</a></strong> (डिजिटल होम ब्लॉग) द्वारा लाइव सिंक की गई है। हमारे पोर्टल पर आपको सबसे तेज <strong><a href="/india/sarkari-jobs">Job Alerts (सरकारी नौकरी लाइव अलर्ट्स)</a></strong>, लेटेस्ट सरकारी नौकरियां, एडमिट कार्ड और रिजल्ट्स के डायरेक्ट लिंक्स मिलते हैं। इसके साथ ही देश-दुनिया, टेक्नोलॉजी और एजुकेशन से जुड़े महत्वपूर्ण आर्टिकल्स पढ़ने के लिए हमारे <strong><a href="/">Home</a></strong> और <strong><a href="/blog">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>\n</div>\n</div>\n`;
     } else {
-      brandBlock = `\n<div class="ql-table-embed">\n<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>\n<p>यह लेख <strong><a href="/">Digital Home Blog</a></strong> के एक्सपर्ट्स द्वारा रिसर्च करके तैयार किया गया है। हम अपने पाठकों तक हेल्थ, एजुकेशन, लाइफस्टाइल और टेक की सटीक जानकारियां (All Insights Blog) पहुंचाते हैं। यदि आप छात्र हैं, तो हमारे पोर्टल पर लाइव <strong><a href="/job-alerts">Government Job Vacancy & Result 2026</a></strong> और न्यू वैकेंसी अलर्ट्स का लाभ उठाने के लिए सीधे हमारे <strong><a href="/job-alerts">Job Alerts (सरकारी नौकरी लाइव अलर्ट्स)</a></strong> पेज पर विजिट कर सकते हैं।</p>\n</div>\n</div>\n`;
+      brandBlock = `\n<div class="ql-table-embed">\n<div class='brand-authority-block' style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>\n<p>यह लेख <strong><a href="/">Digital Home Blog</a></strong> के एक्सपर्ट्स द्वारा रिसर्च करके तैयार किया गया है। हम अपने पाठकों तक टेक्नोलॉजी, AI टूल्स, स्वास्थ्य, एजुकेशन और लाइफस्टाइल की सटीक जानकारियां पहुंचाते हैं। ऐसे ही उपयोगी आर्टिकल्स और अपडेट्स पढ़ने के लिए हमारे <strong><a href="/">Home</a></strong> और <strong><a href="/blog">Blog</a></strong> सेक्शन को जरूर एक्सप्लोर करें।</p>\n</div>\n</div>\n`;
     }
     processedContent = processedContent + brandBlock;
   }
