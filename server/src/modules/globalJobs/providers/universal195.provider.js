@@ -166,37 +166,41 @@ function generateRoleDetails(rawTitle, agency, countryName, category) {
 }
 
 /**
- * Fetch rotating daily circulars for Phase 5 (195 Sovereign Nations)
- * @param {number} [overrideDay] - Optional day of week (0-6) for manual/test triggering
+ * Fetch all countries from every rotation group every cycle.
+ * Deduplicated by countryCode so each country is fetched once.
+ * Per-country hard cap: 5 jobs to stay anti-spam-safe.
  */
-async function fetchUniversalRotatingGovJobs(overrideDay) {
-  const dayOfWeek = (overrideDay !== undefined && overrideDay !== null)
-    ? overrideDay
-    : new Date().getDay();
+async function fetchUniversalRotatingGovJobs() {
+  // Collect ALL unique countries across all 7 day-groups
+  const seenCodes = new Set();
+  const allCountries = [];
+  for (const dayGroup of Object.values(ROTATING_SCHEDULE)) {
+    for (const country of dayGroup.countries) {
+      if (!seenCodes.has(country.code)) {
+        seenCodes.add(country.code);
+        allCountries.push(country);
+      }
+    }
+  }
 
-  const activeHub = ROTATING_SCHEDULE[dayOfWeek] || ROTATING_SCHEDULE[1];
-  console.log(`[Universal 195 Provider] Executing Day ${dayOfWeek} Rotation: ${activeHub.hubName}`);
-
+  console.log(`[Universal 195 Provider] Running full sweep: ${allCountries.length} unique countries.`);
   const verifiedJobs = [];
 
-  for (const country of activeHub.countries) {
-    if (verifiedJobs.length >= 20) break; // Hard safety cap per rotation
-
+  for (const country of allCountries) {
     try {
       const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(country.query)}&hl=en&gl=US&ceid=US:en`;
       const response = await axios.get(feedUrl, {
         timeout: 9000,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) GlobalCareersIntelligence/2.0'
-        }
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) GlobalCareersIntelligence/2.0' }
       });
 
       if (!response.data) continue;
 
       const $ = cheerio.load(response.data, { xmlMode: true });
+      let countryJobCount = 0;
 
-      $('item').slice(0, 30).each((i, el) => {
-        if (verifiedJobs.length >= 40) return false;
+      $('item').slice(0, 20).each((i, el) => {
+        if (countryJobCount >= 5) return false; // max 5 per country
 
         const itemTitle = $(el).find('title').text()?.trim();
         if (!itemTitle) return;
@@ -216,13 +220,12 @@ async function fetchUniversalRotatingGovJobs(overrideDay) {
         const category = detectJobCategory(rawTitle);
         const salary = estimateSalary(country.currency, category);
 
-        const deadline = new Date(Date.now() + 28 * 24 * 60 * 60 * 1000); // 28-day notice
+        const deadline = new Date(Date.now() + 28 * 24 * 60 * 60 * 1000);
         const hash = crypto.createHash('md5').update(`${country.code}-${rawTitle}`).digest('hex').slice(0, 8);
         const refId = `${country.code}-GOV-${hash.toUpperCase()}`;
-
         const roleDetails = generateRoleDetails(rawTitle, agency, country.name, category);
 
-        const job = {
+        verifiedJobs.push({
           title: rawTitle,
           originalTitle: rawTitle,
           countryCode: country.code,
@@ -236,7 +239,7 @@ async function fetchUniversalRotatingGovJobs(overrideDay) {
           salary,
           dutyStation: `${country.name} (National / Duty Station)`,
           officialNoticeUrl: finalUrl,
-          officialGazetteSummary: `Official Gazette Vacancy Notice: ${rawTitle}\nAuthority: ${agency} (${country.name})\nClassification: ${category}\nSalary Scale: ${salary.amount}\nDuty Station: ${country.name}\nClosing Date: ${deadline.toLocaleDateString()}\nAll qualified candidates should register and apply directly through the verified official portal.`,
+          officialGazetteSummary: `Official Gazette Vacancy Notice: ${rawTitle}\nAuthority: ${agency} (${country.name})\nClassification: ${category}\nSalary Scale: ${salary.amount}\nDuty Station: ${country.name}\nClosing Date: ${deadline.toLocaleDateString()}`,
           description: roleDetails.description,
           keyResponsibilities: roleDetails.responsibilities,
           benefits: roleDetails.benefits,
@@ -245,11 +248,11 @@ async function fetchUniversalRotatingGovJobs(overrideDay) {
           verifiedStatus: 'Verified Official Gazette',
           verificationBadge: 'Verified by: Global Careers Intelligence Desk',
           eligibility: {
-            education: 'University Degree or recognized statutory civil service qualification as per official gazette circular.',
-            experience: 'Relevant public administration or professional specialty experience required.',
+            education: 'University Degree or recognized statutory civil service qualification.',
+            experience: 'Relevant public administration or professional specialty experience.',
             citizenshipRequired: false,
             visaSponsored: true,
-            ageLimit: '18 - 65 years (as per public service regulations)'
+            ageLimit: '18 - 65 years'
           },
           translations: {
             hi: {
@@ -258,34 +261,25 @@ async function fetchUniversalRotatingGovJobs(overrideDay) {
               dutyStation: `${country.name} (आधिकारिक तैनाती स्थल)`,
               eligibility: 'आधिकारिक गजट के अनुसार स्नातक / संबंधित योग्यता (18-65 वर्ष)',
               salary: salary.amount,
-              summary: `${agency} (${country.name}) द्वारा ${rawTitle} के पद पर आधिकारिक भर्ती। वेतनमान: ${salary.amount}। सीधे आधिकारिक पोर्टल से ऑनलाइन आवेदन करें।`,
-              howToApply: 'नीचे दिए गए आधिकारिक सरकारी लिंक पर क्लिक करें, पात्रता की जांच करें और सीधे सरकारी पोर्टल पर ऑनलाइन आवेदन जमा करें।'
-            },
-            en: {
-              title: rawTitle,
-              agency,
-              dutyStation: `${country.name} (National / Duty Station)`,
-              eligibility: 'University Degree or equivalent as per official gazette circular (Age: 18-65 yrs)',
-              salary: salary.amount,
-              summary: `Official government recruitment for ${rawTitle} under ${agency} (${country.name}). Salary: ${salary.amount}. Apply directly via the official portal.`,
-              howToApply: roleDetails.howToApply
+              summary: `${agency} (${country.name}) द्वारा ${rawTitle} के पद पर आधिकारिक भर्ती।`,
+              howToApply: 'नीचे दिए गए आधिकारिक सरकारी लिंक पर क्लिक करें।'
             }
           }
-        };
-
-        verifiedJobs.push(job);
+        });
+        countryJobCount++;
       });
 
-      // Natural randomized jitter (500-1000ms delay) between feeds
-      await new Promise(res => setTimeout(res, 600));
+      // Natural jitter between countries (anti-ban)
+      await new Promise(res => setTimeout(res, 500 + Math.random() * 500));
     } catch (err) {
-      console.warn(`[Universal 195 Provider Notice] Failed for ${country.name}:`, err.message);
+      console.warn(`[Universal 195] Failed for ${country.name}:`, err.message);
     }
   }
 
-  console.log(`[Universal 195 Provider] Extracted ${verifiedJobs.length} verified Phase 5 vacancies for ${activeHub.hubName}.`);
+  console.log(`[Universal 195 Provider] Full sweep complete: ${verifiedJobs.length} jobs from ${allCountries.length} countries.`);
   return verifiedJobs;
 }
+
 
 module.exports = {
   fetchUniversalRotatingGovJobs,
