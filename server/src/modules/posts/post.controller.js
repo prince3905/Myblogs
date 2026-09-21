@@ -668,12 +668,24 @@ async function sitemap(req, res) {
       })
       .join('');
 
-    // Strictly INDEXABLE static pages & International Country Hubs only (Excludes tools, games, search, tags)
-    const staticPages = [
+    // Strictly INDEXABLE static pages & International Country Hubs for all active nations
+    const baseStaticPages = [
       '/about', '/contact', '/privacy', '/terms', '/job-alerts',
-      '/global-jobs', '/global-news',
-      '/global-jobs/IN', '/global-jobs/US', '/global-jobs/AE', '/global-jobs/GB',
-      '/global-jobs/CA', '/global-jobs/AU', '/global-jobs/SA', '/global-jobs/DE'
+      '/global-jobs', '/global-news'
+    ];
+
+    let countryHubs = ['IN', 'US', 'AE', 'GB', 'CA', 'AU', 'SA', 'DE'];
+    try {
+      const GlobalJob = require('../globalJobs/globalJob.model');
+      const activeCountryCodes = await GlobalJob.distinct('countryCode');
+      if (activeCountryCodes && activeCountryCodes.length > 0) {
+        countryHubs = Array.from(new Set([...countryHubs, ...activeCountryCodes]));
+      }
+    } catch (cErr) {}
+
+    const staticPages = [
+      ...baseStaticPages,
+      ...countryHubs.map(c => `/global-jobs/${c}`)
     ].map(p => {
       return `<url><loc>${normalizeCanonicalUrl(p)}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>`;
     }).join('');
