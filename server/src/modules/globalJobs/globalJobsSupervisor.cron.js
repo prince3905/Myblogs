@@ -6,6 +6,7 @@ const { fetchAngloGovJobs } = require('./providers/anglo.provider');
 const { fetchContinentalGovJobs } = require('./providers/continental.provider');
 const { fetchApacAfricaGovJobs } = require('./providers/apacAfrica.provider');
 const { fetchUniversalRotatingGovJobs } = require('./providers/universal195.provider');
+const { fetchMultiSourceGovJobs } = require('./providers/multiSource.provider');
 const AutomationLog = require('../admin/automationLog.model');
 const { OFFICIAL_GOV_TLD_REGEX } = require('./globalJob.model');
 
@@ -196,8 +197,12 @@ async function runSupervisorCycle() {
     console.log('[Supervisor] Fetching verified Universal 195 Rotating circulars...');
     const universal195Jobs = await fetchUniversalRotatingGovJobs();
 
-    // Combine all genuine verified official circulars
-    const candidateJobs = [...universal195Jobs, ...apacAfricaJobs, ...continentalJobs, ...angloJobs, ...gulfJobs, ...unJobs];
+    // Step 9: Ingest from MultiSource — ReliefWeb country feeds + UN Jobs + World Bank (80+ countries)
+    console.log('[Supervisor] Fetching MultiSource country-specific feeds (80+ countries)...');
+    const multiSourceJobs = await fetchMultiSourceGovJobs();
+
+    // Combine all genuine verified official circulars (multiSource first for max country diversity)
+    const candidateJobs = [...multiSourceJobs, ...universal195Jobs, ...apacAfricaJobs, ...continentalJobs, ...angloJobs, ...gulfJobs, ...unJobs];
     const newJobUrls = [];
 
     for (const job of candidateJobs) {

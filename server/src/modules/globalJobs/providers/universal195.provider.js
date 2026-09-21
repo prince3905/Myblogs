@@ -5,25 +5,39 @@ const { OFFICIAL_GOV_TLD_REGEX } = require('../globalJob.model');
 
 // Rotating Day-of-Week Schedule for Universal 195 Sovereign Nations Expansion
 const ROTATING_SCHEDULE = {
-  1: { // Monday: Nordic & Alpine Europe
-    hubName: 'Nordic & Alpine Europe',
+  1: { // Monday: Nordic, Alpine & European Civil Services
+    hubName: 'Europe Civil Services',
     countries: [
       { code: 'CH', name: 'Switzerland', flag: '🇨🇭', continent: 'Europe', currency: 'CHF', agency: 'Federal Administration (Bund/Admin.ch)', fallbackUrl: 'https://www.admin.ch', query: '("Stellenausschreibung" OR "Offre d\'emploi" OR "federal job") site:admin.ch OR site:ch.ch' },
       { code: 'NO', name: 'Norway', flag: '🇳🇴', continent: 'Europe', currency: 'NOK', agency: 'Norwegian Directorate (NAV / Jobbnorge)', fallbackUrl: 'https://www.nav.no', query: '("Ledig stilling" OR "statsansatt") site:nav.no' },
       { code: 'SE', name: 'Sweden', flag: '🇸🇪', continent: 'Europe', currency: 'SEK', agency: 'Swedish Public Employment Service', fallbackUrl: 'https://arbetsformedlingen.se', query: '("lediga jobb" OR "statliga jobb") site:arbetsformedlingen.se' },
       { code: 'AT', name: 'Austria', flag: '🇦🇹', continent: 'Europe', currency: 'EUR', agency: 'Federal Chancellery (Jobbörse der Republik)', fallbackUrl: 'https://jobboerse.gv.at', query: '("Ausschreibung" OR "Bundesdienst") site:gv.at' },
       { code: 'DK', name: 'Denmark', flag: '🇩🇰', continent: 'Europe', currency: 'DKK', agency: 'Agency for Public Finance & Recruitment', fallbackUrl: 'https://www.borger.dk', query: '("ledig stilling" OR "statsjob") site:borger.dk' },
-      { code: 'FI', name: 'Finland', flag: '🇫🇮', continent: 'Europe', currency: 'EUR', agency: 'Valtiolle (State Civil Service)', fallbackUrl: 'https://www.valtiolle.fi', query: '("avoimet työpaikat" OR "valtiolle") site:valtiolle.fi' }
+      { code: 'FI', name: 'Finland', flag: '🇫🇮', continent: 'Europe', currency: 'EUR', agency: 'Valtiolle (State Civil Service)', fallbackUrl: 'https://www.valtiolle.fi', query: '("avoimet työpaikat" OR "valtiolle") site:valtiolle.fi' },
+      { code: 'IE', name: 'Ireland', flag: '🇮🇪', continent: 'Europe', currency: 'EUR', agency: 'Public Appointments Service (publicjobs.ie)', fallbackUrl: 'https://www.publicjobs.ie', query: '("Public Appointments Service" OR "civil service" OR vacancy) site:gov.ie' },
+      { code: 'NL', name: 'Netherlands', flag: '🇳🇱', continent: 'Europe', currency: 'EUR', agency: 'Werken voor Nederland (Rijksoverheid)', fallbackUrl: 'https://www.overheid.nl', query: '("Werken voor Nederland" OR "Rijksoverheid" OR vacature) site:overheid.nl' },
+      { code: 'BE', name: 'Belgium', flag: '🇧🇪', continent: 'Europe', currency: 'EUR', agency: 'Selor (Federal Public Service)', fallbackUrl: 'https://www.belgium.be', query: '("Selor" OR "travailler pour" OR vacature OR emploi) site:belgium.be' },
+      { code: 'PT', name: 'Portugal', flag: '🇵🇹', continent: 'Europe', currency: 'EUR', agency: 'Bolsa de Emprego Público (BEP)', fallbackUrl: 'https://www.gov.pt', query: '("Bolsa de Emprego Público" OR concurso OR "função pública") site:gov.pt' },
+      { code: 'PL', name: 'Poland', flag: '🇵🇱', continent: 'Europe', currency: 'PLN', agency: 'Kancelaria Prezesa Rady Ministrów (KPRM)', fallbackUrl: 'https://www.gov.pl', query: '("służba cywilna" OR "nabór") site:gov.pl' },
+      { code: 'CZ', name: 'Czech Republic', flag: '🇨🇿', continent: 'Europe', currency: 'CZK', agency: 'Portál veřejné správy', fallbackUrl: 'https://portal.gov.cz', query: '("státní služba" OR "výběrové řízení") site:gov.cz' },
+      { code: 'GR', name: 'Greece', flag: '🇬🇷', continent: 'Europe', currency: 'EUR', agency: 'ASEP (Supreme Council for Civil Personnel)', fallbackUrl: 'https://www.gov.gr', query: '("ΑΣΕΠ" OR "προσλήψεις" OR "δημόσιο") site:gov.gr' },
+      { code: 'RO', name: 'Romania', flag: '🇷🇴', continent: 'Europe', currency: 'RON', agency: 'Agenția Națională a Funcționarilor Publici', fallbackUrl: 'https://www.gov.ro', query: '("posturi vacante" OR "funcția publică" OR concurs) site:gov.ro' },
+      { code: 'HR', name: 'Croatia', flag: '🇭🇷', continent: 'Europe', currency: 'EUR', agency: 'Ministarstvo pravosuđa i uprave', fallbackUrl: 'https://gov.hr', query: '("državna služba" OR natječaj) site:gov.hr' }
     ]
   },
-  2: { // Tuesday: South & Central Asia
+  2: { // Tuesday: South, Central & East Asia
     hubName: 'South & Central Asia',
     countries: [
       { code: 'NP', name: 'Nepal', flag: '🇳🇵', continent: 'Asia', currency: 'NPR', agency: 'Public Service Commission (Lok Sewa Aayog)', fallbackUrl: 'http://psc.gov.np', query: '("Public Service Commission" OR "Lok Sewa" OR vacancy) site:gov.np' },
       { code: 'LK', name: 'Sri Lanka', flag: '🇱🇰', continent: 'Asia', currency: 'LKR', agency: 'Public Service Commission of Sri Lanka', fallbackUrl: 'http://www.psc.gov.lk', query: '("Public Service Commission" OR "Gazette Vacancy") site:gov.lk' },
       { code: 'BD', name: 'Bangladesh', flag: '🇧🇩', continent: 'Asia', currency: 'BDT', agency: 'Bangladesh Public Service Commission (BPSC)', fallbackUrl: 'http://www.bpsc.gov.bd', query: '("Public Service Commission" OR recruitment OR circular) site:gov.bd' },
       { code: 'KZ', name: 'Kazakhstan', flag: '🇰🇿', continent: 'Asia', currency: 'KZT', agency: 'Agency for Civil Service Affairs', fallbackUrl: 'https://gov.kz', query: '("государственная служба" OR "бос орындар") site:gov.kz' },
-      { code: 'UZ', name: 'Uzbekistan', flag: '🇺🇿', continent: 'Asia', currency: 'UZS', agency: 'Civil Service Development Agency (ARGOS)', fallbackUrl: 'https://gov.uz', query: '("davlat xizmati" OR "vakansiya") site:gov.uz' }
+      { code: 'UZ', name: 'Uzbekistan', flag: '🇺🇿', continent: 'Asia', currency: 'UZS', agency: 'Civil Service Development Agency (ARGOS)', fallbackUrl: 'https://gov.uz', query: '("davlat xizmati" OR "vakansiya") site:gov.uz' },
+      { code: 'BT', name: 'Bhutan', flag: '🇧🇹', continent: 'Asia', currency: 'BTN', agency: 'Royal Civil Service Commission (RCSC)', fallbackUrl: 'https://www.rcsc.gov.bt', query: '("Royal Civil Service Commission" OR vacancy OR recruitment) site:rcsc.gov.bt' },
+      { code: 'MV', name: 'Maldives', flag: '🇲🇻', continent: 'Asia', currency: 'MVR', agency: 'Civil Service Commission of Maldives', fallbackUrl: 'https://www.csc.gov.mv', query: '("Civil Service Commission" OR vacancy OR announcement) site:gov.mv' },
+      { code: 'MN', name: 'Mongolia', flag: '🇲🇳', continent: 'Asia', currency: 'MNT', agency: 'Civil Service Council of Mongolia', fallbackUrl: 'https://csc.gov.mn', query: '("Төрийн албаны зөвлөл" OR "сонгон шалгаруулалт") site:csc.gov.mn' },
+      { code: 'TJ', name: 'Tajikistan', flag: '🇹🇯', continent: 'Asia', currency: 'TJS', agency: 'Civil Service Agency under the President', fallbackUrl: 'https://gov.tj', query: '("хизмати давлатӣ" OR "озмун" OR vacancy) site:gov.tj' },
+      { code: 'KG', name: 'Kyrgyzstan', flag: '🇰🇬', continent: 'Asia', currency: 'KGS', agency: 'State Agency for Civil Service (SACS)', fallbackUrl: 'https://mkk.gov.kg', query: '("государственная служба" OR "бос орундар") site:gov.kg' }
     ]
   },
   3: { // Wednesday: Southeast Asia & Oceania
@@ -33,7 +47,12 @@ const ROTATING_SCHEDULE = {
       { code: 'TH', name: 'Thailand', flag: '🇹🇭', continent: 'Asia', currency: 'THB', agency: 'Office of the Civil Service Commission (OCSC)', fallbackUrl: 'https://www.ocsc.go.th', query: '("รับสมัครงาน" OR "ข้าราชการ") site:go.th' },
       { code: 'VN', name: 'Vietnam', flag: '🇻🇳', continent: 'Asia', currency: 'VND', agency: 'Ministry of Home Affairs / Government Portal', fallbackUrl: 'https://chinhphu.vn', query: '("tuyển dụng công chức" OR "viên chức") site:gov.vn' },
       { code: 'NZ', name: 'New Zealand', flag: '🇳🇿', continent: 'Oceania', currency: 'NZD', agency: 'Public Service Commission (Te Kawa Mataaho)', fallbackUrl: 'https://jobs.govt.nz', query: '("Public Service Commission" OR "civil service" OR vacancy) site:govt.nz' },
-      { code: 'FJ', name: 'Fiji', flag: '🇫🇯', continent: 'Oceania', currency: 'FJD', agency: 'Fiji Public Service Commission', fallbackUrl: 'http://www.civilservice.gov.fj', query: '("Public Service" OR vacancy OR recruitment) site:gov.fj' }
+      { code: 'FJ', name: 'Fiji', flag: '🇫🇯', continent: 'Oceania', currency: 'FJD', agency: 'Fiji Public Service Commission', fallbackUrl: 'http://www.civilservice.gov.fj', query: '("Public Service" OR vacancy OR recruitment) site:gov.fj' },
+      { code: 'ID', name: 'Indonesia', flag: '🇮🇩', continent: 'Asia', currency: 'IDR', agency: 'Badan Kepegawaian Negara (BKN)', fallbackUrl: 'https://www.bkn.go.id', query: '("Badan Kepegawaian Negara" OR "CPNS" OR "PPPK") site:go.id' },
+      { code: 'KH', name: 'Cambodia', flag: '🇰🇭', continent: 'Asia', currency: 'KHR', agency: 'Ministry of Civil Service', fallbackUrl: 'https://mcs.gov.kh', query: '("Civil Service" OR recruitment OR vacancy) site:gov.kh' },
+      { code: 'PG', name: 'Papua New Guinea', flag: '🇵🇬', continent: 'Oceania', currency: 'PGK', agency: 'Department of Personnel Management', fallbackUrl: 'http://www.dpm.gov.pg', query: '("Personnel Management" OR "public service" OR vacancy) site:gov.pg' },
+      { code: 'WS', name: 'Samoa', flag: '🇼🇸', continent: 'Oceania', currency: 'WST', agency: 'Public Service Commission Samoa', fallbackUrl: 'https://www.psc.gov.ws', query: '("Public Service Commission" OR vacancy) site:gov.ws' },
+      { code: 'VU', name: 'Vanuatu', flag: '🇻🇺', continent: 'Oceania', currency: 'VUV', agency: 'Public Service Commission Vanuatu', fallbackUrl: 'https://psc.gov.vu', query: '("Public Service Commission" OR vacancy) site:gov.vu' }
     ]
   },
   4: { // Thursday: Latin America & Caribbean
@@ -43,7 +62,13 @@ const ROTATING_SCHEDULE = {
       { code: 'CL', name: 'Chile', flag: '🇨🇱', continent: 'Americas', currency: 'CLP', agency: 'Servicio Civil (Empleos Públicos)', fallbackUrl: 'https://www.empleospublicos.cl', query: '("Empleos Públicos" OR concurso OR "Servicio Civil") site:gob.cl' },
       { code: 'CO', name: 'Colombia', flag: '🇨🇴', continent: 'Americas', currency: 'COP', agency: 'Comisión Nacional del Servicio Civil (CNSC)', fallbackUrl: 'https://www.cnsc.gov.co', query: '("Convocatoria" OR "Servicio Civil" OR vacante) site:gov.co' },
       { code: 'PE', name: 'Peru', flag: '🇵🇪', continent: 'Americas', currency: 'PEN', agency: 'Autoridad Nacional del Servicio Civil (SERVIR)', fallbackUrl: 'https://www.gob.pe', query: '("Convocatorias de trabajo" OR "Servicio Civil") site:gob.pe' },
-      { code: 'JM', name: 'Jamaica', flag: '🇯🇲', continent: 'Americas', currency: 'JMD', agency: 'Office of the Services Commissions', fallbackUrl: 'https://www.osc.gov.jm', query: '("Public Service" OR vacancy OR "civil service") site:gov.jm' }
+      { code: 'JM', name: 'Jamaica', flag: '🇯🇲', continent: 'Americas', currency: 'JMD', agency: 'Office of the Services Commissions', fallbackUrl: 'https://www.osc.gov.jm', query: '("Public Service" OR vacancy OR "civil service") site:gov.jm' },
+      { code: 'MX', name: 'Mexico', flag: '🇲🇽', continent: 'Americas', currency: 'MXN', agency: 'Secretaría de la Función Pública (TrabajaEn)', fallbackUrl: 'https://www.trabajaen.gob.mx', query: '("TrabajaEn" OR "concurso de ingreso" OR vacante) site:gob.mx' },
+      { code: 'CR', name: 'Costa Rica', flag: '🇨🇷', continent: 'Americas', currency: 'CRC', agency: 'Dirección General de Servicio Civil', fallbackUrl: 'https://www.dgsc.go.cr', query: '("Servicio Civil" OR vacante OR convocatoria) site:go.cr' },
+      { code: 'PA', name: 'Panama', flag: '🇵🇦', continent: 'Americas', currency: 'PAB', agency: 'Dirección General de Carrera Administrativa (DIGECA)', fallbackUrl: 'https://www.digeca.gob.pa', query: '("Carrera Administrativa" OR concurso OR vacante) site:gob.pa' },
+      { code: 'UY', name: 'Uruguay', flag: '🇺🇾', continent: 'Americas', currency: 'UYU', agency: 'Servicio Civil (Uruguay Concursa)', fallbackUrl: 'https://www.uruguayconcursa.gub.uy', query: '("Uruguay Concursa" OR "llamado laboral") site:gub.uy' },
+      { code: 'DO', name: 'Dominican Republic', flag: '🇩🇴', continent: 'Americas', currency: 'DOP', agency: 'Ministerio de Administración Pública (MAP)', fallbackUrl: 'https://map.gob.do', query: '("Administración Pública" OR concurso OR vacante) site:gob.do' },
+      { code: 'TT', name: 'Trinidad and Tobago', flag: '🇹🇹', continent: 'Americas', currency: 'TTD', agency: 'Service Commissions Department', fallbackUrl: 'https://www.scd.org.tt', query: '("Service Commissions" OR "public service" OR vacancy) site:gov.tt' }
     ]
   },
   5: { // Friday: Middle East & North Africa
@@ -52,27 +77,44 @@ const ROTATING_SCHEDULE = {
       { code: 'EG', name: 'Egypt', flag: '🇪🇬', continent: 'Africa', currency: 'EGP', agency: 'Central Agency for Organization & Admin (CAOA)', fallbackUrl: 'https://jobs.caoa.gov.eg', query: '("بوابة الوظائف الحكومية" OR "وظائف حكومية") site:gov.eg' },
       { code: 'JO', name: 'Jordan', flag: '🇯🇴', continent: 'Asia', currency: 'JOD', agency: 'Civil Service Bureau (CSB)', fallbackUrl: 'http://www.csb.gov.jo', query: '("ديوان الخدمة المدنية" OR "وظائف حكومية") site:gov.jo' },
       { code: 'MA', name: 'Morocco', flag: '🇲🇦', continent: 'Africa', currency: 'MAD', agency: 'Ministère de la Transition Numérique et de la Réforme de l\'Administration', fallbackUrl: 'https://www.emploi-public.ma', query: '("Emploi Public" OR "مباريات التوظيف") site:gov.ma' },
-      { code: 'TR', name: 'Turkey', flag: '🇹🇷', continent: 'Asia', currency: 'TRY', agency: 'Kariyer Kapısı (Cumhurbaşkanlığı İnsan Kaynakları)', fallbackUrl: 'https://kariyerkapisi.cbiko.gov.tr', query: '("Kamu Personeli Alımı" OR "memur alımı") site:gov.tr' }
+      { code: 'TR', name: 'Turkey', flag: '🇹🇷', continent: 'Asia', currency: 'TRY', agency: 'Kariyer Kapısı (Cumhurbaşkanlığı İnsan Kaynakları)', fallbackUrl: 'https://kariyerkapisi.cbiko.gov.tr', query: '("Kamu Personeli Alımı" OR "memur alımı") site:gov.tr' },
+      { code: 'KW', name: 'Kuwait', flag: '🇰🇼', continent: 'Asia', currency: 'KWD', agency: 'Civil Service Commission Kuwait', fallbackUrl: 'https://www.csc.gov.kw', query: '("ديوان الخدمة المدنية" OR "وظائف حكومية") site:gov.kw' },
+      { code: 'BH', name: 'Bahrain', flag: '🇧🇭', continent: 'Asia', currency: 'BHD', agency: 'Civil Service Bureau Bahrain', fallbackUrl: 'https://www.csb.gov.bh', query: '("ديوان الخدمة المدنية" OR "وظائف حكومية") site:gov.bh' },
+      { code: 'OM', name: 'Oman', flag: '🇴🇲', continent: 'Asia', currency: 'OMR', agency: 'Ministry of Labour Oman', fallbackUrl: 'https://www.mol.gov.om', query: '("وزارة العمل" OR "وظائف حكومية") site:gov.om' },
+      { code: 'TN', name: 'Tunisia', flag: '🇹🇳', continent: 'Africa', currency: 'TND', agency: 'Portail du Concours de la Fonction Publique', fallbackUrl: 'http://www.concours.gov.tn', query: '("Fonction Publique" OR "مناظرات انتداب") site:gov.tn' },
+      { code: 'DZ', name: 'Algeria', flag: '🇩🇿', continent: 'Africa', currency: 'DZD', agency: 'Direction Générale de la Fonction Publique', fallbackUrl: 'http://www.dgfp.gov.dz', query: '("الوظيفة العمومية" OR "مسابقات التوظيف") site:gov.dz' }
     ]
   },
-  0: { // Saturday & Sunday: Sub-Saharan Africa
+  0: { // Sunday: Sub-Saharan Africa
     hubName: 'Sub-Saharan Africa',
     countries: [
       { code: 'GH', name: 'Ghana', flag: '🇬🇭', continent: 'Africa', currency: 'GHS', agency: 'Public Services Commission of Ghana', fallbackUrl: 'https://psc.gov.gh', query: '("Public Services Commission" OR recruitment OR vacancy) site:gov.gh' },
       { code: 'ET', name: 'Ethiopia', flag: '🇪🇹', continent: 'Africa', currency: 'ETB', agency: 'Federal Civil Service Commission', fallbackUrl: 'http://www.fscs.gov.et', query: '("Civil Service Commission" OR vacancy OR recruitment) site:gov.et' },
       { code: 'RW', name: 'Rwanda', flag: '🇷🇼', continent: 'Africa', currency: 'RWF', agency: 'Public Service Commission of Rwanda', fallbackUrl: 'https://www.psc.gov.rw', query: '("Public Service Commission" OR "e-recruitment") site:gov.rw' },
       { code: 'TZ', name: 'Tanzania', flag: '🇹🇿', continent: 'Africa', currency: 'TZS', agency: 'Public Service Recruitment Secretariat (PSRS)', fallbackUrl: 'http://ajira.go.tz', query: '("Public Service Recruitment" OR "Nafasi za Kazi") site:go.tz' },
-      { code: 'UG', name: 'Uganda', flag: '🇺🇬', continent: 'Africa', currency: 'UGX', agency: 'Public Service Commission (PSC Uganda)', fallbackUrl: 'https://psc.go.ug', query: '("Public Service Commission" OR jobs OR vacancy) site:go.ug' }
+      { code: 'UG', name: 'Uganda', flag: '🇺🇬', continent: 'Africa', currency: 'UGX', agency: 'Public Service Commission (PSC Uganda)', fallbackUrl: 'https://psc.go.ug', query: '("Public Service Commission" OR jobs OR vacancy) site:go.ug' },
+      { code: 'NA', name: 'Namibia', flag: '🇳🇦', continent: 'Africa', currency: 'NAD', agency: 'Office of the Prime Minister', fallbackUrl: 'https://opm.gov.na', query: '("Public Service Commission" OR vacancy OR recruitment) site:gov.na' },
+      { code: 'BW', name: 'Botswana', flag: '🇧🇼', continent: 'Africa', currency: 'BWP', agency: 'Directorate of Public Service Management', fallbackUrl: 'https://www.gov.bw', query: '("Public Service" OR vacancy OR recruitment) site:gov.bw' },
+      { code: 'ZM', name: 'Zambia', flag: '🇿🇲', continent: 'Africa', currency: 'ZMW', agency: 'Public Service Commission Zambia', fallbackUrl: 'https://www.psc.gov.zm', query: '("Public Service Commission" OR recruitment OR vacancy) site:gov.zm' },
+      { code: 'ZW', name: 'Zimbabwe', flag: '🇿🇼', continent: 'Africa', currency: 'ZWL', agency: 'Public Service Commission Zimbabwe', fallbackUrl: 'https://www.psc.gov.zw', query: '("Public Service Commission" OR recruitment OR vacancy) site:gov.zw' },
+      { code: 'MU', name: 'Mauritius', flag: '🇲🇺', continent: 'Africa', currency: 'MUR', agency: 'Public Service Commission Mauritius', fallbackUrl: 'https://psc.govmu.org', query: '("Public Service Commission" OR vacancy OR circular) site:govmu.org' },
+      { code: 'SN', name: 'Senegal', flag: '🇸🇳', continent: 'Africa', currency: 'XOF', agency: 'Ministère de la Fonction Publique', fallbackUrl: 'https://sec.gouv.sn', query: '("Fonction Publique" OR concours OR recrutement) site:sec.gouv.sn' }
     ]
   },
-  6: { // Saturday alias (same hub)
+  6: { // Saturday: Sub-Saharan Africa (alias)
     hubName: 'Sub-Saharan Africa',
     countries: [
       { code: 'GH', name: 'Ghana', flag: '🇬🇭', continent: 'Africa', currency: 'GHS', agency: 'Public Services Commission of Ghana', fallbackUrl: 'https://psc.gov.gh', query: '("Public Services Commission" OR recruitment OR vacancy) site:gov.gh' },
       { code: 'ET', name: 'Ethiopia', flag: '🇪🇹', continent: 'Africa', currency: 'ETB', agency: 'Federal Civil Service Commission', fallbackUrl: 'http://www.fscs.gov.et', query: '("Civil Service Commission" OR vacancy OR recruitment) site:gov.et' },
       { code: 'RW', name: 'Rwanda', flag: '🇷🇼', continent: 'Africa', currency: 'RWF', agency: 'Public Service Commission of Rwanda', fallbackUrl: 'https://www.psc.gov.rw', query: '("Public Service Commission" OR "e-recruitment") site:gov.rw' },
       { code: 'TZ', name: 'Tanzania', flag: '🇹🇿', continent: 'Africa', currency: 'TZS', agency: 'Public Service Recruitment Secretariat (PSRS)', fallbackUrl: 'http://ajira.go.tz', query: '("Public Service Recruitment" OR "Nafasi za Kazi") site:go.tz' },
-      { code: 'UG', name: 'Uganda', flag: '🇺🇬', continent: 'Africa', currency: 'UGX', agency: 'Public Service Commission (PSC Uganda)', fallbackUrl: 'https://psc.go.ug', query: '("Public Service Commission" OR jobs OR vacancy) site:go.ug' }
+      { code: 'UG', name: 'Uganda', flag: '🇺🇬', continent: 'Africa', currency: 'UGX', agency: 'Public Service Commission (PSC Uganda)', fallbackUrl: 'https://psc.go.ug', query: '("Public Service Commission" OR jobs OR vacancy) site:go.ug' },
+      { code: 'NA', name: 'Namibia', flag: '🇳🇦', continent: 'Africa', currency: 'NAD', agency: 'Office of the Prime Minister', fallbackUrl: 'https://opm.gov.na', query: '("Public Service Commission" OR vacancy OR recruitment) site:gov.na' },
+      { code: 'BW', name: 'Botswana', flag: '🇧🇼', continent: 'Africa', currency: 'BWP', agency: 'Directorate of Public Service Management', fallbackUrl: 'https://www.gov.bw', query: '("Public Service" OR vacancy OR recruitment) site:gov.bw' },
+      { code: 'ZM', name: 'Zambia', flag: '🇿🇲', continent: 'Africa', currency: 'ZMW', agency: 'Public Service Commission Zambia', fallbackUrl: 'https://www.psc.gov.zm', query: '("Public Service Commission" OR recruitment OR vacancy) site:gov.zm' },
+      { code: 'ZW', name: 'Zimbabwe', flag: '🇿🇼', continent: 'Africa', currency: 'ZWL', agency: 'Public Service Commission Zimbabwe', fallbackUrl: 'https://www.psc.gov.zw', query: '("Public Service Commission" OR recruitment OR vacancy) site:gov.zw' },
+      { code: 'MU', name: 'Mauritius', flag: '🇲🇺', continent: 'Africa', currency: 'MUR', agency: 'Public Service Commission Mauritius', fallbackUrl: 'https://psc.govmu.org', query: '("Public Service Commission" OR vacancy OR circular) site:govmu.org' },
+      { code: 'SN', name: 'Senegal', flag: '🇸🇳', continent: 'Africa', currency: 'XOF', agency: 'Ministère de la Fonction Publique', fallbackUrl: 'https://sec.gouv.sn', query: '("Fonction Publique" OR concours OR recrutement) site:sec.gouv.sn' }
     ]
   }
 };
