@@ -24,6 +24,7 @@ import AdSlot from '../../../components/AdSlot';
 import { request } from '../../../shared/lib/api';
 import { applyFullWebsiteTranslation, ALL_LANGUAGES } from '../../../components/GlobalLanguagePicker';
 import { SOVEREIGN_COUNTRIES_195, getCountryByCode } from '../data/sovereignCountries195';
+import { getCountrySeoMeta, buildHreflangMatrix } from '../data/countrySeoConfig';
 
 // Continents for filtering
 const CONTINENTS = [
@@ -475,12 +476,31 @@ export default function GlobalGovJobsPage() {
     return null;
   }, [selectedJob, jobs]);
 
+  // Dynamic International SEO Metadata, Canonical & Hreflang Matrix
+  const seoMeta = useMemo(() => {
+    return getCountrySeoMeta(activeCountry);
+  }, [activeCountry]);
+
+  const hreflangMatrix = useMemo(() => {
+    return buildHreflangMatrix(activeCountry);
+  }, [activeCountry]);
+
+  const pageCanonical = useMemo(() => {
+    if (selectedJob) {
+      const ref = selectedJob.officialReferenceId || selectedJob._id;
+      return `https://www.digitalhomeblog.in/global-jobs/view/${encodeURIComponent(ref)}`;
+    }
+    return seoMeta.canonical;
+  }, [selectedJob, seoMeta]);
+
   return (
     <Layout>
       <Seo
-        title={selectedJob ? `${selectedJob.title} - ${selectedJob.countryName} | ग्लोबल सरकारी गजट 2026` : "ग्लोबल सरकारी जॉब पोर्टल 2026 | 195 देशों की आधिकारिक भर्तियां व गजट (Global Gov Jobs)"}
-        description={selectedJob ? `आधिकारिक सरकारी अधिसूचना: ${selectedJob.title} (${selectedJob.agencyOrMinistry}, ${selectedJob.countryName})। वेतन, योग्यता, आवेदन लिंक व गजट PDF।` : "विश्व के 195 संप्रभु देशों, संयुक्त राष्ट्र (UN), WHO, खाड़ी देशों व भारत सरकार की सत्यापित सरकारी नौकरियां। 100% आधिकारिक गजट और सीधे आवेदन लिंक।"}
-        keywords={['Global government jobs', 'Sarkari naukri world', 'UN jobs', 'Dubai government careers', 'Saudi civil service', 'UPSC SSC vacancies 2026', 'WHO jobs']}
+        title={selectedJob ? `${selectedJob.title} - ${selectedJob.countryName} | ग्लोबल सरकारी गजट 2026` : seoMeta.title}
+        description={selectedJob ? `आधिकारिक सरकारी अधिसूचना: ${selectedJob.title} (${selectedJob.agencyOrMinistry}, ${selectedJob.countryName})। वेतन, योग्यता, आवेदन लिंक व गजट PDF।` : seoMeta.description}
+        canonical={pageCanonical}
+        keywords={seoMeta.keywords}
+        hreflangs={hreflangMatrix}
         jsonLd={jobSchema}
       />
 

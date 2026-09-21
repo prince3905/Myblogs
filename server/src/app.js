@@ -755,6 +755,64 @@ app.get(['/global-jobs/view/:id', '/global-jobs/:country/:id'], async (req, res,
   }
 });
 
+// Dynamic Server-Side Meta Tag & Hreflang Matrix Injection for Global Jobs Country Hubs & Directory
+app.get(['/global-jobs', '/global-jobs/:country'], async (req, res, next) => {
+  try {
+    const rawParam = req.params.country ? String(req.params.country).trim() : '';
+    if (rawParam.toLowerCase() === 'view') return next();
+
+    const indexPath = path.join(publicPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(404).send('index.html not found');
+    }
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    const rawCountry = (rawParam || req.query.country || 'ALL').trim();
+    const { getCountrySeoMeta, buildHreflangMatrix } = require('./modules/globalJobs/countrySeoConfig');
+
+    const seoMeta = getCountrySeoMeta(rawCountry);
+    const hreflangMatrix = buildHreflangMatrix(rawCountry);
+
+    const siteName = 'Digital Home';
+    const fullTitle = seoMeta.title;
+    const desc = seoMeta.description;
+    const canonicalUrl = seoMeta.canonical;
+    const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
+
+    const hreflangTags = hreflangMatrix
+      .map(h => `<link rel="alternate" hreflang="${h.lang}" href="${h.href}" />`)
+      .join('\n    ');
+
+    const metaTags = `
+    <title>${fullTitle}</title>
+    <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="${canonicalUrl}" />
+    ${hreflangTags}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="${siteName}" />
+    <meta property="og:title" content="${fullTitle.replace(/"/g, '&quot;')}" />
+    <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:image" content="${imageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${fullTitle.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:image" content="${imageUrl}" />
+    `;
+
+    html = html.replace(/<title>.*?<\/title>/, '');
+    html = html.replace(/<meta name="description" .*?\/>/, '');
+    html = html.replace('</head>', `${metaTags}\n</head>`);
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+    return res.status(200).send(html);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Handle client-side routing (React Router) - only if file doesn't exist
 app.get('*', (req, res) => {
   const filePath = path.join(publicPath, req.path);

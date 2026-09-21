@@ -1,17 +1,20 @@
 import { Helmet } from 'react-helmet-async';
 import { normalizeCanonicalUrl } from '../../../shared/lib/urlUtils';
 
-export default function Seo({ title, description, image, url, canonical, keywords, jsonLd, noindex }) {
+export default function Seo({ title, description, image, url, canonical, keywords, jsonLd, noindex, hreflangs }) {
   const siteName = 'Digital Home Sarkari Result';
   
   let cleanTitle = title || '';
+  const hasDigitalHomeSuffix = /\s*\|\s*Digital Home\s*$/i.test(cleanTitle);
   // Strip any trailing "| Digital Home" or "| Inkspire Blog" or "| Sarkari Result" suffixes
   cleanTitle = cleanTitle.replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '');
 
   const isHomepageOrBrandTitle = cleanTitle.startsWith('Digital Home');
-  const fullTitle = isHomepageOrBrandTitle 
-    ? cleanTitle 
-    : (cleanTitle ? `${cleanTitle} | ${siteName}` : siteName);
+  const fullTitle = hasDigitalHomeSuffix
+    ? `${cleanTitle} | Digital Home`
+    : (isHomepageOrBrandTitle 
+        ? cleanTitle 
+        : (cleanTitle ? `${cleanTitle} | ${siteName}` : siteName));
   const desc = description || 'Sarkari Result, Admit Card, Latest Jobs, Vacancies, Sarkari Result Tools, Kids Games (बचो का गेम), Health, Education, Tech, and Career Insights from Digital Home Blog.';
   
   const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -50,6 +53,9 @@ export default function Seo({ title, description, image, url, canonical, keyword
     <Helmet>
       <title>{fullTitle}</title>
       <link rel="canonical" href={canonicalUrl} />
+      {Array.isArray(hreflangs) && hreflangs.map((h, idx) => (
+        <link key={`hreflang-${idx}-${h.lang}`} rel="alternate" hrefLang={h.lang} href={h.href} />
+      ))}
       <meta name="description" content={desc} />
       <meta name="robots" content={noindex ? "noindex, follow" : "max-image-preview:large, index, follow"} />
       <meta name="keywords" content={keys} />
