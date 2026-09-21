@@ -132,6 +132,7 @@ export default function GlobalGovJobsPage() {
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFallbackToInternational, setIsFallbackToInternational] = useState(false);
 
   // Modal Detail State
   const [selectedJob, setSelectedJob] = useState(null);
@@ -241,6 +242,7 @@ export default function GlobalGovJobsPage() {
         if (res?.success) {
           setJobs(res.data || []);
           setPagination(res.pagination || { total: 0, totalPages: 1 });
+          setIsFallbackToInternational(Boolean(res.fallbackToInternational));
         } else {
           setError('वैश्विक सरकारी नौकरियों की सूची लोड करने में त्रुटि हुई।');
         }
@@ -982,6 +984,47 @@ export default function GlobalGovJobsPage() {
 
           {/* High-Yield Top Feed AdSense Unit */}
           <AdSlot format="incontent" style={{ my: 3 }} />
+
+          {/* Smart Universal Fallback Notice for All 195 Countries */}
+          {!loading && isFallbackToInternational && activeCountry !== 'ALL' && (
+            <Box sx={{
+              mb: 3,
+              p: 2.5,
+              borderRadius: '16px',
+              bgcolor: 'rgba(15, 23, 42, 0.95)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2.5
+            }}>
+              <Box sx={{
+                width: 48,
+                height: 48,
+                borderRadius: '12px',
+                bgcolor: 'rgba(56, 189, 248, 0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <GlobeIcon sx={{ color: '#38BDF8', fontSize: 28 }} />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography sx={{ color: '#F8FAFC', fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <span>{getCountryDisplayName(activeCountry)}</span>
+                  <Chip
+                    label="24/7 Official Gazette Tracking Active"
+                    size="small"
+                    sx={{ bgcolor: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', fontWeight: 700, fontSize: '0.72rem' }}
+                  />
+                </Typography>
+                <Typography sx={{ color: '#94A3B8', fontSize: '0.85rem', mt: 0.5, lineHeight: 1.5 }}>
+                  {getCountryDisplayName(activeCountry)} के सरकारी भर्ती पोर्टल्स की निरंतर निगरानी जारी है। वर्तमान में {getCountryDisplayName(activeCountry)} के उम्मीदवारों व अंतरराष्ट्रीय आवेदकों के लिए खुली सत्यापित संयुक्त राष्ट्र (UN), WHO व अंतरराष्ट्रीय सरकारी नियुक्तियां नीचे प्रदर्शित हैं:
+                </Typography>
+              </Box>
+            </Box>
+          )}
 
           {/* Job Cards Grid */}
           {!loading && jobs.length > 0 && (

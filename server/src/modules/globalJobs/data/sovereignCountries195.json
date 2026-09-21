@@ -1,0 +1,1570 @@
+[
+  {
+    "code": "AF",
+    "name": "Afghanistan",
+    "fullName": "Afghanistan",
+    "flag": "🇦🇫",
+    "continent": "Asia",
+    "currency": "AFN"
+  },
+  {
+    "code": "AM",
+    "name": "Armenia",
+    "fullName": "Armenia",
+    "flag": "🇦🇲",
+    "continent": "Asia",
+    "currency": "AMD"
+  },
+  {
+    "code": "AZ",
+    "name": "Azerbaijan",
+    "fullName": "Azerbaijan",
+    "flag": "🇦🇿",
+    "continent": "Asia",
+    "currency": "AZN"
+  },
+  {
+    "code": "BH",
+    "name": "Bahrain",
+    "fullName": "Bahrain",
+    "flag": "🇧🇭",
+    "continent": "Asia",
+    "currency": "BHD"
+  },
+  {
+    "code": "BD",
+    "name": "Bangladesh",
+    "fullName": "Bangladesh",
+    "flag": "🇧🇩",
+    "continent": "Asia",
+    "currency": "BDT"
+  },
+  {
+    "code": "BT",
+    "name": "Bhutan",
+    "fullName": "Bhutan",
+    "flag": "🇧🇹",
+    "continent": "Asia",
+    "currency": "BTN"
+  },
+  {
+    "code": "BN",
+    "name": "Brunei",
+    "fullName": "Brunei",
+    "flag": "🇧🇳",
+    "continent": "Asia",
+    "currency": "BND"
+  },
+  {
+    "code": "KH",
+    "name": "Cambodia",
+    "fullName": "Cambodia",
+    "flag": "🇰🇭",
+    "continent": "Asia",
+    "currency": "KHR"
+  },
+  {
+    "code": "CN",
+    "name": "China",
+    "fullName": "China",
+    "flag": "🇨🇳",
+    "continent": "Asia",
+    "currency": "CNY"
+  },
+  {
+    "code": "GE",
+    "name": "Georgia",
+    "fullName": "Georgia",
+    "flag": "🇬🇪",
+    "continent": "Asia",
+    "currency": "GEL"
+  },
+  {
+    "code": "IN",
+    "name": "India",
+    "fullName": "India (Sarkari)",
+    "flag": "🇮🇳",
+    "continent": "Asia",
+    "currency": "INR"
+  },
+  {
+    "code": "ID",
+    "name": "Indonesia",
+    "fullName": "Indonesia",
+    "flag": "🇮🇩",
+    "continent": "Asia",
+    "currency": "IDR"
+  },
+  {
+    "code": "IR",
+    "name": "Iran",
+    "fullName": "Iran",
+    "flag": "🇮🇷",
+    "continent": "Asia",
+    "currency": "IRR"
+  },
+  {
+    "code": "IQ",
+    "name": "Iraq",
+    "fullName": "Iraq",
+    "flag": "🇮🇶",
+    "continent": "Asia",
+    "currency": "IQD"
+  },
+  {
+    "code": "IL",
+    "name": "Israel",
+    "fullName": "Israel",
+    "flag": "🇮🇱",
+    "continent": "Asia",
+    "currency": "ILS"
+  },
+  {
+    "code": "JP",
+    "name": "Japan",
+    "fullName": "Japan (Jinji-in)",
+    "flag": "🇯🇵",
+    "continent": "Asia",
+    "currency": "JPY"
+  },
+  {
+    "code": "JO",
+    "name": "Jordan",
+    "fullName": "Jordan",
+    "flag": "🇯🇴",
+    "continent": "Asia",
+    "currency": "JOD"
+  },
+  {
+    "code": "KZ",
+    "name": "Kazakhstan",
+    "fullName": "Kazakhstan",
+    "flag": "🇰🇿",
+    "continent": "Asia",
+    "currency": "KZT"
+  },
+  {
+    "code": "KW",
+    "name": "Kuwait",
+    "fullName": "Kuwait",
+    "flag": "🇰🇼",
+    "continent": "Asia",
+    "currency": "KWD"
+  },
+  {
+    "code": "KG",
+    "name": "Kyrgyzstan",
+    "fullName": "Kyrgyzstan",
+    "flag": "🇰🇬",
+    "continent": "Asia",
+    "currency": "KGS"
+  },
+  {
+    "code": "LA",
+    "name": "Laos",
+    "fullName": "Laos",
+    "flag": "🇱🇦",
+    "continent": "Asia",
+    "currency": "LAK"
+  },
+  {
+    "code": "LB",
+    "name": "Lebanon",
+    "fullName": "Lebanon",
+    "flag": "🇱🇧",
+    "continent": "Asia",
+    "currency": "LBP"
+  },
+  {
+    "code": "MY",
+    "name": "Malaysia",
+    "fullName": "Malaysia (SPA)",
+    "flag": "🇲🇾",
+    "continent": "Asia",
+    "currency": "MYR"
+  },
+  {
+    "code": "MV",
+    "name": "Maldives",
+    "fullName": "Maldives",
+    "flag": "🇲🇻",
+    "continent": "Asia",
+    "currency": "MVR"
+  },
+  {
+    "code": "MN",
+    "name": "Mongolia",
+    "fullName": "Mongolia",
+    "flag": "🇲🇳",
+    "continent": "Asia",
+    "currency": "MNT"
+  },
+  {
+    "code": "MM",
+    "name": "Myanmar",
+    "fullName": "Myanmar",
+    "flag": "🇲🇲",
+    "continent": "Asia",
+    "currency": "MMK"
+  },
+  {
+    "code": "NP",
+    "name": "Nepal",
+    "fullName": "Nepal",
+    "flag": "🇳🇵",
+    "continent": "Asia",
+    "currency": "NPR"
+  },
+  {
+    "code": "KP",
+    "name": "North Korea",
+    "fullName": "North Korea",
+    "flag": "🇰🇵",
+    "continent": "Asia",
+    "currency": "KPW"
+  },
+  {
+    "code": "OM",
+    "name": "Oman",
+    "fullName": "Oman",
+    "flag": "🇴🇲",
+    "continent": "Asia",
+    "currency": "OMR"
+  },
+  {
+    "code": "PK",
+    "name": "Pakistan",
+    "fullName": "Pakistan",
+    "flag": "🇵🇰",
+    "continent": "Asia",
+    "currency": "PKR"
+  },
+  {
+    "code": "PS",
+    "name": "Palestine",
+    "fullName": "Palestine",
+    "flag": "🇵🇸",
+    "continent": "Asia",
+    "currency": "ILS"
+  },
+  {
+    "code": "PH",
+    "name": "Philippines",
+    "fullName": "Philippines",
+    "flag": "🇵🇭",
+    "continent": "Asia",
+    "currency": "PHP"
+  },
+  {
+    "code": "QA",
+    "name": "Qatar",
+    "fullName": "Qatar",
+    "flag": "🇶🇦",
+    "continent": "Asia",
+    "currency": "QAR"
+  },
+  {
+    "code": "SA",
+    "name": "Saudi Arabia",
+    "fullName": "Saudi Arabia",
+    "flag": "🇸🇦",
+    "continent": "Asia",
+    "currency": "SAR"
+  },
+  {
+    "code": "SG",
+    "name": "Singapore",
+    "fullName": "Singapore (Careers@Gov)",
+    "flag": "🇸🇬",
+    "continent": "Asia",
+    "currency": "SGD"
+  },
+  {
+    "code": "KR",
+    "name": "South Korea",
+    "fullName": "South Korea (MPM)",
+    "flag": "🇰🇷",
+    "continent": "Asia",
+    "currency": "KRW"
+  },
+  {
+    "code": "LK",
+    "name": "Sri Lanka",
+    "fullName": "Sri Lanka",
+    "flag": "🇱🇰",
+    "continent": "Asia",
+    "currency": "LKR"
+  },
+  {
+    "code": "SY",
+    "name": "Syria",
+    "fullName": "Syria",
+    "flag": "🇸🇾",
+    "continent": "Asia",
+    "currency": "SYP"
+  },
+  {
+    "code": "TJ",
+    "name": "Tajikistan",
+    "fullName": "Tajikistan",
+    "flag": "🇹🇯",
+    "continent": "Asia",
+    "currency": "TJS"
+  },
+  {
+    "code": "TH",
+    "name": "Thailand",
+    "fullName": "Thailand",
+    "flag": "🇹🇭",
+    "continent": "Asia",
+    "currency": "THB"
+  },
+  {
+    "code": "TL",
+    "name": "Timor-Leste",
+    "fullName": "Timor-Leste",
+    "flag": "🇹🇱",
+    "continent": "Asia",
+    "currency": "USD"
+  },
+  {
+    "code": "TR",
+    "name": "Turkey",
+    "fullName": "Turkey",
+    "flag": "🇹🇷",
+    "continent": "Asia",
+    "currency": "TRY"
+  },
+  {
+    "code": "TM",
+    "name": "Turkmenistan",
+    "fullName": "Turkmenistan",
+    "flag": "🇹🇲",
+    "continent": "Asia",
+    "currency": "TMT"
+  },
+  {
+    "code": "AE",
+    "name": "UAE",
+    "fullName": "UAE (Dubai / Abu Dhabi)",
+    "flag": "🇦🇪",
+    "continent": "Asia",
+    "currency": "AED"
+  },
+  {
+    "code": "UZ",
+    "name": "Uzbekistan",
+    "fullName": "Uzbekistan",
+    "flag": "🇺🇿",
+    "continent": "Asia",
+    "currency": "UZS"
+  },
+  {
+    "code": "VN",
+    "name": "Vietnam",
+    "fullName": "Vietnam",
+    "flag": "🇻🇳",
+    "continent": "Asia",
+    "currency": "VND"
+  },
+  {
+    "code": "YE",
+    "name": "Yemen",
+    "fullName": "Yemen",
+    "flag": "🇾🇪",
+    "continent": "Asia",
+    "currency": "YER"
+  },
+  {
+    "code": "AL",
+    "name": "Albania",
+    "fullName": "Albania",
+    "flag": "🇦🇱",
+    "continent": "Europe",
+    "currency": "ALL"
+  },
+  {
+    "code": "AD",
+    "name": "Andorra",
+    "fullName": "Andorra",
+    "flag": "🇦🇩",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "AT",
+    "name": "Austria",
+    "fullName": "Austria",
+    "flag": "🇦🇹",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "BY",
+    "name": "Belarus",
+    "fullName": "Belarus",
+    "flag": "🇧🇾",
+    "continent": "Europe",
+    "currency": "BYN"
+  },
+  {
+    "code": "BE",
+    "name": "Belgium",
+    "fullName": "Belgium",
+    "flag": "🇧🇪",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "BA",
+    "name": "Bosnia and Herzegovina",
+    "fullName": "Bosnia and Herzegovina",
+    "flag": "🇧🇦",
+    "continent": "Europe",
+    "currency": "BAM"
+  },
+  {
+    "code": "BG",
+    "name": "Bulgaria",
+    "fullName": "Bulgaria",
+    "flag": "🇧🇬",
+    "continent": "Europe",
+    "currency": "BGN"
+  },
+  {
+    "code": "HR",
+    "name": "Croatia",
+    "fullName": "Croatia",
+    "flag": "🇭🇷",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "CY",
+    "name": "Cyprus",
+    "fullName": "Cyprus",
+    "flag": "🇨🇾",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "CZ",
+    "name": "Czech Republic",
+    "fullName": "Czech Republic",
+    "flag": "🇨🇿",
+    "continent": "Europe",
+    "currency": "CZK"
+  },
+  {
+    "code": "DK",
+    "name": "Denmark",
+    "fullName": "Denmark",
+    "flag": "🇩🇰",
+    "continent": "Europe",
+    "currency": "DKK"
+  },
+  {
+    "code": "EE",
+    "name": "Estonia",
+    "fullName": "Estonia",
+    "flag": "🇪🇪",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "EU",
+    "name": "European Union",
+    "fullName": "European Union (EPSO)",
+    "flag": "🇪🇺",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "FI",
+    "name": "Finland",
+    "fullName": "Finland",
+    "flag": "🇫🇮",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "FR",
+    "name": "France",
+    "fullName": "France (Service Public)",
+    "flag": "🇫🇷",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "DE",
+    "name": "Germany",
+    "fullName": "Germany (Bund.de)",
+    "flag": "🇩🇪",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "GR",
+    "name": "Greece",
+    "fullName": "Greece",
+    "flag": "🇬🇷",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "HU",
+    "name": "Hungary",
+    "fullName": "Hungary",
+    "flag": "🇭🇺",
+    "continent": "Europe",
+    "currency": "HUF"
+  },
+  {
+    "code": "IS",
+    "name": "Iceland",
+    "fullName": "Iceland",
+    "flag": "🇮🇸",
+    "continent": "Europe",
+    "currency": "ISK"
+  },
+  {
+    "code": "IE",
+    "name": "Ireland",
+    "fullName": "Ireland (Publicjobs.ie)",
+    "flag": "🇮🇪",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "IT",
+    "name": "Italy",
+    "fullName": "Italy (inPA)",
+    "flag": "🇮🇹",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "LV",
+    "name": "Latvia",
+    "fullName": "Latvia",
+    "flag": "🇱🇻",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "LI",
+    "name": "Liechtenstein",
+    "fullName": "Liechtenstein",
+    "flag": "🇱🇮",
+    "continent": "Europe",
+    "currency": "CHF"
+  },
+  {
+    "code": "LT",
+    "name": "Lithuania",
+    "fullName": "Lithuania",
+    "flag": "🇱🇹",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "LU",
+    "name": "Luxembourg",
+    "fullName": "Luxembourg (GovJobs)",
+    "flag": "🇱🇺",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "MT",
+    "name": "Malta",
+    "fullName": "Malta",
+    "flag": "🇲🇹",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "MD",
+    "name": "Moldova",
+    "fullName": "Moldova",
+    "flag": "🇲🇩",
+    "continent": "Europe",
+    "currency": "MDL"
+  },
+  {
+    "code": "MC",
+    "name": "Monaco",
+    "fullName": "Monaco",
+    "flag": "🇲🇨",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "ME",
+    "name": "Montenegro",
+    "fullName": "Montenegro",
+    "flag": "🇲🇪",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "NL",
+    "name": "Netherlands",
+    "fullName": "Netherlands (Werken voor Nederland)",
+    "flag": "🇳🇱",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "MK",
+    "name": "North Macedonia",
+    "fullName": "North Macedonia",
+    "flag": "🇲🇰",
+    "continent": "Europe",
+    "currency": "MKD"
+  },
+  {
+    "code": "NO",
+    "name": "Norway",
+    "fullName": "Norway (NAV / Jobbnorge)",
+    "flag": "🇳🇴",
+    "continent": "Europe",
+    "currency": "NOK"
+  },
+  {
+    "code": "PL",
+    "name": "Poland",
+    "fullName": "Poland (BIP)",
+    "flag": "🇵🇱",
+    "continent": "Europe",
+    "currency": "PLN"
+  },
+  {
+    "code": "PT",
+    "name": "Portugal",
+    "fullName": "Portugal (BEP)",
+    "flag": "🇵🇹",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "RO",
+    "name": "Romania",
+    "fullName": "Romania",
+    "flag": "🇷🇴",
+    "continent": "Europe",
+    "currency": "RON"
+  },
+  {
+    "code": "RU",
+    "name": "Russia",
+    "fullName": "Russia (Gosuslugi)",
+    "flag": "🇷🇺",
+    "continent": "Europe",
+    "currency": "RUB"
+  },
+  {
+    "code": "SM",
+    "name": "San Marino",
+    "fullName": "San Marino",
+    "flag": "🇸🇲",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "RS",
+    "name": "Serbia",
+    "fullName": "Serbia",
+    "flag": "🇷🇸",
+    "continent": "Europe",
+    "currency": "RSD"
+  },
+  {
+    "code": "SK",
+    "name": "Slovakia",
+    "fullName": "Slovakia",
+    "flag": "🇸🇰",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "SI",
+    "name": "Slovenia",
+    "fullName": "Slovenia",
+    "flag": "🇸🇮",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "ES",
+    "name": "Spain",
+    "fullName": "Spain (Empleo Público)",
+    "flag": "🇪🇸",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "SE",
+    "name": "Sweden",
+    "fullName": "Sweden (Arbetsförmedlingen)",
+    "flag": "🇸🇪",
+    "continent": "Europe",
+    "currency": "SEK"
+  },
+  {
+    "code": "CH",
+    "name": "Switzerland",
+    "fullName": "Switzerland (Bund/Jobportal)",
+    "flag": "🇨🇭",
+    "continent": "Europe",
+    "currency": "CHF"
+  },
+  {
+    "code": "UA",
+    "name": "Ukraine",
+    "fullName": "Ukraine",
+    "flag": "🇺🇦",
+    "continent": "Europe",
+    "currency": "UAH"
+  },
+  {
+    "code": "GB",
+    "name": "United Kingdom",
+    "fullName": "United Kingdom (Civil Service)",
+    "flag": "🇬🇧",
+    "continent": "Europe",
+    "currency": "GBP"
+  },
+  {
+    "code": "VA",
+    "name": "Vatican City",
+    "fullName": "Vatican City",
+    "flag": "🇻🇦",
+    "continent": "Europe",
+    "currency": "EUR"
+  },
+  {
+    "code": "DZ",
+    "name": "Algeria",
+    "fullName": "Algeria",
+    "flag": "🇩🇿",
+    "continent": "Africa",
+    "currency": "DZD"
+  },
+  {
+    "code": "AO",
+    "name": "Angola",
+    "fullName": "Angola",
+    "flag": "🇦🇴",
+    "continent": "Africa",
+    "currency": "AOA"
+  },
+  {
+    "code": "BJ",
+    "name": "Benin",
+    "fullName": "Benin",
+    "flag": "🇧🇯",
+    "continent": "Africa",
+    "currency": "XOF"
+  },
+  {
+    "code": "BW",
+    "name": "Botswana",
+    "fullName": "Botswana",
+    "flag": "🇧🇼",
+    "continent": "Africa",
+    "currency": "BWP"
+  },
+  {
+    "code": "BF",
+    "name": "Burkina Faso",
+    "fullName": "Burkina Faso",
+    "flag": "🇧🇫",
+    "continent": "Africa",
+    "currency": "XOF"
+  },
+  {
+    "code": "BI",
+    "name": "Burundi",
+    "fullName": "Burundi",
+    "flag": "🇧🇮",
+    "continent": "Africa",
+    "currency": "BIF"
+  },
+  {
+    "code": "CV",
+    "name": "Cabo Verde",
+    "fullName": "Cabo Verde",
+    "flag": "🇨🇻",
+    "continent": "Africa",
+    "currency": "CVE"
+  },
+  {
+    "code": "CM",
+    "name": "Cameroon",
+    "fullName": "Cameroon",
+    "flag": "🇨🇲",
+    "continent": "Africa",
+    "currency": "XAF"
+  },
+  {
+    "code": "CF",
+    "name": "Central African Republic",
+    "fullName": "Central African Republic",
+    "flag": "🇨🇫",
+    "continent": "Africa",
+    "currency": "XAF"
+  },
+  {
+    "code": "TD",
+    "name": "Chad",
+    "fullName": "Chad",
+    "flag": "🇹🇩",
+    "continent": "Africa",
+    "currency": "XAF"
+  },
+  {
+    "code": "KM",
+    "name": "Comoros",
+    "fullName": "Comoros",
+    "flag": "🇰🇲",
+    "continent": "Africa",
+    "currency": "KMF"
+  },
+  {
+    "code": "CD",
+    "name": "Congo",
+    "fullName": "Congo (DRC)",
+    "flag": "🇨🇩",
+    "continent": "Africa",
+    "currency": "CDF"
+  },
+  {
+    "code": "CG",
+    "name": "Congo",
+    "fullName": "Congo (Republic)",
+    "flag": "🇨🇬",
+    "continent": "Africa",
+    "currency": "XAF"
+  },
+  {
+    "code": "CI",
+    "name": "Ivory Coast",
+    "fullName": "Ivory Coast",
+    "flag": "🇨🇮",
+    "continent": "Africa",
+    "currency": "XOF"
+  },
+  {
+    "code": "DJ",
+    "name": "Djibouti",
+    "fullName": "Djibouti",
+    "flag": "🇩🇯",
+    "continent": "Africa",
+    "currency": "DJF"
+  },
+  {
+    "code": "EG",
+    "name": "Egypt",
+    "fullName": "Egypt",
+    "flag": "🇪🇬",
+    "continent": "Africa",
+    "currency": "EGP"
+  },
+  {
+    "code": "GQ",
+    "name": "Equatorial Guinea",
+    "fullName": "Equatorial Guinea",
+    "flag": "🇬🇶",
+    "continent": "Africa",
+    "currency": "XAF"
+  },
+  {
+    "code": "ER",
+    "name": "Eritrea",
+    "fullName": "Eritrea",
+    "flag": "🇪🇷",
+    "continent": "Africa",
+    "currency": "ERN"
+  },
+  {
+    "code": "SZ",
+    "name": "Eswatini",
+    "fullName": "Eswatini",
+    "flag": "🇸🇿",
+    "continent": "Africa",
+    "currency": "SZL"
+  },
+  {
+    "code": "ET",
+    "name": "Ethiopia",
+    "fullName": "Ethiopia",
+    "flag": "🇪🇹",
+    "continent": "Africa",
+    "currency": "ETB"
+  },
+  {
+    "code": "GA",
+    "name": "Gabon",
+    "fullName": "Gabon",
+    "flag": "🇬🇦",
+    "continent": "Africa",
+    "currency": "XAF"
+  },
+  {
+    "code": "GM",
+    "name": "Gambia",
+    "fullName": "Gambia",
+    "flag": "🇬🇲",
+    "continent": "Africa",
+    "currency": "GMD"
+  },
+  {
+    "code": "GH",
+    "name": "Ghana",
+    "fullName": "Ghana",
+    "flag": "🇬🇭",
+    "continent": "Africa",
+    "currency": "GHS"
+  },
+  {
+    "code": "GN",
+    "name": "Guinea",
+    "fullName": "Guinea",
+    "flag": "🇬🇳",
+    "continent": "Africa",
+    "currency": "GNF"
+  },
+  {
+    "code": "GW",
+    "name": "Guinea-Bissau",
+    "fullName": "Guinea-Bissau",
+    "flag": "🇬🇼",
+    "continent": "Africa",
+    "currency": "XOF"
+  },
+  {
+    "code": "KE",
+    "name": "Kenya",
+    "fullName": "Kenya (PSC)",
+    "flag": "🇰🇪",
+    "continent": "Africa",
+    "currency": "KES"
+  },
+  {
+    "code": "LS",
+    "name": "Lesotho",
+    "fullName": "Lesotho",
+    "flag": "🇱🇸",
+    "continent": "Africa",
+    "currency": "LSL"
+  },
+  {
+    "code": "LR",
+    "name": "Liberia",
+    "fullName": "Liberia",
+    "flag": "🇱🇷",
+    "continent": "Africa",
+    "currency": "LRD"
+  },
+  {
+    "code": "LY",
+    "name": "Libya",
+    "fullName": "Libya",
+    "flag": "🇱🇾",
+    "continent": "Africa",
+    "currency": "LYD"
+  },
+  {
+    "code": "MG",
+    "name": "Madagascar",
+    "fullName": "Madagascar",
+    "flag": "🇲🇬",
+    "continent": "Africa",
+    "currency": "MGA"
+  },
+  {
+    "code": "MW",
+    "name": "Malawi",
+    "fullName": "Malawi",
+    "flag": "🇲🇼",
+    "continent": "Africa",
+    "currency": "MWK"
+  },
+  {
+    "code": "ML",
+    "name": "Mali",
+    "fullName": "Mali",
+    "flag": "🇲🇱",
+    "continent": "Africa",
+    "currency": "XOF"
+  },
+  {
+    "code": "MR",
+    "name": "Mauritania",
+    "fullName": "Mauritania",
+    "flag": "🇲🇷",
+    "continent": "Africa",
+    "currency": "MRU"
+  },
+  {
+    "code": "MU",
+    "name": "Mauritius",
+    "fullName": "Mauritius",
+    "flag": "🇲🇺",
+    "continent": "Africa",
+    "currency": "MUR"
+  },
+  {
+    "code": "MA",
+    "name": "Morocco",
+    "fullName": "Morocco",
+    "flag": "🇲🇦",
+    "continent": "Africa",
+    "currency": "MAD"
+  },
+  {
+    "code": "MZ",
+    "name": "Mozambique",
+    "fullName": "Mozambique",
+    "flag": "🇲🇿",
+    "continent": "Africa",
+    "currency": "MZN"
+  },
+  {
+    "code": "NA",
+    "name": "Namibia",
+    "fullName": "Namibia",
+    "flag": "🇳🇦",
+    "continent": "Africa",
+    "currency": "NAD"
+  },
+  {
+    "code": "NE",
+    "name": "Niger",
+    "fullName": "Niger",
+    "flag": "🇳🇪",
+    "continent": "Africa",
+    "currency": "XOF"
+  },
+  {
+    "code": "NG",
+    "name": "Nigeria",
+    "fullName": "Nigeria (FCSC)",
+    "flag": "🇳🇬",
+    "continent": "Africa",
+    "currency": "NGN"
+  },
+  {
+    "code": "RW",
+    "name": "Rwanda",
+    "fullName": "Rwanda (PSC)",
+    "flag": "🇷🇼",
+    "continent": "Africa",
+    "currency": "RWF"
+  },
+  {
+    "code": "ST",
+    "name": "Sao Tome and Principe",
+    "fullName": "Sao Tome and Principe",
+    "flag": "🇸🇹",
+    "continent": "Africa",
+    "currency": "STN"
+  },
+  {
+    "code": "SN",
+    "name": "Senegal",
+    "fullName": "Senegal",
+    "flag": "🇸🇳",
+    "continent": "Africa",
+    "currency": "XOF"
+  },
+  {
+    "code": "SC",
+    "name": "Seychelles",
+    "fullName": "Seychelles",
+    "flag": "🇸🇨",
+    "continent": "Africa",
+    "currency": "SCR"
+  },
+  {
+    "code": "SL",
+    "name": "Sierra Leone",
+    "fullName": "Sierra Leone",
+    "flag": "🇸🇱",
+    "continent": "Africa",
+    "currency": "SLL"
+  },
+  {
+    "code": "SO",
+    "name": "Somalia",
+    "fullName": "Somalia",
+    "flag": "🇸🇴",
+    "continent": "Africa",
+    "currency": "SOS"
+  },
+  {
+    "code": "ZA",
+    "name": "South Africa",
+    "fullName": "South Africa (DPSA)",
+    "flag": "🇿🇦",
+    "continent": "Africa",
+    "currency": "ZAR"
+  },
+  {
+    "code": "SS",
+    "name": "South Sudan",
+    "fullName": "South Sudan",
+    "flag": "🇸🇸",
+    "continent": "Africa",
+    "currency": "SSP"
+  },
+  {
+    "code": "SD",
+    "name": "Sudan",
+    "fullName": "Sudan",
+    "flag": "🇸🇩",
+    "continent": "Africa",
+    "currency": "SDG"
+  },
+  {
+    "code": "TZ",
+    "name": "Tanzania",
+    "fullName": "Tanzania (PSRS)",
+    "flag": "🇹🇿",
+    "continent": "Africa",
+    "currency": "TZS"
+  },
+  {
+    "code": "TG",
+    "name": "Togo",
+    "fullName": "Togo",
+    "flag": "🇹🇬",
+    "continent": "Africa",
+    "currency": "XOF"
+  },
+  {
+    "code": "TN",
+    "name": "Tunisia",
+    "fullName": "Tunisia",
+    "flag": "🇹🇳",
+    "continent": "Africa",
+    "currency": "TND"
+  },
+  {
+    "code": "UG",
+    "name": "Uganda",
+    "fullName": "Uganda (PSC)",
+    "flag": "🇺🇬",
+    "continent": "Africa",
+    "currency": "UGX"
+  },
+  {
+    "code": "ZM",
+    "name": "Zambia",
+    "fullName": "Zambia",
+    "flag": "🇿🇲",
+    "continent": "Africa",
+    "currency": "ZMW"
+  },
+  {
+    "code": "ZW",
+    "name": "Zimbabwe",
+    "fullName": "Zimbabwe",
+    "flag": "🇿🇼",
+    "continent": "Africa",
+    "currency": "ZWL"
+  },
+  {
+    "code": "AG",
+    "name": "Antigua and Barbuda",
+    "fullName": "Antigua and Barbuda",
+    "flag": "🇦🇬",
+    "continent": "Americas",
+    "currency": "XCD"
+  },
+  {
+    "code": "AR",
+    "name": "Argentina",
+    "fullName": "Argentina (Empleo Público)",
+    "flag": "🇦🇷",
+    "continent": "Americas",
+    "currency": "ARS"
+  },
+  {
+    "code": "BS",
+    "name": "Bahamas",
+    "fullName": "Bahamas",
+    "flag": "🇧🇸",
+    "continent": "Americas",
+    "currency": "BSD"
+  },
+  {
+    "code": "BB",
+    "name": "Barbados",
+    "fullName": "Barbados",
+    "flag": "🇧🇧",
+    "continent": "Americas",
+    "currency": "BBD"
+  },
+  {
+    "code": "BZ",
+    "name": "Belize",
+    "fullName": "Belize",
+    "flag": "🇧🇿",
+    "continent": "Americas",
+    "currency": "BZD"
+  },
+  {
+    "code": "BO",
+    "name": "Bolivia",
+    "fullName": "Bolivia",
+    "flag": "🇧🇴",
+    "continent": "Americas",
+    "currency": "BOB"
+  },
+  {
+    "code": "BR",
+    "name": "Brazil",
+    "fullName": "Brazil (Concursos Gov.br)",
+    "flag": "🇧🇷",
+    "continent": "Americas",
+    "currency": "BRL"
+  },
+  {
+    "code": "CA",
+    "name": "Canada",
+    "fullName": "Canada (GC Jobs)",
+    "flag": "🇨🇦",
+    "continent": "Americas",
+    "currency": "CAD"
+  },
+  {
+    "code": "CL",
+    "name": "Chile",
+    "fullName": "Chile (Empleos Públicos)",
+    "flag": "🇨🇱",
+    "continent": "Americas",
+    "currency": "CLP"
+  },
+  {
+    "code": "CO",
+    "name": "Colombia",
+    "fullName": "Colombia (CNSC)",
+    "flag": "🇨🇴",
+    "continent": "Americas",
+    "currency": "COP"
+  },
+  {
+    "code": "CR",
+    "name": "Costa Rica",
+    "fullName": "Costa Rica",
+    "flag": "🇨🇷",
+    "continent": "Americas",
+    "currency": "CRC"
+  },
+  {
+    "code": "CU",
+    "name": "Cuba",
+    "fullName": "Cuba",
+    "flag": "🇨🇺",
+    "continent": "Americas",
+    "currency": "CUP"
+  },
+  {
+    "code": "DM",
+    "name": "Dominica",
+    "fullName": "Dominica",
+    "flag": "🇩🇲",
+    "continent": "Americas",
+    "currency": "XCD"
+  },
+  {
+    "code": "DO",
+    "name": "Dominican Republic",
+    "fullName": "Dominican Republic",
+    "flag": "🇩🇴",
+    "continent": "Americas",
+    "currency": "DOP"
+  },
+  {
+    "code": "EC",
+    "name": "Ecuador",
+    "fullName": "Ecuador (Socio Empleo)",
+    "flag": "🇪🇨",
+    "continent": "Americas",
+    "currency": "USD"
+  },
+  {
+    "code": "SV",
+    "name": "El Salvador",
+    "fullName": "El Salvador",
+    "flag": "🇸🇻",
+    "continent": "Americas",
+    "currency": "USD"
+  },
+  {
+    "code": "GD",
+    "name": "Grenada",
+    "fullName": "Grenada",
+    "flag": "🇬🇩",
+    "continent": "Americas",
+    "currency": "XCD"
+  },
+  {
+    "code": "GT",
+    "name": "Guatemala",
+    "fullName": "Guatemala",
+    "flag": "🇬🇹",
+    "continent": "Americas",
+    "currency": "GTQ"
+  },
+  {
+    "code": "GY",
+    "name": "Guyana",
+    "fullName": "Guyana",
+    "flag": "🇬🇾",
+    "continent": "Americas",
+    "currency": "GYD"
+  },
+  {
+    "code": "HT",
+    "name": "Haiti",
+    "fullName": "Haiti",
+    "flag": "🇭🇹",
+    "continent": "Americas",
+    "currency": "HTG"
+  },
+  {
+    "code": "HN",
+    "name": "Honduras",
+    "fullName": "Honduras",
+    "flag": "🇭🇳",
+    "continent": "Americas",
+    "currency": "HNL"
+  },
+  {
+    "code": "JM",
+    "name": "Jamaica",
+    "fullName": "Jamaica",
+    "flag": "🇯🇲",
+    "continent": "Americas",
+    "currency": "JMD"
+  },
+  {
+    "code": "MX",
+    "name": "Mexico",
+    "fullName": "Mexico (TrabajaEn)",
+    "flag": "🇲🇽",
+    "continent": "Americas",
+    "currency": "MXN"
+  },
+  {
+    "code": "NI",
+    "name": "Nicaragua",
+    "fullName": "Nicaragua",
+    "flag": "🇳🇮",
+    "continent": "Americas",
+    "currency": "NIO"
+  },
+  {
+    "code": "PA",
+    "name": "Panama",
+    "fullName": "Panama",
+    "flag": "🇵🇦",
+    "continent": "Americas",
+    "currency": "USD"
+  },
+  {
+    "code": "PY",
+    "name": "Paraguay",
+    "fullName": "Paraguay",
+    "flag": "🇵🇾",
+    "continent": "Americas",
+    "currency": "PYG"
+  },
+  {
+    "code": "PE",
+    "name": "Peru",
+    "fullName": "Peru (Convocatorias)",
+    "flag": "🇵🇪",
+    "continent": "Americas",
+    "currency": "PEN"
+  },
+  {
+    "code": "KN",
+    "name": "Saint Kitts and Nevis",
+    "fullName": "Saint Kitts and Nevis",
+    "flag": "🇰🇳",
+    "continent": "Americas",
+    "currency": "XCD"
+  },
+  {
+    "code": "LC",
+    "name": "Saint Lucia",
+    "fullName": "Saint Lucia",
+    "flag": "🇱🇨",
+    "continent": "Americas",
+    "currency": "XCD"
+  },
+  {
+    "code": "VC",
+    "name": "Saint Vincent & Grenadines",
+    "fullName": "Saint Vincent & Grenadines",
+    "flag": "🇻🇨",
+    "continent": "Americas",
+    "currency": "XCD"
+  },
+  {
+    "code": "SR",
+    "name": "Suriname",
+    "fullName": "Suriname",
+    "flag": "🇸🇷",
+    "continent": "Americas",
+    "currency": "SRD"
+  },
+  {
+    "code": "TT",
+    "name": "Trinidad and Tobago",
+    "fullName": "Trinidad and Tobago",
+    "flag": "🇹🇹",
+    "continent": "Americas",
+    "currency": "TTD"
+  },
+  {
+    "code": "US",
+    "name": "United States",
+    "fullName": "United States (Federal)",
+    "flag": "🇺🇸",
+    "continent": "Americas",
+    "currency": "USD"
+  },
+  {
+    "code": "UY",
+    "name": "Uruguay",
+    "fullName": "Uruguay (Uruguay Concursa)",
+    "flag": "🇺🇾",
+    "continent": "Americas",
+    "currency": "UYU"
+  },
+  {
+    "code": "VE",
+    "name": "Venezuela",
+    "fullName": "Venezuela",
+    "flag": "🇻🇪",
+    "continent": "Americas",
+    "currency": "VES"
+  },
+  {
+    "code": "AU",
+    "name": "Australia",
+    "fullName": "Australia (APSjobs)",
+    "flag": "🇦🇺",
+    "continent": "Oceania",
+    "currency": "AUD"
+  },
+  {
+    "code": "FJ",
+    "name": "Fiji",
+    "fullName": "Fiji (Civil Service)",
+    "flag": "🇫🇯",
+    "continent": "Oceania",
+    "currency": "FJD"
+  },
+  {
+    "code": "KI",
+    "name": "Kiribati",
+    "fullName": "Kiribati",
+    "flag": "🇰🇮",
+    "continent": "Oceania",
+    "currency": "AUD"
+  },
+  {
+    "code": "MH",
+    "name": "Marshall Islands",
+    "fullName": "Marshall Islands",
+    "flag": "🇲🇭",
+    "continent": "Oceania",
+    "currency": "USD"
+  },
+  {
+    "code": "FM",
+    "name": "Micronesia",
+    "fullName": "Micronesia",
+    "flag": "🇫🇲",
+    "continent": "Oceania",
+    "currency": "USD"
+  },
+  {
+    "code": "NR",
+    "name": "Nauru",
+    "fullName": "Nauru",
+    "flag": "🇳🇷",
+    "continent": "Oceania",
+    "currency": "AUD"
+  },
+  {
+    "code": "NZ",
+    "name": "New Zealand",
+    "fullName": "New Zealand (Govt.nz)",
+    "flag": "🇳🇿",
+    "continent": "Oceania",
+    "currency": "NZD"
+  },
+  {
+    "code": "PW",
+    "name": "Palau",
+    "fullName": "Palau",
+    "flag": "🇵🇼",
+    "continent": "Oceania",
+    "currency": "USD"
+  },
+  {
+    "code": "PG",
+    "name": "Papua New Guinea",
+    "fullName": "Papua New Guinea",
+    "flag": "🇵🇬",
+    "continent": "Oceania",
+    "currency": "PGK"
+  },
+  {
+    "code": "WS",
+    "name": "Samoa",
+    "fullName": "Samoa",
+    "flag": "🇼🇸",
+    "continent": "Oceania",
+    "currency": "WST"
+  },
+  {
+    "code": "SB",
+    "name": "Solomon Islands",
+    "fullName": "Solomon Islands",
+    "flag": "🇸🇧",
+    "continent": "Oceania",
+    "currency": "SBD"
+  },
+  {
+    "code": "TO",
+    "name": "Tonga",
+    "fullName": "Tonga",
+    "flag": "🇹🇴",
+    "continent": "Oceania",
+    "currency": "TOP"
+  },
+  {
+    "code": "TV",
+    "name": "Tuvalu",
+    "fullName": "Tuvalu",
+    "flag": "🇹🇻",
+    "continent": "Oceania",
+    "currency": "AUD"
+  },
+  {
+    "code": "VU",
+    "name": "Vanuatu",
+    "fullName": "Vanuatu",
+    "flag": "🇻🇺",
+    "continent": "Oceania",
+    "currency": "VUV"
+  }
+]

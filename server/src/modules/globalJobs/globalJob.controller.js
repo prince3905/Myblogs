@@ -134,14 +134,45 @@ async function getGlobalJobs(req, res) {
         .lean();
     }
 
+    // 🛡️ Smart Universal Fallback: If a specific sovereign country currently has 0 local vacancies,
+    // seamlessly provide verified UN, WHO & Multilateral vacancies open to citizens of that country.
+    // This ensures NO country ever returns an empty white screen or thin content to search engines!
+    let fallbackToInternational = false;
+    let finalTotal = total;
+
+    if (country && country !== 'ALL' && sortedJobs.length === 0 && !search && !category && !timeline) {
+      const fallbackJobs = await GlobalJob.find({
+        $or: [
+          { continent: 'Multilateral' },
+          { countryCode: 'UN' },
+          { 'eligibility.citizenshipRequired': false },
+          { 'eligibility.visaSponsored': true }
+        ]
+      })
+        .sort({ createdAt: -1 })
+        .limit(take)
+        .lean();
+
+      if (fallbackJobs.length > 0) {
+        sortedJobs = fallbackJobs.map(j => ({
+          ...j,
+          isInternationalFallback: true,
+          requestedCountryCode: country.toUpperCase()
+        }));
+        fallbackToInternational = true;
+        finalTotal = fallbackJobs.length;
+      }
+    }
+
     return res.json({
       success: true,
       data: sortedJobs,
+      fallbackToInternational,
       pagination: {
-        total,
+        total: finalTotal,
         page: parseInt(page, 10),
         limit: take,
-        totalPages: Math.ceil(total / take)
+        totalPages: Math.ceil(finalTotal / take) || 1
       }
     });
   } catch (err) {
