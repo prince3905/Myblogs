@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, Fragment } from 'react';
 import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import {
   Typography, Button, Box, Alert, CircularProgress,
@@ -288,7 +288,6 @@ export default function GlobalGovJobsPage() {
         if (e.detail?.lang) setSelectedLanguage(e.detail.lang);
         if (e.detail?.country) {
           setUserDetectedCountry(e.detail.country);
-          setActiveCountry(e.detail.country);
         }
       };
       window.addEventListener('dh_language_changed', handleSync);
@@ -556,6 +555,12 @@ export default function GlobalGovJobsPage() {
     };
   };
 
+  const safeIsoDate = (val, fallback = undefined) => {
+    if (!val) return fallback;
+    const d = new Date(val);
+    return !isNaN(d.getTime()) ? d.toISOString() : fallback;
+  };
+
   // Dynamic Google for Jobs JSON-LD Structured Data Schema
   const jobSchema = useMemo(() => {
     if (selectedJob) {
@@ -570,8 +575,8 @@ export default function GlobalGovJobsPage() {
           name: selectedJob.agencyOrMinistry || 'Official Government Body',
           value: selectedJob.officialReferenceId || selectedJob._id
         },
-        datePosted: selectedJob.createdAt ? new Date(selectedJob.createdAt).toISOString() : new Date().toISOString(),
-        validThrough: selectedJob.applicationDeadline ? new Date(selectedJob.applicationDeadline).toISOString() : undefined,
+        datePosted: safeIsoDate(selectedJob.createdAt, new Date().toISOString()),
+        validThrough: safeIsoDate(selectedJob.applicationDeadline),
         employmentType: 'FULL_TIME',
         hiringOrganization: {
           '@type': 'Organization',
@@ -601,8 +606,8 @@ export default function GlobalGovJobsPage() {
             '@type': 'JobPosting',
             title: j.title,
             description: j.officialGazetteSummary || j.title,
-            datePosted: j.createdAt ? new Date(j.createdAt).toISOString() : new Date().toISOString(),
-            validThrough: j.applicationDeadline ? new Date(j.applicationDeadline).toISOString() : undefined,
+            datePosted: safeIsoDate(j.createdAt, new Date().toISOString()),
+            validThrough: safeIsoDate(j.applicationDeadline),
             hiringOrganization: {
               '@type': 'Organization',
               name: j.agencyOrMinistry || j.countryName,
@@ -1287,7 +1292,7 @@ export default function GlobalGovJobsPage() {
                 const isUrgent = daysLeft && (daysLeft.includes('1 ') || daysLeft.includes('2 ') || daysLeft.includes('3 ') || daysLeft.includes('Day'));
 
                 return (
-                  <React.Fragment key={job._id || job.officialReferenceId || idx}>
+                  <Fragment key={job._id || job.officialReferenceId || idx}>
                     {/* Native In-Feed Ad Slot between Card #3 and Card #4 */}
                     {idx === 3 && (
                       <Box sx={{
@@ -1553,7 +1558,7 @@ export default function GlobalGovJobsPage() {
                       </Box>
                     </Box>
                   </Box>
-                  </React.Fragment>
+                  </Fragment>
                 );
               })}
             </Box>

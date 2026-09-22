@@ -2004,6 +2004,9 @@ export default function PublicLiveAlertsPage() {
               borderTop: '6px solid #38BDF8',
               boxShadow: '0 35px 90px rgba(0, 0, 0, 0.95)',
               margin: { xs: 1.5, sm: 4 },
+              maxHeight: { xs: '94vh', sm: '90vh' },
+              display: 'flex',
+              flexDirection: 'column',
               overflow: 'hidden'
             }
           }}
@@ -2011,12 +2014,13 @@ export default function PublicLiveAlertsPage() {
           <DialogTitle 
             sx={{ 
               m: 0, 
-              p: { xs: 2, sm: 2.8 }, 
+              p: { xs: 2, sm: 2.5 }, 
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              bgcolor: 'rgba(15, 23, 42, 0.85)'
+              bgcolor: 'rgba(15, 23, 42, 0.95)',
+              flexShrink: 0
             }}
           >
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, pr: 4 }}>
@@ -2050,7 +2054,23 @@ export default function PublicLiveAlertsPage() {
             </IconButton>
           </DialogTitle>
 
-          <DialogContent dividers sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#080D1A !important', backgroundColor: '#080D1A !important', color: '#FFFFFF !important', borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+          <DialogContent
+            dividers
+            sx={{
+              p: { xs: 2, sm: 3 },
+              bgcolor: '#080D1A !important',
+              backgroundColor: '#080D1A !important',
+              color: '#FFFFFF !important',
+              borderColor: 'rgba(255, 255, 255, 0.08)',
+              overflowY: 'auto',
+              flexGrow: 1,
+              WebkitOverflowScrolling: 'touch',
+              '&::-webkit-scrollbar': { width: '8px' },
+              '&::-webkit-scrollbar-track': { background: '#080D1A' },
+              '&::-webkit-scrollbar-thumb': { background: '#334155', borderRadius: '4px' },
+              '&::-webkit-scrollbar-thumb:hover': { background: '#475569' }
+            }}
+          >
             {detailsLoading ? (
               <Box sx={{ py: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                 <CircularProgress size={40} sx={{ color: '#38BDF8' }} />
@@ -2072,13 +2092,14 @@ export default function PublicLiveAlertsPage() {
             sx={{ 
               p: { xs: 2, sm: 2.5 }, 
               borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              bgcolor: 'rgba(15, 23, 42, 0.95)',
+              bgcolor: 'rgba(15, 23, 42, 0.98)',
               display: { xs: 'grid', sm: 'flex' },
               gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'none' },
               gap: 1.2,
               alignItems: 'center',
               width: '100%',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              flexShrink: 0
             }}
           >
             {(() => {
