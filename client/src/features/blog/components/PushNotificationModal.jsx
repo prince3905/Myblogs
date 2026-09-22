@@ -122,6 +122,7 @@ export default function PushNotificationModal() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (window.location.pathname.startsWith('/global-jobs')) return;
 
     // Check if already granted
     if ('Notification' in window && Notification.permission === 'granted') {

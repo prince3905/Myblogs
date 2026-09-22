@@ -576,8 +576,8 @@ export default function Layout({ children }) {
         </Container>
       </Box>
 
-      {/* Real-time Push Notification Centered Modal */}
-      <PushNotificationModal />
+      {/* Real-time Push Notification Centered Modal (Suppressed on /global-jobs for zero popup interference) */}
+      {!location.pathname.startsWith('/global-jobs') && <PushNotificationModal />}
 
       {/* Deferred Floating Widgets */}
       {isDeferredMounted && !location.pathname.startsWith('/global') && (

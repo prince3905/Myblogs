@@ -4,7 +4,7 @@ import {
   Typography, Button, Box, Alert, CircularProgress,
   IconButton, TextField,
   Chip, Dialog, DialogContent, DialogTitle,
-  Pagination, Divider
+  Pagination, Divider, Slide
 } from '@mui/material';
 import {
   NotificationsActive as NotificationIcon,
@@ -28,13 +28,13 @@ import { getCountrySeoMeta, buildHreflangMatrix } from '../data/countrySeoConfig
 
 // Continents for filtering
 const CONTINENTS = [
-  { id: 'ALL', label: '🌐 पूरी दुनिया (195)', short: 'All World' },
-  { id: 'Multilateral', label: '🇺🇳 UN व अंतरराष्ट्रीय', short: 'UN & Global' },
-  { id: 'Asia', label: '🕌 खाड़ी व एशिया', short: 'Asia & Gulf' },
-  { id: 'Europe', label: '🇪🇺 यूरोप (44)', short: 'Europe' },
-  { id: 'Americas', label: '🌎 अमेरिका (35)', short: 'Americas' },
-  { id: 'Africa', label: '🌍 अफ्रीका (54)', short: 'Africa' },
-  { id: 'Oceania', label: '🏖 ओशिनिया (14)', short: 'Oceania' }
+  { id: 'ALL', label: '🌐 All Jurisdictions (195)', short: 'All Jurisdictions' },
+  { id: 'Multilateral', label: '🇺🇳 UN & Multilateral', short: 'UN & Global' },
+  { id: 'Asia', label: '🕌 Asia & Middle East', short: 'Asia & Gulf' },
+  { id: 'Europe', label: '🇪🇺 Europe (44)', short: 'Europe' },
+  { id: 'Americas', label: '🌎 Americas (35)', short: 'Americas' },
+  { id: 'Africa', label: '🌍 Africa (54)', short: 'Africa' },
+  { id: 'Oceania', label: '🏖 Oceania (14)', short: 'Oceania' }
 ];
 
 // Complete 195 Sovereign Countries Directory
@@ -60,23 +60,23 @@ function getContinentDisplayName(id) {
 
 // Category Pills
 const CATEGORIES = [
-  { id: 'ALL', label: 'सभी श्रेणियां' },
-  { id: 'Civil Service / Administrative', label: '🎖️ सिविल सेवा व प्रशासन' },
-  { id: 'Healthcare & Medical', label: '🏥 स्वास्थ्य व मेडिकल' },
-  { id: 'Tech & Engineering', label: '💻 तकनीकी व इंजीनियरिंग' },
-  { id: 'Defense, Police & Security', label: '👮 रक्षा, पुलिस व सुरक्षा' },
-  { id: 'Education & Academia', label: '🎓 शिक्षा व प्राध्यापक' },
-  { id: 'Finance, Revenue & Audit', label: '💼 वित्त व राजस्व' },
-  { id: 'Diplomatic & International Relations', label: '🌐 राजनयिक व विदेश सेवा' }
+  { id: 'ALL', label: 'All Disciplines' },
+  { id: 'Civil Service / Administrative', label: '🎖️ Civil Service & Administration' },
+  { id: 'Healthcare & Medical', label: '🏥 Healthcare & Medical' },
+  { id: 'Tech & Engineering', label: '💻 Tech & Engineering' },
+  { id: 'Defense, Police & Security', label: '👮 Defense, Police & Security' },
+  { id: 'Education & Academia', label: '🎓 Education & Academia' },
+  { id: 'Finance, Revenue & Audit', label: '💼 Finance, Revenue & Audit' },
+  { id: 'Diplomatic & International Relations', label: '🌐 Foreign Affairs & Diplomacy' }
 ];
 
-// Timeline Tabs (तारीख का क्रम)
+// Timeline Tabs (Freshness Hierarchy)
 const TIMELINE_TABS = [
-  { id: 'ALL', label: 'सभी भर्तियां', icon: '📋' },
-  { id: 'today', label: '🔥 आज जारी हुई (Today)', icon: '🟢' },
-  { id: 'yesterday', label: '⚡ कल जारी हुई (Yesterday)', icon: '🟡' },
-  { id: 'this_week', label: '📅 इस सप्ताह (This Week)', icon: '⚪' },
-  { id: 'closing_soon', label: '⏳ अंतिम तिथि निकट (Urgent)', icon: '🔴' }
+  { id: 'ALL', label: 'All Notices', icon: '📋' },
+  { id: 'today', label: '🔥 Posted Today', icon: '🟢' },
+  { id: 'yesterday', label: '⚡ Posted Yesterday', icon: '🟡' },
+  { id: 'this_week', label: '📅 This Week', icon: '⚪' },
+  { id: 'closing_soon', label: '⏳ Closing Soon', icon: '🔴' }
 ];
 
 // Timezone to Country code mapping for instant zero-latency geo-detection
@@ -84,13 +84,101 @@ const TIMEZONE_TO_COUNTRY = {
   'Asia/Kolkata': 'IN', 'Asia/Calcutta': 'IN',
   'Asia/Dubai': 'AE', 'Asia/Muscat': 'OM', 'Asia/Riyadh': 'SA', 'Asia/Qatar': 'QA', 'Asia/Kuwait': 'KW', 'Asia/Bahrain': 'BH',
   'Europe/London': 'GB',
-  'America/New_York': 'US', 'America/Chicago': 'US', 'America/Los_Angeles': 'US', 'America/Denver': 'US',
-  'America/Toronto': 'CA', 'America/Vancouver': 'CA',
-  'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU',
+  'America/New_York': 'US', 'America/Chicago': 'US', 'America/Los_Angeles': 'US', 'America/Denver': 'US', 'America/Phoenix': 'US', 'America/Detroit': 'US', 'America/Indiana/Indianapolis': 'US', 'America/Boise': 'US', 'America/Anchorage': 'US', 'Pacific/Honolulu': 'US',
+  'America/Toronto': 'CA', 'America/Vancouver': 'CA', 'America/Montreal': 'CA', 'America/Edmonton': 'CA', 'America/Winnipeg': 'CA', 'America/Halifax': 'CA',
+  'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU', 'Australia/Brisbane': 'AU', 'Australia/Perth': 'AU', 'Australia/Adelaide': 'AU',
   'Europe/Berlin': 'DE', 'Europe/Paris': 'FR', 'Europe/Madrid': 'ES', 'Europe/Rome': 'IT',
-  'Asia/Tokyo': 'JP', 'Asia/Seoul': 'KR', 'Asia/Singapore': 'SG',
-  'Africa/Johannesburg': 'ZA', 'America/Sao_Paulo': 'BR', 'Asia/Dhaka': 'BD', 'Asia/Karachi': 'PK'
+  'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE', 'Europe/Vienna': 'AT', 'Europe/Zurich': 'CH', 'Europe/Warsaw': 'PL', 'Europe/Stockholm': 'SE', 'Europe/Oslo': 'NO', 'Europe/Copenhagen': 'DK', 'Europe/Helsinki': 'FI', 'Europe/Dublin': 'IE', 'Europe/Lisbon': 'PT', 'Europe/Athens': 'GR', 'Europe/Bucharest': 'RO', 'Europe/Budapest': 'HU', 'Europe/Prague': 'CZ', 'Europe/Kyiv': 'UA',
+  'Asia/Tokyo': 'JP', 'Asia/Seoul': 'KR', 'Asia/Singapore': 'SG', 'Asia/Hong_Kong': 'HK', 'Asia/Taipei': 'TW', 'Asia/Bangkok': 'TH', 'Asia/Manila': 'PH', 'Asia/Jakarta': 'ID', 'Asia/Kuala_Lumpur': 'MY', 'Asia/Ho_Chi_Minh': 'VN',
+  'Africa/Johannesburg': 'ZA', 'Africa/Lagos': 'NG', 'Africa/Nairobi': 'KE', 'Africa/Cairo': 'EG', 'Africa/Accra': 'GH', 'Africa/Casablanca': 'MA',
+  'America/Sao_Paulo': 'BR', 'America/Mexico_City': 'MX', 'America/Bogota': 'CO', 'America/Buenos_Aires': 'AR', 'America/Santiago': 'CL', 'America/Lima': 'PE',
+  'Asia/Dhaka': 'BD', 'Asia/Karachi': 'PK', 'Asia/Colombo': 'LK', 'Asia/Kathmandu': 'NP', 'Asia/Kabul': 'AF'
 };
+
+function getHeroBannerContent(activeCountryCode) {
+  const code = (activeCountryCode || 'ALL').toUpperCase();
+
+  if (code === 'US') {
+    return {
+      title: '🇺🇸 Official US Federal Careers (USAJOBS) & Circulars 2026',
+      desc: 'Live verified US Federal Government jobs, GS-grade payscales, and civilian agency circulars from USAJOBS and official federal gazettes.',
+      pill: 'USAJOBS • Federal Civil Service'
+    };
+  }
+  if (code === 'DE') {
+    return {
+      title: '🇩🇪 Offizieller Öffentlicher Dienst & Bund.de Stellenangebote 2026',
+      desc: 'Offizielle Stellenangebote der Bundesverwaltung (Bund.de). Verifizierte Jobs für Beamte, Referenten und Sachbearbeiter im öffentlichen Dienst (TVöD).',
+      pill: 'Bund.de • Bundesverwaltung Deutschland'
+    };
+  }
+  if (code === 'ES') {
+    return {
+      title: '🇪🇸 Empleo Público Oficial y Convocatorias del Estado 2026',
+      desc: 'Convocatorias oficiales de empleo público, plazas del Estado y boletines oficiales (BOE) verificados en España.',
+      pill: 'Boletín Oficial del Estado (BOE) • Empleo Público'
+    };
+  }
+  if (code === 'FR') {
+    return {
+      title: '🇫🇷 Recrutement Fonction Publique & Avis Ministériels 2026',
+      desc: 'Avis de recrutement et concours officiels de la fonction publique d’État, territoriale et hospitalière vérifiés.',
+      pill: 'Journal Officiel • Fonction Publique'
+    };
+  }
+  if (code === 'SG') {
+    return {
+      title: '🇸🇬 Careers@Gov Singapore Public Service Vacancies 2026',
+      desc: 'Official Singapore Civil Service & statutory board career opportunities from Careers@Gov. Verified public service circulars.',
+      pill: 'Careers@Gov • Singapore Public Service Division'
+    };
+  }
+  if (code === 'GB') {
+    return {
+      title: '🇬🇧 UK Civil Service Jobs & Government Vacancies 2026',
+      desc: 'Explore verified UK Civil Service fast-stream, executive agency, and ministry vacancies across England, Scotland, Wales, and Northern Ireland.',
+      pill: 'Civil Service Jobs • GOV.UK Official'
+    };
+  }
+  if (code === 'CA') {
+    return {
+      title: '🇨🇦 Government of Canada Jobs (GC Jobs / Emplois GC) 2026',
+      desc: 'Search live verified Government of Canada federal public service opportunities, bilingual roles, and ministerial appointments across all provinces.',
+      pill: 'GC Jobs / Emplois GC • Federal Public Service'
+    };
+  }
+  if (code === 'AU') {
+    return {
+      title: '🇦🇺 Australian Public Service (APS Jobs) Vacancies 2026',
+      desc: 'Search live Australian Public Service (APS Level & Executive) vacancies, commonwealth agency roles, and statutory appointments across Australia.',
+      pill: 'APSjobs • Australian Public Service Gazette'
+    };
+  }
+  if (code === 'IN') {
+    return {
+      title: '🇮🇳 India Sarkari Result & Govt Jobs Portal 2026',
+      desc: 'UPSC, SSC, Railways, Banking, Defense & State PSC official notifications, verified gazettes and direct .gov.in / .nic.in apply links.',
+      pill: 'UPSC • SSC • Indian Civil Services'
+    };
+  }
+
+  if (code !== 'ALL') {
+    const country = getCountryByCode(code);
+    const countryName = country ? country.name : code;
+    const flag = country ? country.flag : '🏛️';
+    return {
+      title: `${flag} Official ${countryName} Public Service Vacancies & Gazettes 2026`,
+      desc: `Verified public sector circulars, ministry vacancies, and civil service announcements for ${countryName} with 100% direct official links.`,
+      pill: `Official Gazette • ${countryName} Public Sector`
+    };
+  }
+
+  return {
+    title: '🌐 Global Government Jobs & Civil Service Circulars 2026',
+    desc: 'Official public service circulars, ministerial appointments & multilateral vacancies across 195 sovereign nations with 100% direct official links.',
+    pill: '195 Sovereign Nations • Multilateral & Federal'
+  };
+}
 
 // Country code to primary official language mapping
 const COUNTRY_TO_PRIMARY_LANG = {
@@ -135,6 +223,10 @@ export default function GlobalGovJobsPage() {
   const [error, setError] = useState(null);
   const [isFallbackToInternational, setIsFallbackToInternational] = useState(false);
 
+  // 🔔 Subtle Intent Alert State (Non-intrusive 40s / 50% scroll alert)
+  const [showIntentAlert, setShowIntentAlert] = useState(false);
+  const [intentSubscribed, setIntentSubscribed] = useState(false);
+
   // Modal Detail State
   const [selectedJob, setSelectedJob] = useState(null);
   const [modalViewMode, setModalViewMode] = useState('translated'); // 'translated' | 'original'
@@ -160,23 +252,30 @@ export default function GlobalGovJobsPage() {
       let detectedC = savedCountry;
       let detectedL = savedLang;
 
+      const hasExplicitUrlFilter = Boolean(
+        (routeCountry && routeCountry.length === 2) ||
+        searchParams.get('country') ||
+        searchParams.get('continent')
+      );
+
       // Detect country via Timezone if not saved
       if (!detectedC) {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-        detectedC = TIMEZONE_TO_COUNTRY[tz] || 'IN';
+        detectedC = TIMEZONE_TO_COUNTRY[tz] || 'US';
       }
 
-      // Auto-assign matching language if not explicitly locked
+      // Auto-assign matching language
       if (!detectedL) {
-        detectedL = COUNTRY_TO_PRIMARY_LANG[detectedC];
-        if (!detectedL) {
-          const browserLang = (navigator.language || '').slice(0, 2);
-          detectedL = ALL_LANGUAGES.some(l => l.code === browserLang) ? browserLang : 'hi';
-        }
+        detectedL = COUNTRY_TO_PRIMARY_LANG[detectedC] || 'en';
       }
 
       setUserDetectedCountry(detectedC);
-      setSelectedLanguage(detectedL || 'hi');
+      setSelectedLanguage(detectedL || 'en');
+
+      // Auto pre-select detected country if no explicit URL filter is active (zero redirect)
+      if (!hasExplicitUrlFilter && detectedC && detectedC !== 'ALL') {
+        setActiveCountry(detectedC);
+      }
 
       // Async server GeoIP verification in background
       if (!savedCountry) {
@@ -184,8 +283,8 @@ export default function GlobalGovJobsPage() {
           .then(res => {
             if (res?.success && res.detectedCountry) {
               setUserDetectedCountry(res.detectedCountry);
-              if (!savedLang && res.suggestedLanguage) {
-                setSelectedLanguage(res.suggestedLanguage);
+              if (!hasExplicitUrlFilter && activeCountry === 'ALL' && res.detectedCountry !== 'ALL') {
+                setActiveCountry(res.detectedCountry);
               }
             }
           })
@@ -206,6 +305,61 @@ export default function GlobalGovJobsPage() {
       // Safe fallback
     }
   }, []);
+
+  // 🔔 Subtle Intent Alert Listener (40s timer OR 50% scroll)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem('dh_intent_alert_dismissed') === 'true') return;
+
+    let triggered = false;
+    const triggerAlert = () => {
+      if (triggered) return;
+      triggered = true;
+      setShowIntentAlert(true);
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
+
+    const timer = setTimeout(triggerAlert, 40000);
+
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollHeight > 300 && window.scrollY / scrollHeight >= 0.5) {
+        triggerAlert();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const handleDismissIntent = () => {
+    setShowIntentAlert(false);
+    sessionStorage.setItem('dh_intent_alert_dismissed', 'true');
+  };
+
+  const handleSubscribeIntent = async () => {
+    setIntentSubscribed(true);
+    try {
+      if (window.OneSignalDeferred) {
+        window.OneSignalDeferred.push(async function(OneSignal) {
+          if (OneSignal.Notifications) {
+            await OneSignal.Notifications.requestPermission();
+          }
+        });
+      } else if ('Notification' in window && Notification.permission !== 'granted') {
+        await Notification.requestPermission();
+      }
+    } catch (e) {}
+
+    setTimeout(() => {
+      setShowIntentAlert(false);
+      sessionStorage.setItem('dh_intent_alert_dismissed', 'true');
+    }, 2000);
+  };
 
   // Fetch Stats
   useEffect(() => {
@@ -245,11 +399,11 @@ export default function GlobalGovJobsPage() {
           setPagination(res.pagination || { total: 0, totalPages: 1 });
           setIsFallbackToInternational(Boolean(res.fallbackToInternational));
         } else {
-          setError('वैश्विक सरकारी नौकरियों की सूची लोड करने में त्रुटि हुई।');
+          setError('Error loading verified global government vacancies. Please retry.');
         }
       })
       .catch(err => {
-        setError(err.message || 'नेटवर्क त्रुटि');
+        setError(err.message || 'Network connection issue');
       })
       .finally(() => {
         setLoading(false);
@@ -371,12 +525,12 @@ export default function GlobalGovJobsPage() {
 
   // Share helpers
   const handleWhatsAppShare = (job) => {
-    const text = `🏛️ *सरकारी भर्ती अलर्ट:* ${job.title}\n📍 *देश/संस्था:* ${job.countryFlag} ${job.countryName} (${job.agencyOrMinistry})\n💰 *वेतन:* ${job.salary?.amount}\n🔗 *आधिकारिक पोर्टल पर देखें:* ${window.location.origin}/global-jobs?id=${job.officialReferenceId || job._id}`;
+    const text = `🏛️ *Official Career Notice:* ${job.title}\n📍 *Jurisdiction:* ${job.countryFlag} ${job.countryName} (${job.agencyOrMinistry})\n💰 *Payscale:* ${job.salary?.amount || 'Statutory Public Scale'}\n🔗 *Verified Official Notice:* ${window.location.origin}/global-jobs?id=${job.officialReferenceId || job._id}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleTelegramShare = (job) => {
-    const text = `🏛️ सरकारी भर्ती: ${job.title}\n📍 ${job.countryFlag} ${job.countryName} - ${job.agencyOrMinistry}\n💰 वेतन: ${job.salary?.amount}`;
+    const text = `🏛️ *Official Career Notice:* ${job.title}\n📍 *Agency:* ${job.countryFlag} ${job.countryName} - ${job.agencyOrMinistry}\n💰 *Payscale:* ${job.salary?.amount || 'Statutory Scale'}`;
     const url = `${window.location.origin}/global-jobs?id=${job.officialReferenceId || job._id}`;
     window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -386,9 +540,9 @@ export default function GlobalGovJobsPage() {
     if (!deadline) return null;
     const diff = new Date(deadline).getTime() - Date.now();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    if (days <= 0) return 'समाप्त (Closed)';
-    if (days === 1) return '⏳ 1 दिन शेष (आज लास्ट डेट)';
-    return `⏳ ${days} दिन शेष`;
+    if (days <= 0) return 'Closed / Expired';
+    if (days === 1) return '⏳ 1 Day Left (Closing Soon)';
+    return `⏳ ${days} Days Left`;
   };
 
   // Helper to extract clean quantitative salary for Google Jobs schema
@@ -396,7 +550,7 @@ export default function GlobalGovJobsPage() {
     if (!salaryStr) return undefined;
     const nums = (salaryStr.match(/\d[\d,]*/g) || []).map(n => parseInt(n.replace(/,/g, ''), 10)).filter(n => !isNaN(n) && n > 0);
     if (nums.length === 0) return undefined;
-    const isMonth = /month|माह/i.test(salaryStr);
+    const isMonth = /month/i.test(salaryStr);
     const unitText = isMonth ? 'MONTH' : 'YEAR';
     return {
       '@type': 'MonetaryAmount',
@@ -476,6 +630,11 @@ export default function GlobalGovJobsPage() {
     return null;
   }, [selectedJob, jobs]);
 
+  // Country-Tailored Hero Banner Content
+  const heroContent = useMemo(() => {
+    return getHeroBannerContent(activeCountry);
+  }, [activeCountry]);
+
   // Dynamic International SEO Metadata, Canonical & Hreflang Matrix
   const seoMeta = useMemo(() => {
     return getCountrySeoMeta(activeCountry);
@@ -496,8 +655,8 @@ export default function GlobalGovJobsPage() {
   return (
     <Layout>
       <Seo
-        title={selectedJob ? `${selectedJob.title} - ${selectedJob.countryName} | ग्लोबल सरकारी गजट 2026` : seoMeta.title}
-        description={selectedJob ? `आधिकारिक सरकारी अधिसूचना: ${selectedJob.title} (${selectedJob.agencyOrMinistry}, ${selectedJob.countryName})। वेतन, योग्यता, आवेदन लिंक व गजट PDF।` : seoMeta.description}
+        title={selectedJob ? `${selectedJob.title} (${selectedJob.agencyOrMinistry}) - ${selectedJob.countryName} | Global Gov Jobs 2026` : seoMeta.title}
+        description={selectedJob ? `Official vacancy circular: ${selectedJob.title} under ${selectedJob.agencyOrMinistry}, ${selectedJob.countryName}. Check payscale, qualifications & apply online.` : seoMeta.description}
         canonical={pageCanonical}
         keywords={seoMeta.keywords}
         hreflangs={hreflangMatrix}
@@ -578,7 +737,7 @@ export default function GlobalGovJobsPage() {
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
                 <Chip
-                  label="आधिकारिक सरकारी करियर इंटेलिजेंस"
+                  label={heroContent.pill}
                   size="small"
                   sx={{
                     bgcolor: 'rgba(56, 189, 248, 0.15)',
@@ -604,12 +763,12 @@ export default function GlobalGovJobsPage() {
                 color: '#F8FAFC',
                 fontWeight: 900,
                 letterSpacing: '-0.02em',
-                fontSize: { xs: '1.4rem', sm: '1.8rem', md: '2.2rem' }
+                fontSize: { xs: '1.3rem', sm: '1.75rem', md: '2.15rem' }
               }}>
-                🏛️ ग्लोबल सरकारी जॉब्स व लोक सेवा भर्ती पोर्टल
+                {heroContent.title}
               </Typography>
-              <Typography variant="body2" sx={{ color: '#94A3B8', mt: 0.5, maxWidth: 800 }}>
-                195 संप्रभु देशों, संयुक्त राष्ट्र (UN), खाड़ी देशों व भारत सरकार के आधिकारिक भर्ती नोटिफिकेशन — सीधे मूल गजट व अपनी स्थानीय भाषा में।
+              <Typography variant="body2" sx={{ color: '#94A3B8', mt: 0.5, maxWidth: 850, lineHeight: 1.6 }}>
+                {heroContent.desc}
               </Typography>
             </Box>
 
@@ -629,7 +788,7 @@ export default function GlobalGovJobsPage() {
                 textAlign: 'center'
               }}>
                 <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', fontWeight: 600 }}>
-                  🔥 आज जारी
+                  🔥 New Today
                 </Typography>
                 <Typography variant="h6" sx={{ color: '#38BDF8', fontWeight: 800, lineHeight: 1 }}>
                   {stats.todayCount || 18}
@@ -644,7 +803,7 @@ export default function GlobalGovJobsPage() {
                 textAlign: 'center'
               }}>
                 <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', fontWeight: 600 }}>
-                  ⚡ कल की भर्तियां
+                  ⚡ Yesterday
                 </Typography>
                 <Typography variant="h6" sx={{ color: '#FBBF24', fontWeight: 800, lineHeight: 1 }}>
                   {stats.yesterdayCount || 24}
@@ -659,7 +818,7 @@ export default function GlobalGovJobsPage() {
                 textAlign: 'center'
               }}>
                 <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', fontWeight: 600 }}>
-                  ⏳ लास्ट डेट निकट
+                  ⏳ Closing Soon
                 </Typography>
                 <Typography variant="h6" sx={{ color: '#F43F5E', fontWeight: 800, lineHeight: 1 }}>
                   {stats.closingSoonCount || 11}
@@ -674,7 +833,7 @@ export default function GlobalGovJobsPage() {
                 textAlign: 'center'
               }}>
                 <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', fontWeight: 600 }}>
-                  🌐 कुल सक्रिय
+                  🌐 Total Active
                 </Typography>
                 <Typography variant="h6" sx={{ color: '#34D399', fontWeight: 800, lineHeight: 1 }}>
                   {stats.totalActive || 150}+
@@ -688,7 +847,7 @@ export default function GlobalGovJobsPage() {
             <TextField
               fullWidth
               size="small"
-              placeholder="पद का नाम, मंत्रालय, देश या योग्यता से सर्च करें (e.g. Health Officer, UPSC, Dubai, Engineer, Consultant)..."
+              placeholder="Search by job title, ministry, department, duty station, or reference ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') setCurrentPage(1); }}
@@ -717,7 +876,7 @@ export default function GlobalGovJobsPage() {
                 '&:hover': { bgcolor: '#0369A1' }
               }}
             >
-              खोजें
+              Search
             </Button>
           </Box>
         </Box>
@@ -742,7 +901,7 @@ export default function GlobalGovJobsPage() {
             '&::-webkit-scrollbar-thumb': { bgcolor: '#334155', borderRadius: 2 }
           }}>
             <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, whiteSpace: 'nowrap', mr: 1 }}>
-              महाद्वीप:
+              Region / Continent:
             </Typography>
             {CONTINENTS.map(cont => (
               <Chip
@@ -784,7 +943,7 @@ export default function GlobalGovJobsPage() {
                 '&:hover': { bgcolor: '#334155', borderColor: '#38BDF8' }
               }}
             >
-              {activeCountry !== 'ALL' ? getCountryDisplayName(activeCountry) : '🌍 देश चुनें (195 Nations)'}
+              {activeCountry !== 'ALL' ? getCountryDisplayName(activeCountry) : '🌍 Select Jurisdiction (195 Nations)'}
             </Button>
           </Box>
 
@@ -799,7 +958,7 @@ export default function GlobalGovJobsPage() {
             '&::-webkit-scrollbar-thumb': { bgcolor: '#334155', borderRadius: 2 }
           }}>
             <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, whiteSpace: 'nowrap', mr: 1 }}>
-              श्रेणी:
+              Discipline / Category:
             </Typography>
             {CATEGORIES.map(cat => (
               <Chip
@@ -821,7 +980,7 @@ export default function GlobalGovJobsPage() {
             ))}
           </Box>
 
-          {/* Row 3: Timeline & Eligibility Filters (आज, कल, परसों) */}
+          {/* Row 3: Timeline & Eligibility Filters */}
           <Box sx={{
             display: 'flex',
             alignItems: 'center',
@@ -833,7 +992,7 @@ export default function GlobalGovJobsPage() {
             {/* Timeline Tabs */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflowX: 'auto' }}>
               <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, whiteSpace: 'nowrap', mr: 0.5 }}>
-                तारीख:
+                Timeline / Freshness:
               </Typography>
               {TIMELINE_TABS.map(tab => (
                 <Chip
@@ -876,10 +1035,17 @@ export default function GlobalGovJobsPage() {
                   '&:hover': { bgcolor: '#059669', color: '#FFFFFF' }
                 }}
               >
-                🌍 केवल वीज़ा-स्पॉन्सर / Expat Friendly
+                🌍 Visa Sponsored / International Friendly
               </Button>
             </Box>
           </Box>
+        </Box>
+      </Box>
+
+      {/* 🟢 High-CTR Responsive Google AdSense Banner below Filter Controls */}
+      <Box sx={{ bgcolor: '#0B0F19', pt: 2.5, pb: 1, px: { xs: 2, md: 4 } }}>
+        <Box sx={{ maxWidth: 1400, mx: 'auto', textAlign: 'center' }}>
+          <AdSlot format="horizontal" style={{ my: 1 }} />
         </Box>
       </Box>
 
@@ -896,7 +1062,7 @@ export default function GlobalGovJobsPage() {
             <Box sx={{ textAlign: 'center', py: 8 }}>
               <CircularProgress sx={{ color: '#38BDF8', mb: 2 }} />
               <Typography sx={{ color: '#94A3B8', fontWeight: 600 }}>
-                विश्व स्तरीय सरकारी नौकरियों की लाइव अधिसूचनाएं लोड हो रही हैं...
+                Loading verified global government vacancies & official gazettes...
               </Typography>
             </Box>
           )}
@@ -1040,7 +1206,7 @@ export default function GlobalGovJobsPage() {
                   />
                 </Typography>
                 <Typography sx={{ color: '#94A3B8', fontSize: '0.85rem', mt: 0.5, lineHeight: 1.5 }}>
-                  {getCountryDisplayName(activeCountry)} के सरकारी भर्ती पोर्टल्स की निरंतर निगरानी जारी है। वर्तमान में {getCountryDisplayName(activeCountry)} के उम्मीदवारों व अंतरराष्ट्रीय आवेदकों के लिए खुली सत्यापित संयुक्त राष्ट्र (UN), WHO व अंतरराष्ट्रीय सरकारी नियुक्तियां नीचे प्रदर्शित हैं:
+                  Official gazette circulars for {getCountryDisplayName(activeCountry)} are actively tracked 24/7. Verified multilateral, UN, and international civil service vacancies currently open to applicants worldwide are displayed below:
                 </Typography>
               </Box>
             </Box>
@@ -1053,11 +1219,83 @@ export default function GlobalGovJobsPage() {
               gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
               gap: 2.5
             }}>
-              {jobs.map((job) => {
+              {jobs.map((job, idx) => {
                 const daysLeft = getDaysRemaining(job.applicationDeadline);
-                const isUrgent = daysLeft && (daysLeft.includes('1 दिन') || daysLeft.includes('2 दिन') || daysLeft.includes('3 दिन'));
+                const isUrgent = daysLeft && (daysLeft.includes('1 ') || daysLeft.includes('2 ') || daysLeft.includes('3 ') || daysLeft.includes('Day'));
 
                 return (
+                  <React.Fragment key={job._id || job.officialReferenceId || idx}>
+                    {/* Native In-Feed Ad Slot between Card #3 and Card #4 */}
+                    {idx === 3 && (
+                      <Box sx={{
+                        bgcolor: '#0F172A',
+                        border: '1px solid #1E293B',
+                        borderRadius: '16px',
+                        p: 2.5,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        minHeight: 340,
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          borderColor: 'rgba(56, 189, 248, 0.4)',
+                          boxShadow: '0 12px 24px -10px rgba(56, 189, 248, 0.15)'
+                        }
+                      }}>
+                        <Box sx={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          background: 'linear-gradient(90deg, #38BDF8, #818CF8, #34D399)'
+                        }} />
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: '6px',
+                              bgcolor: 'rgba(56, 189, 248, 0.12)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <VerifiedIcon sx={{ fontSize: 16, color: '#38BDF8' }} />
+                            </Box>
+                            <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700, letterSpacing: '0.04em' }}>
+                              OFFICIAL CAREER ADVISORY
+                            </Typography>
+                          </Box>
+                          <Chip
+                            label="Sponsored Notice"
+                            size="small"
+                            sx={{
+                              bgcolor: 'rgba(251, 191, 36, 0.1)',
+                              color: '#FBBF24',
+                              fontWeight: 700,
+                              fontSize: '0.68rem',
+                              height: 22,
+                              border: '1px solid rgba(251, 191, 36, 0.25)'
+                            }}
+                          />
+                        </Box>
+                        <Box sx={{ my: 'auto', py: 1.5, textAlign: 'center' }}>
+                          <AdSlot format="infeed" />
+                        </Box>
+                        <Box sx={{ pt: 1.5, borderTop: '1px solid #1E293B', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.72rem' }}>
+                            Advertisement • Google Certified Public Ads
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: '#38BDF8', fontWeight: 600, fontSize: '0.72rem' }}>
+                            Trusted Partner
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
+
                   <Box
                     key={job._id || job.officialReferenceId}
                     sx={{
@@ -1106,7 +1344,7 @@ export default function GlobalGovJobsPage() {
                         {/* Status Badges */}
                         {isUrgent ? (
                           <Chip
-                            label="अंतिम तिथि निकट"
+                            label="Closing Soon"
                             size="small"
                             sx={{ bgcolor: 'rgba(244, 63, 94, 0.2)', color: '#FB7185', fontWeight: 700, fontSize: '0.7rem' }}
                           />
@@ -1174,7 +1412,7 @@ export default function GlobalGovJobsPage() {
                             WebkitBoxOrient: 'vertical',
                             overflow: 'hidden'
                           }}>
-                            {job.eligibility?.education || 'स्नातक / संबंधित सरकारी योग्यता'}
+                            {job.eligibility?.education || 'University Degree or statutory qualification'}
                           </Typography>
                         </Box>
                       </Box>
@@ -1184,12 +1422,12 @@ export default function GlobalGovJobsPage() {
                     <Box sx={{ pt: 1.5, borderTop: '1px solid #1E293B' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
                         <Typography variant="caption" sx={{ color: isUrgent ? '#FB7185' : '#94A3B8', fontWeight: 700 }}>
-                          {daysLeft || 'सक्रिय भर्ती (Active)'}
+                          {daysLeft || 'Active Notice'}
                         </Typography>
 
                         {/* Visa / Expat Badge */}
                         <Chip
-                          label={job.eligibility?.visaSponsored ? '🌍 वीज़ा उपलब्ध' : '🏛️ स्थानीय नागरिक'}
+                          label={job.eligibility?.visaSponsored ? '🌍 Visa Sponsored' : '🏛️ Citizen / Statutory'}
                           size="small"
                           sx={{
                             bgcolor: job.eligibility?.visaSponsored ? 'rgba(16, 185, 129, 0.1)' : 'rgba(148, 163, 184, 0.1)',
@@ -1219,7 +1457,7 @@ export default function GlobalGovJobsPage() {
                             '&:hover': { bgcolor: '#0369A1' }
                           }}
                         >
-                          विवरण देखें व आवेदन
+                          View Verified Notice & Apply ↗
                         </Button>
 
                         {/* WhatsApp Share */}
@@ -1252,6 +1490,7 @@ export default function GlobalGovJobsPage() {
                       </Box>
                     </Box>
                   </Box>
+                  </React.Fragment>
                 );
               })}
             </Box>
@@ -1332,7 +1571,7 @@ export default function GlobalGovJobsPage() {
                     </Typography>
                     <Chip
                       icon={<VerifiedIcon sx={{ fontSize: '13px !important', color: '#10B981 !important' }} />}
-                      label="आधिकारिक सरकारी गजट"
+                      label="Official Gazette Circular"
                       size="small"
                       sx={{ bgcolor: 'rgba(16, 185, 129, 0.12)', color: '#34D399', fontWeight: 600, height: 20, fontSize: '0.68rem' }}
                     />
@@ -1364,7 +1603,7 @@ export default function GlobalGovJobsPage() {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <TranslateIcon sx={{ color: '#A855F7', fontSize: 20 }} />
                   <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600 }}>
-                    भाषा मोड (Language View):
+                    Language Mode:
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
@@ -1382,7 +1621,7 @@ export default function GlobalGovJobsPage() {
                       borderColor: '#4F46E5'
                     }}
                   >
-                    🌐 अनुवादित रूप (My Language)
+                    🌐 Translated View
                   </Button>
                   <Button
                     size="small"
@@ -1398,7 +1637,7 @@ export default function GlobalGovJobsPage() {
                       borderColor: '#0284C7'
                     }}
                   >
-                    🏛️ मूल सरकारी गजट (Original)
+                    🏛️ Original Official Gazette
                   </Button>
                 </Box>
               </Box>
@@ -1409,7 +1648,7 @@ export default function GlobalGovJobsPage() {
               </Typography>
               {selectedJob.officialReferenceId && (
                 <Typography variant="caption" sx={{ color: '#64748B', display: 'block', mb: 3 }}>
-                  विज्ञापन संख्या / Reference Code: {selectedJob.officialReferenceId}
+                  Reference Code: {selectedJob.officialReferenceId}
                 </Typography>
               )}
 
@@ -1422,7 +1661,7 @@ export default function GlobalGovJobsPage() {
               }}>
                 <Box sx={{ bgcolor: '#0F172A', p: 2, borderRadius: '12px', border: '1px solid #1E293B' }}>
                   <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, display: 'block' }}>
-                    💰 वेतनमान (Pay Scale)
+                    💰 Payscale / Grade
                   </Typography>
                   <Typography variant="body1" sx={{ color: '#34D399', fontWeight: 800, mt: 0.5 }}>
                     {selectedJob.salary?.amount}
@@ -1431,7 +1670,7 @@ export default function GlobalGovJobsPage() {
 
                 <Box sx={{ bgcolor: '#0F172A', p: 2, borderRadius: '12px', border: '1px solid #1E293B' }}>
                   <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, display: 'block' }}>
-                    📍 ड्यूटी स्टेशन / तैनाती स्थल
+                    📍 Official Duty Station
                   </Typography>
                   <Typography variant="body1" sx={{ color: '#F8FAFC', fontWeight: 700, mt: 0.5 }}>
                     {selectedJob.dutyStation}
@@ -1440,19 +1679,19 @@ export default function GlobalGovJobsPage() {
 
                 <Box sx={{ bgcolor: '#0F172A', p: 2, borderRadius: '12px', border: '1px solid #1E293B' }}>
                   <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, display: 'block' }}>
-                    🎓 शैक्षणिक योग्यता (Eligibility)
+                    🎓 Educational Qualification
                   </Typography>
                   <Typography variant="body2" sx={{ color: '#CBD5E1', fontWeight: 600, mt: 0.5 }}>
-                    {selectedJob.eligibility?.education || 'स्नातक / संबंधित आधिकारिक योग्यता'}
+                    {selectedJob.eligibility?.education || 'University Degree or recognized statutory qualification'}
                   </Typography>
                 </Box>
 
                 <Box sx={{ bgcolor: '#0F172A', p: 2, borderRadius: '12px', border: '1px solid #1E293B' }}>
                   <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 600, display: 'block' }}>
-                    ⏳ आवेदन की अंतिम तिथि (Deadline)
+                    ⏳ Application Deadline
                   </Typography>
                   <Typography variant="body1" sx={{ color: '#FB7185', fontWeight: 800, mt: 0.5 }}>
-                    {selectedJob.applicationDeadline ? new Date(selectedJob.applicationDeadline).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'आधिकारिक गजट देखें'}
+                    {selectedJob.applicationDeadline ? new Date(selectedJob.applicationDeadline).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Refer to Official Gazette'}
                   </Typography>
                 </Box>
               </Box>
@@ -1467,7 +1706,7 @@ export default function GlobalGovJobsPage() {
                   mb: 3
                 }}>
                   <Typography variant="subtitle2" sx={{ color: '#38BDF8', fontWeight: 800, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    📋 आधिकारिक पद विवरण एवं अधिसूचना (Official Role Overview)
+                    📋 Official Role Overview & Gazette Summary
                   </Typography>
                   <Typography variant="body2" sx={{ color: '#CBD5E1', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
                     {selectedJob.description || selectedJob.officialGazetteSummary}
@@ -1485,7 +1724,7 @@ export default function GlobalGovJobsPage() {
                   mb: 3
                 }}>
                   <Typography variant="subtitle2" sx={{ color: '#F59E0B', fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    🎯 मुख्य कार्य एवं जिम्मेदारियां (Key Duties & Scope of Work)
+                    🎯 Key Duties & Scope of Work
                   </Typography>
                   <Box component="ul" sx={{ m: 0, pl: 2.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {selectedJob.keyResponsibilities.map((resp, idx) => (
@@ -1506,36 +1745,36 @@ export default function GlobalGovJobsPage() {
                 mb: 3
               }}>
                 <Typography variant="subtitle2" sx={{ color: '#A855F7', fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  ⚖️ पात्रता एवं सेवा शर्तें (Detailed Eligibility Criteria)
+                  ⚖️ Detailed Eligibility Criteria
                 </Typography>
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
                   <Box sx={{ bgcolor: 'rgba(30, 41, 59, 0.5)', p: 1.5, borderRadius: '8px' }}>
                     <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, display: 'block' }}>
-                      आयु सीमा (Age Limit)
+                      Age Limit
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#F8FAFC', fontWeight: 700, mt: 0.3 }}>
-                      {selectedJob.eligibility?.ageLimit || '18 - 62 वर्ष (आधिकारिक नियमानुसार)'}
+                      {selectedJob.eligibility?.ageLimit || 'Statutory public service age guidelines'}
                     </Typography>
                   </Box>
                   <Box sx={{ bgcolor: 'rgba(30, 41, 59, 0.5)', p: 1.5, borderRadius: '8px' }}>
                     <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, display: 'block' }}>
-                      नागरिकता एवं वीज़ा (Citizenship / Visa)
+                      Citizenship / Visa Status
                     </Typography>
                     <Typography variant="body2" sx={{ color: selectedJob.eligibility?.visaSponsored ? '#34D399' : '#38BDF8', fontWeight: 700, mt: 0.3 }}>
-                      {selectedJob.eligibility?.visaSponsored ? '✅ वीज़ा प्रायोजित (Open to International Applicants)' : '🏛️ राष्ट्रीय नागरिक / नियमानुसार पात्रता'}
+                      {selectedJob.eligibility?.visaSponsored ? '✅ Open to International Applicants (Visa Sponsored)' : '🏛️ Citizen / Statutory Eligibility Criteria'}
                     </Typography>
                   </Box>
                   <Box sx={{ bgcolor: 'rgba(30, 41, 59, 0.5)', p: 1.5, borderRadius: '8px' }}>
                     <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, display: 'block' }}>
-                      न्यूनतम अनुभव (Experience)
+                      Minimum Experience
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#F8FAFC', fontWeight: 700, mt: 0.3 }}>
-                      {selectedJob.eligibility?.experience || 'संबंधित लोक सेवा / पेशेवर अनुभव'}
+                      {selectedJob.eligibility?.experience || 'Relevant public sector / professional experience'}
                     </Typography>
                   </Box>
                   <Box sx={{ bgcolor: 'rgba(30, 41, 59, 0.5)', p: 1.5, borderRadius: '8px' }}>
                     <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600, display: 'block' }}>
-                      कार्य क्षेत्र (Domain)
+                      Career Track
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#F8FAFC', fontWeight: 700, mt: 0.3 }}>
                       {selectedJob.jobType || selectedJob.category || 'Civil Service'}
@@ -1554,7 +1793,7 @@ export default function GlobalGovJobsPage() {
                   mb: 3
                 }}>
                   <Typography variant="subtitle2" sx={{ color: '#10B981', fontWeight: 800, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    🎁 आधिकारिक सरकारी भत्ते व सुविधाएं (Official Perks & Benefits)
+                    🎁 Official Allowances & Statutory Perks
                   </Typography>
                   <Box component="ul" sx={{ m: 0, pl: 2.5, display: 'flex', flexDirection: 'column', gap: 0.8 }}>
                     {selectedJob.benefits.map((benefit, idx) => (
@@ -1576,7 +1815,7 @@ export default function GlobalGovJobsPage() {
                   mb: 3
                 }}>
                   <Typography variant="subtitle2" sx={{ color: '#38BDF8', fontWeight: 800, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    📝 आवेदन करने की प्रक्रिया (How to Apply Guide)
+                    📝 Official Application Procedure
                   </Typography>
                   <Typography variant="body2" sx={{ color: '#CBD5E1', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
                     {selectedJob.howToApply}
@@ -1593,7 +1832,7 @@ export default function GlobalGovJobsPage() {
                 mb: 2
               }}>
                 <Typography variant="body2" sx={{ color: '#E2E8F0', fontWeight: 500, fontSize: '0.85rem' }}>
-                  🛡️ <strong>सत्यापित आधिकारिक भर्ती नीति:</strong> यह सूचना सीधे संबंधित सरकार या संस्था के सार्वजनिक पोर्टल से संकलित की गई है। इस पद हेतु किसी भी मध्यस्थ या एजेंट को शुल्क न दें। सीधे नीचे दिए गए आधिकारिक सरकारी बटन से आवेदन करें।
+                  🛡️ <strong>Verified Official Recruitment Standards:</strong> This vacancy circular is directly aggregated from public gazettes and ministry databases. Never pay fees to private recruitment consultants or intermediaries. Proceed only via the verified official button below.
                 </Typography>
               </Box>
 
@@ -1606,7 +1845,7 @@ export default function GlobalGovJobsPage() {
                 mb: 3
               }}>
                 <Typography variant="body2" sx={{ color: '#FCA5A5', fontWeight: 600, fontSize: '0.82rem', lineHeight: 1.6 }}>
-                  ⚠️ <strong>धोखाधड़ी से सावधान (Anti-Fraud Warning):</strong> सरकारी विभाग कभी भी किसी व्यक्तिगत बैंक खाते, QR कोड या UPI पर भर्ती शुल्क नहीं मांगते। किसी भी फर्जी एजेंट या अनधिकृत मध्यस्थ के झांसे में न आएं। केवल नीचे दिए गए सीधे आधिकारिक .gov पोर्टल से ही आवेदन करें।
+                  ⚠️ <strong>Anti-Fraud Advisory:</strong> Government departments and multilateral agencies never request candidate fees via personal bank accounts, QR codes, or wire transfers. Always apply exclusively through the verified official portal linked below.
                 </Typography>
               </Box>
 
@@ -1622,21 +1861,46 @@ export default function GlobalGovJobsPage() {
                   href={selectedJob.officialNoticeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="आधिकारिक सरकारी पोर्टल पर आवेदन करें"
-                  startIcon={<ApplyIcon />}
+                  aria-label="Apply on Official Government Portal"
+                  startIcon={<VerifiedIcon sx={{ fontSize: 22, color: '#34D399' }} />}
                   sx={{
                     bgcolor: '#10B981',
                     color: '#FFFFFF',
                     fontWeight: 800,
-                    fontSize: '0.95rem',
-                    py: 1.5,
+                    fontSize: '1rem',
+                    py: 1.6,
                     borderRadius: '12px',
                     textTransform: 'none',
+                    boxShadow: '0 8px 24px rgba(16, 185, 129, 0.35)',
                     '&:hover': { bgcolor: '#059669' }
                   }}
                 >
-                  🔗 आधिकारिक सरकारी पोर्टल पर आवेदन करें (Official .gov Link)
+                  Apply on Official Portal ↗ (Verified .gov Link)
                 </Button>
+
+                {/* Trust Badges Row */}
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 2,
+                  flexWrap: 'wrap',
+                  py: 1,
+                  px: 1.5,
+                  borderRadius: '8px',
+                  bgcolor: 'rgba(16, 185, 129, 0.06)',
+                  border: '1px solid rgba(16, 185, 129, 0.2)'
+                }}>
+                  <Typography variant="caption" sx={{ color: '#34D399', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                    🛡️ 100% Verified Government Portal
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#38BDF8', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                    🔒 Zero Fee / No Intermediaries
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#A7F3D0', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                    📄 Official PDF Gazette Available
+                  </Typography>
+                </Box>
 
                 {/* PDF Gazette Button */}
                 {selectedJob.officialPdfUrl && (
@@ -1646,7 +1910,7 @@ export default function GlobalGovJobsPage() {
                     href={selectedJob.officialPdfUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="आधिकारिक नोटिफिकेशन डाउनलोड करें"
+                    aria-label="Download Official Gazette Circular"
                     startIcon={<PdfIcon />}
                     sx={{
                       color: '#38BDF8',
@@ -1658,7 +1922,7 @@ export default function GlobalGovJobsPage() {
                       '&:hover': { bgcolor: 'rgba(2, 132, 199, 0.1)', borderColor: '#38BDF8' }
                     }}
                   >
-                    📄 आधिकारिक नोटिफिकेशन / गजट डाउनलोड करें (PDF)
+                    📄 Download Official Gazette / Circular (PDF)
                   </Button>
                 )}
 
@@ -1668,7 +1932,7 @@ export default function GlobalGovJobsPage() {
                     fullWidth
                     variant="outlined"
                     onClick={() => handleWhatsAppShare(selectedJob)}
-                    aria-label="WhatsApp पर यह सरकारी नौकरी शेयर करें"
+                    aria-label="Share via WhatsApp"
                     startIcon={<WhatsAppIcon />}
                     sx={{
                       color: '#25D366',
@@ -1678,13 +1942,13 @@ export default function GlobalGovJobsPage() {
                       textTransform: 'none'
                     }}
                   >
-                    WhatsApp पर शेयर करें
+                    Share via WhatsApp
                   </Button>
                   <Button
                     fullWidth
                     variant="outlined"
                     onClick={() => handleTelegramShare(selectedJob)}
-                    aria-label="Telegram चैनल पर यह सरकारी नौकरी भेजें"
+                    aria-label="Share via Telegram"
                     startIcon={<TelegramIcon />}
                     sx={{
                       color: '#0088cc',
@@ -1694,7 +1958,7 @@ export default function GlobalGovJobsPage() {
                       textTransform: 'none'
                     }}
                   >
-                    Telegram पर भेजें
+                    Share via Telegram
                   </Button>
                 </Box>
               </Box>
@@ -1723,7 +1987,7 @@ export default function GlobalGovJobsPage() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <GlobeIcon sx={{ color: '#38BDF8', fontSize: 24 }} />
             <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              🌍 विश्व के 195 संप्रभु देश (Select Sovereign Country)
+              🌍 Select Jurisdiction (195 Sovereign Nations)
             </Typography>
           </Box>
           <IconButton onClick={() => setCountryPickerOpen(false)} sx={{ color: '#94A3B8' }}>
@@ -1735,7 +1999,7 @@ export default function GlobalGovJobsPage() {
           <TextField
             fullWidth
             size="small"
-            placeholder="देश का नाम, कोड या महाद्वीप खोजें (e.g. Switzerland, Nepal, Philippines, Argentina)..."
+            placeholder="Search by country name, ISO code, or continent (e.g. United States, Germany, Singapore, France)..."
             value={countrySearchQuery}
             onChange={e => setCountrySearchQuery(e.target.value)}
             InputProps={{
