@@ -555,7 +555,20 @@ function renderBlogContent(alert) {
 
         if (sect.type === 'table') {
           return (
-            <TableContainer key={idx} component={Paper} variant="outlined" sx={{ mb: 2.5, borderRadius: 2, overflowX: 'auto', bgcolor: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <TableContainer 
+              key={idx} 
+              component={Paper} 
+              variant="outlined" 
+              sx={{ 
+                mb: 2.5, 
+                borderRadius: 2, 
+                overflowX: 'auto', 
+                bgcolor: 'rgba(15, 23, 42, 0.85)', 
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                touchAction: 'pan-y pan-x',
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
               <Table size="small">
                 <TableBody>
                   {sect.rows.map((row, rowIdx) => {
@@ -2004,31 +2017,11 @@ export default function PublicLiveAlertsPage() {
               borderTop: '6px solid #38BDF8',
               boxShadow: '0 35px 90px rgba(0, 0, 0, 0.95)',
               margin: { xs: 1, sm: 3 },
-              height: { xs: '92vh', sm: '88vh' },
-              maxHeight: { xs: '92vh', sm: '88vh' },
+              height: { xs: '90vh', sm: '86vh' },
+              maxHeight: { xs: '90vh', sm: '86vh' },
               display: 'flex',
               flexDirection: 'column',
-              overflow: 'hidden',
-              position: 'relative'
-            },
-            onWheel: (e) => {
-              const el = document.getElementById('public-live-alert-modal-content');
-              if (el && !el.contains(e.target)) {
-                el.scrollTop += e.deltaY;
-              }
-            },
-            onTouchStart: (e) => {
-              if (e.touches && e.touches[0]) {
-                e.currentTarget._touchStartY = e.touches[0].clientY;
-              }
-            },
-            onTouchMove: (e) => {
-              const el = document.getElementById('public-live-alert-modal-content');
-              if (el && !el.contains(e.target) && e.touches && e.touches[0] && e.currentTarget._touchStartY !== undefined) {
-                const delta = e.currentTarget._touchStartY - e.touches[0].clientY;
-                el.scrollTop += delta;
-                e.currentTarget._touchStartY = e.touches[0].clientY;
-              }
+              overflow: 'hidden'
             }
           }}
         >
@@ -2086,11 +2079,9 @@ export default function PublicLiveAlertsPage() {
               borderColor: 'rgba(255, 255, 255, 0.08)',
               flex: '1 1 auto',
               minHeight: 0,
-              maxHeight: '100%',
               overflowY: 'auto !important',
+              overflowX: 'hidden',
               WebkitOverflowScrolling: 'touch',
-              touchAction: 'pan-y',
-              overscrollBehavior: 'contain',
               '&::-webkit-scrollbar': { width: '8px' },
               '&::-webkit-scrollbar-track': { background: '#080D1A' },
               '&::-webkit-scrollbar-thumb': { background: '#334155', borderRadius: '4px' },
@@ -2107,10 +2098,7 @@ export default function PublicLiveAlertsPage() {
             ) : errorLoadingDetails ? (
               <Alert severity="error" sx={{ borderRadius: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#F87171' }}>{errorLoadingDetails}</Alert>
             ) : (
-              <>
-                {renderBlogContent(selectedAlert)}
-                <AdSlot format="incontent" style={{ my: 2.5 }} />
-              </>
+              renderBlogContent(selectedAlert)
             )}
           </DialogContent>
 

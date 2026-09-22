@@ -1605,31 +1605,11 @@ export default function GlobalGovJobsPage() {
             boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.9)',
             color: '#F8FAFC',
             margin: { xs: 1, sm: 3 },
-            height: { xs: '92vh', sm: '88vh' },
-            maxHeight: { xs: '92vh', sm: '88vh' },
+            height: { xs: '90vh', sm: '86vh' },
+            maxHeight: { xs: '90vh', sm: '86vh' },
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden',
-            position: 'relative'
-          },
-          onWheel: (e) => {
-            const el = document.getElementById('global-gov-job-modal-content');
-            if (el && !el.contains(e.target)) {
-              el.scrollTop += e.deltaY;
-            }
-          },
-          onTouchStart: (e) => {
-            if (e.touches && e.touches[0]) {
-              e.currentTarget._touchStartY = e.touches[0].clientY;
-            }
-          },
-          onTouchMove: (e) => {
-            const el = document.getElementById('global-gov-job-modal-content');
-            if (el && !el.contains(e.target) && e.touches && e.touches[0] && e.currentTarget._touchStartY !== undefined) {
-              const delta = e.currentTarget._touchStartY - e.touches[0].clientY;
-              el.scrollTop += delta;
-              e.currentTarget._touchStartY = e.touches[0].clientY;
-            }
+            overflow: 'hidden'
           }
         }}
       >
@@ -1692,11 +1672,9 @@ export default function GlobalGovJobsPage() {
                 borderColor: '#1E293B',
                 flex: '1 1 auto',
                 minHeight: 0,
-                maxHeight: '100%',
                 overflowY: 'auto !important',
+                overflowX: 'hidden',
                 WebkitOverflowScrolling: 'touch',
-                touchAction: 'pan-y',
-                overscrollBehavior: 'contain',
                 '&::-webkit-scrollbar': { width: '8px' },
                 '&::-webkit-scrollbar-track': { background: '#0B0F19' },
                 '&::-webkit-scrollbar-thumb': { background: '#334155', borderRadius: '4px' },
@@ -1962,9 +1940,6 @@ export default function GlobalGovJobsPage() {
                   ⚠️ <strong>Anti-Fraud Advisory:</strong> Government departments and multilateral agencies never request candidate fees via personal bank accounts, QR codes, or wire transfers. Always apply exclusively through the verified official portal linked below.
                 </Typography>
               </Box>
-
-              {/* High-Engagement Job Application In-Modal AdSense Unit */}
-              <AdSlot format="incontent" style={{ my: 2.5 }} />
 
               {/* Action Buttons */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
