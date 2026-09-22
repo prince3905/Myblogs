@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import {
   Typography, Button, Box, Alert, CircularProgress,
   IconButton, TextField,
-  Chip, Dialog, DialogContent, DialogTitle,
+  Chip, Dialog, DialogContent, DialogTitle, DialogActions,
   Pagination, Divider, Slide
 } from '@mui/material';
 import {
@@ -272,20 +272,12 @@ export default function GlobalGovJobsPage() {
       setUserDetectedCountry(detectedC);
       setSelectedLanguage(detectedL || 'en');
 
-      // Auto pre-select detected country if no explicit URL filter is active (zero redirect)
-      if (!hasExplicitUrlFilter && detectedC && detectedC !== 'ALL') {
-        setActiveCountry(detectedC);
-      }
-
-      // Async server GeoIP verification in background
+      // Async server GeoIP verification in background (sets userDetectedCountry for geo-priority ranking without filtering out global jobs)
       if (!savedCountry) {
         request('/api/global-jobs/detect-geo')
           .then(res => {
             if (res?.success && res.detectedCountry) {
               setUserDetectedCountry(res.detectedCountry);
-              if (!hasExplicitUrlFilter && activeCountry === 'ALL' && res.detectedCountry !== 'ALL') {
-                setActiveCountry(res.detectedCountry);
-              }
             }
           })
           .catch(() => {});
@@ -1057,6 +1049,77 @@ export default function GlobalGovJobsPage() {
         px: { xs: 2, md: 4 }
       }}>
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+          {/* 🇮🇳 Special Indian Candidate Advisory: Direct 1-Click Access to 940+ Sarkari Live Alerts */}
+          {userDetectedCountry === 'IN' && (
+            <Box sx={{
+              mb: 3,
+              p: { xs: 2, sm: 2.5 },
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(16, 185, 129, 0.12) 100%)',
+              border: '1.5px solid rgba(249, 115, 22, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 2,
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: 280 }}>
+                <Box sx={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: '12px',
+                  bgcolor: 'rgba(249, 115, 22, 0.2)',
+                  border: '1px solid rgba(249, 115, 22, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.7rem',
+                  flexShrink: 0
+                }}>
+                  🇮🇳
+                </Box>
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    <Typography sx={{ color: '#F8FAFC', fontWeight: 800, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>
+                      भारतीय सरकारी नौकरी (Sarkari Alert) खोज रहे हैं?
+                    </Typography>
+                    <Chip
+                      label="940+ सक्रिय सरकारी भर्तियां"
+                      size="small"
+                      sx={{ bgcolor: '#10B981', color: '#FFFFFF', fontWeight: 750, fontSize: '0.68rem', height: 20 }}
+                    />
+                  </Box>
+                  <Typography sx={{ color: '#CBD5E1', fontSize: '0.8rem', mt: 0.4, lineHeight: 1.4 }}>
+                    UPSC, SSC, रेलवे, बैंक व सभी राज्य लोक सेवा आयोगों (State PSCs) के लाइव सरकारी रिजल्ट व आवेदन फॉर्म।
+                  </Typography>
+                </Box>
+              </Box>
+              <Button
+                variant="contained"
+                onClick={() => navigate('/live-alerts')}
+                sx={{
+                  background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)',
+                  color: '#FFFFFF',
+                  fontWeight: 850,
+                  fontSize: '0.85rem',
+                  textTransform: 'none',
+                  borderRadius: '12px',
+                  px: 3,
+                  py: 1.1,
+                  boxShadow: '0 4px 18px rgba(249, 115, 22, 0.45)',
+                  whiteSpace: 'nowrap',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #EA580C 0%, #C2410C 100%)',
+                    transform: 'translateY(-1px)'
+                  }
+                }}
+              >
+                🇮🇳 सभी भारतीय सरकारी रिजल्ट व भर्तियां देखें ↗
+              </Button>
+            </Box>
+          )}
+
           {/* Feedback & Loading states */}
           {loading && (
             <Box sx={{ textAlign: 'center', py: 8 }}>
@@ -1527,14 +1590,18 @@ export default function GlobalGovJobsPage() {
         onClose={closeJobModal}
         maxWidth="md"
         fullWidth
+        scroll="paper"
         PaperProps={{
           sx: {
             bgcolor: '#0B0F19',
             backgroundImage: 'none',
-            borderRadius: '20px',
+            borderRadius: { xs: '18px', sm: '24px' },
             border: '1px solid #334155',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+            boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.9)',
             color: '#F8FAFC',
+            maxHeight: { xs: '94vh', sm: '90vh' },
+            display: 'flex',
+            flexDirection: 'column',
             overflow: 'hidden'
           }
         }}
@@ -1543,12 +1610,13 @@ export default function GlobalGovJobsPage() {
           <>
             {/* Modal Header */}
             <DialogTitle sx={{
-              p: 3,
+              p: { xs: 2, sm: 2.5 },
               bgcolor: '#0F172A',
               borderBottom: '1px solid #1E293B',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between'
+              justifyContent: 'space-between',
+              flexShrink: 0
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <Box sx={{
@@ -1587,8 +1655,22 @@ export default function GlobalGovJobsPage() {
               </IconButton>
             </DialogTitle>
 
-            {/* Modal Content */}
-            <DialogContent sx={{ p: 3, bgcolor: '#0B0F19' }}>
+            {/* Modal Content - Scrollable */}
+            <DialogContent
+              dividers
+              sx={{
+                p: { xs: 2, sm: 3 },
+                bgcolor: '#0B0F19',
+                borderColor: '#1E293B',
+                overflowY: 'auto',
+                flexGrow: 1,
+                WebkitOverflowScrolling: 'touch',
+                '&::-webkit-scrollbar': { width: '8px' },
+                '&::-webkit-scrollbar-track': { background: '#0B0F19' },
+                '&::-webkit-scrollbar-thumb': { background: '#334155', borderRadius: '4px' },
+                '&::-webkit-scrollbar-thumb:hover': { background: '#475569' }
+              }}
+            >
               {/* Dual Language Switcher inside Modal */}
               <Box sx={{
                 display: 'flex',
@@ -1963,6 +2045,115 @@ export default function GlobalGovJobsPage() {
                 </Box>
               </Box>
             </DialogContent>
+
+            {/* 🌟 PINNED STICKY BOTTOM ACTION BAR */}
+            <DialogActions sx={{
+              p: { xs: 1.5, sm: 2 },
+              bgcolor: '#0F172A',
+              borderTop: '1px solid #1E293B',
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1.5,
+              width: '100%',
+              boxSizing: 'border-box',
+              flexShrink: 0
+            }}>
+              {/* Left on desktop: Share & PDF */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
+                {selectedJob.officialPdfUrl && (
+                  <Button
+                    variant="outlined"
+                    href={selectedJob.officialPdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    startIcon={<PdfIcon />}
+                    sx={{
+                      color: '#38BDF8',
+                      borderColor: '#0284C7',
+                      fontWeight: 750,
+                      fontSize: '0.82rem',
+                      borderRadius: '10px',
+                      textTransform: 'none',
+                      px: 1.8,
+                      py: 0.8,
+                      whiteSpace: 'nowrap',
+                      flex: { xs: 1, sm: 'none' },
+                      '&:hover': { bgcolor: 'rgba(2, 132, 199, 0.1)', borderColor: '#38BDF8' }
+                    }}
+                  >
+                    Official <span className="notranslate" translate="no">PDF</span>
+                  </Button>
+                )}
+                <Button
+                  variant="outlined"
+                  onClick={() => handleWhatsAppShare(selectedJob)}
+                  aria-label="Share via WhatsApp"
+                  startIcon={<WhatsAppIcon sx={{ fontSize: '1.1rem' }} />}
+                  sx={{
+                    color: '#25D366',
+                    borderColor: 'rgba(37, 211, 102, 0.4)',
+                    bgcolor: 'rgba(37, 211, 102, 0.08)',
+                    fontWeight: 750,
+                    fontSize: '0.82rem',
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    px: 1.5,
+                    py: 0.8,
+                    flex: { xs: 1, sm: 'none' },
+                    '&:hover': { bgcolor: '#25D366', color: '#FFFFFF', borderColor: '#25D366' }
+                  }}
+                >
+                  <span className="notranslate" translate="no">WhatsApp</span>
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => handleTelegramShare(selectedJob)}
+                  aria-label="Share via Telegram"
+                  startIcon={<TelegramIcon sx={{ fontSize: '1.1rem' }} />}
+                  sx={{
+                    color: '#38BDF8',
+                    borderColor: 'rgba(56, 189, 248, 0.4)',
+                    bgcolor: 'rgba(56, 189, 248, 0.08)',
+                    fontWeight: 750,
+                    fontSize: '0.82rem',
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    px: 1.5,
+                    py: 0.8,
+                    flex: { xs: 1, sm: 'none' },
+                    '&:hover': { bgcolor: '#0284C7', color: '#FFFFFF', borderColor: '#0284C7' }
+                  }}
+                >
+                  <span className="notranslate" translate="no">Telegram</span>
+                </Button>
+              </Box>
+
+              {/* Right: Big Prominent Apply Button */}
+              <Button
+                variant="contained"
+                href={selectedJob.officialNoticeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                startIcon={<VerifiedIcon sx={{ fontSize: 20, color: '#34D399' }} />}
+                sx={{
+                  bgcolor: '#10B981',
+                  color: '#FFFFFF',
+                  fontWeight: 850,
+                  fontSize: '0.92rem',
+                  py: 1.1,
+                  px: 3,
+                  borderRadius: '10px',
+                  textTransform: 'none',
+                  boxShadow: '0 4px 16px rgba(16, 185, 129, 0.4)',
+                  width: { xs: '100%', sm: 'auto' },
+                  '&:hover': { bgcolor: '#059669', transform: 'translateY(-1px)' }
+                }}
+              >
+                Apply on Official Portal ↗ (Verified .gov)
+              </Button>
+            </DialogActions>
           </>
         )}
       </Dialog>

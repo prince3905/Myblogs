@@ -1,5 +1,36 @@
 const GlobalJob = require('./globalJob.model');
+const LiveAlert = require('../liveAlerts/liveAlert.model');
 const { runSupervisorCycle } = require('./globalJobsSupervisor.cron');
+
+/**
+ * Format an Indian LiveAlert into a GlobalJob model structure
+ */
+function mapLiveAlertToGlobalJob(alert) {
+  return {
+    _id: alert._id,
+    officialReferenceId: `IN-${alert._id.toString().slice(-8).toUpperCase()}`,
+    title: alert.title,
+    countryCode: 'IN',
+    countryName: 'India',
+    countryFlag: '🇮🇳',
+    continent: 'Asia',
+    agencyOrMinistry: alert.boardName || 'Government of India',
+    officialNoticeUrl: alert.officialApplyUrl || alert.officialUrl || alert.sourceUrl || 'https://www.digitalhomeblog.in/live-alerts',
+    officialPdfUrl: alert.officialPdfUrl || '',
+    applicationDeadline: alert.lastDate && alert.lastDate !== 'N/A' && !isNaN(new Date(alert.lastDate).getTime()) ? new Date(alert.lastDate) : null,
+    jobType: alert.category || 'Civil Services & Administration',
+    dutyStation: alert.state ? `${alert.state}, India` : 'All India',
+    eligibility: {
+      educationRequired: 'Graduation / 10th / 12th / Diploma / Engineering',
+      citizenshipRequired: true,
+      visaSponsored: false
+    },
+    benefits: ['Statutory Central / State Pay Scale', 'Dearness Allowance (DA)', 'House Rent Allowance (HRA)', 'Provident Fund (NPS/GPF)', 'Medical Insurance Coverage'],
+    summary: alert.detailsText ? alert.detailsText.slice(0, 400) : `Official recruitment notification issued by ${alert.boardName || 'Government Authority'}. Interested eligible candidates can review guidelines and apply via official portal before the closing deadline.`,
+    howToApply: `1. Visit the official online application portal.\n2. Register using valid mobile number & email ID.\n3. Complete candidate details & upload attested certificates.\n4. Submit before the closing deadline (${alert.lastDate || 'As announced'}).`,
+    createdAt: alert.parsedPostDate || alert.createdAt || new Date()
+  };
+}
 
 /**
  * Smart Geo-Priority Scoring Function
@@ -107,6 +138,46 @@ async function getGlobalJobs(req, res) {
 
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const take = parseInt(limit, 10);
+
+    // 🇮🇳 Special Indian Sarkari Bridge:
+    // If the visitor explicitly filters by country=IN, query both GlobalJob and the 940+ LiveAlerts!
+    if (country && country.toUpperCase() === 'IN') {
+      const liveAlertQuery = { status: { $ne: 'expired' } };
+      if (search) {
+        const regex = new RegExp(search.trim(), 'i');
+        liveAlertQuery.$or = [{ title: regex }, { boardName: regex }, { state: regex }];
+      }
+      if (category && category !== 'ALL') {
+        liveAlertQuery.category = new RegExp(category, 'i');
+      }
+
+      const [inGlobalJobs, liveAlerts, liveAlertTotal] = await Promise.all([
+        GlobalJob.find(query).sort({ createdAt: -1 }).lean(),
+        LiveAlert.find(liveAlertQuery)
+          .sort({ parsedPostDate: -1, createdAt: -1 })
+          .skip(skip)
+          .limit(take)
+          .lean(),
+        LiveAlert.countDocuments(liveAlertQuery)
+      ]);
+
+      const mappedAlerts = liveAlerts.map(mapLiveAlertToGlobalJob);
+      const combined = [...inGlobalJobs, ...mappedAlerts];
+      const paginatedJobs = combined.slice(0, take);
+      const combinedTotal = inGlobalJobs.length + liveAlertTotal;
+
+      return res.json({
+        success: true,
+        data: paginatedJobs,
+        fallbackToInternational: false,
+        pagination: {
+          total: combinedTotal,
+          page: parseInt(page, 10),
+          limit: take,
+          totalPages: Math.ceil(combinedTotal / take) || 1
+        }
+      });
+    }
 
     const total = await GlobalJob.countDocuments(query);
     const targetCountry = (userCountry || '').toUpperCase();
@@ -232,6 +303,12 @@ async function getGlobalJobById(req, res) {
     }
     if (!job && id.match(/^[0-9a-fA-F]{24}$/)) {
       job = await GlobalJob.findById(id).lean();
+      if (!job) {
+        const alert = await LiveAlert.findById(id).lean();
+        if (alert) {
+          job = mapLiveAlertToGlobalJob(alert);
+        }
+      }
     }
 
     if (!job) {
