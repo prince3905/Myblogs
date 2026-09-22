@@ -135,21 +135,42 @@ export default function PushNotificationModal() {
       return;
     }
 
-    // Incremental delay calculation (+10 seconds per previous dismiss)
-    const dismissCount = parseInt(sessionStorage.getItem('push_modal_dismiss_count') || '0', 10);
-    const initialDelay = 3000 + (dismissCount * 10000); // 3s initial, then +10s per dismiss
+    // Check if dismissed in this session
+    if (sessionStorage.getItem('push_modal_dismissed') === 'true') {
+      return;
+    }
 
-    timerRef.current = setTimeout(() => {
+    let triggered = false;
+    const triggerPrompt = () => {
+      if (triggered) return;
+      triggered = true;
       checkAndShowPrompt();
-    }, initialDelay);
+      window.removeEventListener('scroll', handleScroll);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+
+    // 1. Trigger ONLY after 50% scroll
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollHeight > 300 && window.scrollY / scrollHeight >= 0.5) {
+        triggerPrompt();
+      }
+    };
+
+    // 2. Gentle reading delay fallback (45 seconds)
+    timerRef.current = setTimeout(triggerPrompt, 45000);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
   const checkAndShowPrompt = () => {
     if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem('push_modal_dismissed') === 'true') return;
     if ('Notification' in window && Notification.permission === 'granted') {
       setIsSubscribed(true);
       return;
@@ -162,6 +183,7 @@ export default function PushNotificationModal() {
   const handleAllow = async () => {
     setOpen(false);
     if (timerRef.current) clearTimeout(timerRef.current);
+    sessionStorage.setItem('push_modal_dismissed', 'true');
 
     try {
       if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -191,22 +213,7 @@ export default function PushNotificationModal() {
   const handleLater = () => {
     setOpen(false);
     if (timerRef.current) clearTimeout(timerRef.current);
-
-    if (typeof window === 'undefined') return;
-
-    // Increment dismiss count in sessionStorage
-    const currentCount = parseInt(sessionStorage.getItem('push_modal_dismiss_count') || '0', 10);
-    const nextCount = currentCount + 1;
-    sessionStorage.setItem('push_modal_dismiss_count', nextCount.toString());
-
-    // Delay gets incremented by exactly +10 seconds each time user clicks "Later" (10s, 20s, 30s, 40s...)
-    const nextDelayMs = nextCount * 10000;
-
-    timerRef.current = setTimeout(() => {
-      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-        setOpen(true);
-      }
-    }, nextDelayMs);
+    sessionStorage.setItem('push_modal_dismissed', 'true');
   };
 
   if (isSubscribed) return null;

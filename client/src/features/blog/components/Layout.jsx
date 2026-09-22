@@ -11,6 +11,7 @@ import TelegramStickyBanner from '../../../components/TelegramStickyBanner';
 import FloatingQuickShare, { ShareModalProvider } from '../../../components/FloatingQuickShare';
 import PushNotificationModal from './PushNotificationModal';
 import GlobalLanguagePicker from '../../../components/GlobalLanguagePicker';
+import IndianLanguagePrompt from '../../../components/IndianLanguagePrompt';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -117,6 +118,9 @@ export default function Layout({ children }) {
   return (
     <ShareModalProvider>
       <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', pb: { xs: 8, sm: 9 } }}>
+      {/* 🇮🇳 Indian Visitors Native Language Preference Prompt */}
+      <IndianLanguagePrompt />
+
       {/* Floating pill-shaped navbar */}
       <Box
         sx={{
