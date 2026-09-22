@@ -30,7 +30,7 @@ export default function SocialShare({ title, slug, category }) {
   }
 
   return (
-    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+    <Box className="notranslate" translate="no" sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
       <Box 
         sx={{ 
           display: 'flex', 

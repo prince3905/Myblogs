@@ -209,7 +209,7 @@ export function ShareModalProvider({ children }) {
                 }}
               >
                 <Box sx={{ textAlign: 'left' }}>
-                  <Typography variant="body2" sx={{ fontWeight: 850, lineHeight: 1.1 }}>
+                  <Typography variant="body2" className="notranslate" translate="no" sx={{ fontWeight: 850, lineHeight: 1.1 }}>
                     {platform.name}
                   </Typography>
                 </Box>

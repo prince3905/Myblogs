@@ -76,7 +76,7 @@ export default function PostInlineShare({ title, url }) {
             '&:hover': { bgcolor: '#1EBE5D' }
           }}
         >
-          WhatsApp
+          <span className="notranslate" translate="no">WhatsApp</span>
         </Button>
 
         <Button
@@ -96,7 +96,7 @@ export default function PostInlineShare({ title, url }) {
             '&:hover': { bgcolor: '#0077b5' }
           }}
         >
-          Telegram
+          <span className="notranslate" translate="no">Telegram</span>
         </Button>
 
         <Button

@@ -1922,7 +1922,7 @@ export default function GlobalGovJobsPage() {
                       '&:hover': { bgcolor: 'rgba(2, 132, 199, 0.1)', borderColor: '#38BDF8' }
                     }}
                   >
-                    📄 Download Official Gazette / Circular (PDF)
+                    📄 Download Official Gazette / Circular (<span className="notranslate" translate="no">PDF</span>)
                   </Button>
                 )}
 
@@ -1942,7 +1942,7 @@ export default function GlobalGovJobsPage() {
                       textTransform: 'none'
                     }}
                   >
-                    Share via WhatsApp
+                    Share via <span className="notranslate" translate="no">WhatsApp</span>
                   </Button>
                   <Button
                     fullWidth
@@ -1958,7 +1958,7 @@ export default function GlobalGovJobsPage() {
                       textTransform: 'none'
                     }}
                   >
-                    Share via Telegram
+                    Share via <span className="notranslate" translate="no">Telegram</span>
                   </Button>
                 </Box>
               </Box>

@@ -477,11 +477,15 @@ export const ALL_LANGUAGES = [
   { code: 'sw', label: 'Kiswahili (Swahili)', flag: '🇰🇪' }
 ];
 
+import { protectElement } from '../shared/lib/translationProtection';
+
 // Full Website Seamless Translation Controller
 // Sets cookie and triggers Google Translate combo WITHOUT harsh page reloads
 export function applyFullWebsiteTranslation(langCode) {
   try {
     if (!langCode) return;
+    // Protect sensitive brands and acronyms before translation runs
+    protectElement(document.body);
     const isOriginal = langCode === 'original';
     const targetLang = isOriginal ? '' : langCode;
     const cookieVal = isOriginal ? '' : `/auto/${targetLang}`;
@@ -527,9 +531,12 @@ export function applyFullWebsiteTranslation(langCode) {
       }, 100);
     }
 
-    // 3. Re-sweep passes to translate dynamic React DOM nodes as they render
+    // 3. Re-sweep passes to protect brand words and translate dynamic React DOM nodes as they render
     [250, 650, 1300].forEach((delay) => {
-      setTimeout(triggerCombo, delay);
+      setTimeout(() => {
+        protectElement(document.body);
+        triggerCombo();
+      }, delay);
     });
   } catch (err) {
     console.warn('[Full Translate Error]:', err);
