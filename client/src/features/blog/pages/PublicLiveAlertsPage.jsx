@@ -1995,7 +1995,7 @@ export default function PublicLiveAlertsPage() {
           PaperProps={{
             sx: {
               borderRadius: { xs: '18px', sm: '28px' },
-              p: { xs: 0, sm: 0.5 },
+              p: 0,
               bgcolor: '#070B18 !important',
               backgroundColor: '#070B18 !important',
               backgroundImage: 'linear-gradient(180deg, #0D1629 0%, #060A14 100%) !important',
@@ -2003,11 +2003,32 @@ export default function PublicLiveAlertsPage() {
               border: '1px solid rgba(255, 255, 255, 0.14)',
               borderTop: '6px solid #38BDF8',
               boxShadow: '0 35px 90px rgba(0, 0, 0, 0.95)',
-              margin: { xs: 1.5, sm: 4 },
-              maxHeight: { xs: '94vh', sm: '90vh' },
+              margin: { xs: 1, sm: 3 },
+              height: { xs: '92vh', sm: '88vh' },
+              maxHeight: { xs: '92vh', sm: '88vh' },
               display: 'flex',
               flexDirection: 'column',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              position: 'relative'
+            },
+            onWheel: (e) => {
+              const el = document.getElementById('public-live-alert-modal-content');
+              if (el && !el.contains(e.target)) {
+                el.scrollTop += e.deltaY;
+              }
+            },
+            onTouchStart: (e) => {
+              if (e.touches && e.touches[0]) {
+                e.currentTarget._touchStartY = e.touches[0].clientY;
+              }
+            },
+            onTouchMove: (e) => {
+              const el = document.getElementById('public-live-alert-modal-content');
+              if (el && !el.contains(e.target) && e.touches && e.touches[0] && e.currentTarget._touchStartY !== undefined) {
+                const delta = e.currentTarget._touchStartY - e.touches[0].clientY;
+                el.scrollTop += delta;
+                e.currentTarget._touchStartY = e.touches[0].clientY;
+              }
             }
           }}
         >
@@ -2055,6 +2076,7 @@ export default function PublicLiveAlertsPage() {
           </DialogTitle>
 
           <DialogContent
+            id="public-live-alert-modal-content"
             dividers
             sx={{
               p: { xs: 2, sm: 3 },
@@ -2062,9 +2084,13 @@ export default function PublicLiveAlertsPage() {
               backgroundColor: '#080D1A !important',
               color: '#FFFFFF !important',
               borderColor: 'rgba(255, 255, 255, 0.08)',
-              overflowY: 'auto',
-              flexGrow: 1,
+              flex: '1 1 auto',
+              minHeight: 0,
+              maxHeight: '100%',
+              overflowY: 'auto !important',
               WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain',
               '&::-webkit-scrollbar': { width: '8px' },
               '&::-webkit-scrollbar-track': { background: '#080D1A' },
               '&::-webkit-scrollbar-thumb': { background: '#334155', borderRadius: '4px' },

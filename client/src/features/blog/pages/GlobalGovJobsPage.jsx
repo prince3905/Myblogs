@@ -1604,10 +1604,32 @@ export default function GlobalGovJobsPage() {
             border: '1px solid #334155',
             boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.9)',
             color: '#F8FAFC',
-            maxHeight: { xs: '94vh', sm: '90vh' },
+            margin: { xs: 1, sm: 3 },
+            height: { xs: '92vh', sm: '88vh' },
+            maxHeight: { xs: '92vh', sm: '88vh' },
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            position: 'relative'
+          },
+          onWheel: (e) => {
+            const el = document.getElementById('global-gov-job-modal-content');
+            if (el && !el.contains(e.target)) {
+              el.scrollTop += e.deltaY;
+            }
+          },
+          onTouchStart: (e) => {
+            if (e.touches && e.touches[0]) {
+              e.currentTarget._touchStartY = e.touches[0].clientY;
+            }
+          },
+          onTouchMove: (e) => {
+            const el = document.getElementById('global-gov-job-modal-content');
+            if (el && !el.contains(e.target) && e.touches && e.touches[0] && e.currentTarget._touchStartY !== undefined) {
+              const delta = e.currentTarget._touchStartY - e.touches[0].clientY;
+              el.scrollTop += delta;
+              e.currentTarget._touchStartY = e.touches[0].clientY;
+            }
           }
         }}
       >
@@ -1662,14 +1684,19 @@ export default function GlobalGovJobsPage() {
 
             {/* Modal Content - Scrollable */}
             <DialogContent
+              id="global-gov-job-modal-content"
               dividers
               sx={{
                 p: { xs: 2, sm: 3 },
                 bgcolor: '#0B0F19',
                 borderColor: '#1E293B',
-                overflowY: 'auto',
-                flexGrow: 1,
+                flex: '1 1 auto',
+                minHeight: 0,
+                maxHeight: '100%',
+                overflowY: 'auto !important',
                 WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                overscrollBehavior: 'contain',
                 '&::-webkit-scrollbar': { width: '8px' },
                 '&::-webkit-scrollbar-track': { background: '#0B0F19' },
                 '&::-webkit-scrollbar-thumb': { background: '#334155', borderRadius: '4px' },
