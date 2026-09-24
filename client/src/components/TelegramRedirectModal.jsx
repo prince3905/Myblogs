@@ -34,20 +34,25 @@ export default function TelegramRedirectModal({ open, onClose, targetUrl }) {
     <Dialog 
       open={open} 
       onClose={onClose}
+      scroll="paper"
       PaperProps={{
         sx: {
           borderRadius: 4,
-          p: 2,
+          p: { xs: 1.5, sm: 2 },
           maxWidth: '420px',
           width: '100%',
+          margin: { xs: '8px auto', sm: '24px auto' },
+          maxHeight: { xs: 'calc(100dvh - 24px)', sm: '88vh' },
+          display: 'flex',
+          flexDirection: 'column'
         }
       }}
     >
-      <DialogTitle sx={{ textAlign: 'center', fontWeight: 800, pb: 1, color: '#1f2937' }}>
+      <DialogTitle sx={{ textAlign: 'center', fontWeight: 800, pb: 1, color: '#1f2937', flexShrink: 0 }}>
         ⚡ Fast Track Updates
       </DialogTitle>
       
-      <DialogContent sx={{ textAlign: 'center', pb: 2 }}>
+      <DialogContent sx={{ textAlign: 'center', pb: 2, flex: '1 1 auto', overflowY: 'auto !important' }}>
         <Typography variant="body2" sx={{ color: '#4b5563', mb: 2.5, px: 1, lineHeight: 1.6 }}>
           सरकारी भर्ती, एडमिट कार्ड और रिजल्ट्स की पल-पल की जानकारी सबसे पहले पाने के लिए हमारे ऑफिशियल टेलीग्राम चैनल को जॉइन करें!
         </Typography>

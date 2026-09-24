@@ -1588,16 +1588,23 @@ export default function GlobalGovJobsPage() {
         fullWidth
         scroll="paper"
         PaperProps={{
+          onWheel: (e) => {
+            const contentEl = document.getElementById('global-gov-job-modal-content');
+            if (contentEl && !contentEl.contains(e.target)) {
+              contentEl.scrollTop += e.deltaY;
+            }
+          },
           sx: {
             bgcolor: '#0B0F19',
             backgroundImage: 'none',
-            borderRadius: { xs: '18px', sm: '24px' },
+            borderRadius: { xs: '16px', sm: '24px' },
             border: '1px solid #334155',
             boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.9)',
             color: '#F8FAFC',
-            margin: { xs: 1, sm: 3 },
-            height: { xs: '90vh', sm: '86vh' },
-            maxHeight: { xs: '90vh', sm: '86vh' },
+            margin: { xs: '8px auto', sm: '20px auto' },
+            width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+            height: { xs: 'calc(100dvh - 16px)', sm: 'calc(100dvh - 40px)' },
+            maxHeight: { xs: 'calc(100dvh - 16px)', sm: 'calc(100dvh - 40px)' },
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden'
@@ -1608,7 +1615,7 @@ export default function GlobalGovJobsPage() {
           <>
             {/* Modal Header */}
             <DialogTitle sx={{
-              p: { xs: 2, sm: 2.5 },
+              p: { xs: 1.5, sm: 2.2 },
               bgcolor: '#0F172A',
               borderBottom: '1px solid #1E293B',
               display: 'flex',
@@ -1658,13 +1665,15 @@ export default function GlobalGovJobsPage() {
               id="global-gov-job-modal-content"
               dividers
               sx={{
-                p: { xs: 2, sm: 3 },
+                p: { xs: 1.8, sm: 3 },
                 bgcolor: '#0B0F19',
                 borderColor: '#1E293B',
                 flex: '1 1 auto',
                 minHeight: 0,
                 overflowY: 'auto !important',
                 overflowX: 'hidden',
+                overscrollBehavior: 'contain',
+                touchAction: 'pan-y',
                 WebkitOverflowScrolling: 'touch',
                 '&::-webkit-scrollbar': { width: '8px' },
                 '&::-webkit-scrollbar-track': { background: '#0B0F19' },
@@ -1982,84 +1991,171 @@ export default function GlobalGovJobsPage() {
                   </Typography>
                 </Box>
 
-                {/* PDF Gazette Button */}
-                {selectedJob.officialPdfUrl && (
+                {/* 🌟 DIRECT PRIMARY APPLY BUTTON INSIDE SCROLLABLE CONTENT */}
+                <Box sx={{
+                  mt: 2.5,
+                  p: { xs: 2, sm: 2.5 },
+                  bgcolor: 'rgba(15, 23, 42, 0.95)',
+                  borderRadius: 3,
+                  border: '2px solid rgba(16, 185, 129, 0.4)',
+                  boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <Box sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 3,
+                    background: 'linear-gradient(90deg, #10B981 0%, #38BDF8 100%)'
+                  }} />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 850, color: '#34D399', mb: 0.5, display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>
+                    ⚡ Official Gazette Circular Application Portal
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2 }}>
+                    Direct official government circular application portal • 100% verified, zero third-party redirects
+                  </Typography>
+
                   <Button
                     fullWidth
-                    variant="outlined"
-                    href={selectedJob.officialPdfUrl}
+                    variant="contained"
+                    href={selectedJob.officialNoticeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="Download Official Gazette Circular"
-                    startIcon={<PdfIcon />}
+                    startIcon={<VerifiedIcon sx={{ fontSize: '1.4rem !important', color: '#FFFFFF' }} />}
                     sx={{
-                      color: '#38BDF8',
-                      borderColor: '#0284C7',
-                      fontWeight: 700,
-                      py: 1.2,
+                      bgcolor: '#10B981',
+                      color: '#FFFFFF',
+                      fontWeight: 850,
+                      fontSize: { xs: '0.95rem', sm: '1.05rem' },
+                      py: 1.4,
+                      px: 3,
                       borderRadius: '12px',
                       textTransform: 'none',
-                      '&:hover': { bgcolor: 'rgba(2, 132, 199, 0.1)', borderColor: '#38BDF8' }
+                      boxShadow: '0 4px 20px rgba(16, 185, 129, 0.45)',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: 1,
+                      mb: 1.5,
+                      '&:hover': { bgcolor: '#059669', transform: 'translateY(-1px)', boxShadow: '0 6px 24px rgba(16, 185, 129, 0.6)' }
                     }}
                   >
-                    📄 Download Official Gazette / Circular (<span className="notranslate" translate="no">PDF</span>)
+                    Apply on Official Portal ↗ (Verified .gov)
                   </Button>
-                )}
 
-                {/* Share Options */}
-                <Box sx={{ display: 'flex', gap: 1.5, mt: 1 }}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={() => handleWhatsAppShare(selectedJob)}
-                    aria-label="Share via WhatsApp"
-                    startIcon={<WhatsAppIcon />}
-                    sx={{
-                      color: '#25D366',
-                      borderColor: '#25D366',
-                      fontWeight: 700,
-                      borderRadius: '10px',
-                      textTransform: 'none'
-                    }}
-                  >
-                    Share via <span className="notranslate" translate="no">WhatsApp</span>
-                  </Button>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={() => handleTelegramShare(selectedJob)}
-                    aria-label="Share via Telegram"
-                    startIcon={<TelegramIcon />}
-                    sx={{
-                      color: '#0088cc',
-                      borderColor: '#0088cc',
-                      fontWeight: 700,
-                      borderRadius: '10px',
-                      textTransform: 'none'
-                    }}
-                  >
-                    Share via <span className="notranslate" translate="no">Telegram</span>
-                  </Button>
+                  {selectedJob.officialPdfUrl && (
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      href={selectedJob.officialPdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      startIcon={<PdfIcon />}
+                      sx={{
+                        color: '#38BDF8',
+                        borderColor: 'rgba(56, 189, 248, 0.5)',
+                        bgcolor: 'rgba(56, 189, 248, 0.08)',
+                        fontWeight: 750,
+                        fontSize: '0.82rem',
+                        py: 1,
+                        borderRadius: '10px',
+                        textTransform: 'none',
+                        mb: 1.2,
+                        '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.2)', borderColor: '#38BDF8' }
+                      }}
+                    >
+                      📄 Download Official Gazette Circular (PDF)
+                    </Button>
+                  )}
+
+                  {/* Share Options */}
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      onClick={() => handleWhatsAppShare(selectedJob)}
+                      aria-label="Share via WhatsApp"
+                      startIcon={<WhatsAppIcon sx={{ color: '#25D366' }} />}
+                      sx={{
+                        color: '#86EFAC',
+                        borderColor: 'rgba(37, 211, 102, 0.4)',
+                        bgcolor: 'rgba(37, 211, 102, 0.08)',
+                        fontWeight: 700,
+                        borderRadius: '10px',
+                        textTransform: 'none',
+                        py: 0.9,
+                        '&:hover': { bgcolor: 'rgba(37, 211, 102, 0.18)', borderColor: '#25D366' }
+                      }}
+                    >
+                      WhatsApp
+                    </Button>
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      onClick={() => handleTelegramShare(selectedJob)}
+                      aria-label="Share via Telegram"
+                      startIcon={<TelegramIcon sx={{ color: '#38BDF8' }} />}
+                      sx={{
+                        color: '#BAE6FD',
+                        borderColor: 'rgba(56, 189, 248, 0.4)',
+                        bgcolor: 'rgba(56, 189, 248, 0.08)',
+                        fontWeight: 700,
+                        borderRadius: '10px',
+                        textTransform: 'none',
+                        py: 0.9,
+                        '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.18)', borderColor: '#38BDF8' }
+                      }}
+                    >
+                      Telegram
+                    </Button>
+                  </Box>
                 </Box>
               </Box>
             </DialogContent>
 
             {/* 🌟 PINNED STICKY BOTTOM ACTION BAR */}
             <DialogActions sx={{
-              p: { xs: 1.5, sm: 2 },
+              p: { xs: 1.25, sm: 1.8 },
               bgcolor: '#0F172A',
               borderTop: '1px solid #1E293B',
               display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
+              flexDirection: 'row',
+              flexWrap: 'wrap',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: 1.5,
+              gap: { xs: 0.8, sm: 1.2 },
               width: '100%',
               boxSizing: 'border-box',
-              flexShrink: 0
+              flexShrink: 0,
+              boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.6)',
+              zIndex: 10
             }}>
-              {/* Left on desktop: Share & PDF */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, flex: 1, alignItems: 'center' }}>
+                <Button
+                  variant="contained"
+                  href={selectedJob.officialNoticeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  startIcon={<VerifiedIcon sx={{ fontSize: 18, color: '#34D399' }} />}
+                  sx={{
+                    bgcolor: '#10B981',
+                    color: '#FFFFFF',
+                    fontWeight: 850,
+                    fontSize: { xs: '0.82rem', sm: '0.88rem' },
+                    py: 0.9,
+                    px: { xs: 1.8, sm: 2.8 },
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    boxShadow: '0 2px 10px rgba(16, 185, 129, 0.4)',
+                    whiteSpace: 'nowrap',
+                    '&:hover': { bgcolor: '#059669' }
+                  }}
+                >
+                  Apply on Official Portal ↗
+                </Button>
+
                 {selectedJob.officialPdfUrl && (
                   <Button
                     variant="outlined"
@@ -2071,85 +2167,61 @@ export default function GlobalGovJobsPage() {
                       color: '#38BDF8',
                       borderColor: '#0284C7',
                       fontWeight: 750,
-                      fontSize: '0.82rem',
+                      fontSize: '0.8rem',
                       borderRadius: '10px',
                       textTransform: 'none',
-                      px: 1.8,
-                      py: 0.8,
+                      px: { xs: 1.2, sm: 1.8 },
+                      py: 0.9,
                       whiteSpace: 'nowrap',
-                      flex: { xs: 1, sm: 'none' },
                       '&:hover': { bgcolor: 'rgba(2, 132, 199, 0.1)', borderColor: '#38BDF8' }
                     }}
                   >
-                    Official <span className="notranslate" translate="no">PDF</span>
+                    Official PDF
                   </Button>
                 )}
+
                 <Button
                   variant="outlined"
                   onClick={() => handleWhatsAppShare(selectedJob)}
                   aria-label="Share via WhatsApp"
-                  startIcon={<WhatsAppIcon sx={{ fontSize: '1.1rem' }} />}
+                  startIcon={<WhatsAppIcon sx={{ fontSize: '1rem', color: '#25D366' }} />}
                   sx={{
-                    color: '#25D366',
+                    color: '#86EFAC',
                     borderColor: 'rgba(37, 211, 102, 0.4)',
                     bgcolor: 'rgba(37, 211, 102, 0.08)',
                     fontWeight: 750,
-                    fontSize: '0.82rem',
+                    fontSize: '0.8rem',
                     borderRadius: '10px',
                     textTransform: 'none',
-                    px: 1.5,
-                    py: 0.8,
-                    flex: { xs: 1, sm: 'none' },
+                    px: { xs: 1.2, sm: 1.5 },
+                    py: 0.9,
+                    whiteSpace: 'nowrap',
                     '&:hover': { bgcolor: '#25D366', color: '#FFFFFF', borderColor: '#25D366' }
                   }}
                 >
-                  <span className="notranslate" translate="no">WhatsApp</span>
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={() => handleTelegramShare(selectedJob)}
-                  aria-label="Share via Telegram"
-                  startIcon={<TelegramIcon sx={{ fontSize: '1.1rem' }} />}
-                  sx={{
-                    color: '#38BDF8',
-                    borderColor: 'rgba(56, 189, 248, 0.4)',
-                    bgcolor: 'rgba(56, 189, 248, 0.08)',
-                    fontWeight: 750,
-                    fontSize: '0.82rem',
-                    borderRadius: '10px',
-                    textTransform: 'none',
-                    px: 1.5,
-                    py: 0.8,
-                    flex: { xs: 1, sm: 'none' },
-                    '&:hover': { bgcolor: '#0284C7', color: '#FFFFFF', borderColor: '#0284C7' }
-                  }}
-                >
-                  <span className="notranslate" translate="no">Telegram</span>
+                  WhatsApp
                 </Button>
               </Box>
 
-              {/* Right: Big Prominent Apply Button */}
               <Button
-                variant="contained"
-                href={selectedJob.officialNoticeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                startIcon={<VerifiedIcon sx={{ fontSize: 20, color: '#34D399' }} />}
+                onClick={closeJobModal}
+                variant="outlined"
                 sx={{
-                  bgcolor: '#10B981',
-                  color: '#FFFFFF',
-                  fontWeight: 850,
-                  fontSize: '0.92rem',
-                  py: 1.1,
-                  px: 3,
                   borderRadius: '10px',
                   textTransform: 'none',
-                  boxShadow: '0 4px 16px rgba(16, 185, 129, 0.4)',
-                  width: { xs: '100%', sm: 'auto' },
-                  '&:hover': { bgcolor: '#059669', transform: 'translateY(-1px)' }
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  color: '#CBD5E1',
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  bgcolor: 'rgba(255, 255, 255, 0.05)',
+                  py: 0.9,
+                  px: { xs: 1.8, sm: 2.2 },
+                  ml: 'auto',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)', borderColor: '#FFFFFF', color: '#FFFFFF' }
                 }}
               >
-                Apply on Official Portal ↗ (Verified .gov)
+                Close
               </Button>
             </DialogActions>
           </>
@@ -2162,20 +2234,28 @@ export default function GlobalGovJobsPage() {
         onClose={() => setCountryPickerOpen(false)}
         maxWidth="md"
         fullWidth
+        scroll="paper"
         PaperProps={{
           sx: {
             bgcolor: '#0F172A',
-            borderRadius: '20px',
+            borderRadius: { xs: '16px', sm: '24px' },
             border: '1px solid #334155',
             color: '#F8FAFC',
-            p: { xs: 1, sm: 2 }
+            p: 0,
+            margin: { xs: '8px auto', sm: '20px auto' },
+            width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+            height: { xs: 'calc(100dvh - 20px)', sm: '85vh' },
+            maxHeight: { xs: 'calc(100dvh - 20px)', sm: '85vh' },
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
           }
         }}
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1, borderBottom: '1px solid #1E293B' }}>
+        <DialogTitle sx={{ p: { xs: 1.5, sm: 2 }, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1E293B', flexShrink: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <GlobeIcon sx={{ color: '#38BDF8', fontSize: 24 }} />
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
               🌍 Select Jurisdiction (195 Sovereign Nations)
             </Typography>
           </Box>
@@ -2183,7 +2263,17 @@ export default function GlobalGovJobsPage() {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
+        <DialogContent sx={{
+          p: { xs: 1.5, sm: 2.5 },
+          flex: '1 1 auto',
+          minHeight: 0,
+          overflowY: 'auto !important',
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch',
+          '&::-webkit-scrollbar': { width: '8px' },
+          '&::-webkit-scrollbar-thumb': { bgcolor: '#334155', borderRadius: '4px' }
+        }}>
           {/* Real-time Country Search Input */}
           <TextField
             fullWidth
@@ -2232,12 +2322,7 @@ export default function GlobalGovJobsPage() {
           <Box sx={{
             display: 'grid',
             gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-            gap: 1.2,
-            maxHeight: '52vh',
-            overflowY: 'auto',
-            pr: 0.5,
-            '&::-webkit-scrollbar': { width: 6 },
-            '&::-webkit-scrollbar-thumb': { bgcolor: '#334155', borderRadius: 3 }
+            gap: 1.2
           }}>
             {filtered195Countries.map(c => (
               <Button

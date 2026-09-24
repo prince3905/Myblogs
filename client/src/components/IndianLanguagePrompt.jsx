@@ -294,16 +294,23 @@ export default function IndianLanguagePrompt() {
         onClose={() => setDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        scroll="paper"
         TransitionComponent={Fade}
         PaperProps={{
           sx: {
             background: 'linear-gradient(145deg, #0B0F19 0%, #0F172A 100%)',
             color: '#F8FAFC',
             border: '1px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: '24px',
+            borderRadius: { xs: '18px', sm: '24px' },
             boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 30px rgba(249, 115, 22, 0.15)',
-            p: { xs: 1.5, sm: 2.5 },
+            p: { xs: 1, sm: 2 },
             position: 'relative',
+            margin: { xs: '8px auto', sm: '20px auto' },
+            width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+            height: { xs: 'calc(100dvh - 20px)', sm: 'auto' },
+            maxHeight: { xs: 'calc(100dvh - 20px)', sm: '88vh' },
+            display: 'flex',
+            flexDirection: 'column',
             overflow: 'hidden'
           }
         }}
@@ -318,7 +325,7 @@ export default function IndianLanguagePrompt() {
           background: 'linear-gradient(90deg, #F97316 0%, #FFFFFF 50%, #10B981 100%)'
         }} />
 
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1, px: 1 }}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1, px: 1, flexShrink: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box sx={{
               width: 38,
@@ -354,7 +361,19 @@ export default function IndianLanguagePrompt() {
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ px: 1, pt: 2, pb: 1 }}>
+        <DialogContent sx={{
+          px: 1,
+          pt: 1.5,
+          pb: 2,
+          flex: '1 1 auto',
+          minHeight: 0,
+          overflowY: 'auto !important',
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch',
+          '&::-webkit-scrollbar': { width: '8px' },
+          '&::-webkit-scrollbar-thumb': { bgcolor: '#334155', borderRadius: '4px' }
+        }}>
           <Typography variant="body2" sx={{ color: '#64748B', mb: 2, fontSize: '0.82rem' }}>
             सरकारी रिजल्ट, एडमिट कार्ड व भर्ती अधिसूचनाएं आपकी चुनी हुई भाषा में तुरंत बदल जाएंगी:
           </Typography>

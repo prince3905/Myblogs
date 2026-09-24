@@ -758,20 +758,27 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
         onClose={() => setDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        scroll="paper"
         PaperProps={{
           sx: {
-            borderRadius: '24px',
+            borderRadius: { xs: '18px', sm: '24px' },
             bgcolor: isDark ? '#0B0F19' : '#FFFFFF',
             border: '1px solid',
             borderColor: isDark ? '#1E293B' : '#E2E8F0',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-            p: 1,
+            p: 0,
+            margin: { xs: '8px auto', sm: '20px auto' },
+            width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+            height: { xs: 'calc(100dvh - 20px)', sm: 'auto' },
+            maxHeight: { xs: 'calc(100dvh - 20px)', sm: '88vh' },
+            display: 'flex',
+            flexDirection: 'column',
             overflow: 'hidden'
           }
         }}
       >
         {/* Header */}
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: { xs: 1.5, sm: 2 }, borderBottom: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0', flexShrink: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PublicIcon sx={{ color: '#0284C7', fontSize: 24 }} />
             <Box>
@@ -788,7 +795,17 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 1, pb: 3 }}>
+        <DialogContent sx={{
+          p: { xs: 1.5, sm: 2.5 },
+          flex: '1 1 auto',
+          minHeight: 0,
+          overflowY: 'auto !important',
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch',
+          '&::-webkit-scrollbar': { width: '8px' },
+          '&::-webkit-scrollbar-thumb': { bgcolor: isDark ? '#334155' : '#CBD5E1', borderRadius: '4px' }
+        }}>
           {/* 1. Country Selection Bar */}
           <Typography variant="caption" sx={{ fontWeight: 750, color: isDark ? '#38BDF8' : '#0284C7', display: 'block', mb: 1, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             📍 1. देश चुनें (Select Country)

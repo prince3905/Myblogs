@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Container, Typography, Grid, Card, CardContent, Chip,
   TextField, Button, CircularProgress, Dialog, DialogTitle,
-  DialogContent, IconButton, Divider
+  DialogContent, DialogActions, IconButton, Divider
 } from '@mui/material';
 import PublicIcon from '@mui/icons-material/Public';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -256,26 +256,42 @@ export default function GlobalNewsPage() {
             onClose={() => setSelectedArticle(null)}
             maxWidth="md"
             fullWidth
+            scroll="paper"
             PaperProps={{
               sx: {
                 bgcolor: '#0B0F19',
                 color: '#F8FAFC',
-                borderRadius: 4,
+                borderRadius: { xs: '16px', sm: '24px' },
                 border: '1px solid #1E293B',
-                p: { xs: 1, md: 2 }
+                p: 0,
+                margin: { xs: '8px auto', sm: '20px auto' },
+                width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+                height: { xs: 'calc(100dvh - 20px)', sm: '85vh' },
+                maxHeight: { xs: 'calc(100dvh - 20px)', sm: '85vh' },
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
               }
             }}
           >
             {selectedArticle && (
               <>
-                <DialogTitle sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', pb: 1 }}>
-                  <Box>
+                <DialogTitle sx={{
+                  p: { xs: 1.5, sm: 2.2 },
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  borderBottom: '1px solid #1E293B',
+                  bgcolor: '#0F172A',
+                  flexShrink: 0
+                }}>
+                  <Box sx={{ pr: 1 }}>
                     <Chip
                       label={selectedArticle.badge || 'WORLD AFFAIRS'}
                       size="small"
                       sx={{ bgcolor: '#0284C7', color: '#FFFFFF', fontWeight: 800, mb: 1 }}
                     />
-                    <Typography variant="h5" sx={{ fontWeight: 800, color: '#F8FAFC', lineHeight: 1.3 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 800, color: '#F8FAFC', lineHeight: 1.3, fontSize: { xs: '1.1rem', sm: '1.4rem' } }}>
                       {selectedArticle.title}
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#94A3B8', mt: 0.5, display: 'block' }}>
@@ -287,12 +303,22 @@ export default function GlobalNewsPage() {
                   </IconButton>
                 </DialogTitle>
 
-                <DialogContent sx={{ py: 2 }}>
+                <DialogContent sx={{
+                  p: { xs: 2, sm: 3 },
+                  flex: '1 1 auto',
+                  minHeight: 0,
+                  overflowY: 'auto !important',
+                  overscrollBehavior: 'contain',
+                  touchAction: 'pan-y',
+                  WebkitOverflowScrolling: 'touch',
+                  '&::-webkit-scrollbar': { width: '8px' },
+                  '&::-webkit-scrollbar-thumb': { bgcolor: '#334155', borderRadius: '4px' }
+                }}>
                   <Box sx={{ bgcolor: '#131D31', p: 2.5, borderRadius: 3, mb: 3, border: '1px solid #1E293B' }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#38BDF8', mb: 1 }}>
                       📋 Editorial Overview & Policy Summary
                     </Typography>
-                    <Typography variant="body1" sx={{ color: '#E2E8F0', lineHeight: 1.7 }}>
+                    <Typography variant="body1" sx={{ color: '#E2E8F0', lineHeight: 1.7, fontSize: '0.95rem' }}>
                       {selectedArticle.overview || selectedArticle.editorialOverview || selectedArticle.title}
                     </Typography>
                   </Box>
@@ -345,6 +371,33 @@ export default function GlobalNewsPage() {
                     </Box>
                   </Box>
                 </DialogContent>
+
+                <DialogActions sx={{
+                  p: { xs: 1.25, sm: 1.5 },
+                  bgcolor: '#0F172A',
+                  borderTop: '1px solid #1E293B',
+                  flexShrink: 0,
+                  display: 'flex',
+                  justifyContent: 'flex-end'
+                }}>
+                  <Button
+                    onClick={() => setSelectedArticle(null)}
+                    variant="outlined"
+                    sx={{
+                      borderRadius: '10px',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      color: '#CBD5E1',
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                      bgcolor: 'rgba(255, 255, 255, 0.05)',
+                      py: 0.8,
+                      px: 2.5,
+                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)', color: '#FFFFFF' }
+                    }}
+                  >
+                    Close
+                  </Button>
+                </DialogActions>
               </>
             )}
           </Dialog>

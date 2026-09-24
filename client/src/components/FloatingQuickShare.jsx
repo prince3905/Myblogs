@@ -99,18 +99,25 @@ export function ShareModalProvider({ children }) {
         onClose={() => setOpenDialog(false)}
         maxWidth="xs"
         fullWidth
+        scroll="paper"
         PaperProps={{
           sx: {
-            borderRadius: '24px',
+            borderRadius: { xs: '18px', sm: '24px' },
             p: 1.5,
             background: '#FFFFFF',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            margin: { xs: '8px auto', sm: '20px auto' },
+            width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+            height: { xs: 'calc(100dvh - 24px)', sm: 'auto' },
+            maxHeight: { xs: 'calc(100dvh - 24px)', sm: '88vh' },
+            display: 'flex',
+            flexDirection: 'column',
             overflow: 'hidden'
           }
         }}
       >
         {/* Header */}
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, px: 1 }}>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, px: 1, flexShrink: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box sx={{ p: 0.8, bgcolor: '#DCFCE7', color: '#16A34A', borderRadius: '12px', display: 'flex' }}>
               <ShareIcon sx={{ fontSize: '1.2rem' }} />
@@ -124,7 +131,17 @@ export function ShareModalProvider({ children }) {
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ px: 1, pt: 1, pb: 2 }}>
+        <DialogContent sx={{
+          px: 1,
+          pt: 1,
+          pb: 2,
+          flex: '1 1 auto',
+          minHeight: 0,
+          overflowY: 'auto !important',
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch'
+        }}>
           {/* Post Link Preview Card */}
           <Paper
             elevation={0}
