@@ -1,5 +1,5 @@
 import { useEffect, useState, Fragment, useMemo, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Typography, Button, Table, TableBody, TableCell, TableContainer,
   TableRow, Paper, Chip, Box, Alert, CircularProgress,
@@ -622,6 +622,9 @@ function renderBlogContent(alert) {
         return null;
       })}
 
+      {/* Google AdSense High-Intent In-Modal Action Zone Ad */}
+      <AdSlot format="incontent" style={{ my: 3.5 }} />
+
       {/* Digital Home Student Tools & Fast Community Banner */}
       <Box sx={{ mt: 3, p: 2.5, bgcolor: 'rgba(15, 23, 42, 0.85)', borderRadius: 3, border: '1.5px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#FFFFFF', mb: 1.2, display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.9rem' }}>
@@ -1027,8 +1030,10 @@ function isAlertMatchingState(alert, stateQuery) {
 }
 
 export default function PublicLiveAlertsPage() {
+  const navigate = useNavigate();
+  const { id: routeAlertId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const alertIdParam = searchParams.get('alert');
+  const alertIdParam = routeAlertId || searchParams.get('alert');
   const openedAlertIdRef = useRef(null);
 
   const [alerts, setAlerts] = useState([]);
@@ -1052,10 +1057,14 @@ export default function PublicLiveAlertsPage() {
     if (!alert) {
       setSelectedAlertState(null);
       openedAlertIdRef.current = null;
-      if (searchParams && searchParams.has('alert')) {
+      if (routeAlertId) {
+        navigate('/india/sarkari-jobs', { replace: true });
+      } else if (searchParams && searchParams.has('alert')) {
         const newParams = new URLSearchParams(searchParams);
         newParams.delete('alert');
         setSearchParams(newParams, { replace: true });
+      } else if (window.history.pushState) {
+        window.history.pushState(null, '', '/india/sarkari-jobs');
       }
       return;
     }
@@ -1063,6 +1072,9 @@ export default function PublicLiveAlertsPage() {
     setSelectedAlertState(alert);
     if (alert._id) {
       openedAlertIdRef.current = alert._id;
+      if (window.history.pushState && !routeAlertId) {
+        window.history.pushState(null, '', `/india/sarkari-jobs/${alert._id}`);
+      }
     }
     
     if (!alert.detailsText) {
@@ -1082,8 +1094,6 @@ export default function PublicLiveAlertsPage() {
       }
     }
   };
-
-  const navigate = useNavigate();
 
   const hotLinks = useMemo(() => {
     if (!alerts || alerts.length === 0) return [];
@@ -1232,10 +1242,10 @@ export default function PublicLiveAlertsPage() {
   return (
     <Layout>
       <Seo 
-        title="Live Job Alerts & Vacancies | Digital Home" 
-        description="Browse, filter, and search active job vacancies, admit cards, and results fetched dynamically from official government boards." 
-        canonical="https://www.digitalhomeblog.in/job-alerts"
-        noindex={Boolean(searchParams.get('search') || searchParams.get('alert') || searchParams.get('board') || searchQuery.trim())}
+        title={selectedAlert ? `${selectedAlert.title} (${selectedAlert.boardName || 'Official Board'}) | Sarkari Result & Live Alerts` : "Sarkari Result 2026: Live Job Alerts, Admit Cards & Vacancies | Digital Home"} 
+        description={selectedAlert ? `Official notification for ${selectedAlert.title} by ${selectedAlert.boardName || 'Official Board'}. Apply online, check eligibility, fee, syllabus, and last date: ${selectedAlert.lastDate || 'Active'}.` : "Browse, filter, and search active Indian Sarkari job vacancies, admit cards, and results fetched dynamically from official government boards."} 
+        canonical={selectedAlert ? `https://www.digitalhomeblog.in/india/sarkari-jobs/${selectedAlert._id}` : "https://www.digitalhomeblog.in/india/sarkari-jobs"}
+        noindex={Boolean(searchParams.get('search') && !selectedAlert)}
       />
 
       <Box sx={{ pt: { xs: 1.5, md: 2 }, pb: { xs: 4, md: 6 } }}>
@@ -1826,6 +1836,11 @@ export default function PublicLiveAlertsPage() {
                 )}
               </Box>
             </Paper>
+
+            {/* High-Converting Responsive In-Feed Ad Banner Between Top 3 & Bottom 3 Grids */}
+            <Box sx={{ gridColumn: '1 / -1', my: { xs: 1, md: 1.5 }, width: '100%' }}>
+              <AdSlot format="incontent" style={{ my: 1.5 }} />
+            </Box>
 
             {/* Column 4: Answer Keys */}
             <Paper

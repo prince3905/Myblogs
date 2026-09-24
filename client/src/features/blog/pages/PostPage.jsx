@@ -520,7 +520,7 @@ export default function PostPage() {
               url={`${window.location.origin}${postUrl(post)}`}
               canonical={post.canonicalUrl}
               keywords={(post.seoKeywords || []).join(', ')}
-              noindex={!isJobPost}
+              noindex={false}
               jsonLd={(() => {
             const blogPostingSchema = {
               '@context': 'https://schema.org',

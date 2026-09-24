@@ -142,13 +142,16 @@ export default function App() {
         <Route path="/india/daily-quiz" element={<DailyQuizPageSuspense />} />
         <Route path="/india/daily-quiz/:date" element={<DailyQuizPageSuspense />} />
         <Route path="/india/sarkari-jobs" element={<PublicLiveAlertsPageSuspense />} />
+        <Route path="/india/sarkari-jobs/:id" element={<PublicLiveAlertsPageSuspense />} />
         {/* Legacy / Direct Aliases for Existing SEO & Bookmarks */}
         <Route path="/current-affairs" element={<CurrentAffairsListPageSuspense />} />
         <Route path="/current-affairs/:slug" element={<CurrentAffairsDetailPageSuspense />} />
         <Route path="/daily-quiz" element={<DailyQuizPageSuspense />} />
         <Route path="/daily-quiz/:date" element={<DailyQuizPageSuspense />} />
         <Route path="/job-alerts" element={<PublicLiveAlertsPageSuspense />} />
+        <Route path="/job-alerts/:id" element={<PublicLiveAlertsPageSuspense />} />
         <Route path="/live-alerts" element={<PublicLiveAlertsPageSuspense />} />
+        <Route path="/live-alerts/:id" element={<PublicLiveAlertsPageSuspense />} />
         {/* Global Portals & Individual Crawlable Job URLs */}
         <Route path="/global-jobs" element={<GlobalGovJobsPageSuspense />} />
         <Route path="/global-jobs/view/:id" element={<GlobalGovJobsPageSuspense />} />

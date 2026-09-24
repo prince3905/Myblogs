@@ -439,15 +439,10 @@ export default function GlobalGovJobsPage() {
     setCountrySearchQuery('');
     setCurrentPage(1);
 
-    if (routeCountry) {
-      navigate(countryCode === 'ALL' ? '/global-jobs' : `/global-jobs?country=${countryCode}`, { replace: true });
+    if (countryCode === 'ALL') {
+      navigate('/global-jobs', { replace: true });
     } else {
-      const nextParams = {};
-      if (countryCode !== 'ALL') nextParams.country = countryCode;
-      if (activeCategory !== 'ALL') nextParams.category = activeCategory;
-      if (activeTimeline !== 'ALL') nextParams.timeline = activeTimeline;
-      if (activeCitizenship !== 'ALL') nextParams.citizenship = activeCitizenship;
-      setSearchParams(nextParams, { replace: true });
+      navigate(`/global-jobs/${countryCode}`, { replace: true });
     }
 
     try {
@@ -1182,11 +1177,7 @@ export default function GlobalGovJobsPage() {
                       setActiveCitizenship('ALL');
                       setSearchTerm('');
                       setCurrentPage(1);
-                      if (routeCountry) {
-                        navigate('/global-jobs?country=UN', { replace: true });
-                      } else {
-                        setSearchParams({ country: 'UN' }, { replace: true });
-                      }
+                      navigate('/global-jobs/UN', { replace: true });
                     }}
                     sx={{
                       bgcolor: '#0284C7',

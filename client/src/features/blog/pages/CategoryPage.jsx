@@ -82,7 +82,7 @@ export default function CategoryPage() {
       <Seo 
         title={`${displayTitle} — Digital Home Articles & Guides`} 
         description={`Browse latest insights, updates, and verified articles in ${displayTitle}.`} 
-        noindex={!isJobCategory || page > 1 || sortOption !== 'date-desc'}
+        noindex={page > 1 || sortOption !== 'date-desc'}
       />
 
       <Box sx={{ pt: { xs: 3, md: 4 }, pb: { xs: 8, md: 12 } }}>

@@ -282,8 +282,7 @@ async function runSupervisorCycle() {
 
     const hubUrlsToIndex = [
       'https://www.digitalhomeblog.in/global-jobs',
-      ...Array.from(affectedCountries).map(cc => `https://www.digitalhomeblog.in/global-jobs?country=${encodeURIComponent(cc)}`),
-      ...Array.from(affectedContinents).map(ct => `https://www.digitalhomeblog.in/global-jobs?continent=${encodeURIComponent(ct)}`)
+      ...Array.from(affectedCountries).map(cc => `https://www.digitalhomeblog.in/global-jobs/${encodeURIComponent(cc)}`)
     ];
 
     // Cap individual job pings to a randomized 5-10 featured circulars per day to protect crawl budget

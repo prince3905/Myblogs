@@ -670,7 +670,8 @@ async function sitemap(req, res) {
 
     // Strictly INDEXABLE static pages & International Country Hubs for all active nations
     const baseStaticPages = [
-      '/about', '/contact', '/privacy', '/terms', '/job-alerts',
+      '/india/sarkari-jobs',
+      '/about', '/contact', '/privacy', '/terms',
       '/global-jobs', '/global-news'
     ];
 
@@ -687,7 +688,8 @@ async function sitemap(req, res) {
       ...baseStaticPages,
       ...countryHubs.map(c => `/global-jobs/${c}`)
     ].map(p => {
-      return `<url><loc>${normalizeCanonicalUrl(p)}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>`;
+      const priority = p.includes('sarkari') || p.includes('global-jobs') ? '0.9' : '0.8';
+      return `<url><loc>${normalizeCanonicalUrl(p)}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>${priority}</priority></url>`;
     }).join('');
 
     // Only include job-related categories in sitemap.xml
@@ -724,6 +726,26 @@ async function sitemap(req, res) {
         .join('');
     } catch (storyErr) {
       console.error('[Sitemap] Failed to append Web Stories:', storyErr.message);
+    }
+
+    // Include active Indian Sarkari Live Alerts dynamically (Crawlable URLs with High Priority 0.9)
+    let liveAlertUrls = '';
+    try {
+      const LiveAlert = require('../liveAlerts/liveAlert.model');
+      const liveAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
+        .select('_id title updatedAt parsedPostDate createdAt')
+        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .limit(1000)
+        .lean();
+
+      liveAlertUrls = liveAlerts
+        .map((a) => {
+          const lastmod = a.updatedAt ? new Date(a.updatedAt).toISOString() : (a.parsedPostDate ? new Date(a.parsedPostDate).toISOString() : new Date(a.createdAt).toISOString());
+          return `<url><loc>https://www.digitalhomeblog.in/india/sarkari-jobs/${a._id}</loc><lastmod>${lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>`;
+        })
+        .join('');
+    } catch (alertErr) {
+      console.error('[Sitemap] Failed to append Live Alerts:', alertErr.message);
     }
 
     // Include published Daily Current Affairs dynamically
@@ -773,7 +795,7 @@ async function sitemap(req, res) {
     }
 
     const homeMod = new Date().toISOString();
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><lastmod>${homeMod}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><lastmod>${homeMod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>${staticPages}${categoryUrls}${urls}${caUrls}${storyUrls}${globalJobUrls}</urlset>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><lastmod>${homeMod}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><lastmod>${homeMod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>${staticPages}${categoryUrls}${urls}${liveAlertUrls}${caUrls}${storyUrls}${globalJobUrls}</urlset>`;
     res.type('application/xml');
     return res.send(xml);
   } catch (err) {

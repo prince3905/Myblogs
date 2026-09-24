@@ -521,10 +521,10 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       // Eliminates 404 Not Found errors for users & Googlebot!
       // Passes link authority to active category hubs and de-indexes cleanly in GSC.
       const cat = (req.params.category || '').toLowerCase();
-      let targetRedirect = 'https://www.digitalhomeblog.in/job-alerts';
+      let targetRedirect = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
 
       if (cat.includes('sarkari') || cat.includes('job') || cat.includes('result') || cat.includes('admit')) {
-        targetRedirect = 'https://www.digitalhomeblog.in/job-alerts';
+        targetRedirect = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
       } else if (cat.includes('tech') || cat.includes('tutorial')) {
         targetRedirect = 'https://www.digitalhomeblog.in/category/tech-tutorials';
       } else if (cat.includes('ai') || cat.includes('tool')) {
@@ -755,11 +755,208 @@ app.get(['/global-jobs/view/:id', '/global-jobs/:country/:id'], async (req, res,
   }
 });
 
+// Dynamic Server-Side Meta Tag & JobPosting Schema Injection for Individual Indian Sarkari Jobs
+app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], async (req, res, next) => {
+  try {
+    const rawId = req.params.id ? String(req.params.id).trim() : '';
+    if (!rawId) return next();
+
+    const indexPath = path.join(publicPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(404).send('index.html not found');
+    }
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    const mongoose = require('mongoose');
+    const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(rawId);
+
+    const alert = await LiveAlert.findOne({
+      $or: [
+        ...(isValidObjectId ? [{ _id: rawId }] : []),
+        { sourceUrl: new RegExp(rawId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') }
+      ]
+    }).lean();
+
+    if (alert) {
+      const siteName = 'Digital Home Sarkari Result';
+      const cleanTitle = (alert.title || '').replace(/\s*\|\s*(Digital Home|Sarkari Result)\s*$/i, '');
+      const fullTitle = `${cleanTitle} - ${alert.state || 'All India'} | Sarkari Result 2026`;
+      const desc = (alert.detailsText || `${cleanTitle}. Apply online form, eligibility, notification PDF, admit card and result link on Digital Home.`).slice(0, 160).replace(/[\r\n]+/g, ' ');
+      const canonicalUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${alert._id}`;
+      const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
+
+      const datePosted = alert.parsedPostDate ? new Date(alert.parsedPostDate).toISOString() : (alert.createdAt ? new Date(alert.createdAt).toISOString() : new Date().toISOString());
+      let validThrough = undefined;
+      if (alert.lastDate && alert.lastDate !== 'N/A' && alert.lastDate !== 'Check Detail Page') {
+        const parsed = new Date(alert.lastDate);
+        if (!isNaN(parsed.getTime())) {
+          validThrough = parsed.toISOString();
+        }
+      }
+
+      // Official Google for Jobs structured data
+      const jobPostingSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'JobPosting',
+        'title': cleanTitle,
+        'description': alert.detailsText || cleanTitle,
+        'datePosted': datePosted,
+        ...(validThrough ? { 'validThrough': validThrough } : {}),
+        'employmentType': 'FULL_TIME',
+        'hiringOrganization': {
+          '@type': 'Organization',
+          'name': alert.boardName || 'Government of India / State Public Service Commission',
+          'sameAs': alert.sourceUrl || 'https://www.digitalhomeblog.in'
+        },
+        'jobLocation': {
+          '@type': 'Place',
+          'address': {
+            '@type': 'PostalAddress',
+            'addressCountry': 'IN',
+            'addressRegion': alert.state || 'Central/All India'
+          }
+        },
+        'occupationalCategory': alert.category || 'Latest Job'
+      };
+
+      // Pre-rendered crawler-visible static text & direct links for zero JS bots
+      let crawlerContent = `
+<div id="seo-crawler-alert" style="display:none;" aria-hidden="true">
+  <h1>${cleanTitle}</h1>
+  <p><strong>Department / Board:</strong> ${alert.boardName || 'Government of India'}</p>
+  <p><strong>Category:</strong> ${alert.category || 'Sarkari Job'}</p>
+  <p><strong>State / Region:</strong> ${alert.state || 'Central/All India'}</p>
+  <p><strong>Last Date:</strong> ${alert.lastDate || 'See Official Circular'}</p>
+  <p>${desc}</p>
+  ${alert.sourceUrl ? `<a href="${alert.sourceUrl}">Official Gazette Notification Link</a>` : ''}
+</div>`;
+
+      const metaTags = `
+    <title>${fullTitle}</title>
+    <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="${canonicalUrl}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="${siteName}" />
+    <meta property="og:title" content="${fullTitle.replace(/"/g, '&quot;')}" />
+    <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:image" content="${imageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${fullTitle.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:image" content="${imageUrl}" />
+    <script type="application/ld+json">${JSON.stringify(jobPostingSchema)}</script>
+      `;
+
+      html = html.replace(/<title>.*?<\/title>/, '');
+      html = html.replace(/<meta name="description" .*?\/>/, '');
+      html = html.replace('</head>', `${metaTags}\n</head>`);
+      html = html.replace('<body>', `<body>\n${crawlerContent}`);
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+      return res.status(200).send(html);
+    }
+
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Dynamic Server-Side Meta Tag & Crawler Links for Indian Sarkari Jobs Portal Hub
+app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res, next) => {
+  try {
+    const alertIdParam = req.query.alert;
+    if (alertIdParam) {
+      const mongoose = require('mongoose');
+      const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+      if (mongoose.Types.ObjectId.isValid(alertIdParam)) {
+        req.params.id = alertIdParam;
+        return app._router.handle(req, res, next);
+      }
+    }
+
+    const indexPath = path.join(publicPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(404).send('index.html not found');
+    }
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    const mongoose = require('mongoose');
+    const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+    const topAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
+      .select('title category state _id parsedPostDate')
+      .sort({ parsedPostDate: -1, createdAt: -1 })
+      .limit(60)
+      .lean();
+
+    const siteName = 'Digital Home Sarkari Result';
+    const fullTitle = 'Sarkari Result 2026: Latest Online Forms, Admit Card, Result & Answer Key | Digital Home';
+    const desc = 'Latest Sarkari Result 2026 notifications, central & state government recruitment, UPSC, SSC, Railways, Banking, Defense & State PSC exam admit cards and answer keys.';
+    const canonicalUrl = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
+    const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
+
+    let crawlerLinks = '\n<div style="display:none;" id="seo-crawler-sarkari-links" aria-hidden="true">\n';
+    crawlerLinks += '  <h1>Sarkari Result 2026 - Latest Government Jobs, Admit Cards & Results</h1>\n';
+    topAlerts.forEach(a => {
+      crawlerLinks += `  <a href="/india/sarkari-jobs/${a._id}">${a.title} (${a.state || 'All India'}) - ${a.category || 'Job'}</a>\n`;
+    });
+    crawlerLinks += '</div>\n';
+
+    const breadcrumbSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      'itemListElement': [
+        { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://www.digitalhomeblog.in' },
+        { '@type': 'ListItem', 'position': 2, 'name': 'Sarkari Result & Govt Jobs', 'item': canonicalUrl }
+      ]
+    };
+
+    const metaTags = `
+    <title>${fullTitle}</title>
+    <meta name="description" content="${desc}" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="${canonicalUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="${siteName}" />
+    <meta property="og:title" content="${fullTitle}" />
+    <meta property="og:description" content="${desc}" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta property="og:image" content="${imageUrl}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${fullTitle}" />
+    <meta name="twitter:description" content="${desc}" />
+    <meta name="twitter:image" content="${imageUrl}" />
+    <script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>
+    `;
+
+    html = html.replace(/<title>.*?<\/title>/, '');
+    html = html.replace(/<meta name="description" .*?\/>/, '');
+    html = html.replace('</head>', `${metaTags}\n</head>`);
+    html = html.replace('<body>', `<body>${crawlerLinks}`);
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+    return res.status(200).send(html);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Dynamic Server-Side Meta Tag & Hreflang Matrix Injection for Global Jobs Country Hubs & Directory
 app.get(['/global-jobs', '/global-jobs/:country'], async (req, res, next) => {
   try {
     const rawParam = req.params.country ? String(req.params.country).trim() : '';
     if (rawParam.toLowerCase() === 'view') return next();
+
+    // 301 Canonical normalization: Redirect ?country=XX to clean static path /global-jobs/XX
+    if (!rawParam && req.query.country && req.query.country.trim().toUpperCase() !== 'ALL') {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.redirect(301, `/global-jobs/${encodeURIComponent(req.query.country.trim().toUpperCase())}`);
+    }
 
     const indexPath = path.join(publicPath, 'index.html');
     if (!fs.existsSync(indexPath)) {
