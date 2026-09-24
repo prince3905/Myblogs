@@ -311,7 +311,9 @@ export default function IndianLanguagePrompt() {
             maxHeight: { xs: 'calc(100dvh - 20px)', sm: '88vh' },
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            overflowY: 'auto !important',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch'
           }
         }}
       >
@@ -322,10 +324,22 @@ export default function IndianLanguagePrompt() {
           left: 0,
           right: 0,
           height: 3,
-          background: 'linear-gradient(90deg, #F97316 0%, #FFFFFF 50%, #10B981 100%)'
+          background: 'linear-gradient(90deg, #F97316 0%, #FFFFFF 50%, #10B981 100%)',
+          zIndex: 35
         }} />
 
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1, px: 1, flexShrink: 0 }}>
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          pb: 1, 
+          px: 1, 
+          bgcolor: 'transparent',
+          position: 'sticky',
+          top: 0,
+          zIndex: 30,
+          flexShrink: 0 
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box sx={{
               width: 38,
@@ -365,14 +379,10 @@ export default function IndianLanguagePrompt() {
           px: 1,
           pt: 1.5,
           pb: 2,
-          flex: '1 1 auto',
-          minHeight: 0,
-          overflowY: 'auto !important',
-          overscrollBehavior: 'contain',
-          touchAction: 'pan-y',
-          WebkitOverflowScrolling: 'touch',
-          '&::-webkit-scrollbar': { width: '8px' },
-          '&::-webkit-scrollbar-thumb': { bgcolor: '#334155', borderRadius: '4px' }
+          flex: '1 0 auto',
+          overflow: 'visible !important',
+          overflowY: 'visible !important',
+          overflowX: 'visible !important'
         }}>
           <Typography variant="body2" sx={{ color: '#64748B', mb: 2, fontSize: '0.82rem' }}>
             सरकारी रिजल्ट, एडमिट कार्ड व भर्ती अधिसूचनाएं आपकी चुनी हुई भाषा में तुरंत बदल जाएंगी:

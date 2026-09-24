@@ -566,7 +566,6 @@ function renderBlogContent(alert, onActionClick) {
                 overflowX: 'auto', 
                 bgcolor: 'rgba(15, 23, 42, 0.85)', 
                 border: '1px solid rgba(255, 255, 255, 0.1)',
-                touchAction: 'pan-y pan-x',
                 WebkitOverflowScrolling: 'touch'
               }}
             >
@@ -2193,12 +2192,6 @@ export default function PublicLiveAlertsPage() {
             }
           }}
           PaperProps={{
-            onWheel: (e) => {
-              const contentEl = document.getElementById('public-live-alert-modal-content');
-              if (contentEl && !contentEl.contains(e.target)) {
-                contentEl.scrollTop += e.deltaY;
-              }
-            },
             sx: {
               borderRadius: { xs: '16px', sm: '24px' },
               p: 0,
@@ -2211,11 +2204,14 @@ export default function PublicLiveAlertsPage() {
               boxShadow: '0 35px 90px rgba(0, 0, 0, 0.95)',
               margin: { xs: '8px auto', sm: '20px auto' },
               width: { xs: 'calc(100% - 16px)', sm: 'auto' },
-              height: { xs: 'calc(100dvh - 16px)', sm: 'calc(100dvh - 40px)' },
+              height: { xs: 'calc(100dvh - 16px)', sm: 'auto' },
               maxHeight: { xs: 'calc(100dvh - 16px)', sm: 'calc(100dvh - 40px)' },
               display: 'flex',
               flexDirection: 'column',
-              overflow: 'hidden'
+              overflowY: 'auto !important',
+              overflowX: 'hidden',
+              WebkitOverflowScrolling: 'touch',
+              position: 'relative'
             }
           }}
         >
@@ -2227,7 +2223,11 @@ export default function PublicLiveAlertsPage() {
               justifyContent: 'space-between', 
               alignItems: 'center',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              bgcolor: 'rgba(15, 23, 42, 0.95)',
+              bgcolor: '#0D1629 !important',
+              backgroundColor: '#0D1629 !important',
+              position: 'sticky',
+              top: 0,
+              zIndex: 30,
               flexShrink: 0
             }}
           >
@@ -2264,24 +2264,16 @@ export default function PublicLiveAlertsPage() {
 
           <DialogContent
             id="public-live-alert-modal-content"
-            dividers
             sx={{
               p: { xs: 1.8, sm: 3 },
               bgcolor: '#080D1A !important',
               backgroundColor: '#080D1A !important',
               color: '#FFFFFF !important',
               borderColor: 'rgba(255, 255, 255, 0.08)',
-              flex: '1 1 auto',
-              minHeight: 0,
-              overflowY: 'auto !important',
-              overflowX: 'hidden',
-              overscrollBehavior: 'contain',
-              touchAction: 'pan-y',
-              WebkitOverflowScrolling: 'touch',
-              '&::-webkit-scrollbar': { width: '8px' },
-              '&::-webkit-scrollbar-track': { background: '#080D1A' },
-              '&::-webkit-scrollbar-thumb': { background: '#334155', borderRadius: '4px' },
-              '&::-webkit-scrollbar-thumb:hover': { background: '#475569' }
+              flex: '1 0 auto',
+              overflow: 'visible !important',
+              overflowY: 'visible !important',
+              overflowX: 'visible !important'
             }}
           >
             {detailsLoading ? (
@@ -2294,10 +2286,13 @@ export default function PublicLiveAlertsPage() {
             ) : errorLoadingDetails ? (
               <Alert severity="error" sx={{ borderRadius: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#F87171' }}>{errorLoadingDetails}</Alert>
             ) : (
-              renderBlogContent(selectedAlert, (url) => {
-                setPendingRedirectUrl(url);
-                setRedirectModalOpen(true);
-              })
+              <>
+                {renderBlogContent(selectedAlert, (url) => {
+                  setPendingRedirectUrl(url);
+                  setRedirectModalOpen(true);
+                })}
+                <Box sx={{ height: { xs: 30, sm: 40 } }} />
+              </>
             )}
           </DialogContent>
 
@@ -2305,7 +2300,8 @@ export default function PublicLiveAlertsPage() {
             sx={{ 
               p: { xs: 1.25, sm: 1.8 }, 
               borderTop: '1px solid rgba(255, 255, 255, 0.12)',
-              bgcolor: 'rgba(15, 23, 42, 0.98)',
+              bgcolor: '#0D1629 !important',
+              backgroundColor: '#0D1629 !important',
               display: 'flex',
               flexDirection: 'row',
               flexWrap: 'wrap',
@@ -2315,8 +2311,10 @@ export default function PublicLiveAlertsPage() {
               width: '100%',
               boxSizing: 'border-box',
               flexShrink: 0,
-              boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.6)',
-              zIndex: 10
+              position: 'sticky',
+              bottom: 0,
+              zIndex: 30,
+              boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.85)'
             }}
           >
             {(() => {

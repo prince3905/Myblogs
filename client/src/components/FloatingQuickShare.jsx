@@ -112,12 +112,26 @@ export function ShareModalProvider({ children }) {
             maxHeight: { xs: 'calc(100dvh - 24px)', sm: '88vh' },
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            overflowY: 'auto !important',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            position: 'relative'
           }
         }}
       >
         {/* Header */}
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, px: 1, flexShrink: 0 }}>
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          pb: 1, 
+          px: 1, 
+          bgcolor: '#FFFFFF',
+          position: 'sticky',
+          top: 0,
+          zIndex: 30,
+          flexShrink: 0 
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box sx={{ p: 0.8, bgcolor: '#DCFCE7', color: '#16A34A', borderRadius: '12px', display: 'flex' }}>
               <ShareIcon sx={{ fontSize: '1.2rem' }} />
@@ -135,12 +149,10 @@ export function ShareModalProvider({ children }) {
           px: 1,
           pt: 1,
           pb: 2,
-          flex: '1 1 auto',
-          minHeight: 0,
-          overflowY: 'auto !important',
-          overscrollBehavior: 'contain',
-          touchAction: 'pan-y',
-          WebkitOverflowScrolling: 'touch'
+          flex: '1 0 auto',
+          overflow: 'visible !important',
+          overflowY: 'visible !important',
+          overflowX: 'visible !important'
         }}>
           {/* Post Link Preview Card */}
           <Paper

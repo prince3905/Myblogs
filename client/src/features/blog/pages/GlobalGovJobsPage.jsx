@@ -1588,26 +1588,24 @@ export default function GlobalGovJobsPage() {
         fullWidth
         scroll="paper"
         PaperProps={{
-          onWheel: (e) => {
-            const contentEl = document.getElementById('global-gov-job-modal-content');
-            if (contentEl && !contentEl.contains(e.target)) {
-              contentEl.scrollTop += e.deltaY;
-            }
-          },
           sx: {
-            bgcolor: '#0B0F19',
-            backgroundImage: 'none',
+            bgcolor: '#0B0F19 !important',
+            backgroundColor: '#0B0F19 !important',
+            backgroundImage: 'linear-gradient(180deg, #0F172A 0%, #0B0F19 100%) !important',
             borderRadius: { xs: '16px', sm: '24px' },
             border: '1px solid #334155',
             boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.9)',
             color: '#F8FAFC',
             margin: { xs: '8px auto', sm: '20px auto' },
             width: { xs: 'calc(100% - 16px)', sm: 'auto' },
-            height: { xs: 'calc(100dvh - 16px)', sm: 'calc(100dvh - 40px)' },
+            height: { xs: 'calc(100dvh - 16px)', sm: 'auto' },
             maxHeight: { xs: 'calc(100dvh - 16px)', sm: 'calc(100dvh - 40px)' },
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            overflowY: 'auto !important',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            position: 'relative'
           }
         }}
       >
@@ -1616,11 +1614,15 @@ export default function GlobalGovJobsPage() {
             {/* Modal Header */}
             <DialogTitle sx={{
               p: { xs: 1.5, sm: 2.2 },
-              bgcolor: '#0F172A',
+              bgcolor: '#0F172A !important',
+              backgroundColor: '#0F172A !important',
               borderBottom: '1px solid #1E293B',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              position: 'sticky',
+              top: 0,
+              zIndex: 30,
               flexShrink: 0
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -1663,22 +1665,15 @@ export default function GlobalGovJobsPage() {
             {/* Modal Content - Scrollable */}
             <DialogContent
               id="global-gov-job-modal-content"
-              dividers
               sx={{
                 p: { xs: 1.8, sm: 3 },
-                bgcolor: '#0B0F19',
+                bgcolor: '#0B0F19 !important',
+                backgroundColor: '#0B0F19 !important',
                 borderColor: '#1E293B',
-                flex: '1 1 auto',
-                minHeight: 0,
-                overflowY: 'auto !important',
-                overflowX: 'hidden',
-                overscrollBehavior: 'contain',
-                touchAction: 'pan-y',
-                WebkitOverflowScrolling: 'touch',
-                '&::-webkit-scrollbar': { width: '8px' },
-                '&::-webkit-scrollbar-track': { background: '#0B0F19' },
-                '&::-webkit-scrollbar-thumb': { background: '#334155', borderRadius: '4px' },
-                '&::-webkit-scrollbar-thumb:hover': { background: '#475569' }
+                flex: '1 0 auto',
+                overflow: 'visible !important',
+                overflowY: 'visible !important',
+                overflowX: 'visible !important'
               }}
             >
               {/* Dual Language Switcher inside Modal */}
@@ -2112,13 +2107,15 @@ export default function GlobalGovJobsPage() {
                     </Button>
                   </Box>
                 </Box>
+                <Box sx={{ height: { xs: 30, sm: 40 } }} />
               </Box>
             </DialogContent>
 
             {/* 🌟 PINNED STICKY BOTTOM ACTION BAR */}
             <DialogActions sx={{
               p: { xs: 1.25, sm: 1.8 },
-              bgcolor: '#0F172A',
+              bgcolor: '#0F172A !important',
+              backgroundColor: '#0F172A !important',
               borderTop: '1px solid #1E293B',
               display: 'flex',
               flexDirection: 'row',
@@ -2129,8 +2126,10 @@ export default function GlobalGovJobsPage() {
               width: '100%',
               boxSizing: 'border-box',
               flexShrink: 0,
-              boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.6)',
-              zIndex: 10
+              position: 'sticky',
+              bottom: 0,
+              zIndex: 30,
+              boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.85)'
             }}>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, flex: 1, alignItems: 'center' }}>
                 <Button
@@ -2237,22 +2236,38 @@ export default function GlobalGovJobsPage() {
         scroll="paper"
         PaperProps={{
           sx: {
-            bgcolor: '#0F172A',
+            bgcolor: '#0F172A !important',
+            backgroundColor: '#0F172A !important',
             borderRadius: { xs: '16px', sm: '24px' },
             border: '1px solid #334155',
             color: '#F8FAFC',
             p: 0,
             margin: { xs: '8px auto', sm: '20px auto' },
             width: { xs: 'calc(100% - 16px)', sm: 'auto' },
-            height: { xs: 'calc(100dvh - 20px)', sm: '85vh' },
+            height: { xs: 'calc(100dvh - 20px)', sm: 'auto' },
             maxHeight: { xs: 'calc(100dvh - 20px)', sm: '85vh' },
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            overflowY: 'auto !important',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            position: 'relative'
           }
         }}
       >
-        <DialogTitle sx={{ p: { xs: 1.5, sm: 2 }, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1E293B', flexShrink: 0 }}>
+        <DialogTitle sx={{ 
+          p: { xs: 1.5, sm: 2 }, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          borderBottom: '1px solid #1E293B', 
+          bgcolor: '#0F172A !important',
+          backgroundColor: '#0F172A !important',
+          position: 'sticky',
+          top: 0,
+          zIndex: 30,
+          flexShrink: 0 
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <GlobeIcon sx={{ color: '#38BDF8', fontSize: 24 }} />
             <Typography variant="h6" sx={{ fontWeight: 800, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
@@ -2265,14 +2280,12 @@ export default function GlobalGovJobsPage() {
         </DialogTitle>
         <DialogContent sx={{
           p: { xs: 1.5, sm: 2.5 },
-          flex: '1 1 auto',
-          minHeight: 0,
-          overflowY: 'auto !important',
-          overscrollBehavior: 'contain',
-          touchAction: 'pan-y',
-          WebkitOverflowScrolling: 'touch',
-          '&::-webkit-scrollbar': { width: '8px' },
-          '&::-webkit-scrollbar-thumb': { bgcolor: '#334155', borderRadius: '4px' }
+          bgcolor: '#0F172A !important',
+          backgroundColor: '#0F172A !important',
+          flex: '1 0 auto',
+          overflow: 'visible !important',
+          overflowY: 'visible !important',
+          overflowX: 'visible !important'
         }}>
           {/* Real-time Country Search Input */}
           <TextField

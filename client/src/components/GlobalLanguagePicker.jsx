@@ -773,12 +773,26 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
             maxHeight: { xs: 'calc(100dvh - 20px)', sm: '88vh' },
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            overflowY: 'auto !important',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            position: 'relative'
           }
         }}
       >
         {/* Header */}
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: { xs: 1.5, sm: 2 }, borderBottom: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0', flexShrink: 0 }}>
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          p: { xs: 1.5, sm: 2 }, 
+          borderBottom: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0', 
+          bgcolor: isDark ? '#0B0F19' : '#FFFFFF',
+          position: 'sticky',
+          top: 0,
+          zIndex: 30,
+          flexShrink: 0 
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PublicIcon sx={{ color: '#0284C7', fontSize: 24 }} />
             <Box>
@@ -797,14 +811,10 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
 
         <DialogContent sx={{
           p: { xs: 1.5, sm: 2.5 },
-          flex: '1 1 auto',
-          minHeight: 0,
-          overflowY: 'auto !important',
-          overscrollBehavior: 'contain',
-          touchAction: 'pan-y',
-          WebkitOverflowScrolling: 'touch',
-          '&::-webkit-scrollbar': { width: '8px' },
-          '&::-webkit-scrollbar-thumb': { bgcolor: isDark ? '#334155' : '#CBD5E1', borderRadius: '4px' }
+          flex: '1 0 auto',
+          overflow: 'visible !important',
+          overflowY: 'visible !important',
+          overflowX: 'visible !important'
         }}>
           {/* 1. Country Selection Bar */}
           <Typography variant="caption" sx={{ fontWeight: 750, color: isDark ? '#38BDF8' : '#0284C7', display: 'block', mb: 1, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
