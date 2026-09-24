@@ -148,6 +148,7 @@ export default function App() {
         <Route path="/daily-quiz" element={<DailyQuizPageSuspense />} />
         <Route path="/daily-quiz/:date" element={<DailyQuizPageSuspense />} />
         <Route path="/job-alerts" element={<PublicLiveAlertsPageSuspense />} />
+        <Route path="/live-alerts" element={<PublicLiveAlertsPageSuspense />} />
         {/* Global Portals & Individual Crawlable Job URLs */}
         <Route path="/global-jobs" element={<GlobalGovJobsPageSuspense />} />
         <Route path="/global-jobs/view/:id" element={<GlobalGovJobsPageSuspense />} />

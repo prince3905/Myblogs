@@ -1102,7 +1102,7 @@ export default function GlobalGovJobsPage() {
               </Box>
               <Button
                 variant="contained"
-                onClick={() => navigate('/live-alerts')}
+                onClick={() => navigate('/india/sarkari-jobs')}
                 sx={{
                   background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)',
                   color: '#FFFFFF',
