@@ -263,7 +263,7 @@ function detectCategory(title, href) {
   if (text.includes('answer key') || text.includes('answerkey') || text.includes('solution')) {
     return 'Answer Key';
   }
-  if (text.includes('admission') || text.includes('counseling')) {
+  if (text.includes('admission') || text.includes('counseling') || text.includes('counselling')) {
     return 'Admission';
   }
   if (text.includes('certificate') || text.includes('verification')) {
@@ -1136,8 +1136,13 @@ async function scrapeFeeds() {
             : (href.startsWith('/') ? `https://www.sarkariresult.com${href}` : `https://www.sarkariresult.com/${href}`);
 
           if (isDetailUrl(fullHref)) {
-            if (!listLinks.some(l => l.href === fullHref)) {
-              listLinks.push({ text: rawText, href: fullHref, defaultCategory: target.defaultCategory });
+            // For dedicated category targets (Syllabus / Admission), append hash so they don't collide with existing job post URLs
+            const finalSourceUrl = (target.defaultCategory === 'Syllabus' || target.defaultCategory === 'Admission')
+              ? `${fullHref}#${target.defaultCategory.toLowerCase()}`
+              : fullHref;
+
+            if (!listLinks.some(l => l.href === finalSourceUrl)) {
+              listLinks.push({ text: rawText, href: finalSourceUrl, originalHref: fullHref, defaultCategory: target.defaultCategory });
               pageLinksCount++;
             }
           }
@@ -1150,14 +1155,18 @@ async function scrapeFeeds() {
 
   console.log(`[LiveAlert Scraper] Found ${listLinks.length} total unique listings across sources.`);
 
-  // Caching optimization: fetch all existing sourceUrls from the database that already have details
-  const existingAlerts = await LiveAlert.find({}, { sourceUrl: 1, detailsText: 1 });
-  const existingMap = new Map(existingAlerts.map(doc => [doc.sourceUrl, !!doc.detailsText]));
+  // Caching optimization: fetch all existing sourceUrls from the database with details, category and status
+  const existingAlerts = await LiveAlert.find({}, { sourceUrl: 1, detailsText: 1, category: 1, status: 1 });
+  const existingMap = new Map(existingAlerts.map(doc => [doc.sourceUrl, { hasDetails: !!doc.detailsText, category: doc.category, status: doc.status }]));
 
-  // Filter listLinks to only include those that either don't exist in DB, or exist but have no detailsText
+  // Filter listLinks to only include those that either don't exist in DB, or exist but have no detailsText, or category changed, or need un-archiving
   const pendingListings = listLinks.filter(listing => {
-    const hasDetails = existingMap.get(listing.href);
-    return hasDetails === undefined || hasDetails === false;
+    const existing = existingMap.get(listing.href);
+    if (!existing) return true;
+    if (!existing.hasDetails) return true;
+    if (listing.defaultCategory && existing.category !== listing.defaultCategory) return true;
+    if (existing.status !== 'active') return true;
+    return false;
   });
 
   console.log(`[LiveAlert Scraper] ${pendingListings.length} of ${listLinks.length} listings are new or pending detail fetch.`);
@@ -1266,8 +1275,9 @@ async function scrapeFeeds() {
       const delay = 300 + Math.floor(Math.random() * 300);
       await sleep(delay);
 
-      console.log(`[LiveAlert Scraper] Fetching details for: ${href}`);
-      const details = await scrapeDetailedUrls(href);
+      const fetchHref = listing.originalHref || href.split('#')[0];
+      console.log(`[LiveAlert Scraper] Fetching details for: ${fetchHref}`);
+      const details = await scrapeDetailedUrls(fetchHref);
 
       const { title, lastDate } = parseLinkText(text);
       const boardName = extractBoardName(title);
@@ -1283,7 +1293,7 @@ async function scrapeFeeds() {
 
       if (finalDetailsText.length < 50) {
         console.log(`[LiveAlert Scraper] Applying fallback detailsText for alert: "${title}"`);
-        finalDetailsText = `Official Notification Alert: ${title}\nBoard/Organisation: ${boardName}\nState: ${state}\nCategory: ${detectCategory(title, href)}\nOfficial Portal: ${safeGovtFallback}\n\nKey Highlights:\n- Official recruitment announcement for ${title}.\n- Online application form and official notification links are active.\n- Interested candidates should check eligibility details and apply via the official link below.`;
+        finalDetailsText = `Official Notification Alert: ${title}\nBoard/Organisation: ${boardName}\nState: ${state}\nCategory: ${listing.defaultCategory || detectCategory(title, href)}\nOfficial Portal: ${safeGovtFallback}\n\nKey Highlights:\n- Official recruitment announcement for ${title}.\n- Online application form and official notification links are active.\n- Interested candidates should check eligibility details and apply via the official link below.`;
       }
 
       // CRITICAL: Preserve exact scraped direct official links (SSO/IBPS/RRB/PDFs), and only use portal map if empty or competitor URL
@@ -1310,7 +1320,7 @@ async function scrapeFeeds() {
       finalDetailsText = stripSarkariResultMentionsAndLinks(finalDetailsText);
 
       const detectedCat = detectCategory(title, href);
-      const finalCategory = (detectedCat === 'Latest Job' && listing.defaultCategory) ? listing.defaultCategory : detectedCat;
+      const finalCategory = listing.defaultCategory || detectedCat;
       const safeParsedDate = (parsedDate && !isNaN(new Date(parsedDate).getTime())) ? parsedDate : new Date();
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
