@@ -477,7 +477,7 @@ export const ALL_LANGUAGES = [
   { code: 'sw', label: 'Kiswahili (Swahili)', flag: '🇰🇪' }
 ];
 
-import { protectElement } from '../shared/lib/translationProtection';
+import { protectElement, initTranslationProtection } from '../shared/lib/translationProtection';
 
 // Full Website Seamless Translation Controller
 // Sets cookie and triggers Google Translate combo WITHOUT harsh page reloads
@@ -487,6 +487,7 @@ export function applyFullWebsiteTranslation(langCode) {
     if (typeof window !== 'undefined' && typeof window.ensureGoogleTranslateLoaded === 'function') {
       window.ensureGoogleTranslateLoaded();
     }
+    initTranslationProtection();
     // Protect sensitive brands and acronyms before translation runs
     protectElement(document.body);
     const isOriginal = langCode === 'original';
@@ -617,18 +618,20 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
     const savedL = localStorage.getItem('dh_user_lang');
     const isLocked = localStorage.getItem('dh_user_lang_locked') === 'true';
 
-    // Auto-pick the native language of user's detected country if not explicitly locked
+    // Set UI language indicator based on saved preference or detected country
     let activeL = savedL;
-    if (!activeL || !isLocked) {
+    if (!activeL) {
       const matched = COUNTRY_REGIONS.find(item => item.code === c);
       activeL = matched?.languages?.[0]?.code || 'hi';
     }
 
     setSelectedLang(activeL);
 
-    // Apply translation seamlessly
-    if (!document.cookie.includes(`googtrans=/auto/${activeL}`)) {
-      applyFullWebsiteTranslation(activeL);
+    // Apply translation ONLY if user previously explicitly selected and locked a language
+    if (isLocked && savedL && savedL !== 'original' && savedL !== 'en') {
+      if (!document.cookie.includes(`googtrans=/auto/${savedL}`)) {
+        applyFullWebsiteTranslation(savedL);
+      }
     }
 
     // Set HTML lang and dir

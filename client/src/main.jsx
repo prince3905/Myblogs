@@ -9,8 +9,10 @@ import { ThemeModeProvider } from './features/theme/ThemeContext';
 import './assets/styles/global.css';
 import { initTranslationProtection } from './shared/lib/translationProtection';
 
-// Initialize zero-mangling translation protection for WhatsApp, Telegram, UPSC, etc.
-initTranslationProtection();
+// Initialize zero-mangling translation protection only if active translation cookie exists
+if (typeof document !== 'undefined' && document.cookie && document.cookie.includes('googtrans=') && !document.cookie.includes('googtrans=/auto/en')) {
+  initTranslationProtection();
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
