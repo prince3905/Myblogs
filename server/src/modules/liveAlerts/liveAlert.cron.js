@@ -1087,6 +1087,123 @@ async function scrapeStateHubFeeds() {
   return savedCount;
 }
 
+async function scrapeOfflineVacancies() {
+  console.log('[Offline Form Scraper] Starting offline vacancies scrape...');
+  let savedCount = 0;
+  try {
+    const res = await axios.get('https://www.freejobalert.com', {
+      headers: { 'User-Agent': getRandomUA() },
+      timeout: 12000
+    });
+    const $ = cheerio.load(res.data);
+    const offlineItems = [];
+    $('a').each((i, el) => {
+      const text = $(el).text().trim();
+      const href = $(el).attr('href');
+      if (text.toLowerCase().includes('offline') && href && href.includes('/articles/')) {
+        offlineItems.push({ title: text, url: href });
+      }
+    });
+
+    console.log(`[Offline Form Scraper] Found ${offlineItems.length} candidate offline articles`);
+
+    for (const item of offlineItems) {
+      try {
+        const cleanTitle = item.title.replace(/\s+/g, ' ').trim();
+        const existing = await LiveAlert.findOne({
+          $or: [
+            { title: cleanTitle },
+            { sourceUrl: item.url }
+          ]
+        });
+
+        if (existing) {
+          if (!existing.isOffline) {
+            existing.isOffline = true;
+            existing.category = 'Offline Form';
+            await existing.save();
+          }
+          continue;
+        }
+
+        const artRes = await axios.get(item.url, {
+          headers: { 'User-Agent': getRandomUA() },
+          timeout: 10000
+        });
+        const $art = cheerio.load(artRes.data);
+
+        let org = '';
+        let lastDate = '';
+        let location = '';
+        let address = '';
+
+        $art('table tr').each((_, tr) => {
+          const rowText = $art(tr).text().trim().replace(/\s+/g, ' ');
+          if (/Organisation|Organization/i.test(rowText) && !org) {
+            org = rowText.replace(/^Organisation\s*[:\-]?/i, '').trim();
+          }
+          if (/Last Date/i.test(rowText) && !lastDate) {
+            const m = rowText.match(/([0-9]{1,2}\s+[a-zA-Z]+\s+[0-9]{4}|[0-9]{1,2}[\/\-][0-9]{1,2}[\/\-][0-9]{4})/);
+            if (m) lastDate = m[1];
+          }
+          if (/Location/i.test(rowText) && !location) {
+            location = rowText.replace(/^Location\s*[:\-]?/i, '').trim();
+          }
+          if (/Address|Send Application/i.test(rowText) && !address) {
+            address = rowText.replace(/^Address\s*[:\-]?/i, '').trim();
+          }
+        });
+
+        let pdfUrl = '';
+        let applyUrl = '';
+        $art('table a, .entry-content a, a').each((_, el) => {
+          const text = $art(el).text().trim().toLowerCase();
+          const href = $art(el).attr('href') || '';
+          if (href.includes('freejobalert.com') || href.includes('slate.freejobalert') || href === '#') return;
+          if ((text.includes('notification') || text.includes('application form') || href.endsWith('.pdf')) && !pdfUrl) {
+            pdfUrl = href;
+          }
+          if ((text.includes('official website') || text.includes('website')) && !applyUrl) {
+            applyUrl = href;
+          }
+        });
+
+        const boardName = extractBoardName(cleanTitle) || (org ? org.split('–')[0].split(',')[0].trim() : 'Govt Department');
+        const parsedPostDate = new Date();
+
+        await LiveAlert.create({
+          title: cleanTitle,
+          boardName,
+          lastDate: lastDate || 'Refer Notification',
+          postDate: new Date().toLocaleDateString('en-IN'),
+          parsedPostDate,
+          officialUrl: applyUrl || 'https://www.india.gov.in',
+          officialApplyUrl: applyUrl || '',
+          officialPdfUrl: pdfUrl || '',
+          source: 'Official Portal',
+          sourceUrl: item.url,
+          state: location || 'All India',
+          category: 'Offline Form',
+          detailsText: `Board: ${boardName}\nLocation: ${location || 'All India'}\nLast Date: ${lastDate || 'Refer Notification'}\nOfficial PDF: ${pdfUrl}\nPostal Address: ${address || location}`,
+          isOffline: true,
+          offlineAddress: address || location || '',
+          status: 'active'
+        });
+
+        savedCount++;
+        console.log(`[Offline Form Scraper] Ingested offline alert: "${cleanTitle}"`);
+        await sleep(300);
+      } catch (itemErr) {
+        console.warn(`[Offline Form Scraper] Error scraping article ${item.url}:`, itemErr.message);
+      }
+    }
+  } catch (err) {
+    console.error('[Offline Form Scraper] Failed:', err.message);
+  }
+  console.log(`[Offline Form Scraper] Finished. Ingested ${savedCount} offline alerts.`);
+  return savedCount;
+}
+
 async function scrapeFeeds() {
   console.log('[LiveAlert Scraper] Starting multi-source DOM scraping (1-week fresh gate active)...');
   
@@ -1400,6 +1517,14 @@ async function scrapeFeeds() {
     totalSaved += (stateSaved || 0);
   } catch (stateScrapeErr) {
     console.error('[Multi-State Scraper] Feed processing notice:', stateScrapeErr.message);
+  }
+
+  // Dedicated Offline Vacancies Feed Ingestion
+  try {
+    const offlineSaved = await scrapeOfflineVacancies();
+    totalSaved += (offlineSaved || 0);
+  } catch (offlineScrapeErr) {
+    console.error('[Offline Form Scraper] Feed processing notice:', offlineScrapeErr.message);
   }
 
   console.log(`[LiveAlert Scraper] Completed! Saved/updated ${totalSaved} total raw alerts across Central & All States.`);
@@ -1795,4 +1920,4 @@ function initScheduler() {
   });
 }
 
-module.exports = { scrapeFeeds, initScheduler, publishNextQueuedPost, scrapeDetailedUrls };
+module.exports = { scrapeFeeds, initScheduler, publishNextQueuedPost, scrapeDetailedUrls, scrapeOfflineVacancies };

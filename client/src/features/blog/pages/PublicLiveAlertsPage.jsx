@@ -1462,9 +1462,13 @@ export default function PublicLiveAlertsPage() {
   function loadAlerts(query = '') {
     setLoading(true);
     setError('');
-    const url = query.trim() 
-      ? `/api/public/live-alerts?status=all&search=${encodeURIComponent(query.trim())}&limit=120`
-      : '/api/public/live-alerts?status=all&limit=120';
+    const qTrim = query.trim();
+    let url = '/api/public/live-alerts?status=all&limit=120';
+    if (qTrim.toLowerCase() === 'offline') {
+      url = '/api/public/live-alerts?status=all&category=offline&limit=120';
+    } else if (qTrim) {
+      url = `/api/public/live-alerts?status=all&search=${encodeURIComponent(qTrim)}&limit=120`;
+    }
 
     request(url)
       .then(res => {

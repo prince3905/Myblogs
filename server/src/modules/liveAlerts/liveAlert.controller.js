@@ -207,7 +207,20 @@ async function getAlerts(req, res) {
     ];
 
     const searchQuery = (search || q || '').trim();
-    if (searchQuery) {
+    if (searchQuery.toLowerCase() === 'offline') {
+      const offlineCondition = {
+        $or: [
+          { isOffline: true },
+          { category: { $regex: /offline/i } },
+          { title: { $regex: /offline|apply offline|डाक द्वारा/i } }
+        ]
+      };
+      if (filter.$and) {
+        filter.$and.push(offlineCondition);
+      } else {
+        filter.$and = [offlineCondition];
+      }
+    } else if (searchQuery) {
       const synonymMap = {
         'rrb': ['railway', 'rrc', 'rail'],
         'railway': ['rrb', 'rrc', 'rail'],
