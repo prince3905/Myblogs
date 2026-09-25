@@ -62,10 +62,8 @@ export default function Layout({ children }) {
 
     const events = ['touchstart', 'scroll', 'click'];
     events.forEach(evt => window.addEventListener(evt, loadPush, { once: true, passive: true }));
-    const timer = setTimeout(loadPush, 8000);
 
     function cleanup() {
-      clearTimeout(timer);
       events.forEach(evt => window.removeEventListener(evt, loadPush));
     }
 

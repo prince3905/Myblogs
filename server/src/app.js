@@ -348,8 +348,16 @@ app.get('/', async (req, res, next) => {
   }
 });
 
-// Serve static files
-app.use(express.static(publicPath));
+// Serve static files with 1-year immutable caching for hashed assets (Vite /assets/*)
+app.use(express.static(publicPath, {
+  maxAge: '1y',
+  immutable: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html') || filePath.endsWith('.json')) {
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    }
+  }
+}));
 
 // In-Memory SSR HTML Cache for Individual Blog Posts (Guarantees <5ms crawler response and prevents timeouts)
 const postSsrCache = new Map();

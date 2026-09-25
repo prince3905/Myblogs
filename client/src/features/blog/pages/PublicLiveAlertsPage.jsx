@@ -1672,7 +1672,7 @@ export default function PublicLiveAlertsPage() {
         </Box>
 
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress size={44} /></Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: { xs: '650px', md: '800px' }, py: 8 }}><CircularProgress size={44} /></Box>
         ) : error ? (
           <Alert severity="error" sx={{ borderRadius: 3 }}>{error}</Alert>
         ) : (

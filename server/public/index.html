@@ -113,17 +113,49 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;700;800&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;700;800&display=swap"></noscript>
     <meta name="google-adsense-account" content="ca-pub-7044184444698366">
-    <!-- Global Full-Website Headless Translation Engine -->
+    <!-- Global Full-Website Headless Translation Engine: Interaction & On-Demand Loaded -->
     <script type="text/javascript">
-      function googleTranslateElementInit() {
-        new google.translate.TranslateElement({
-          pageLanguage: 'auto',
-          autoDisplay: false
-        }, 'google_translate_element');
-      }
+      window.googleTranslateElementInit = function() {
+        try {
+          if (window.google && window.google.translate) {
+            new window.google.translate.TranslateElement({
+              pageLanguage: 'auto',
+              autoDisplay: false
+            }, 'google_translate_element');
+          }
+        } catch (e) {}
+      };
+
+      window.ensureGoogleTranslateLoaded = function() {
+        if (window._gtLoaded) return;
+        window._gtLoaded = true;
+        var s = document.createElement('script');
+        s.type = 'text/javascript';
+        s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        s.async = true;
+        document.head.appendChild(s);
+      };
+
+      // Load immediately ONLY if user has an existing translation cookie,
+      // otherwise defer to user touch/scroll/click to guarantee 90+ PageSpeed
+      try {
+        if (document.cookie && document.cookie.indexOf('googtrans=') !== -1 && document.cookie.indexOf('googtrans=/auto/en') === -1) {
+          window.ensureGoogleTranslateLoaded();
+        } else {
+          var gtEvents = ['touchstart', 'wheel', 'scroll', 'click'];
+          var loadGtOnce = function() {
+            window.ensureGoogleTranslateLoaded();
+            gtEvents.forEach(function(evt) {
+              window.removeEventListener(evt, loadGtOnce);
+            });
+          };
+          gtEvents.forEach(function(evt) {
+            window.addEventListener(evt, loadGtOnce, { once: true, passive: true });
+          });
+        }
+      } catch (e) {}
     </script>
-    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" defer></script>
-    <script type="module" crossorigin src="/assets/index-CuX4d08V.js"></script>
+    <script type="module" crossorigin src="/assets/index-BSjYCsXO.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-BelXacNR.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" crossorigin href="/assets/index-BelXacNR.css"></noscript>
   </head>
   <body>

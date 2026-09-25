@@ -43,7 +43,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@mui/material', '@emotion/react', '@emotion/styled']
+          ui: ['@mui/material', '@emotion/react', '@emotion/styled'],
+          icons: ['@mui/icons-material']
         }
       }
     }

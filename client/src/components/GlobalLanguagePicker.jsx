@@ -484,6 +484,9 @@ import { protectElement } from '../shared/lib/translationProtection';
 export function applyFullWebsiteTranslation(langCode) {
   try {
     if (!langCode) return;
+    if (typeof window !== 'undefined' && typeof window.ensureGoogleTranslateLoaded === 'function') {
+      window.ensureGoogleTranslateLoaded();
+    }
     // Protect sensitive brands and acronyms before translation runs
     protectElement(document.body);
     const isOriginal = langCode === 'original';
@@ -724,7 +727,12 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
     <>
       {/* Navbar Trigger Button */}
       <Button
-        onClick={() => setDialogOpen(true)}
+        onClick={() => {
+          if (typeof window !== 'undefined' && typeof window.ensureGoogleTranslateLoaded === 'function') {
+            window.ensureGoogleTranslateLoaded();
+          }
+          setDialogOpen(true);
+        }}
         size="small"
         startIcon={<TranslateIcon sx={{ fontSize: 16, color: '#38BDF8' }} />}
         sx={{

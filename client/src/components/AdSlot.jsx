@@ -32,9 +32,14 @@ function fetchAdsData() {
   return pendingAdsPromise;
 }
 
+// Eager preload ads configuration to prevent layout shift
+if (typeof window !== 'undefined') {
+  fetchAdsData();
+}
+
 export default function AdSlot({ format = 'sidebar', style }) {
-  const [code, setCode] = useState(null);
-  const [loaded, setLoaded] = useState(false);
+  const [code, setCode] = useState(() => (cachedAdsData ? (cachedAdsData[format] || '') : null));
+  const [loaded, setLoaded] = useState(() => Boolean(cachedAdsData));
   const ref = useRef(null);
 
   const minH = defaultMinHeights[format] || 250;
