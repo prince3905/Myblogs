@@ -51,8 +51,25 @@ function sanitizeAlertResponse(alert) {
   if (obj.parsedPostDate && new Date(obj.parsedPostDate) > now) {
     obj.parsedPostDate = now;
   }
-  if (!obj.parsedPostDate) {
-    obj.parsedPostDate = now;
+  // Auto-detect offline flag if not explicitly set
+  if (obj.isOffline === undefined || obj.isOffline === false) {
+    const title = (obj.title || '').toLowerCase();
+    const cat = (obj.category || '').toLowerCase();
+    const details = (obj.detailsText || '').toLowerCase();
+    const isOnline = title.includes('online form') || title.includes('apply online');
+    if (!isOnline) {
+      obj.isOffline = Boolean(
+        title.includes('offline form') ||
+        title.includes('offline vacancy') ||
+        title.includes('offline recruitment') ||
+        title.includes('apply offline') ||
+        title.includes('डाक द्वारा') ||
+        cat.includes('offline') ||
+        details.includes('apply offline') ||
+        details.includes('offline application form') ||
+        details.includes('send application form to')
+      );
+    }
   }
 
   // Never expose sourceUrl to public client (keep for admin reference)
@@ -156,6 +173,12 @@ async function getAlerts(req, res) {
           { category: { $in: ['Admission', 'Admissions'] } },
           { title: { $regex: /admission|counselling|counseling|entrance\s*exam/i } }
         ];
+      } else if (catLower === 'offline' || catLower === 'offline form' || catLower === 'offline-form') {
+        filter.$or = [
+          { isOffline: true },
+          { category: { $regex: /offline/i } },
+          { title: { $regex: /offline|apply offline|डाक द्वारा/i } }
+        ];
       } else {
         filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
       }
@@ -240,7 +263,7 @@ async function getAlerts(req, res) {
 
     console.log(`[LiveAlert API] getAlerts called: category="${category || ''}", state="${state || ''}", searchQuery="${searchQuery}", pageNum=${pageNum}, limit=${queryLimit}`);
 
-    const ALERT_LIST_PROJECTION = '_id title category state boardName lastDate isHighlight parsedPostDate createdAt officialUrl officialApplyUrl officialPdfUrl allLinks status';
+    const ALERT_LIST_PROJECTION = '_id title category state boardName lastDate isHighlight parsedPostDate createdAt officialUrl officialApplyUrl officialPdfUrl allLinks status isOffline offlineAddress';
     let alerts = [];
 
     // If explicit category or state or small query: return pure latest matching alerts

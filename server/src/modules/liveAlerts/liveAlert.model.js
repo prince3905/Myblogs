@@ -16,6 +16,8 @@ const liveAlertSchema = new mongoose.Schema(
     category: { type: String, default: 'Latest Job', trim: true },
     detailsText: { type: String, default: '', trim: true },
     isHighlight: { type: Boolean, default: false },
+    isOffline: { type: Boolean, default: false },
+    offlineAddress: { type: String, default: '', trim: true },
     status: { type: String, enum: ['active', 'drafted', 'published', 'expired'], default: 'active' }
   },
   { timestamps: true }

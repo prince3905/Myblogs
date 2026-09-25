@@ -1046,6 +1046,13 @@ async function scrapeStateHubFeeds() {
             `Direct Apply Link: ${officialApplyUrl}`
           ].join('\n');
 
+          const isOfflineJob = Boolean(
+            cleanTitle.toLowerCase().includes('offline') ||
+            postName.toLowerCase().includes('offline') ||
+            qualification.toLowerCase().includes('offline') ||
+            (!extracted.applyUrl && extracted.pdfUrl)
+          );
+
           await LiveAlert.create({
             title: cleanTitle,
             boardName,
@@ -1059,6 +1066,7 @@ async function scrapeStateHubFeeds() {
             state: target.state,
             category: 'Latest Job',
             detailsText,
+            isOffline: isOfflineJob,
             status: 'active'
           });
 

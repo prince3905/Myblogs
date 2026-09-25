@@ -15,7 +15,8 @@ import {
   LocationOn as LocationIcon, Work as WorkIcon,
   FilterList as FilterIcon, RestartAlt as ResetIcon,
   Close as CloseIcon, Search as SearchIcon,
-  WhatsApp as WhatsAppIcon, Send as TelegramIcon
+  WhatsApp as WhatsAppIcon, Send as TelegramIcon,
+  ContentCopy as ContentCopyIcon
 } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import Seo from '../components/Seo';
@@ -710,10 +711,12 @@ function renderBlogContent(alert, onActionClick) {
 
       {/* 🏛️ Direct Official Action Buttons Section inside Scrollable Content */}
       {(() => {
+        const isOffline = isOfflineAlert(alert);
+        const postalAddress = extractPostalAddress(alert);
         const actionLinks = getDynamicActions(alert);
-        const pdfLink = actionLinks.find(l => l.label.includes('PDF'))?.url;
-        const applyLink = actionLinks.find(l => l.label.includes('Apply') || l.label.includes('Check') || l.label.includes('Download'))?.url;
-        const officialWeb = actionLinks.find(l => l.label.includes('Website'))?.url;
+        const pdfLink = actionLinks.find(l => l.label.includes('PDF'))?.url || alert.officialPdfUrl;
+        const applyLink = actionLinks.find(l => l.label.includes('Apply') || l.label.includes('Check') || l.label.includes('Download'))?.url || alert.officialApplyUrl;
+        const officialWeb = actionLinks.find(l => l.label.includes('Website'))?.url || alert.officialUrl;
         const applyLabel = actionLinks.find(l => l.label.includes('Apply') || l.label.includes('Check') || l.label.includes('Download'))?.label || 'Apply Online Now';
         const pdfLabel = actionLinks.find(l => l.label.includes('PDF'))?.label || 'Download Official Notification (PDF)';
 
@@ -756,31 +759,114 @@ function renderBlogContent(alert, onActionClick) {
             </Typography>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              {applyLink && (
-                <Button
-                  fullWidth
-                  variant="contained"
-                  onClick={(e) => { e.preventDefault(); handleAction(applyLink); }}
-                  startIcon={<ApplyIcon sx={{ fontSize: '1.3rem !important' }} />}
-                  sx={{
-                    bgcolor: '#16A34A',
-                    color: '#FFFFFF',
-                    fontWeight: 850,
-                    fontSize: { xs: '0.95rem', sm: '1rem' },
-                    py: 1.4,
-                    px: 2.5,
+              {isOffline ? (
+                /* 📬 Offline Application Form & Dispatch Box */
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={(e) => { e.preventDefault(); handleAction(pdfLink || applyLink); }}
+                    startIcon={<PdfIcon sx={{ fontSize: '1.3rem !important', color: '#FFFFFF !important' }} />}
+                    sx={{
+                      bgcolor: '#D97706',
+                      color: '#FFFFFF',
+                      fontWeight: 850,
+                      fontSize: { xs: '0.95rem', sm: '1.02rem' },
+                      py: 1.4,
+                      px: 2.5,
+                      borderRadius: 2.5,
+                      textTransform: 'none',
+                      boxShadow: '0 4px 18px rgba(217, 119, 6, 0.45)',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: 1,
+                      '&:hover': { bgcolor: '#B45309', transform: 'translateY(-1px)' }
+                    }}
+                  >
+                    📥 डाउनलोड ऑफलाइन आवेदन फॉर्म (Official PDF) ➔
+                  </Button>
+
+                  <Box sx={{
+                    p: 2,
+                    bgcolor: 'rgba(217, 119, 6, 0.1)',
+                    border: '1.5px solid rgba(245, 158, 11, 0.35)',
                     borderRadius: 2.5,
-                    textTransform: 'none',
-                    boxShadow: '0 4px 18px rgba(22, 163, 74, 0.45)',
                     display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: 1,
-                    '&:hover': { bgcolor: '#15803D', transform: 'translateY(-1px)', boxShadow: '0 6px 22px rgba(22, 163, 74, 0.6)' }
-                  }}
-                >
-                  {applyLabel} ➔
-                </Button>
+                    flexDirection: 'column',
+                    gap: 1.2
+                  }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                      <Typography sx={{ fontWeight: 850, color: '#FBBF24', fontSize: '0.88rem' }}>
+                        📮 फॉर्म भेजने का डाक पता (Postal Address):
+                      </Typography>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => {
+                          if (navigator?.clipboard) {
+                            navigator.clipboard.writeText(postalAddress);
+                            alert('डाक पता कॉपी हो गया!');
+                          }
+                        }}
+                        startIcon={<ContentCopyIcon sx={{ fontSize: '13px !important' }} />}
+                        sx={{ color: '#FDE68A', borderColor: 'rgba(253, 230, 138, 0.4)', textTransform: 'none', fontSize: '0.72rem', fontWeight: 800, py: 0.3, px: 1.2, borderRadius: '6px' }}
+                      >
+                        📋 पता कॉपी करें
+                      </Button>
+                    </Box>
+
+                    <Typography sx={{ color: '#FFFFFF', fontWeight: 750, fontSize: '0.84rem', whiteSpace: 'pre-line', bgcolor: 'rgba(0,0,0,0.35)', p: 1.5, borderRadius: 1.5, border: '1px solid rgba(255,255,255,0.08)', lineHeight: 1.5 }}>
+                      {postalAddress}
+                    </Typography>
+
+                    <Typography sx={{ color: '#E2E8F0', fontSize: '0.75rem', lineHeight: 1.4 }}>
+                      ✉️ <strong>लिफाफे पर लिखें:</strong> APPLICATION FOR THE POST OF &ldquo;{alert.title.split('Recruitment')[0].trim()}&rdquo; — CATEGORY: [आपकी श्रेणी]
+                    </Typography>
+
+                    <Box sx={{ pt: 1, borderTop: '1px dashed rgba(255,255,255,0.15)', fontSize: '0.74rem', color: '#CBD5E1', lineHeight: 1.5 }}>
+                      📎 <strong>संलग्न दस्तावेज (Self-Attested Photocopies):</strong><br />
+                      • 10वीं की अंकतालिका (जन्मतिथि प्रमाण हेतु)<br />
+                      • आवश्यक शैक्षणिक व तकनीकी योग्यता प्रमाण पत्र<br />
+                      • जाति प्रमाण पत्र एवं मूल निवास प्रमाण पत्र (यदि लागू हो)<br />
+                      • आधार कार्ड या पहचान पत्र की स्व-हस्ताक्षरित प्रति<br />
+                      • 2 पासपोर्ट साइज नवीनतम फोटो (पीछे नाम लिखकर)<br />
+                      • स्वयं का पता लिखा लिफाफा (उचित डाक टिकट सहित)
+                    </Box>
+
+                    <Typography sx={{ color: '#FCA5A5', fontWeight: 750, fontSize: '0.72rem' }}>
+                      ⚠️ <strong>महत्वपूर्ण निर्देश:</strong> आवेदन केवल स्पीड पोस्ट (Speed Post) या रजिस्टर्ड डाक से भेजें ताकि अंतिम तिथि से पहले विभाग को प्राप्त हो सके।
+                    </Typography>
+                  </Box>
+                </Box>
+              ) : (
+                /* Standard Online Application Button */
+                applyLink && (
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={(e) => { e.preventDefault(); handleAction(applyLink); }}
+                    startIcon={<ApplyIcon sx={{ fontSize: '1.3rem !important' }} />}
+                    sx={{
+                      bgcolor: '#16A34A',
+                      color: '#FFFFFF',
+                      fontWeight: 850,
+                      fontSize: { xs: '0.95rem', sm: '1rem' },
+                      py: 1.4,
+                      px: 2.5,
+                      borderRadius: 2.5,
+                      textTransform: 'none',
+                      boxShadow: '0 4px 18px rgba(22, 163, 74, 0.45)',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: 1,
+                      '&:hover': { bgcolor: '#15803D', transform: 'translateY(-1px)', boxShadow: '0 6px 22px rgba(22, 163, 74, 0.6)' }
+                    }}
+                  >
+                    {applyLabel} ➔
+                  </Button>
+                )
               )}
 
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: pdfLink && officialWeb ? '1fr 1fr' : '1fr' }, gap: 1.2 }}>
@@ -885,6 +971,7 @@ function renderBlogContent(alert, onActionClick) {
 function renderAlertListItem(alert, setSelectedAlert, themeColor) {
   const isNew = new Date() - new Date(alert.createdAt) < 3 * 24 * 60 * 60 * 1000;
   const hasValidDate = alert.lastDate && alert.lastDate !== 'N/A' && alert.lastDate !== 'Check Detail Page';
+  const isOffline = isOfflineAlert(alert);
 
   return (
     <Box
@@ -973,6 +1060,22 @@ function renderAlertListItem(alert, setSelectedAlert, themeColor) {
               }} 
             />
           )}
+          {isOffline && (
+            <Chip 
+              label="📬 OFFLINE" 
+              size="small" 
+              sx={{ 
+                height: 16, 
+                fontSize: '0.52rem', 
+                fontWeight: 850, 
+                bgcolor: '#FEF3C7', 
+                color: '#B45309',
+                border: '1px solid #FCD34D',
+                borderRadius: '4px',
+                '& .MuiChip-label': { px: 0.5 }
+              }} 
+            />
+          )}
         </Box>
       </Box>
 
@@ -1037,6 +1140,7 @@ function renderAlertListItem(alert, setSelectedAlert, themeColor) {
 
 const QUICK_EXAM_FILTERS = [
   { label: '🌟 All Updates', query: '', color: '#4F46E5', icon: '⚡' },
+  { label: '📬 ऑफलाइन फॉर्म (Offline)', query: 'offline', color: '#B45309', icon: '📬' },
   { label: '🚆 Railway / RRB', query: 'rrb', color: '#0284C7', icon: '🚆' },
   { label: '📋 SSC Exams', query: 'ssc', color: '#D97706', icon: '📋' },
   { label: '🏦 Bank / IBPS / SBI', query: 'bank', color: '#059669', icon: '🏦' },
@@ -1195,6 +1299,47 @@ function isAlertMatchingState(alert, stateQuery) {
     alertTitle.includes(alias) || 
     alertBoard.includes(alias)
   );
+}
+
+export function isOfflineAlert(alert) {
+  if (!alert) return false;
+  if (alert.isOffline) return true;
+  const title = (alert.title || '').toLowerCase();
+  const cat = (alert.category || '').toLowerCase();
+  const details = (alert.detailsText || '').toLowerCase();
+
+  // If title explicitly states online form or apply online, it is NOT offline
+  if (title.includes('online form') || title.includes('apply online')) return false;
+
+  return Boolean(
+    title.includes('offline form') ||
+    title.includes('offline vacancy') ||
+    title.includes('offline recruitment') ||
+    title.includes('apply offline') ||
+    title.includes('डाक द्वारा') ||
+    cat.includes('offline') ||
+    details.includes('apply offline') ||
+    details.includes('offline application form') ||
+    details.includes('send application form to') ||
+    (details.includes('by speed post') && !details.includes('online application'))
+  );
+}
+
+export function extractPostalAddress(alert) {
+  if (!alert) return '';
+  if (alert.offlineAddress && alert.offlineAddress.trim()) return alert.offlineAddress.trim();
+
+  // Try extracting address from detailsText
+  if (alert.detailsText) {
+    const addressMatch = alert.detailsText.match(/(?:send\s+application\s+(?:to|at)|address\s*:?|डाक\s*का\s*पता\s*:?)\s*([^\n\r]+(?:[\n\r]+[^\n\r]+){1,3})/i);
+    if (addressMatch && addressMatch[1] && addressMatch[1].length > 15) {
+      return addressMatch[1].trim();
+    }
+  }
+
+  const board = alert.boardName || 'Official Recruitment Authority';
+  const state = alert.state && alert.state !== 'Central/All India' ? alert.state : 'Headquarters';
+  return `To,\nThe Office of ${board},\n${state}, India\n(Refer Official Notification for Pin Code & Room No.)`;
 }
 
 export default function PublicLiveAlertsPage() {
@@ -1387,11 +1532,15 @@ export default function PublicLiveAlertsPage() {
   const filteredAlerts = useMemo(() => {
     return alerts.filter(alert => {
       const q = searchQuery.toLowerCase().trim();
-      const titleMatch = !q ||
-                         alert.title.toLowerCase().includes(q) ||
-                         (alert.boardName || '').toLowerCase().includes(q);
+      let queryMatch = !q;
+      if (q === 'offline') {
+        queryMatch = isOfflineAlert(alert);
+      } else if (q) {
+        queryMatch = alert.title.toLowerCase().includes(q) ||
+                     (alert.boardName || '').toLowerCase().includes(q);
+      }
       const stateMatch = isAlertMatchingState(alert, selectedState);
-      return titleMatch && stateMatch;
+      return queryMatch && stateMatch;
     });
   }, [alerts, searchQuery, selectedState]);
 

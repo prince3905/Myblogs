@@ -17,14 +17,18 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import PublicIcon from '@mui/icons-material/Public';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
 import Layout from '../components/Layout';
 import PostCard from '../components/PostCard';
 import Seo from '../components/Seo';
 import AdSlot from '../../../components/AdSlot';
 import { request } from '../../../shared/lib/api';
+import { isOfflineAlert, extractPostalAddress } from './PublicLiveAlertsPage';
 
 const TRENDING_SEARCH_PILLS = [
   { label: '🔥 Latest Sarkari Jobs', q: 'recruitment' },
+  { label: '📬 Offline Forms', q: 'offline' },
   { label: '🚆 Railway RRB', q: 'railway' },
   { label: '⚡ SSC CGL / CHSL', q: 'ssc' },
   { label: '🛡️ Police & Defence', q: 'police' },
@@ -55,6 +59,15 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedAlert, setSelectedAlert] = useState(null);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+
+  const handleCopyAddress = (addr) => {
+    if (!addr) return;
+    navigator.clipboard.writeText(addr).then(() => {
+      setCopiedAddress(true);
+      setTimeout(() => setCopiedAddress(false), 3000);
+    }).catch(() => {});
+  };
 
   // Sync query input when URL search params change externally
   useEffect(() => {
@@ -480,18 +493,34 @@ export default function SearchPage() {
                               >
                                 {alert.boardName || 'Govt Department'}
                               </Typography>
-                              <Chip
-                                label={alert.category || 'Latest Job'}
-                                size="small"
-                                sx={{
-                                  bgcolor: catStyle.bg,
-                                  color: catStyle.text,
-                                  border: `1px solid ${catStyle.border}`,
-                                  fontWeight: 800,
-                                  fontSize: '0.64rem',
-                                  height: 20
-                                }}
-                              />
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
+                                {isOfflineAlert(alert) && (
+                                  <Chip
+                                    label="📬 OFFLINE"
+                                    size="small"
+                                    sx={{
+                                      bgcolor: '#FEF3C7',
+                                      color: '#B45309',
+                                      border: '1px solid #FCD34D',
+                                      fontWeight: 850,
+                                      fontSize: '0.6rem',
+                                      height: 20
+                                    }}
+                                  />
+                                )}
+                                <Chip
+                                  label={alert.category || 'Latest Job'}
+                                  size="small"
+                                  sx={{
+                                    bgcolor: catStyle.bg,
+                                    color: catStyle.text,
+                                    border: `1px solid ${catStyle.border}`,
+                                    fontWeight: 800,
+                                    fontSize: '0.64rem',
+                                    height: 20
+                                  }}
+                                />
+                              </Box>
                             </Box>
 
                             {/* Card Middle: Title */}
@@ -736,18 +765,34 @@ export default function SearchPage() {
                         >
                           {alert.boardName || 'Govt Department'}
                         </Typography>
-                        <Chip
-                          label={alert.category || 'Latest Job'}
-                          size="small"
-                          sx={{
-                            bgcolor: catStyle.bg,
-                            color: catStyle.text,
-                            border: `1px solid ${catStyle.border}`,
-                            fontWeight: 800,
-                            fontSize: '0.6rem',
-                            height: 18
-                          }}
-                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          {isOfflineAlert(alert) && (
+                            <Chip
+                              label="📬 OFFLINE"
+                              size="small"
+                              sx={{
+                                bgcolor: '#FEF3C7',
+                                color: '#B45309',
+                                border: '1px solid #FCD34D',
+                                fontWeight: 850,
+                                fontSize: '0.55rem',
+                                height: 18
+                              }}
+                            />
+                          )}
+                          <Chip
+                            label={alert.category || 'Latest Job'}
+                            size="small"
+                            sx={{
+                              bgcolor: catStyle.bg,
+                              color: catStyle.text,
+                              border: `1px solid ${catStyle.border}`,
+                              fontWeight: 800,
+                              fontSize: '0.6rem',
+                              height: 18
+                            }}
+                          />
+                        </Box>
                       </Box>
 
                       <Typography
@@ -921,55 +966,144 @@ export default function SearchPage() {
               </Box>
 
               {/* Verified Action Buttons */}
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 3 }}>
-                {(selectedAlert.officialApplyUrl || selectedAlert.officialUrl) && (
-                  <Button
-                    variant="contained"
-                    component="a"
-                    href={selectedAlert.officialApplyUrl || selectedAlert.officialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    startIcon={<LaunchIcon />}
-                    sx={{
-                      flex: 1,
-                      minWidth: 200,
-                      background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                      color: '#FFFFFF',
-                      fontWeight: 850,
-                      textTransform: 'none',
-                      py: 1.3,
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 16px rgba(37, 99, 235, 0.4)',
-                      '&:hover': { background: 'linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%)' }
-                    }}
-                  >
-                    Apply on Official Portal (Direct .gov Link) ↗
-                  </Button>
-                )}
+              {isOfflineAlert(selectedAlert) ? (
+                /* Dedicated Zero-Fluff Offline Form Instructions Box */
+                <Box sx={{ mb: 3 }}>
+                  {(selectedAlert.officialPdfUrl || selectedAlert.officialApplyUrl || selectedAlert.officialUrl) && (
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      component="a"
+                      href={selectedAlert.officialPdfUrl || selectedAlert.officialApplyUrl || selectedAlert.officialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      startIcon={<PictureAsPdfIcon />}
+                      sx={{
+                        background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+                        color: '#FFFFFF',
+                        fontWeight: 850,
+                        fontSize: '0.95rem',
+                        py: 1.4,
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        boxShadow: '0 4px 18px rgba(217, 119, 6, 0.4)',
+                        mb: 2,
+                        '&:hover': { background: 'linear-gradient(135deg, #B45309 0%, #92400E 100%)' }
+                      }}
+                    >
+                      📥 डाउनलोड ऑफलाइन आवेदन फॉर्म (Official PDF) ➔
+                    </Button>
+                  )}
 
-                {selectedAlert.officialPdfUrl && (
-                  <Button
-                    variant="outlined"
-                    component="a"
-                    href={selectedAlert.officialPdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    startIcon={<PictureAsPdfIcon sx={{ color: '#EF4444' }} />}
-                    sx={{
-                      color: '#F8FAFC',
-                      borderColor: 'rgba(255, 255, 255, 0.2)',
-                      fontWeight: 750,
-                      textTransform: 'none',
-                      py: 1.3,
-                      px: 2.5,
-                      borderRadius: '12px',
-                      '&:hover': { borderColor: '#EF4444', bgcolor: 'rgba(239, 68, 68, 0.1)' }
-                    }}
-                  >
-                    Official PDF Gazette ⬇
-                  </Button>
-                )}
-              </Box>
+                  <Box sx={{
+                    p: 2,
+                    borderRadius: '12px',
+                    bgcolor: 'rgba(217, 119, 6, 0.08)',
+                    border: '1.5px solid rgba(245, 158, 11, 0.4)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1.5
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                      <Box>
+                        <Typography sx={{ color: '#FCD34D', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                          📮 <strong>आवेदन भेजने का आधिकारिक डाक पता (Postal Address):</strong>
+                        </Typography>
+                        <Typography sx={{ color: '#F8FAFC', fontWeight: 700, fontSize: '0.84rem', mt: 0.5, whiteSpace: 'pre-line' }}>
+                          {extractPostalAddress(selectedAlert)}
+                        </Typography>
+                      </Box>
+                      <Button
+                        size="small"
+                        onClick={() => handleCopyAddress(extractPostalAddress(selectedAlert))}
+                        startIcon={copiedAddress ? <CheckIcon sx={{ color: '#4ADE80' }} /> : <ContentCopyIcon />}
+                        sx={{
+                          color: copiedAddress ? '#4ADE80' : '#FCD34D',
+                          borderColor: copiedAddress ? '#4ADE80' : 'rgba(252, 211, 77, 0.5)',
+                          textTransform: 'none',
+                          fontWeight: 750,
+                          fontSize: '0.74rem',
+                          flexShrink: 0,
+                          border: '1px solid',
+                          borderRadius: '8px',
+                          px: 1.2
+                        }}
+                      >
+                        {copiedAddress ? 'कॉपी हो गया ✓' : 'पता कॉपी करें'}
+                      </Button>
+                    </Box>
+
+                    <Typography sx={{ color: '#FDE68A', fontWeight: 750, fontSize: '0.74rem', bgcolor: 'rgba(0,0,0,0.3)', p: 1, borderRadius: '8px', border: '1px dashed rgba(245, 158, 11, 0.3)' }}>
+                      ✉️ <strong>लिफाफे पर लिखें:</strong> APPLICATION FOR THE POST OF &ldquo;{selectedAlert.title.split('Recruitment')[0].trim()}&rdquo; — CATEGORY: [आपकी श्रेणी]
+                    </Typography>
+
+                    <Box sx={{ pt: 1, borderTop: '1px dashed rgba(255,255,255,0.15)', fontSize: '0.74rem', color: '#CBD5E1', lineHeight: 1.5 }}>
+                      📎 <strong>संलग्न दस्तावेज (Self-Attested Photocopies):</strong><br />
+                      • 10वीं की अंकतालिका (जन्मतिथि प्रमाण हेतु)<br />
+                      • आवश्यक शैक्षणिक व तकनीकी योग्यता प्रमाण पत्र<br />
+                      • जाति प्रमाण पत्र एवं मूल निवास प्रमाण पत्र (यदि लागू हो)<br />
+                      • आधार कार्ड या पहचान पत्र की स्व-हस्ताक्षरित प्रति<br />
+                      • 2 पासपोर्ट साइज नवीनतम फोटो (पीछे नाम लिखकर)<br />
+                      • स्वयं का पता लिखा लिफाफा (उचित डाक टिकट सहित)
+                    </Box>
+
+                    <Typography sx={{ color: '#FCA5A5', fontWeight: 750, fontSize: '0.72rem' }}>
+                      ⚠️ <strong>महत्वपूर्ण निर्देश:</strong> आवेदन केवल स्पीड पोस्ट (Speed Post) या रजिस्टर्ड डाक से भेजें ताकि अंतिम तिथि से पहले विभाग को प्राप्त हो सके।
+                    </Typography>
+                  </Box>
+                </Box>
+              ) : (
+                /* Standard Online Action Buttons (100% Untouched) */
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 3 }}>
+                  {(selectedAlert.officialApplyUrl || selectedAlert.officialUrl) && (
+                    <Button
+                      variant="contained"
+                      component="a"
+                      href={selectedAlert.officialApplyUrl || selectedAlert.officialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      startIcon={<LaunchIcon />}
+                      sx={{
+                        flex: 1,
+                        minWidth: 200,
+                        background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                        color: '#FFFFFF',
+                        fontWeight: 850,
+                        textTransform: 'none',
+                        py: 1.3,
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 16px rgba(37, 99, 235, 0.4)',
+                        '&:hover': { background: 'linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%)' }
+                      }}
+                    >
+                      Apply on Official Portal (Direct .gov Link) ↗
+                    </Button>
+                  )}
+
+                  {selectedAlert.officialPdfUrl && (
+                    <Button
+                      variant="outlined"
+                      component="a"
+                      href={selectedAlert.officialPdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      startIcon={<PictureAsPdfIcon sx={{ color: '#EF4444' }} />}
+                      sx={{
+                        color: '#F8FAFC',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        fontWeight: 750,
+                        textTransform: 'none',
+                        py: 1.3,
+                        px: 2.5,
+                        borderRadius: '12px',
+                        '&:hover': { borderColor: '#EF4444', bgcolor: 'rgba(239, 68, 68, 0.1)' }
+                      }}
+                    >
+                      Official PDF Gazette ⬇
+                    </Button>
+                  )}
+                </Box>
+              )}
 
               {/* Viral Student Community Sharing */}
               <Box sx={{ p: 2, borderRadius: '12px', bgcolor: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
