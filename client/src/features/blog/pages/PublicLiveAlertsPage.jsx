@@ -2,7 +2,7 @@ import { useEffect, useState, Fragment, useMemo, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Typography, Button, Table, TableBody, TableCell, TableContainer,
-  TableRow, Paper, Chip, Box, Alert, CircularProgress,
+  TableRow, Paper, Chip, Box, Alert, CircularProgress, LinearProgress,
   IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Collapse,
   Pagination, Link as MuiLink, Dialog, DialogContent, DialogTitle, DialogActions,
   Divider
@@ -622,9 +622,6 @@ function renderBlogContent(alert, onActionClick) {
         return null;
       })}
 
-      {/* Google AdSense High-Intent In-Modal Action Zone Ad */}
-      <AdSlot format="incontent" style={{ my: 3.5 }} />
-
       {/* Digital Home Student Tools & Fast Community Banner */}
       <Box sx={{ mt: 3, p: 2.5, bgcolor: 'rgba(15, 23, 42, 0.85)', borderRadius: 3, border: '1.5px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#FFFFFF', mb: 1.2, display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.9rem' }}>
@@ -1206,6 +1203,7 @@ export default function PublicLiveAlertsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const alertIdParam = routeAlertId || searchParams.get('alert');
   const openedAlertIdRef = useRef(null);
+  const alertCacheRef = useRef(new Map());
 
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1239,30 +1237,54 @@ export default function PublicLiveAlertsPage() {
       }
       return;
     }
-    
-    setSelectedAlertState(alert);
-    if (alert._id) {
-      openedAlertIdRef.current = alert._id;
+
+    const alertId = alert._id;
+
+    // Check if alert details are already cached in memory
+    if (alertId && alertCacheRef.current.has(alertId)) {
+      const cached = alertCacheRef.current.get(alertId);
+      setSelectedAlertState(cached);
+      openedAlertIdRef.current = alertId;
+      setDetailsLoading(false);
+      setErrorLoadingDetails('');
       if (window.history.pushState && !routeAlertId) {
-        window.history.pushState(null, '', `/india/sarkari-jobs/${alert._id}`);
+        window.history.pushState(null, '', `/india/sarkari-jobs/${alertId}`);
+      }
+      return;
+    }
+
+    // Set immediate alert state
+    setSelectedAlertState(alert);
+    if (alertId) {
+      openedAlertIdRef.current = alertId;
+      if (window.history.pushState && !routeAlertId) {
+        window.history.pushState(null, '', `/india/sarkari-jobs/${alertId}`);
       }
     }
-    
-    if (!alert.detailsText) {
-      setDetailsLoading(true);
+
+    if (alert.detailsText) {
+      if (alertId) alertCacheRef.current.set(alertId, alert);
+      setDetailsLoading(false);
       setErrorLoadingDetails('');
-      try {
-        const res = await request(`/api/public/live-alerts/${alert._id}`);
-        if (res.success && res.data) {
-          setSelectedAlertState(res.data);
-        } else {
-          setErrorLoadingDetails(res.message || 'Failed to fetch details from server');
-        }
-      } catch (err) {
-        setErrorLoadingDetails(err.message || 'Failed to connect to server');
-      } finally {
-        setDetailsLoading(false);
+      return;
+    }
+
+    // Fetch full details without wiping out the modal contents
+    setDetailsLoading(true);
+    setErrorLoadingDetails('');
+    try {
+      const res = await request(`/api/public/live-alerts/${alertId}`);
+      if (res.success && res.data) {
+        const fullAlert = { ...alert, ...res.data };
+        alertCacheRef.current.set(alertId, fullAlert);
+        setSelectedAlertState(fullAlert);
+      } else {
+        setErrorLoadingDetails(res.message || 'Failed to fetch details from server');
       }
+    } catch (err) {
+      setErrorLoadingDetails(err.message || 'Failed to connect to server');
+    } finally {
+      setDetailsLoading(false);
     }
   };
 
@@ -1343,9 +1365,15 @@ export default function PublicLiveAlertsPage() {
 
     openedAlertIdRef.current = alertIdParam;
 
+    if (alertCacheRef.current.has(alertIdParam)) {
+      setSelectedAlertState(alertCacheRef.current.get(alertIdParam));
+      return;
+    }
+
     request(`/api/public/live-alerts/${alertIdParam}`)
       .then(res => {
         if (res.success && res.data) {
+          alertCacheRef.current.set(alertIdParam, res.data);
           setSelectedAlertState(res.data);
         }
       })
@@ -2177,263 +2205,258 @@ export default function PublicLiveAlertsPage() {
       </Box>
 
       {/* Center Details Dialog Popup Modal */}
-      {selectedAlert && (
-        <Dialog
-          open={Boolean(selectedAlert)}
-          onClose={() => setSelectedAlert(null)}
-          maxWidth="md"
-          fullWidth
-          scroll="paper"
-          BackdropProps={{
-            sx: {
-              bgcolor: 'rgba(0, 0, 0, 0.85) !important',
-              backgroundColor: 'rgba(0, 0, 0, 0.85) !important',
-              backdropFilter: 'blur(10px)'
-            }
-          }}
-          PaperProps={{
-            sx: {
-              borderRadius: { xs: '16px', sm: '24px' },
-              p: 0,
-              bgcolor: '#070B18 !important',
-              backgroundColor: '#070B18 !important',
-              backgroundImage: 'linear-gradient(180deg, #0D1629 0%, #060A14 100%) !important',
-              color: '#FFFFFF !important',
-              border: '1px solid rgba(255, 255, 255, 0.14)',
-              borderTop: '6px solid #38BDF8',
-              boxShadow: '0 35px 90px rgba(0, 0, 0, 0.95)',
-              margin: { xs: '8px auto', sm: '20px auto' },
-              width: { xs: 'calc(100% - 16px)', sm: 'auto' },
-              height: { xs: 'calc(100dvh - 16px)', sm: 'auto' },
-              maxHeight: { xs: 'calc(100dvh - 16px)', sm: 'calc(100dvh - 40px)' },
-              display: 'flex',
-              flexDirection: 'column',
-              overflowY: 'auto !important',
-              overflowX: 'hidden',
-              WebkitOverflowScrolling: 'touch',
-              position: 'relative'
-            }
-          }}
-        >
-          <DialogTitle 
-            sx={{ 
-              m: 0, 
-              p: { xs: 1.5, sm: 2.2 }, 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              bgcolor: '#0D1629 !important',
-              backgroundColor: '#0D1629 !important',
-              position: 'sticky',
-              top: 0,
-              zIndex: 30,
-              flexShrink: 0
-            }}
-          >
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, pr: 2 }}>
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <Chip 
-                  label={selectedAlert.boardName || 'Official Board'} 
-                  size="small" 
-                  sx={{ fontWeight: 800, fontSize: '0.68rem', bgcolor: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '8px' }} 
-                />
-                <Chip 
-                  label={selectedAlert.state || 'All India'} 
-                  size="small" 
-                  sx={{ fontWeight: 700, fontSize: '0.68rem', bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#E2E8F0', borderRadius: '8px' }} 
-                />
-              </Box>
-              <Typography sx={{ fontWeight: 850, color: '#FFFFFF', mt: 0.5, lineHeight: 1.35, fontSize: { xs: '0.98rem', sm: '1.25rem' } }}>
-                {selectedAlert.title}
-              </Typography>
-            </Box>
-            <IconButton
-              aria-label="close"
-              onClick={() => setSelectedAlert(null)}
-              sx={{
-                color: '#94A3B8',
-                bgcolor: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                '&:hover': { color: '#EF4444', bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.4)' }
+      <Dialog
+        open={Boolean(selectedAlert)}
+        onClose={() => setSelectedAlert(null)}
+        maxWidth="md"
+        fullWidth
+        scroll="paper"
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: '16px', sm: '24px' },
+            p: 0,
+            bgcolor: '#070B18 !important',
+            backgroundColor: '#070B18 !important',
+            backgroundImage: 'linear-gradient(180deg, #0D1629 0%, #060A14 100%) !important',
+            color: '#FFFFFF !important',
+            border: '1px solid rgba(255, 255, 255, 0.14)',
+            borderTop: '6px solid #38BDF8',
+            boxShadow: '0 35px 90px rgba(0, 0, 0, 0.95)',
+            margin: { xs: '8px auto', sm: '20px auto' },
+            width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+            height: { xs: 'calc(100dvh - 16px)', sm: 'auto' },
+            maxHeight: { xs: 'calc(100dvh - 16px)', sm: 'calc(100dvh - 40px)' },
+            display: 'flex',
+            flexDirection: 'column',
+            overflowY: 'auto !important',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            position: 'relative'
+          }
+        }}
+      >
+        {selectedAlert && (
+          <>
+            <DialogTitle 
+              sx={{ 
+                m: 0, 
+                p: { xs: 1.5, sm: 2.2 }, 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                bgcolor: '#0D1629 !important',
+                backgroundColor: '#0D1629 !important',
+                position: 'sticky',
+                top: 0,
+                zIndex: 30,
+                flexShrink: 0
               }}
             >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-
-          <DialogContent
-            id="public-live-alert-modal-content"
-            sx={{
-              p: { xs: 1.8, sm: 3 },
-              bgcolor: '#080D1A !important',
-              backgroundColor: '#080D1A !important',
-              color: '#FFFFFF !important',
-              borderColor: 'rgba(255, 255, 255, 0.08)',
-              flex: '1 0 auto',
-              overflow: 'visible !important',
-              overflowY: 'visible !important',
-              overflowX: 'visible !important'
-            }}
-          >
-            {detailsLoading ? (
-              <Box sx={{ py: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                <CircularProgress size={40} sx={{ color: '#38BDF8' }} />
-                <Typography variant="body2" sx={{ color: '#94A3B8', fontWeight: 600 }}>
-                  Fetching official notification details factsheet...
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, pr: 2 }}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Chip 
+                    label={selectedAlert.boardName || 'Official Board'} 
+                    size="small" 
+                    sx={{ fontWeight: 800, fontSize: '0.68rem', bgcolor: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '8px' }} 
+                  />
+                  <Chip 
+                    label={selectedAlert.state || 'All India'} 
+                    size="small" 
+                    sx={{ fontWeight: 700, fontSize: '0.68rem', bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#E2E8F0', borderRadius: '8px' }} 
+                  />
+                </Box>
+                <Typography sx={{ fontWeight: 850, color: '#FFFFFF', mt: 0.5, lineHeight: 1.35, fontSize: { xs: '0.98rem', sm: '1.25rem' } }}>
+                  {selectedAlert.title}
                 </Typography>
               </Box>
-            ) : errorLoadingDetails ? (
-              <Alert severity="error" sx={{ borderRadius: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#F87171' }}>{errorLoadingDetails}</Alert>
-            ) : (
-              <>
-                {renderBlogContent(selectedAlert, (url) => {
-                  setPendingRedirectUrl(url);
-                  setRedirectModalOpen(true);
-                })}
-                <Box sx={{ height: { xs: 30, sm: 40 } }} />
-              </>
-            )}
-          </DialogContent>
+              <IconButton
+                aria-label="close"
+                onClick={() => setSelectedAlert(null)}
+                sx={{
+                  color: '#94A3B8',
+                  bgcolor: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  '&:hover': { color: '#EF4444', bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.4)' }
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
 
-          <DialogActions 
-            sx={{ 
-              p: { xs: 1.25, sm: 1.8 }, 
-              borderTop: '1px solid rgba(255, 255, 255, 0.12)',
-              bgcolor: '#0D1629 !important',
-              backgroundColor: '#0D1629 !important',
-              display: 'flex',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              gap: { xs: 0.8, sm: 1.2 },
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-              boxSizing: 'border-box',
-              flexShrink: 0,
-              position: 'sticky',
-              bottom: 0,
-              zIndex: 30,
-              boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.85)'
-            }}
-          >
-            {(() => {
-              const actionLinks = getDynamicActions(selectedAlert);
-              const pdfLink = actionLinks.find(l => l.label.includes('PDF'))?.url;
-              const applyLink = actionLinks.find(l => l.label.includes('Apply') || l.label.includes('Check') || l.label.includes('Download'))?.url;
-              const officialWeb = actionLinks.find(l => l.label.includes('Website'))?.url;
-              const applyLabel = actionLinks.find(l => l.label.includes('Apply') || l.label.includes('Check') || l.label.includes('Download'))?.label || 'Apply Online';
+            <DialogContent
+              id="public-live-alert-modal-content"
+              sx={{
+                p: { xs: 1.8, sm: 3 },
+                bgcolor: '#080D1A !important',
+                backgroundColor: '#080D1A !important',
+                color: '#FFFFFF !important',
+                borderColor: 'rgba(255, 255, 255, 0.08)',
+                flex: '1 0 auto',
+                overflow: 'visible !important',
+                overflowY: 'visible !important',
+                overflowX: 'visible !important'
+              }}
+            >
+              {detailsLoading && (
+                <Box sx={{ mb: 2 }}>
+                  <LinearProgress sx={{ bgcolor: 'rgba(56, 189, 248, 0.2)', '& .MuiLinearProgress-bar': { bgcolor: '#38BDF8' }, borderRadius: 1 }} />
+                  <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mt: 0.5, textAlign: 'center', fontSize: '0.72rem' }}>
+                    ⚡ Loading official circular details...
+                  </Typography>
+                </Box>
+              )}
+              {errorLoadingDetails && (
+                <Alert severity="warning" sx={{ mb: 2, borderRadius: 2, bgcolor: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24' }}>
+                  {errorLoadingDetails} — You can still access official portal and PDF links below.
+                </Alert>
+              )}
+              {renderBlogContent(selectedAlert, (url) => {
+                setPendingRedirectUrl(url);
+                setRedirectModalOpen(true);
+              })}
+              <Box sx={{ height: { xs: 30, sm: 40 } }} />
+            </DialogContent>
 
-              return (
-                <>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, flex: 1, alignItems: 'center' }}>
-                    {applyLink && (
-                      <Button
-                        variant="contained"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setPendingRedirectUrl(applyLink);
-                          setRedirectModalOpen(true);
-                        }}
-                        startIcon={<ApplyIcon />}
-                        sx={{ 
-                          textTransform: 'none', 
-                          borderRadius: 2, 
-                          fontWeight: 800, 
-                          fontSize: { xs: '0.82rem', sm: '0.88rem' },
-                          bgcolor: '#16A34A',
-                          px: { xs: 1.8, sm: 2.8 },
-                          py: 0.9,
-                          boxShadow: '0 2px 10px rgba(22, 163, 74, 0.4)',
-                          whiteSpace: 'nowrap',
-                          '&:hover': { bgcolor: '#15803D' }
-                        }}
-                      >
-                        {applyLabel}
-                      </Button>
-                    )}
+            <DialogActions 
+              sx={{ 
+                p: { xs: 1.25, sm: 1.8 }, 
+                borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+                bgcolor: '#0D1629 !important',
+                backgroundColor: '#0D1629 !important',
+                display: 'flex',
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                gap: { xs: 0.8, sm: 1.2 },
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                boxSizing: 'border-box',
+                flexShrink: 0,
+                position: 'sticky',
+                bottom: 0,
+                zIndex: 30,
+                boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.85)'
+              }}
+            >
+              {(() => {
+                const actionLinks = getDynamicActions(selectedAlert);
+                const pdfLink = actionLinks.find(l => l.label.includes('PDF'))?.url;
+                const applyLink = actionLinks.find(l => l.label.includes('Apply') || l.label.includes('Check') || l.label.includes('Download'))?.url;
+                const officialWeb = actionLinks.find(l => l.label.includes('Website'))?.url;
+                const applyLabel = actionLinks.find(l => l.label.includes('Apply') || l.label.includes('Check') || l.label.includes('Download'))?.label || 'Apply Online';
 
-                    {pdfLink && (
-                      <Button
-                        variant="outlined"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setPendingRedirectUrl(pdfLink);
-                          setRedirectModalOpen(true);
-                        }}
-                        startIcon={<PdfIcon />}
-                        sx={{ 
-                          textTransform: 'none', 
-                          borderRadius: 2, 
-                          fontWeight: 750, 
-                          fontSize: '0.8rem',
-                          color: '#F87171',
-                          borderColor: 'rgba(239, 68, 68, 0.4)',
-                          bgcolor: 'rgba(239, 68, 68, 0.1)',
-                          px: { xs: 1.2, sm: 2 },
-                          py: 0.9,
-                          whiteSpace: 'nowrap',
-                          '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: '#EF4444' }
-                        }}
-                      >
-                        Official PDF
-                      </Button>
-                    )}
+                return (
+                  <>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, flex: 1, alignItems: 'center' }}>
+                      {applyLink && (
+                        <Button
+                          variant="contained"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setPendingRedirectUrl(applyLink);
+                            setRedirectModalOpen(true);
+                          }}
+                          startIcon={<ApplyIcon />}
+                          sx={{ 
+                            textTransform: 'none', 
+                            borderRadius: 2, 
+                            fontWeight: 800, 
+                            fontSize: { xs: '0.82rem', sm: '0.88rem' },
+                            bgcolor: '#16A34A',
+                            px: { xs: 1.8, sm: 2.8 },
+                            py: 0.9,
+                            boxShadow: '0 2px 10px rgba(22, 163, 74, 0.4)',
+                            whiteSpace: 'nowrap',
+                            '&:hover': { bgcolor: '#15803D' }
+                          }}
+                        >
+                          {applyLabel}
+                        </Button>
+                      )}
 
-                    {officialWeb && (
-                      <Button
-                        variant="outlined"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setPendingRedirectUrl(officialWeb);
-                          setRedirectModalOpen(true);
-                        }}
-                        startIcon={<WebIcon />}
-                        sx={{ 
-                          textTransform: 'none', 
-                          borderRadius: 2, 
-                          fontWeight: 750, 
-                          fontSize: '0.8rem',
-                          color: '#38BDF8',
-                          borderColor: 'rgba(56, 189, 248, 0.4)',
-                          bgcolor: 'rgba(56, 189, 248, 0.1)',
-                          px: { xs: 1.2, sm: 2 },
-                          py: 0.9,
-                          whiteSpace: 'nowrap',
-                          '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.2)', borderColor: '#38BDF8' }
-                        }}
-                      >
-                        Official Portal
-                      </Button>
-                    )}
-                  </Box>
+                      {pdfLink && (
+                        <Button
+                          variant="outlined"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setPendingRedirectUrl(pdfLink);
+                            setRedirectModalOpen(true);
+                          }}
+                          startIcon={<PdfIcon />}
+                          sx={{ 
+                            textTransform: 'none', 
+                            borderRadius: 2, 
+                            fontWeight: 750, 
+                            fontSize: '0.8rem',
+                            color: '#F87171',
+                            borderColor: 'rgba(239, 68, 68, 0.4)',
+                            bgcolor: 'rgba(239, 68, 68, 0.1)',
+                            px: { xs: 1.2, sm: 2 },
+                            py: 0.9,
+                            whiteSpace: 'nowrap',
+                            '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: '#EF4444' }
+                          }}
+                        >
+                          Official PDF
+                        </Button>
+                      )}
 
-                  <Button 
-                    onClick={() => setSelectedAlert(null)} 
-                    variant="outlined" 
-                    sx={{ 
-                      borderRadius: 2, 
-                      textTransform: 'none', 
-                      fontWeight: 700,
-                      fontSize: '0.82rem',
-                      color: '#E2E8F0',
-                      borderColor: 'rgba(255, 255, 255, 0.2)',
-                      bgcolor: 'rgba(255, 255, 255, 0.05)',
-                      py: 0.9,
-                      px: { xs: 1.8, sm: 2.5 },
-                      ml: 'auto',
-                      whiteSpace: 'nowrap',
-                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)', borderColor: '#FFFFFF', color: '#FFFFFF' }
-                    }}
-                  >
-                    Close
-                  </Button>
-                </>
-              );
-            })()}
-          </DialogActions>
-        </Dialog>
-      )}
+                      {officialWeb && (
+                        <Button
+                          variant="outlined"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setPendingRedirectUrl(officialWeb);
+                            setRedirectModalOpen(true);
+                          }}
+                          startIcon={<WebIcon />}
+                          sx={{ 
+                            textTransform: 'none', 
+                            borderRadius: 2, 
+                            fontWeight: 750, 
+                            fontSize: '0.8rem',
+                            color: '#38BDF8',
+                            borderColor: 'rgba(56, 189, 248, 0.4)',
+                            bgcolor: 'rgba(56, 189, 248, 0.1)',
+                            px: { xs: 1.2, sm: 2 },
+                            py: 0.9,
+                            whiteSpace: 'nowrap',
+                            '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.2)', borderColor: '#38BDF8' }
+                          }}
+                        >
+                          Official Portal
+                        </Button>
+                      )}
+                    </Box>
+
+                    <Button 
+                      onClick={() => setSelectedAlert(null)} 
+                      variant="outlined" 
+                      sx={{ 
+                        borderRadius: 2, 
+                        textTransform: 'none', 
+                        fontWeight: 700, 
+                        fontSize: '0.82rem', 
+                        color: '#E2E8F0', 
+                        borderColor: 'rgba(255, 255, 255, 0.2)', 
+                        bgcolor: 'rgba(255, 255, 255, 0.05)', 
+                        py: 0.9, 
+                        px: { xs: 1.8, sm: 2.5 }, 
+                        ml: 'auto', 
+                        whiteSpace: 'nowrap', 
+                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)', borderColor: '#FFFFFF', color: '#FFFFFF' } 
+                      }}
+                    >
+                      Close
+                    </Button>
+                  </>
+                );
+              })()}
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
 
       {/* Interstitial Redirect Modal for Telegram */}
       <TelegramRedirectModal 

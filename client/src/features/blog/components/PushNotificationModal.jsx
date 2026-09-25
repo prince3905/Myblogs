@@ -121,8 +121,12 @@ export default function PushNotificationModal() {
   }, [open]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (window.location.pathname.startsWith('/global-jobs')) return;
+    if (
+      window.location.pathname.startsWith('/global-jobs') || 
+      window.location.pathname.startsWith('/india/sarkari-jobs') ||
+      window.location.pathname.startsWith('/job-alerts') ||
+      window.location.pathname.startsWith('/live-alerts')
+    ) return;
 
     // Check if already granted
     if ('Notification' in window && Notification.permission === 'granted') {

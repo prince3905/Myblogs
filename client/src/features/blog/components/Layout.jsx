@@ -580,11 +580,19 @@ export default function Layout({ children }) {
         </Container>
       </Box>
 
-      {/* Real-time Push Notification Centered Modal (Suppressed on /global-jobs for zero popup interference) */}
-      {!location.pathname.startsWith('/global-jobs') && <PushNotificationModal />}
+      {/* Real-time Push Notification Centered Modal (Suppressed on job hubs for zero popup interference) */}
+      {!location.pathname.startsWith('/global-jobs') && 
+       !location.pathname.startsWith('/india/sarkari-jobs') && 
+       !location.pathname.startsWith('/job-alerts') && 
+       !location.pathname.startsWith('/live-alerts') && 
+       <PushNotificationModal />}
 
-      {/* Deferred Floating Widgets */}
-      {isDeferredMounted && !location.pathname.startsWith('/global') && (
+      {/* Deferred Floating Widgets (Suppressed on job hubs for zero layout/touch collision) */}
+      {isDeferredMounted && 
+       !location.pathname.startsWith('/global') && 
+       !location.pathname.startsWith('/india/sarkari-jobs') && 
+       !location.pathname.startsWith('/job-alerts') && 
+       !location.pathname.startsWith('/live-alerts') && (
         <>
           <TelegramStickyBanner />
           <FloatingQuickShare />

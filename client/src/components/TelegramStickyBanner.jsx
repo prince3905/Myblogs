@@ -22,9 +22,14 @@ export default function TelegramStickyBanner() {
     return false;
   });
 
-  // Strict UI rule: Suppress sticky banner completely on global career portal pages
+  // Strict UI rule: Suppress sticky banner completely on all career portal pages to prevent sticky collisions
   const currentPath = location?.pathname || (typeof window !== 'undefined' ? window.location.pathname : '');
-  if (currentPath.startsWith('/global')) return null;
+  if (
+    currentPath.startsWith('/global') || 
+    currentPath.startsWith('/india/sarkari-jobs') || 
+    currentPath.startsWith('/job-alerts') || 
+    currentPath.startsWith('/live-alerts')
+  ) return null;
 
   if (dismissed) return null;
 
