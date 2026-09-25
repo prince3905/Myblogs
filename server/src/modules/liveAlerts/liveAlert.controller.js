@@ -240,12 +240,13 @@ async function getAlerts(req, res) {
 
     console.log(`[LiveAlert API] getAlerts called: category="${category || ''}", state="${state || ''}", searchQuery="${searchQuery}", pageNum=${pageNum}, limit=${queryLimit}`);
 
+    const ALERT_LIST_PROJECTION = '_id title category state boardName lastDate isHighlight parsedPostDate createdAt officialUrl officialApplyUrl officialPdfUrl allLinks status';
     let alerts = [];
 
     // If explicit category or state or small query: return pure latest matching alerts
     if (category || state || (!searchQuery && queryLimit <= 50 && pageNum === 1)) {
       alerts = await LiveAlert.find(filter)
-        .select('-detailsText')
+        .select(ALERT_LIST_PROJECTION)
         .sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 })
         .skip(skip)
         .limit(queryLimit)
@@ -259,7 +260,7 @@ async function getAlerts(req, res) {
             { title: { $not: /admit card|hall ticket|call letter|exam city|result|score card|merit list|answer key|objection|syllabus/i } },
             { category: { $not: /Admit Card|Result|Answer Key|Syllabus/i } }
           ]
-        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
+        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -267,7 +268,7 @@ async function getAlerts(req, res) {
             { category: 'Admit Card' },
             { title: { $regex: /admit card|hall ticket|call letter|exam city/i } }
           ]
-        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
+        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -275,7 +276,7 @@ async function getAlerts(req, res) {
             { category: 'Result' },
             { title: { $regex: /result|score card|merit list/i } }
           ]
-        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
+        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -283,7 +284,7 @@ async function getAlerts(req, res) {
             { category: 'Answer Key' },
             { title: { $regex: /answer key|answer-key|objection tracker/i } }
           ]
-        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
+        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -291,7 +292,7 @@ async function getAlerts(req, res) {
             { category: 'Admission' },
             { title: { $regex: /admission|entrance exam|counseling|counselling/i } }
           ]
-        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean(),
+        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -299,7 +300,7 @@ async function getAlerts(req, res) {
             { category: 'Syllabus' },
             { title: { $regex: /syllabus|exam pattern/i } }
           ]
-        }).select('-detailsText').sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(100).lean()
+        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean()
       ]);
 
       alerts = [...jobs, ...admitCards, ...results, ...answerKeys, ...admissions, ...syllabus];
@@ -307,10 +308,11 @@ async function getAlerts(req, res) {
       alerts.sort((a, b) => safeAlertTime(b) - safeAlertTime(a));
     } else {
       alerts = await LiveAlert.find(filter)
-        .select('-detailsText')
+        .select(ALERT_LIST_PROJECTION)
         .sort({ parsedPostDate: -1, createdAt: -1 })
         .skip(skip)
-        .limit(queryLimit);
+        .limit(queryLimit)
+        .lean();
     }
 
     // Fallback if $and search produced 0 results: try $or search across tokens
@@ -359,10 +361,11 @@ async function getAlerts(req, res) {
       fallbackFilter.$or = orConditions;
 
       alerts = await LiveAlert.find(fallbackFilter)
-        .select('-detailsText')
+        .select(ALERT_LIST_PROJECTION)
         .sort({ parsedPostDate: -1, createdAt: -1 })
         .skip(skip)
-        .limit(queryLimit);
+        .limit(queryLimit)
+        .lean();
     }
 
     // Final safety net: sanitize all alerts before sending to client

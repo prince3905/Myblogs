@@ -1318,8 +1318,8 @@ export default function PublicLiveAlertsPage() {
     setLoading(true);
     setError('');
     const url = query.trim() 
-      ? `/api/public/live-alerts?status=all&search=${encodeURIComponent(query.trim())}&limit=300`
-      : '/api/public/live-alerts?status=all&limit=300';
+      ? `/api/public/live-alerts?status=all&search=${encodeURIComponent(query.trim())}&limit=120`
+      : '/api/public/live-alerts?status=all&limit=120';
 
     request(url)
       .then(res => {
