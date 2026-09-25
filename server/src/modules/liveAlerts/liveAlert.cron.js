@@ -1265,9 +1265,12 @@ async function scrapeFeeds() {
             : (href.startsWith('/') ? `https://www.sarkariresult.com${href}` : `https://www.sarkariresult.com/${href}`);
 
           if (isDetailUrl(fullHref)) {
-            // For dedicated category targets (Syllabus / Admission), append hash so they don't collide with existing job post URLs
-            const finalSourceUrl = (target.defaultCategory === 'Syllabus' || target.defaultCategory === 'Admission')
-              ? `${fullHref}#${target.defaultCategory.toLowerCase()}`
+            // For dedicated category targets (Answer Key, Syllabus, Admission, Result, Admit Card), append category hash so each phase has its own verified record and doesn't collide with existing job post URLs
+            const categorySuffix = target.defaultCategory
+              ? target.defaultCategory.toLowerCase().replace(/[^a-z]/g, '')
+              : '';
+            const finalSourceUrl = (categorySuffix && categorySuffix !== 'latestjob')
+              ? `${fullHref}#${categorySuffix}`
               : fullHref;
 
             const existingIndex = listLinks.findIndex(l => l.href === finalSourceUrl);
@@ -1429,9 +1432,10 @@ async function scrapeFeeds() {
       const boardName = extractBoardName(title);
       const state = detectState(title, href);
 
-      const dateInfo = extractDateFromSlugOrText(href, title, details.detailsText);
-      const parsedDate = parseFlexibleDate(details.postDate) || dateInfo.parsedDate;
-      const finalPostDate = details.postDate || dateInfo.postDate;
+      const effectiveCategory = listing.defaultCategory || detectCategory(title, href);
+      const dateInfo = extractDateFromSlugOrText(href, title, details.detailsText, effectiveCategory);
+      const parsedDate = dateInfo.parsedDate || parseFlexibleDate(details.postDate) || new Date();
+      const finalPostDate = dateInfo.postDate || details.postDate || new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
       // Fallback detailsText generator if scraping yields short text so NO job alert is ever skipped
       let finalDetailsText = details.detailsText ? details.detailsText.trim() : '';

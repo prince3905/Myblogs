@@ -283,7 +283,7 @@ async function getAlerts(req, res) {
     if (category || state || (!searchQuery && queryLimit <= 50 && pageNum === 1)) {
       alerts = await LiveAlert.find(filter)
         .select(ALERT_LIST_PROJECTION)
-        .sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 })
+        .sort({ parsedPostDate: -1, createdAt: -1, isHighlight: -1 })
         .skip(skip)
         .limit(queryLimit)
         .lean();
@@ -293,10 +293,10 @@ async function getAlerts(req, res) {
         LiveAlert.find({
           ...filter,
           $and: [
-            { title: { $not: /admit card|hall ticket|call letter|exam city|result|score card|merit list|answer key|objection|syllabus/i } },
-            { category: { $not: /Admit Card|Result|Answer Key|Syllabus/i } }
+            { title: { $not: /admit card|hall ticket|call letter|exam city|result|score card|merit list|answer key|objection|syllabus|admission|counseling|counselling/i } },
+            { category: { $not: /Admit Card|Result|Answer Key|Syllabus|Admission/i } }
           ]
-        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean(),
+        }).select(ALERT_LIST_PROJECTION).sort({ parsedPostDate: -1, createdAt: -1, isHighlight: -1 }).limit(30).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -304,7 +304,7 @@ async function getAlerts(req, res) {
             { category: 'Admit Card' },
             { title: { $regex: /admit card|hall ticket|call letter|exam city/i } }
           ]
-        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean(),
+        }).select(ALERT_LIST_PROJECTION).sort({ parsedPostDate: -1, createdAt: -1, isHighlight: -1 }).limit(30).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -312,7 +312,7 @@ async function getAlerts(req, res) {
             { category: 'Result' },
             { title: { $regex: /result|score card|merit list/i } }
           ]
-        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean(),
+        }).select(ALERT_LIST_PROJECTION).sort({ parsedPostDate: -1, createdAt: -1, isHighlight: -1 }).limit(30).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -320,7 +320,7 @@ async function getAlerts(req, res) {
             { category: 'Answer Key' },
             { title: { $regex: /answer key|answer-key|objection tracker/i } }
           ]
-        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean(),
+        }).select(ALERT_LIST_PROJECTION).sort({ parsedPostDate: -1, createdAt: -1, isHighlight: -1 }).limit(30).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -328,7 +328,7 @@ async function getAlerts(req, res) {
             { category: 'Admission' },
             { title: { $regex: /admission|entrance exam|counseling|counselling/i } }
           ]
-        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean(),
+        }).select(ALERT_LIST_PROJECTION).sort({ parsedPostDate: -1, createdAt: -1, isHighlight: -1 }).limit(30).lean(),
 
         LiveAlert.find({
           ...filter,
@@ -336,10 +336,19 @@ async function getAlerts(req, res) {
             { category: 'Syllabus' },
             { title: { $regex: /syllabus|exam pattern/i } }
           ]
-        }).select(ALERT_LIST_PROJECTION).sort({ isHighlight: -1, parsedPostDate: -1, createdAt: -1 }).limit(30).lean()
+        }).select(ALERT_LIST_PROJECTION).sort({ parsedPostDate: -1, createdAt: -1, isHighlight: -1 }).limit(30).lean()
       ]);
 
-      alerts = [...jobs, ...admitCards, ...results, ...answerKeys, ...admissions, ...syllabus];
+      const rawCombined = [...jobs, ...admitCards, ...results, ...answerKeys, ...admissions, ...syllabus];
+      const seenIds = new Set();
+      alerts = [];
+      for (const item of rawCombined) {
+        const idStr = item._id.toString();
+        if (!seenIds.has(idStr)) {
+          seenIds.add(idStr);
+          alerts.push(item);
+        }
+      }
       const safeAlertTime = (x) => Math.min(new Date(x.parsedPostDate || x.createdAt || 0).getTime(), Date.now());
       alerts.sort((a, b) => safeAlertTime(b) - safeAlertTime(a));
     } else {

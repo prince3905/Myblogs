@@ -1436,13 +1436,14 @@ export default function PublicLiveAlertsPage() {
   const hotLinks = useMemo(() => {
     if (!alerts || alerts.length === 0) return [];
 
-    // Filter and strictly sort by parsedPostDate descending (with isHighlight prioritized at top)
+    // Strictly sort by parsedPostDate descending (newest date first: 25, 24, 23, 22...)
     const sorted = [...alerts].sort((a, b) => {
-      if (a.isHighlight && !b.isHighlight) return -1;
-      if (!a.isHighlight && b.isHighlight) return 1;
       const dateA = new Date(a.parsedPostDate || a.createdAt || 0).getTime();
       const dateB = new Date(b.parsedPostDate || b.createdAt || 0).getTime();
-      return dateB - dateA;
+      if (dateA !== dateB) return dateB - dateA;
+      if (a.isHighlight && !b.isHighlight) return -1;
+      if (!a.isHighlight && b.isHighlight) return 1;
+      return 0;
     });
 
     return sorted.slice(0, 8).map(alert => ({
@@ -1577,9 +1578,14 @@ export default function PublicLiveAlertsPage() {
     });
 
     const sortByDate = (a, b) => {
+      const timeA = new Date(a.parsedPostDate || a.createdAt || 0).getTime();
+      const timeB = new Date(b.parsedPostDate || b.createdAt || 0).getTime();
+      if (timeA !== timeB) {
+        return timeB - timeA; // Strict newest date first (25, 24, 23, 22...)
+      }
       if (a.isHighlight && !b.isHighlight) return -1;
       if (!a.isHighlight && b.isHighlight) return 1;
-      return new Date(b.parsedPostDate || b.createdAt) - new Date(a.parsedPostDate || a.createdAt);
+      return 0;
     };
     jobs.sort(sortByDate);
     admitCards.sort(sortByDate);
