@@ -12,7 +12,7 @@ import {
   AssignmentTurnedIn as ApplyIcon, CalendarToday as CalendarIcon,
   LocationOn as LocationIcon, Work as WorkIcon,
   FilterList as FilterIcon, Close as CloseIcon,
-  Search as SearchIcon, Public as GlobeIcon,
+  Search as SearchIcon, Public as GlobeIcon, Clear as ClearIcon,
   Verified as VerifiedIcon, WhatsApp as WhatsAppIcon,
   Telegram as TelegramIcon, Share as ShareIcon,
   AttachMoney as MoneyIcon, School as SchoolIcon,
@@ -209,7 +209,16 @@ export default function GlobalGovJobsPage() {
   const [activeTimeline, setActiveTimeline] = useState(searchParams.get('timeline') || 'ALL');
   const [activeCitizenship, setActiveCitizenship] = useState(searchParams.get('citizenship') || 'ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+      setCurrentPage(1);
+    }, 350);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
   // Active language & Geo-detection state
   const [selectedLanguage, setSelectedLanguage] = useState('hi');
@@ -379,8 +388,8 @@ export default function GlobalGovJobsPage() {
       userCountry: userDetectedCountry
     });
 
-    if (searchTerm.trim()) {
-      queryParams.append('search', searchTerm.trim());
+    if (debouncedSearch) {
+      queryParams.append('search', debouncedSearch);
     }
 
     request(`/api/global-jobs?${queryParams.toString()}`)
@@ -399,7 +408,7 @@ export default function GlobalGovJobsPage() {
       .finally(() => {
         setLoading(false);
       });
-  }, [activeContinent, activeCountry, activeCategory, activeTimeline, activeCitizenship, currentPage, userDetectedCountry]);
+  }, [activeContinent, activeCountry, activeCategory, activeTimeline, activeCitizenship, currentPage, userDetectedCountry, debouncedSearch]);
 
   // Sync URL query params
   useEffect(() => {
@@ -844,7 +853,16 @@ export default function GlobalGovJobsPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') setCurrentPage(1); }}
               InputProps={{
-                startAdornment: <SearchIcon sx={{ color: '#64748B', mr: 1 }} />
+                startAdornment: <SearchIcon sx={{ color: '#64748B', mr: 1 }} />,
+                endAdornment: searchTerm ? (
+                  <IconButton
+                    size="small"
+                    onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
+                    sx={{ color: '#94A3B8', p: 0.5, '&:hover': { color: '#F8FAFC' } }}
+                  >
+                    <ClearIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                ) : null
               }}
               sx={{
                 bgcolor: '#0B0F19',
@@ -1049,6 +1067,50 @@ export default function GlobalGovJobsPage() {
         px: { xs: 2, md: 4 }
       }}>
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+          {/* Priority Search Results Banner (Appears First) */}
+          {debouncedSearch && (
+            <Box sx={{
+              mb: 3,
+              p: { xs: 1.5, sm: 2 },
+              borderRadius: '14px',
+              bgcolor: 'rgba(56, 189, 248, 0.08)',
+              border: '1.5px solid rgba(56, 189, 248, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 1.5
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, flexWrap: 'wrap' }}>
+                <Typography sx={{ color: '#38BDF8', fontWeight: 800, fontSize: { xs: '0.92rem', sm: '1.05rem' } }}>
+                  🔍 Search Results for: &ldquo;{debouncedSearch}&rdquo;
+                </Typography>
+                <Chip
+                  label={`${pagination.total || jobs.length} Vacancies Found`}
+                  size="small"
+                  sx={{ bgcolor: '#0284C7', color: '#FFFFFF', fontWeight: 800, fontSize: '0.72rem' }}
+                />
+              </Box>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
+                startIcon={<ClearIcon sx={{ fontSize: '15px !important' }} />}
+                sx={{
+                  color: '#38BDF8',
+                  borderColor: 'rgba(56, 189, 248, 0.4)',
+                  borderRadius: '20px',
+                  textTransform: 'none',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.15)', borderColor: '#38BDF8' }
+                }}
+              >
+                Clear Search
+              </Button>
+            </Box>
+          )}
+
           {/* 🇮🇳 Special Indian Candidate Advisory: Direct 1-Click Access to 940+ Sarkari Live Alerts */}
           {userDetectedCountry === 'IN' && (
             <Box sx={{

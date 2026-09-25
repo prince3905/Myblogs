@@ -1673,198 +1673,373 @@ export default function PublicLiveAlertsPage() {
 
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: { xs: '650px', md: '800px' }, py: 8 }}><CircularProgress size={44} /></Box>
-        ) : error ? (
-          <Alert severity="error" sx={{ borderRadius: 3 }}>{error}</Alert>
         ) : (
-          <Box sx={{ width: '100%' }}>
-            {/* Hot Links Grid */}
-            <Box 
-              sx={{ 
-                mb: 4.5, 
-                p: 2, 
-                bgcolor: 'background.paper', 
-                borderRadius: '16px', 
-                border: '1px solid #ECECEC',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
-                maxWidth: '1200px',
-                mx: 'auto'
-              }}
-            >
-              <Typography 
-                variant="subtitle2" 
-                sx={{ 
-                  fontWeight: 850, 
-                  letterSpacing: 1, 
-                  textTransform: 'uppercase', 
-                  color: '#EF4444', 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  gap: 1,
-                  mb: 2,
-                  px: 0.5
-                }}
-              >
+          <Box>
+            {/* Direct Priority Search Results Grid (Displayed FIRST when user searches or filters) */}
+            {Boolean(searchQuery.trim() || (selectedState && selectedState !== 'All States')) ? (
+              <Box sx={{ mb: 4, width: '100%', maxWidth: '1200px', mx: 'auto' }}>
+                {/* Search Results Banner Header */}
                 <Box 
                   sx={{ 
-                    width: 7, 
-                    height: 7, 
-                    borderRadius: '50%', 
-                    bgcolor: '#EF4444',
-                    animation: 'pulse 1.6s infinite ease-in-out',
-                    '@keyframes pulse': {
-                      '0%': { transform: 'scale(0.8)', opacity: 0.5 },
-                      '50%': { transform: 'scale(1.4)', opacity: 1 },
-                      '100%': { transform: 'scale(0.8)', opacity: 0.5 }
-                    }
-                  }} 
-                />
-                Hot Links / Active Updates
-              </Typography>
-              
-              <Box sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(2, 1fr)',
-                  md: 'repeat(4, 1fr)'
-                },
-                gap: { xs: 1.5, sm: 2 }
-              }}>
-                {hotLinks.map((item, idx) => {
-                  const styles = getCardStyles(item, idx);
-                  const alert = item.targetAlert;
-                  if (!alert) return null;
-                  const isNew = idx < 4 || (new Date() - new Date(alert.createdAt || 0) < 3 * 24 * 60 * 60 * 1000);
-                  const accentColor = styles.accentColor || '#4F46E5';
-                  const board = alert.boardName || 'Govt Board';
-                  const lastDate = alert.lastDate;
-                  const hasLastDate = lastDate && lastDate !== 'N/A' && lastDate !== 'Check Detail Page' && lastDate !== 'अधिसूचना देखें' && lastDate !== 'Check Result List' && lastDate !== 'Download Score Card' && lastDate !== 'Check PDF List';
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    p: { xs: 1.5, md: 2 },
+                    mb: 2.5,
+                    bgcolor: '#EFF6FF',
+                    border: '1.5px solid #BFDBFE',
+                    borderRadius: '16px',
+                    flexWrap: 'wrap',
+                    gap: 1.5
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 850, color: '#1E40AF', fontSize: { xs: '0.95rem', md: '1.15rem' } }}>
+                      🔍 खोज परिणाम (Search Results) {searchQuery ? `"${searchQuery}"` : ''} {selectedState !== 'All States' ? `• ${selectedState}` : ''}
+                    </Typography>
+                    <Chip 
+                      label={`${filteredAlerts.length} ${filteredAlerts.length === 1 ? 'भर्ती' : 'भर्तियां'} मिलीं`} 
+                      size="small" 
+                      sx={{ bgcolor: '#2563EB', color: '#FFFFFF', fontWeight: 800, fontSize: '0.72rem' }} 
+                    />
+                  </Box>
 
-                  let actionText = 'Apply ↗';
-                  if (alert.category === 'Result' || /result|score card/i.test(alert.title)) {
-                    actionText = 'Result ↗';
-                  } else if (alert.category === 'Admit Card' || /admit card|hall ticket/i.test(alert.title)) {
-                    actionText = 'Admit Card ↗';
-                  } else if (alert.category === 'Syllabus' || /syllabus/i.test(alert.title)) {
-                    actionText = 'Syllabus ↗';
-                  } else if (alert.category === 'Answer Key' || /answer key/i.test(alert.title)) {
-                    actionText = 'Answer Key ↗';
-                  }
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedState('All States');
+                    }}
+                    startIcon={<ResetIcon />}
+                    sx={{
+                      borderRadius: '20px',
+                      fontWeight: 700,
+                      textTransform: 'none',
+                      borderColor: '#93C5FD',
+                      color: '#1D4ED8',
+                      bgcolor: '#FFFFFF',
+                      fontSize: '0.75rem',
+                      '&:hover': { bgcolor: '#DBEAFE', borderColor: '#2563EB' }
+                    }}
+                  >
+                    Clear Search (सभी देखें)
+                  </Button>
+                </Box>
 
-                  return (
-                    <Box
-                      key={alert._id || idx}
-                      onClick={() => handleHotLinkClick(item)}
-                      sx={{
-                        p: 1.6,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        minHeight: '128px',
-                        height: '100%',
-                        bgcolor: styles.bgColor,
-                        background: styles.bgGradient || styles.bgColor,
-                        border: isNew ? `1.5px solid ${accentColor}` : `1px solid ${styles.borderColor}`,
-                        borderRadius: '14px',
-                        cursor: 'pointer',
-                        position: 'relative',
-                        transition: 'all 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: isNew 
-                          ? `0 3px 10px ${accentColor}25`
-                          : `0 2px 5px -1px ${styles.shadowColor || 'rgba(0,0,0,0.03)'}`,
-                        '&:hover': {
-                          transform: 'translateY(-3px)',
-                          boxShadow: `0 10px 20px -3px ${styles.shadowColor || 'rgba(0,0,0,0.12)'}`,
-                          background: styles.hoverBgGradient || styles.hoverBg,
-                          borderColor: accentColor,
-                          '& .hot-link-title': {
-                            color: accentColor
-                          }
-                        }
-                      }}
+                {filteredAlerts.length === 0 ? (
+                  <Paper 
+                    elevation={0}
+                    sx={{ 
+                      p: { xs: 4, md: 6 }, 
+                      textAlign: 'center', 
+                      borderRadius: '16px', 
+                      border: '1px dashed #CBD5E1', 
+                      bgcolor: 'background.paper',
+                      my: 2
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: '#334155', mb: 1, fontSize: '1rem' }}>
+                      "{searchQuery}" से मिलती-जुलती कोई सक्रिय भर्ती नहीं मिली
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 500, mx: 'auto', mb: 3, fontSize: '0.82rem' }}>
+                      कृपया अन्य कीवर्ड (जैसे SSC, Railway, Police, BPSC, UPSC, Defence) से खोजें अथवा रीसेट करें।
+                    </Typography>
+                    <Button 
+                      variant="contained" 
+                      onClick={() => { setSearchQuery(''); setSelectedState('All States'); }}
+                      sx={{ borderRadius: '24px', px: 3, py: 0.8, textTransform: 'none', fontWeight: 700, bgcolor: '#2563EB' }}
                     >
-                      {/* Top Row: Board Name + NEW Badge */}
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.8 }}>
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            fontWeight: 850, 
-                            color: styles.textColor, 
-                            textTransform: 'uppercase', 
-                            fontSize: '0.64rem',
-                            letterSpacing: 0.4
+                      सभी सक्रिय भर्तियां देखें (Show All Vacancies)
+                    </Button>
+                  </Paper>
+                ) : (
+                  <Box 
+                    sx={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, 
+                      gap: 2 
+                    }}
+                  >
+                    {filteredAlerts.map((alert, idx) => {
+                      const hasLastDate = alert.lastDate && alert.lastDate !== 'N/A' && alert.lastDate !== 'Check Detail Page' && alert.lastDate !== 'अधिसूचना देखें';
+                      let actionLabel = 'पूरी अधिसूचना देखें ↗';
+                      let badgeColor = '#2563EB';
+                      let badgeBg = '#EFF6FF';
+                      if (alert.category === 'Result' || /result/i.test(alert.title)) {
+                        actionLabel = 'रिजल्ट देखें ↗';
+                        badgeColor = '#DC2626';
+                        badgeBg = '#FEE2E2';
+                      } else if (alert.category === 'Admit Card' || /admit/i.test(alert.title)) {
+                        actionLabel = 'एडमिट कार्ड ↗';
+                        badgeColor = '#D97706';
+                        badgeBg = '#FEF3C7';
+                      } else if (alert.category === 'Answer Key' || /answer key/i.test(alert.title)) {
+                        actionLabel = 'उत्तर कुंजी ↗';
+                        badgeColor = '#0D9488';
+                        badgeBg = '#CCFBF1';
+                      }
+
+                      return (
+                        <Paper
+                          key={alert._id || idx}
+                          elevation={0}
+                          onClick={() => setSelectedAlert(alert)}
+                          sx={{
+                            p: 2,
+                            borderRadius: '16px',
+                            border: '1.5px solid #E2E8F0',
+                            bgcolor: 'background.paper',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            minHeight: '145px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              transform: 'translateY(-3px)',
+                              boxShadow: '0 8px 24px rgba(37, 99, 235, 0.12)',
+                              borderColor: '#2563EB'
+                            }
                           }}
                         >
-                          {board}
-                        </Typography>
-                        {isNew && (
-                          <Box
-                            sx={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 0.3,
-                              bgcolor: accentColor,
-                              color: 'white',
-                              px: 0.6,
-                              py: 0.15,
-                              borderRadius: '4px',
-                              fontSize: '0.52rem',
-                              fontWeight: 900,
-                              boxShadow: `0 1px 4px ${accentColor}40`,
-                              animation: 'pulse 1.5s infinite ease-in-out',
-                              '@keyframes pulse': {
-                                '0%': { transform: 'scale(1)', opacity: 0.9 },
-                                '50%': { transform: 'scale(1.05)', opacity: 1 },
-                                '100%': { transform: 'scale(1)', opacity: 0.9 }
-                              }
-                            }}
-                          >
-                            <Box sx={{ width: 3, height: 3, bgcolor: 'white', borderRadius: '50%' }} />
-                            NEW 🔥
+                          <Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                              <Typography variant="caption" sx={{ fontWeight: 850, color: '#2563EB', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.66rem' }}>
+                                🏛️ {alert.boardName || 'Official Board'}
+                              </Typography>
+                              <Chip 
+                                label={alert.category || 'Job'} 
+                                size="small" 
+                                sx={{ height: 20, fontSize: '0.62rem', fontWeight: 800, bgcolor: badgeBg, color: badgeColor }} 
+                              />
+                            </Box>
+                            <Typography 
+                              sx={{ 
+                                fontWeight: 750, 
+                                fontSize: '0.86rem', 
+                                color: '#0F172A', 
+                                lineHeight: 1.4,
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden'
+                              }}
+                            >
+                              {alert.title}
+                            </Typography>
                           </Box>
-                        )}
-                      </Box>
 
-                      {/* Middle Row: Title (Clamped to 2 lines) */}
-                      <Typography
-                        className="hot-link-title"
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1.8, pt: 1, borderTop: '1px dashed #E2E8F0' }}>
+                            <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 700, fontSize: '0.68rem' }}>
+                              📅 {new Date(alert.parsedPostDate || alert.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                            </Typography>
+                            {hasLastDate ? (
+                              <Typography variant="caption" sx={{ color: '#DC2626', fontWeight: 800, fontSize: '0.66rem', bgcolor: '#FEE2E2', px: 0.8, py: 0.2, borderRadius: '4px' }}>
+                                ⏳ {alert.lastDate}
+                              </Typography>
+                            ) : (
+                              <Typography variant="caption" sx={{ color: '#2563EB', fontWeight: 800, fontSize: '0.70rem' }}>
+                                {actionLabel}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Paper>
+                      );
+                    })}
+                  </Box>
+                )}
+              </Box>
+            ) : (
+              /* Hot Links Grid (Only shown when not searching) */
+              <Box 
+                sx={{ 
+                  mb: 4.5, 
+                  p: 2, 
+                  bgcolor: 'background.paper', 
+                  borderRadius: '16px', 
+                  border: '1px solid #ECECEC',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+                  maxWidth: '1200px',
+                  mx: 'auto'
+                }}
+              >
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    fontWeight: 850, 
+                    letterSpacing: 1, 
+                    textTransform: 'uppercase', 
+                    color: '#EF4444', 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: 1, 
+                    mb: 2, 
+                    px: 0.5 
+                  }}
+                >
+                  <Box 
+                    sx={{ 
+                      width: 7, 
+                      height: 7, 
+                      borderRadius: '50%', 
+                      bgcolor: '#EF4444',
+                      animation: 'pulse 1.6s infinite ease-in-out',
+                      '@keyframes pulse': {
+                        '0%': { transform: 'scale(0.8)', opacity: 0.5 },
+                        '50%': { transform: 'scale(1.4)', opacity: 1 },
+                        '100%': { transform: 'scale(0.8)', opacity: 0.5 }
+                      }
+                    }} 
+                  />
+                  Hot Links / Active Updates
+                </Typography>
+                
+                <Box sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: 'repeat(1, 1fr)',
+                    sm: 'repeat(2, 1fr)',
+                    md: 'repeat(4, 1fr)'
+                  },
+                  gap: { xs: 1.5, sm: 2 }
+                }}>
+                  {hotLinks.map((item, idx) => {
+                    const styles = getCardStyles(item, idx);
+                    const alert = item.targetAlert;
+                    if (!alert) return null;
+                    const isNew = idx < 4 || (new Date() - new Date(alert.createdAt || 0) < 3 * 24 * 60 * 60 * 1000);
+                    const accentColor = styles.accentColor || '#4F46E5';
+                    const board = alert.boardName || 'Govt Board';
+                    const lastDate = alert.lastDate;
+                    const hasLastDate = lastDate && lastDate !== 'N/A' && lastDate !== 'Check Detail Page' && lastDate !== 'अधिसूचना देखें' && lastDate !== 'Check Result List' && lastDate !== 'Download Score Card' && lastDate !== 'Check PDF List';
+
+                    let actionText = 'Apply ↗';
+                    if (alert.category === 'Result' || /result|score card/i.test(alert.title)) {
+                      actionText = 'Result ↗';
+                    } else if (alert.category === 'Admit Card' || /admit card|hall ticket/i.test(alert.title)) {
+                      actionText = 'Admit Card ↗';
+                    } else if (alert.category === 'Syllabus' || /syllabus/i.test(alert.title)) {
+                      actionText = 'Syllabus ↗';
+                    } else if (alert.category === 'Answer Key' || /answer key/i.test(alert.title)) {
+                      actionText = 'Answer Key ↗';
+                    }
+
+                    return (
+                      <Box
+                        key={alert._id || idx}
+                        onClick={() => handleHotLinkClick(item)}
                         sx={{
-                          fontWeight: 750,
-                          fontSize: '0.80rem',
-                          color: '#1E293B',
-                          lineHeight: 1.35,
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          mb: 'auto',
-                          transition: 'color 0.15s ease'
+                          p: 1.6,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          minHeight: '128px',
+                          height: '100%',
+                          bgcolor: styles.bgColor,
+                          background: styles.bgGradient || styles.bgColor,
+                          border: isNew ? `1.5px solid ${accentColor}` : `1px solid ${styles.borderColor}`,
+                          borderRadius: '14px',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          transition: 'all 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+                          boxShadow: isNew 
+                            ? `0 3px 10px ${accentColor}25`
+                            : `0 2px 5px -1px ${styles.shadowColor || 'rgba(0,0,0,0.03)'}`,
+                          '&:hover': {
+                            transform: 'translateY(-3px)',
+                            boxShadow: `0 10px 20px -3px ${styles.shadowColor || 'rgba(0,0,0,0.12)'}`,
+                            background: styles.hoverBgGradient || styles.hoverBg,
+                            borderColor: accentColor,
+                            '& .hot-link-title': {
+                              color: accentColor
+                            }
+                          }
                         }}
                       >
-                        {alert.title}
-                      </Typography>
+                        {/* Top Row: Board Name + NEW Badge */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.8 }}>
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              fontWeight: 850, 
+                              color: styles.textColor, 
+                              textTransform: 'uppercase', 
+                              fontSize: '0.64rem',
+                              letterSpacing: 0.4
+                            }}
+                          >
+                            {board}
+                          </Typography>
+                          {isNew && (
+                            <Box
+                              sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 0.3,
+                                bgcolor: accentColor,
+                                color: 'white',
+                                px: 0.6,
+                                py: 0.15,
+                                borderRadius: '4px',
+                                fontSize: '0.52rem',
+                                fontWeight: 900,
+                                boxShadow: `0 1px 4px ${accentColor}40`,
+                                animation: 'pulse 1.5s infinite ease-in-out',
+                                '@keyframes pulse': {
+                                  '0%': { transform: 'scale(1)', opacity: 0.9 },
+                                  '50%': { transform: 'scale(1.05)', opacity: 1 },
+                                  '100%': { transform: 'scale(1)', opacity: 0.9 }
+                                }
+                              }}
+                            >
+                              <Box sx={{ width: 3, height: 3, bgcolor: 'white', borderRadius: '50%' }} />
+                              NEW 🔥
+                            </Box>
+                          )}
+                        </Box>
 
-                      {/* Bottom Row: Post Date & Action / Last Date Badge */}
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, pt: 0.6, borderTop: '1px dashed rgba(0,0,0,0.08)' }}>
-                        <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.64rem', fontWeight: 700 }}>
-                          📅 {new Date(alert.parsedPostDate || alert.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        {/* Middle Row: Title (Clamped to 2 lines) */}
+                        <Typography
+                          className="hot-link-title"
+                          sx={{
+                            fontWeight: 750,
+                            fontSize: '0.80rem',
+                            color: '#1E293B',
+                            lineHeight: 1.35,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            mb: 'auto',
+                            transition: 'color 0.15s ease'
+                          }}
+                        >
+                          {alert.title}
                         </Typography>
-                        {hasLastDate ? (
-                          <Typography variant="caption" sx={{ color: '#DC2626', fontSize: '0.62rem', fontWeight: 800, bgcolor: '#FEE2E2', px: 0.6, py: 0.15, borderRadius: '4px' }}>
-                            ⏳ {lastDate}
+
+                        {/* Bottom Row: Post Date & Action / Last Date Badge */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, pt: 0.6, borderTop: '1px dashed rgba(0,0,0,0.08)' }}>
+                          <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.64rem', fontWeight: 700 }}>
+                            📅 {new Date(alert.parsedPostDate || alert.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                           </Typography>
-                        ) : (
-                          <Typography variant="caption" sx={{ color: styles.textColor, fontSize: '0.62rem', fontWeight: 850, textTransform: 'uppercase', letterSpacing: 0.2 }}>
-                            {actionText}
-                          </Typography>
-                        )}
+                          {hasLastDate ? (
+                            <Typography variant="caption" sx={{ color: '#DC2626', fontSize: '0.62rem', fontWeight: 800, bgcolor: '#FEE2E2', px: 0.6, py: 0.15, borderRadius: '4px' }}>
+                              ⏳ {lastDate}
+                            </Typography>
+                          ) : (
+                            <Typography variant="caption" sx={{ color: styles.textColor, fontSize: '0.62rem', fontWeight: 850, textTransform: 'uppercase', letterSpacing: 0.2 }}>
+                              {actionText}
+                            </Typography>
+                          )}
+                        </Box>
                       </Box>
-                    </Box>
-                  );
-                })}
+                    );
+                  })}
+                </Box>
               </Box>
-            </Box>
+            )}
 
             {/* In-Content High-Yield Ad Unit */}
             <AdSlot format="incontent" style={{ my: 3 }} />
