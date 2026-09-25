@@ -1064,7 +1064,7 @@ async function scrapeStateHubFeeds() {
             officialPdfUrl: officialPdfUrl,
             source: 'Official Portal',
             state: target.state,
-            category: 'Latest Job',
+            category: detectCategory(cleanTitle, uniqueKey) || 'Latest Job',
             detailsText,
             isOffline: isOfflineJob,
             status: 'active'
@@ -1214,7 +1214,11 @@ async function scrapeFeeds() {
     $or: [
       { source: { $nin: ['SarkariResult', 'Official Portal'] } },
       { status: 'expired' },
-      { createdAt: { $lt: sevenDaysAgo }, parsedPostDate: { $lt: sevenDaysAgo } }
+      { 
+        createdAt: { $lt: sevenDaysAgo }, 
+        parsedPostDate: { $lt: sevenDaysAgo },
+        category: { $nin: ['Result', 'Admit Card', 'Answer Key', 'Syllabus', 'Admission', 'Offline Form'] }
+      }
     ]
   });
 
@@ -1266,9 +1270,13 @@ async function scrapeFeeds() {
               ? `${fullHref}#${target.defaultCategory.toLowerCase()}`
               : fullHref;
 
-            if (!listLinks.some(l => l.href === finalSourceUrl)) {
+            const existingIndex = listLinks.findIndex(l => l.href === finalSourceUrl);
+            if (existingIndex === -1) {
               listLinks.push({ text: rawText, href: finalSourceUrl, originalHref: fullHref, defaultCategory: target.defaultCategory });
               pageLinksCount++;
+            } else if (target.defaultCategory && !listLinks[existingIndex].defaultCategory) {
+              listLinks[existingIndex].defaultCategory = target.defaultCategory;
+              listLinks[existingIndex].text = rawText;
             }
           }
         }
@@ -1281,16 +1289,29 @@ async function scrapeFeeds() {
   console.log(`[LiveAlert Scraper] Found ${listLinks.length} total unique listings across sources.`);
 
   // Caching optimization: fetch all existing sourceUrls from the database with details, category and status
-  const existingAlerts = await LiveAlert.find({}, { sourceUrl: 1, detailsText: 1, category: 1, status: 1 });
-  const existingMap = new Map(existingAlerts.map(doc => [doc.sourceUrl, { hasDetails: !!doc.detailsText, category: doc.category, status: doc.status }]));
+  const existingAlerts = await LiveAlert.find({}, { sourceUrl: 1, title: 1, detailsText: 1, category: 1, status: 1 });
+  const existingMap = new Map(existingAlerts.map(doc => [doc.sourceUrl, { 
+    title: doc.title,
+    hasDetails: !!doc.detailsText, 
+    category: doc.category, 
+    status: doc.status 
+  }]));
 
-  // Filter listLinks to only include those that either don't exist in DB, or exist but have no detailsText, or category changed, or need un-archiving
+  // Filter listLinks to only include those that either don't exist in DB, or exist but have no detailsText, or category/title changed, or need un-archiving
   const pendingListings = listLinks.filter(listing => {
     const existing = existingMap.get(listing.href);
     if (!existing) return true;
     if (!existing.hasDetails) return true;
     if (listing.defaultCategory && existing.category !== listing.defaultCategory) return true;
     if (existing.status !== 'active') return true;
+
+    // Check if title or state changed (e.g. from Job to Admit Card / Answer Key / Result)
+    const cleanListingText = (listing.text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const cleanExistingTitle = (existing.title || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    if (cleanListingText && cleanExistingTitle && cleanListingText !== cleanExistingTitle) {
+      return true;
+    }
+
     return false;
   });
 
