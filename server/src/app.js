@@ -163,6 +163,7 @@ app.use('/api/admin', liveAlertRoutes);
 app.use('/api/admin', settingsRoutes);
 app.use('/api/current-affairs', currentAffairsRoutes);
 app.use('/api/admin/auto-publish', autoPublishRoutes);
+app.use('/api/admin/job-guides', require('./modules/jobGuides/jobGuideAutomation.routes'));
 app.use('/api/public/trending-pulse', require('./modules/trendingPulse/trendingPulse.routes'));
 app.use('/api/global-jobs', require('./modules/globalJobs/globalJob.routes'));
 

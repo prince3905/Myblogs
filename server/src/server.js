@@ -7,6 +7,7 @@ const seedAdmin = require('./shared/utils/seed-admin');
 const { initScheduler } = require('./modules/liveAlerts/liveAlert.cron');
 const { initCurrentAffairsCron } = require('./modules/currentAffairs/currentAffairs.cron');
 const { initMultiCategoryCron } = require('./modules/autoPublisher/multiCategory.cron');
+const { initJobGuideCron } = require('./modules/jobGuides/jobGuideAutomation.cron');
 const { initGlobalJobsSupervisor } = require('./modules/globalJobs/globalJobsSupervisor.cron');
 
 mongoose.connection.on('connected', () => {
@@ -31,6 +32,7 @@ async function start() {
   initScheduler();
   initCurrentAffairsCron();
   initMultiCategoryCron();
+  initJobGuideCron();
   initGlobalJobsSupervisor();
   const server = app.listen(env.port, () => {
     console.log(`Server running on port ${env.port}`);
