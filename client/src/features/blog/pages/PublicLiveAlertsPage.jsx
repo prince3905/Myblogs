@@ -4,7 +4,7 @@ import {
   Typography, Button, Table, TableBody, TableCell, TableContainer,
   TableRow, Paper, Chip, Box, Alert, CircularProgress, LinearProgress,
   IconButton, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Collapse,
-  Pagination, Link as MuiLink, Dialog, DialogContent, DialogTitle, DialogActions,
+  Pagination, Link as MuiLink, Dialog, DialogContent, DialogTitle,
   Divider
 } from '@mui/material';
 import {
@@ -2315,145 +2315,8 @@ export default function PublicLiveAlertsPage() {
                 setPendingRedirectUrl(url);
                 setRedirectModalOpen(true);
               })}
-              <Box sx={{ height: { xs: 30, sm: 40 } }} />
+              <Box sx={{ height: { xs: 20, sm: 30 } }} />
             </DialogContent>
-
-            <DialogActions 
-              sx={{ 
-                p: { xs: 1.25, sm: 1.8 }, 
-                borderTop: '1px solid rgba(255, 255, 255, 0.12)',
-                bgcolor: '#0D1629 !important',
-                backgroundColor: '#0D1629 !important',
-                display: 'flex',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                gap: { xs: 0.8, sm: 1.2 },
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                boxSizing: 'border-box',
-                flexShrink: 0,
-                position: 'sticky',
-                bottom: 0,
-                zIndex: 30,
-                boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.85)'
-              }}
-            >
-              {(() => {
-                const actionLinks = getDynamicActions(selectedAlert);
-                const pdfLink = actionLinks.find(l => l.label.includes('PDF'))?.url;
-                const applyLink = actionLinks.find(l => l.label.includes('Apply') || l.label.includes('Check') || l.label.includes('Download'))?.url;
-                const officialWeb = actionLinks.find(l => l.label.includes('Website'))?.url;
-                const applyLabel = actionLinks.find(l => l.label.includes('Apply') || l.label.includes('Check') || l.label.includes('Download'))?.label || 'Apply Online';
-
-                return (
-                  <>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, flex: 1, alignItems: 'center' }}>
-                      {applyLink && (
-                        <Button
-                          variant="contained"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setPendingRedirectUrl(applyLink);
-                            setRedirectModalOpen(true);
-                          }}
-                          startIcon={<ApplyIcon />}
-                          sx={{ 
-                            textTransform: 'none', 
-                            borderRadius: 2, 
-                            fontWeight: 800, 
-                            fontSize: { xs: '0.82rem', sm: '0.88rem' },
-                            bgcolor: '#16A34A',
-                            px: { xs: 1.8, sm: 2.8 },
-                            py: 0.9,
-                            boxShadow: '0 2px 10px rgba(22, 163, 74, 0.4)',
-                            whiteSpace: 'nowrap',
-                            '&:hover': { bgcolor: '#15803D' }
-                          }}
-                        >
-                          {applyLabel}
-                        </Button>
-                      )}
-
-                      {pdfLink && (
-                        <Button
-                          variant="outlined"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setPendingRedirectUrl(pdfLink);
-                            setRedirectModalOpen(true);
-                          }}
-                          startIcon={<PdfIcon />}
-                          sx={{ 
-                            textTransform: 'none', 
-                            borderRadius: 2, 
-                            fontWeight: 750, 
-                            fontSize: '0.8rem',
-                            color: '#F87171',
-                            borderColor: 'rgba(239, 68, 68, 0.4)',
-                            bgcolor: 'rgba(239, 68, 68, 0.1)',
-                            px: { xs: 1.2, sm: 2 },
-                            py: 0.9,
-                            whiteSpace: 'nowrap',
-                            '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: '#EF4444' }
-                          }}
-                        >
-                          Official PDF
-                        </Button>
-                      )}
-
-                      {officialWeb && (
-                        <Button
-                          variant="outlined"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setPendingRedirectUrl(officialWeb);
-                            setRedirectModalOpen(true);
-                          }}
-                          startIcon={<WebIcon />}
-                          sx={{ 
-                            textTransform: 'none', 
-                            borderRadius: 2, 
-                            fontWeight: 750, 
-                            fontSize: '0.8rem',
-                            color: '#38BDF8',
-                            borderColor: 'rgba(56, 189, 248, 0.4)',
-                            bgcolor: 'rgba(56, 189, 248, 0.1)',
-                            px: { xs: 1.2, sm: 2 },
-                            py: 0.9,
-                            whiteSpace: 'nowrap',
-                            '&:hover': { bgcolor: 'rgba(56, 189, 248, 0.2)', borderColor: '#38BDF8' }
-                          }}
-                        >
-                          Official Portal
-                        </Button>
-                      )}
-                    </Box>
-
-                    <Button 
-                      onClick={() => setSelectedAlert(null)} 
-                      variant="outlined" 
-                      sx={{ 
-                        borderRadius: 2, 
-                        textTransform: 'none', 
-                        fontWeight: 700, 
-                        fontSize: '0.82rem', 
-                        color: '#E2E8F0', 
-                        borderColor: 'rgba(255, 255, 255, 0.2)', 
-                        bgcolor: 'rgba(255, 255, 255, 0.05)', 
-                        py: 0.9, 
-                        px: { xs: 1.8, sm: 2.5 }, 
-                        ml: 'auto', 
-                        whiteSpace: 'nowrap', 
-                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)', borderColor: '#FFFFFF', color: '#FFFFFF' } 
-                      }}
-                    >
-                      Close
-                    </Button>
-                  </>
-                );
-              })()}
-            </DialogActions>
           </>
         )}
       </Dialog>

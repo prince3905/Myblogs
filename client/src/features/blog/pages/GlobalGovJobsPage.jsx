@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import {
   Typography, Button, Box, Alert, CircularProgress,
   IconButton, TextField,
-  Chip, Dialog, DialogContent, DialogTitle, DialogActions,
+  Chip, Dialog, DialogContent, DialogTitle,
   Pagination, Divider, Slide
 } from '@mui/material';
 import {
@@ -2107,122 +2107,9 @@ export default function GlobalGovJobsPage() {
                     </Button>
                   </Box>
                 </Box>
-                <Box sx={{ height: { xs: 30, sm: 40 } }} />
+                <Box sx={{ height: { xs: 20, sm: 30 } }} />
               </Box>
             </DialogContent>
-
-            {/* 🌟 PINNED STICKY BOTTOM ACTION BAR */}
-            <DialogActions sx={{
-              p: { xs: 1.25, sm: 1.8 },
-              bgcolor: '#0F172A !important',
-              backgroundColor: '#0F172A !important',
-              borderTop: '1px solid #1E293B',
-              display: 'flex',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: { xs: 0.8, sm: 1.2 },
-              width: '100%',
-              boxSizing: 'border-box',
-              flexShrink: 0,
-              position: 'sticky',
-              bottom: 0,
-              zIndex: 30,
-              boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.85)'
-            }}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, flex: 1, alignItems: 'center' }}>
-                <Button
-                  variant="contained"
-                  href={selectedJob.officialNoticeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  startIcon={<VerifiedIcon sx={{ fontSize: 18, color: '#34D399' }} />}
-                  sx={{
-                    bgcolor: '#10B981',
-                    color: '#FFFFFF',
-                    fontWeight: 850,
-                    fontSize: { xs: '0.82rem', sm: '0.88rem' },
-                    py: 0.9,
-                    px: { xs: 1.8, sm: 2.8 },
-                    borderRadius: '10px',
-                    textTransform: 'none',
-                    boxShadow: '0 2px 10px rgba(16, 185, 129, 0.4)',
-                    whiteSpace: 'nowrap',
-                    '&:hover': { bgcolor: '#059669' }
-                  }}
-                >
-                  Apply on Official Portal ↗
-                </Button>
-
-                {selectedJob.officialPdfUrl && (
-                  <Button
-                    variant="outlined"
-                    href={selectedJob.officialPdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    startIcon={<PdfIcon />}
-                    sx={{
-                      color: '#38BDF8',
-                      borderColor: '#0284C7',
-                      fontWeight: 750,
-                      fontSize: '0.8rem',
-                      borderRadius: '10px',
-                      textTransform: 'none',
-                      px: { xs: 1.2, sm: 1.8 },
-                      py: 0.9,
-                      whiteSpace: 'nowrap',
-                      '&:hover': { bgcolor: 'rgba(2, 132, 199, 0.1)', borderColor: '#38BDF8' }
-                    }}
-                  >
-                    Official PDF
-                  </Button>
-                )}
-
-                <Button
-                  variant="outlined"
-                  onClick={() => handleWhatsAppShare(selectedJob)}
-                  aria-label="Share via WhatsApp"
-                  startIcon={<WhatsAppIcon sx={{ fontSize: '1rem', color: '#25D366' }} />}
-                  sx={{
-                    color: '#86EFAC',
-                    borderColor: 'rgba(37, 211, 102, 0.4)',
-                    bgcolor: 'rgba(37, 211, 102, 0.08)',
-                    fontWeight: 750,
-                    fontSize: '0.8rem',
-                    borderRadius: '10px',
-                    textTransform: 'none',
-                    px: { xs: 1.2, sm: 1.5 },
-                    py: 0.9,
-                    whiteSpace: 'nowrap',
-                    '&:hover': { bgcolor: '#25D366', color: '#FFFFFF', borderColor: '#25D366' }
-                  }}
-                >
-                  WhatsApp
-                </Button>
-              </Box>
-
-              <Button
-                onClick={closeJobModal}
-                variant="outlined"
-                sx={{
-                  borderRadius: '10px',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  color: '#CBD5E1',
-                  borderColor: 'rgba(255, 255, 255, 0.2)',
-                  bgcolor: 'rgba(255, 255, 255, 0.05)',
-                  py: 0.9,
-                  px: { xs: 1.8, sm: 2.2 },
-                  ml: 'auto',
-                  whiteSpace: 'nowrap',
-                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)', borderColor: '#FFFFFF', color: '#FFFFFF' }
-                }}
-              >
-                Close
-              </Button>
-            </DialogActions>
           </>
         )}
       </Dialog>

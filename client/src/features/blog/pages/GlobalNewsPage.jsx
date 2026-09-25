@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Container, Typography, Grid, Card, CardContent, Chip,
   TextField, Button, CircularProgress, Dialog, DialogTitle,
-  DialogContent, DialogActions, IconButton, Divider
+  DialogContent, IconButton, Divider
 } from '@mui/material';
 import PublicIcon from '@mui/icons-material/Public';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -378,38 +378,6 @@ export default function GlobalNewsPage() {
                   </Box>
                   <Box sx={{ height: { xs: 20, sm: 30 } }} />
                 </DialogContent>
-
-                <DialogActions sx={{
-                  p: { xs: 1.25, sm: 1.5 },
-                  bgcolor: '#0F172A !important',
-                  backgroundColor: '#0F172A !important',
-                  borderTop: '1px solid #1E293B',
-                  flexShrink: 0,
-                  position: 'sticky',
-                  bottom: 0,
-                  zIndex: 30,
-                  boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.85)',
-                  display: 'flex',
-                  justifyContent: 'flex-end'
-                }}>
-                  <Button
-                    onClick={() => setSelectedArticle(null)}
-                    variant="outlined"
-                    sx={{
-                      borderRadius: '10px',
-                      textTransform: 'none',
-                      fontWeight: 700,
-                      color: '#CBD5E1',
-                      borderColor: 'rgba(255, 255, 255, 0.2)',
-                      bgcolor: 'rgba(255, 255, 255, 0.05)',
-                      py: 0.8,
-                      px: 2.5,
-                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)', color: '#FFFFFF' }
-                    }}
-                  >
-                    Close
-                  </Button>
-                </DialogActions>
               </>
             )}
           </Dialog>
