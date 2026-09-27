@@ -168,12 +168,17 @@ export function calculateSeoScore(post, keywordResearch = null) {
   }
 
   // Metric 7: Tables/Data Structure (10 pts)
+  // In News & Trends, World Affairs, or Editorials, structured lists (key takeaways, bullet points) serve as rich data structures for Google Discover & AEO.
+  const isNewsPost = post.category === 'News & Trends' || post.category === 'World Affairs' || post.category === 'Global News';
+  const hasStructuredLists = (content.match(/<li[^>]*>/gi) || []).length >= 3 || (content.match(/^[-*]\s+.+$/gm) || []).length >= 3;
   const hasMarkdownTable = /\|[^\n]+\|\r?\n\s*\|[-:| ]+\|\r?\n\s*\|[^\n]+\|/.test(content);
-  if (content.toLowerCase().includes('<table') || content.toLowerCase().includes('class="comparison-table"') || content.toLowerCase().includes('class="data-table"') || hasMarkdownTable) {
+  const hasTable = content.toLowerCase().includes('<table') || content.toLowerCase().includes('class="comparison-table"') || content.toLowerCase().includes('class="data-table"') || hasMarkdownTable;
+
+  if (hasTable || (isNewsPost && hasStructuredLists)) {
     checks.hasTable = true;
     score += 10;
   } else {
-    suggestions.push("Google Rich Snippets ke liye table (data table ya specs checklist) insert karein.");
+    suggestions.push(isNewsPost ? "Google Rich Snippets ke liye key takeaways bullet points ya summary add karein." : "Google Rich Snippets ke liye table (data table ya specs checklist) insert karein.");
   }
 
   // Metric 8: Meta title/description check (5 pts)

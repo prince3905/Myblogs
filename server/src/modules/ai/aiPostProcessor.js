@@ -790,16 +790,10 @@ async function processAIOutput(data) {
   // Clean rogue trailing/leading quotes, colons, or punctuation from title
   processedTitle = (processedTitle || '').replace(/["':\s]+$/, '').replace(/^["'\s]+/, '').trim();
 
-  // Table Structure Check (SEO)
-  if (!processedContent.toLowerCase().includes('<table')) {
-    const isSarkari = category === 'Sarkari Jobs & Exams';
-    const isTech = category === 'Tech & Tutorials' || category === 'AI & Web Tools';
-    const isFinance = category === 'Finance & Business';
-    const isHealth = category === 'Health & Wellness';
-
-    let tableHtml = '';
-    if (isSarkari) {
-      tableHtml = `
+  // Table Structure Check (SEO): Only inject structured overview tables strictly for Sarkari Job posts.
+  // NEVER force fake dummy tables into News & Trends, World Affairs, or general articles.
+  if (category === 'Sarkari Jobs & Exams' && !processedContent.toLowerCase().includes('<table')) {
+    const tableHtml = `
 <table class="min-w-full divide-y divide-gray-200 border border-gray-300 my-4">
   <thead>
     <tr class="bg-gray-100">
@@ -827,103 +821,6 @@ async function processAIOutput(data) {
   </tbody>
 </table>
 `;
-    } else if (isTech) {
-      tableHtml = `
-<table class="min-w-full divide-y divide-gray-200 border border-gray-300 my-4">
-  <thead>
-    <tr class="bg-gray-100">
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300">फ़ीचर / पैरामीटर (Aspect)</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300">महत्वपूर्ण विवरण (Key Details)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">विषय / टॉपिक (Topic)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">${processedTitle}</td>
-    </tr>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">श्रेणी (Category)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">${category || 'Technology'}</td>
-    </tr>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">मुख्य लाभ (Key Benefit)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">Higher Performance, Productivity & Easy Setup</td>
-    </tr>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">गाइड स्तर (Level)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">Beginner to Advanced (2026 Guide)</td>
-    </tr>
-  </tbody>
-</table>
-`;
-    } else if (isFinance) {
-      tableHtml = `
-<table class="min-w-full divide-y divide-gray-200 border border-gray-300 my-4">
-  <thead>
-    <tr class="bg-gray-100">
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300">वित्तीय पहलू (Financial Parameter)</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300">महत्वपूर्ण जानकारी (Details)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">विषय / योजना (Topic)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">${processedTitle}</td>
-    </tr>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">फोकस एरिया (Target Area)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">Savings, Smart Investment & Tax Benefits</td>
-    </tr>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">निवेश का समय (Horizon)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">Short-term & Long-term Planning (2026)</td>
-    </tr>
-  </tbody>
-</table>
-`;
-    } else if (isHealth) {
-      tableHtml = `
-<table class="min-w-full divide-y divide-gray-200 border border-gray-300 my-4">
-  <thead>
-    <tr class="bg-gray-100">
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300">स्वास्थ्य पहलू (Health Factor)</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300">महत्वपूर्ण जानकारी (Advisory & Tips)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">विषय (Health Focus)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">${processedTitle}</td>
-    </tr>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">प्राथमिक उपचार (Approach)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">Natural Diet, Yoga & Lifestyle Balance</td>
-    </tr>
-  </tbody>
-</table>
-`;
-    } else {
-      tableHtml = `
-<table class="min-w-full divide-y divide-gray-200 border border-gray-300 my-4">
-  <thead>
-    <tr class="bg-gray-100">
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300">मुख्य बिंदु (Key Points)</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-300">महत्वपूर्ण विवरण (Details)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">अपडेट / टॉपिक (Topic)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">${processedTitle}</td>
-    </tr>
-    <tr>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">स्थिति (Status)</td>
-      <td class="px-4 py-2 text-sm text-gray-600 border border-gray-300">Latest Live Analysis (2026)</td>
-    </tr>
-  </tbody>
-</table>
-`;
-    }
 
     const linksIdx = processedContent.indexOf('<h2>महत्वपूर्ण लिंक्स');
     if (linksIdx > 0) {

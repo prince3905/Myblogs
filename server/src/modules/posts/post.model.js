@@ -164,17 +164,38 @@ blogPostSchema.pre('save', async function (next) {
         };
 
         const cleanTitle = getCleanAlertTitle(post.title);
-        const searchRegex = new RegExp(cleanTitle.slice(0, Math.min(cleanTitle.length, 25)).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
-        const firstWord = cleanTitle.split(' ')[0] || '';
 
-        const escapedFirstWord = firstWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        alertObj = await LiveAlert.findOne({
-          $or: [
-            { title: cleanTitle },
-            { title: { $regex: searchRegex } },
-            ...(firstWord.length > 3 ? [{ title: { $regex: new RegExp(escapedFirstWord, 'i') } }] : [])
-          ]
-        });
+        // 1. Direct sourceAlert reference if present
+        if (post.sourceAlert) {
+          alertObj = await LiveAlert.findById(post.sourceAlert);
+        }
+
+        // 2. Exact clean title match (highest accuracy)
+        if (!alertObj) {
+          alertObj = await LiveAlert.findOne({ title: cleanTitle });
+        }
+
+        // 3. Match by canonicalUrl / sourceUrl
+        if (!alertObj && (post.sourceUrl || post.canonicalUrl)) {
+          alertObj = await LiveAlert.findOne({
+            $or: [
+              ...(post.sourceUrl ? [{ sourceUrl: post.sourceUrl }] : []),
+              ...(post.canonicalUrl ? [{ sourceUrl: post.canonicalUrl }] : [])
+            ]
+          });
+        }
+
+        // 4. Specific multi-word prefix regex match (at least 2-3 words, NEVER a loose 1-word fallback)
+        if (!alertObj) {
+          const words = cleanTitle.split(/\s+/).filter(w => w.length > 2);
+          if (words.length >= 2) {
+            const multiWordPrefix = words.slice(0, 3).join(' ');
+            if (multiWordPrefix.length >= 8) {
+              const escapedKey = multiWordPrefix.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+              alertObj = await LiveAlert.findOne({ title: { $regex: new RegExp(escapedKey, 'i') } });
+            }
+          }
+        }
 
         if (alertObj) {
           if (alertObj.boardName) boardName = alertObj.boardName.trim();
@@ -415,14 +436,26 @@ blogPostSchema.pre('save', async function (next) {
         $(table).find('th').attr('style', "border: 1px solid #E5E7EB; padding: 12px 16px; text-align: left; font-weight: 600; color: #111827; background-color: #F9FAFB;");
         $(table).find('td').attr('style', "border: 1px solid #E5E7EB; padding: 12px 16px; color: #374151;");
         
-        // Auto-fix plain text "Check Detail Page" or Hindi "चेक डिटेल पेज" or any stray sarkariresult links in table cells into active, clickable official links!
-        $(table).find('td').each((tdIdx, tdEl) => {
-          const cellText = $(tdEl).text().trim();
-          const cellHtml = $(tdEl).html() || '';
-          if (/(check|चेक)\s*(detail|official|page|डिटेल|पेज)/i.test(cellText) || cellText.includes('चेक डिटेल') || isSarkariResultUrl(cellHtml)) {
-            $(tdEl).html(`<a href="${defaultPdfUrl}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: 700; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">अधिसूचना देखें (Notice Out 📄)</a>`);
-          }
-        });
+        // Auto-fix ONLY explicit placeholder text in non-label cells (col > 0) strictly for Sarkari job posts with a valid official PDF URL!
+        if (isJobPost && defaultPdfUrl && defaultPdfUrl.startsWith('http')) {
+          $(table).find('tr').each((rIdx, trEl) => {
+            $(trEl).find('td').each((tdIdx, tdEl) => {
+              // NEVER touch the first column (labels/categories/post names/event names)
+              if (tdIdx === 0) return;
+
+              const cellText = $(tdEl).text().trim();
+              // Check if cell is strictly a placeholder phrase (e.g. "Check Detail Page", "Check Notification", "चेक डिटेल")
+              const isPlaceholder = /^(check|चेक)\s*(detail|official|page|notification|notice|डिटेल|पेज|नोटिफिकेशन)?$/i.test(cellText) ||
+                                   /^(click here|यहाँ देखें|यहाँ क्लिक करें|check now)$/i.test(cellText) ||
+                                   cellText === 'चेक डिटेल' ||
+                                   cellText === 'अधिसूचना देखें';
+
+              if (isPlaceholder) {
+                $(tdEl).html(`<a href="${defaultPdfUrl}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: 700; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">अधिसूचना देखें (Notice Out 📄)</a>`);
+              }
+            });
+          });
+        }
 
         if (!$(table).parent().hasClass('ql-table-embed')) {
           $(table).wrap('<div class="ql-table-embed"></div>');
