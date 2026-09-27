@@ -51,6 +51,124 @@ function formatAmpUrl(urlStr) {
     .replace(/>/g, '&gt;');
 }
 
+// Traffic and Referrer Intelligence Parser
+function parseTrafficContext(req) {
+  const userAgent = (req.get('user-agent') || '').toLowerCase();
+  const rawReferer = (req.get('referrer') || req.get('referer') || '').trim();
+  const refLower = rawReferer.toLowerCase();
+  
+  // 1. Detect if Bot / Search Crawler
+  const isBot = /googlebot|bingbot|yandex|baiduspider|duckduckbot|slurp|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest\/0\.|pinterestbot|slackbot|vkshare|w3c_validator|crawler|spider|bot|lighthouse|headlesschrome|curl|python-requests|node-fetch|postman/i.test(userAgent);
+
+  // 2. Detect Device
+  let device = 'Mobile';
+  if (/tablet|ipad/i.test(userAgent)) {
+    device = 'Tablet';
+  } else if (/mobile|android|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent)) {
+    device = 'Mobile';
+  } else {
+    device = 'Desktop';
+  }
+
+  // 3. Detect Source
+  let source = 'Direct / App';
+  let sourceKey = 'direct';
+
+  if (isBot) {
+    source = 'Googlebot / Web Crawler';
+    sourceKey = 'bots';
+  } else if (
+    refLower.includes('googlequicksearchbox') ||
+    refLower.includes('android-app://com.google.android.googlequicksearchbox') ||
+    refLower.includes('com.google.android.apps.searchlite') ||
+    refLower.includes('amp-web-story') ||
+    (refLower.includes('google.') && (refLower.includes('amp') || refLower.includes('discover') || refLower.includes('feed')))
+  ) {
+    source = 'Google Discover';
+    sourceKey = 'googleDiscover';
+  } else if (refLower.includes('google.') || refLower.includes('bing.') || refLower.includes('yahoo.') || refLower.includes('duckduckgo.')) {
+    source = 'Google Search';
+    sourceKey = 'googleSearch';
+  } else if (refLower.includes('digitalhomeblog.in') || refLower.includes('localhost') || refLower.includes('127.0.0.1')) {
+    source = 'Website Homepage';
+    sourceKey = 'internalWebsite';
+  } else if (refLower.includes('whatsapp') || refLower.includes('android-app://com.whatsapp')) {
+    source = 'WhatsApp';
+    sourceKey = 'social';
+  } else if (refLower.includes('telegram') || refLower.includes('org.telegram') || refLower.includes('t.me')) {
+    source = 'Telegram';
+    sourceKey = 'social';
+  } else if (refLower.includes('facebook') || refLower.includes('instagram') || refLower.includes('twitter') || refLower.includes('t.co') || refLower.includes('linkedin')) {
+    source = 'Social Media';
+    sourceKey = 'social';
+  } else if (rawReferer) {
+    try {
+      const urlObj = new URL(rawReferer);
+      source = urlObj.hostname.replace(/^www\./, '');
+      sourceKey = 'direct';
+    } catch {
+      source = 'External Link';
+      sourceKey = 'direct';
+    }
+  } else {
+    source = 'Direct / App';
+    sourceKey = 'direct';
+  }
+
+  // Masked IP for privacy
+  const rawIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
+  const clientIp = Array.isArray(rawIp) ? rawIp[0] : (rawIp.split(',')[0] || '').trim();
+  const maskedIp = clientIp.includes('.') 
+    ? clientIp.split('.').slice(0, 2).join('.') + '.xxx.xxx' 
+    : (clientIp ? 'IP-Protected' : 'Anonymous');
+
+  const country = req.headers['cf-ipcountry'] || req.headers['x-country-code'] || 'India';
+
+  return { isBot, device, source, sourceKey, rawReferer, maskedIp, country };
+}
+
+// Background Story View & Referrer Analytics Recorder
+async function recordStoryView(storyId, req, extraSource = null) {
+  try {
+    const traffic = parseTrafficContext(req);
+    const isAdminPreview = req.query.preview === 'true';
+    if (isAdminPreview) return;
+
+    const updateOps = {};
+    if (traffic.isBot) {
+      updateOps.$inc = { 'trafficSources.bots': 1 };
+    } else {
+      const finalSource = extraSource || traffic.source;
+      const finalKey = extraSource === 'Google Discover (AMP Cache)' ? 'googleDiscover' : traffic.sourceKey;
+      
+      updateOps.$inc = {
+        views: 1,
+        [`trafficSources.${finalKey}`]: 1,
+        [`devices.${traffic.device.toLowerCase()}`]: 1
+      };
+      
+      updateOps.$push = {
+        recentReferrers: {
+          $each: [{
+            source: finalSource,
+            rawReferer: (req.query.ref || traffic.rawReferer || '').substring(0, 250),
+            device: traffic.device,
+            country: traffic.country,
+            city: req.headers['cf-ipcity'] || '',
+            ip: traffic.maskedIp,
+            timestamp: new Date()
+          }],
+          $slice: -30
+        }
+      };
+    }
+
+    await WebStory.updateOne({ _id: storyId }, updateOps);
+  } catch (err) {
+    console.error('[WebStory Analytics] Failed to record view:', err.message);
+  }
+}
+
 async function renderWebStory(req, res, next) {
   try {
     const { slug } = req.params;
@@ -72,10 +190,8 @@ async function renderWebStory(req, res, next) {
       return res.status(404).send('Web Story is currently a draft. Please publish it or use ?preview=true to view.');
     }
 
-    // Increment view count in background
-    WebStory.updateOne({ _id: story._id }, { $inc: { views: 1 } }).catch(err => {
-      console.error('[WebStory Analytics] Failed to increment views:', err.message);
-    });
+    // Record view & traffic analytics in background
+    recordStoryView(story._id, req);
 
     // Resolve post path details
     const categorySlug = catUrlSlug(story.post?.category);
@@ -122,6 +238,14 @@ async function renderWebStory(req, res, next) {
       "datePublished": "${new Date(story.createdAt || Date.now()).toISOString()}",
       "dateModified": "${new Date(story.updatedAt || Date.now()).toISOString()}",
       "inLanguage": "hi-IN",
+      "isAccessibleForFree": "true",
+      "articleSection": "Government Jobs & Sarkari Naukri",
+      "keywords": "${escapedTitle}, Sarkari Naukri, Online Form 2026, Government Jobs",
+      "author": {
+        "@type": "Organization",
+        "name": "Global Careers Intelligence Desk",
+        "url": "https://www.digitalhomeblog.in"
+      },
       "publisher": {
         "@type": "Organization",
         "name": "Digital Home",
@@ -138,6 +262,8 @@ async function renderWebStory(req, res, next) {
     
     <script async src="https://cdn.ampproject.org/v0.js"></script>
     <script async custom-element="amp-story" src="https://cdn.ampproject.org/v0/amp-story-1.0.js"></script>
+    <script async custom-element="amp-story-auto-ads" src="https://cdn.ampproject.org/v0/amp-story-auto-ads-0.1.js"></script>
+    <script async custom-element="amp-analytics" src="https://cdn.ampproject.org/v0/amp-analytics-0.1.js"></script>
     
     <style amp-custom>
       amp-story-page {
@@ -145,7 +271,7 @@ async function renderWebStory(req, res, next) {
         font-family: 'Outfit', -apple-system, sans-serif;
       }
       .text-layer {
-        padding: 30px 24px;
+        padding: 30px 24px 60px 24px;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
@@ -183,6 +309,10 @@ async function renderWebStory(req, res, next) {
         letter-spacing: 0.08em;
         box-shadow: 0 3px 6px rgba(37,99,235,0.4);
       }
+      .badge-live {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        box-shadow: 0 3px 10px rgba(220,38,38,0.5);
+      }
       .cta-button {
         display: inline-block;
         background: linear-gradient(135deg, #2563eb, #1d4ed8);
@@ -218,10 +348,36 @@ async function renderWebStory(req, res, next) {
                poster-square-src="${coverImage}"
                poster-landscape-src="${coverImage}">
                
-      <!-- Slide 1: Cover/Hook -->
-      <amp-story-page id="slide1">
+      <!-- Google AdSense Auto-Ads between story slides -->
+      <amp-story-auto-ads>
+        <script type="application/json">
+        {
+          "ad-attributes": {
+            "type": "adsense",
+            "data-ad-client": "ca-pub-7044184444698366",
+            "data-ad-slot": "auto"
+          }
+        }
+        </script>
+      </amp-story-auto-ads>
+
+      <!-- 1-Click Social Share Sheet (WhatsApp, Telegram, etc.) -->
+      <amp-story-social-share layout="nodisplay">
+        <script type="application/json">
+        [
+          { "provider": "whatsapp" },
+          { "provider": "telegram" },
+          { "provider": "facebook" },
+          { "provider": "twitter" },
+          { "provider": "system" }
+        ]
+        </script>
+      </amp-story-social-share>
+
+      <!-- Slide 1: Cover/Hook (Auto-Advance 5s) -->
+      <amp-story-page id="slide1" auto-advance-after="5s">
         <amp-story-grid-layer template="fill">
-          <amp-img src="${formatAmpUrl(story.slides?.[0]?.image)}"
+          <amp-img src="${coverImage}"
                    width="720" height="1280"
                    layout="responsive"
                    alt="${escapeXml(story.slides?.[0]?.heading || story.title)}">
@@ -229,15 +385,18 @@ async function renderWebStory(req, res, next) {
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
-            <span class="badge" animate-in="fade-in" animate-in-duration="0.4s">Vacancy Alert</span>
+            <span class="badge badge-live" animate-in="fade-in" animate-in-duration="0.4s">🔥 Live Vacancy Alert</span>
             <h1 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[0]?.heading || story.title)}</h1>
             <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[0]?.text || story.title)}</p>
           </div>
         </amp-story-grid-layer>
+        <amp-story-page-outlink layout="nodisplay" theme="dark">
+          <a href="${postUrl}">📢 पूरी भर्ती विवरण व कुल पद चेक करें</a>
+        </amp-story-page-outlink>
       </amp-story-page>
 
-      <!-- Slide 2: Eligibility -->
-      <amp-story-page id="slide2">
+      <!-- Slide 2: Eligibility (Auto-Advance 6s) -->
+      <amp-story-page id="slide2" auto-advance-after="6s">
         <amp-story-grid-layer template="fill">
           <amp-img src="${formatAmpUrl(story.slides?.[1]?.image)}"
                    width="720" height="1280"
@@ -247,15 +406,18 @@ async function renderWebStory(req, res, next) {
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
-            <span class="badge" animate-in="fade-in" animate-in-duration="0.4s">Qualification</span>
+            <span class="badge" animate-in="fade-in" animate-in-duration="0.4s">📋 Eligibility & Age Limit</span>
             <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[1]?.heading || 'Eligibility & Rules')}</h2>
             <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[1]?.text || 'Check qualification details in full article.')}</p>
           </div>
         </amp-story-grid-layer>
+        <amp-story-page-outlink layout="nodisplay" theme="dark">
+          <a href="${postUrl}">📋 शैक्षणिक योग्यता व आयु सीमा देखें</a>
+        </amp-story-page-outlink>
       </amp-story-page>
 
-      <!-- Slide 3: Dates & Fees -->
-      <amp-story-page id="slide3">
+      <!-- Slide 3: Dates & Fees (Auto-Advance 6s) -->
+      <amp-story-page id="slide3" auto-advance-after="6s">
         <amp-story-grid-layer template="fill">
           <amp-img src="${formatAmpUrl(story.slides?.[2]?.image)}"
                    width="720" height="1280"
@@ -265,15 +427,18 @@ async function renderWebStory(req, res, next) {
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
-            <span class="badge" animate-in="fade-in" animate-in-duration="0.4s">Important Dates</span>
+            <span class="badge" animate-in="fade-in" animate-in-duration="0.4s">📅 Dates & Application Fee</span>
             <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[2]?.heading || 'Dates & Fees')}</h2>
             <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[2]?.text || 'Important application dates & fee details.')}</p>
           </div>
         </amp-story-grid-layer>
+        <amp-story-page-outlink layout="nodisplay" theme="dark">
+          <a href="${postUrl}">📅 अंतिम तिथि व फीस विवरण देखें</a>
+        </amp-story-page-outlink>
       </amp-story-page>
 
-      <!-- Slide 4: Photo & Signature Tools Alert -->
-      <amp-story-page id="slide4">
+      <!-- Slide 4: Photo & Signature Tools Alert (Auto-Advance 6s) -->
+      <amp-story-page id="slide4" auto-advance-after="6s">
         <amp-story-grid-layer template="fill">
           <amp-img src="${formatAmpUrl(story.slides?.[3]?.image)}"
                    width="720" height="1280"
@@ -283,18 +448,18 @@ async function renderWebStory(req, res, next) {
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer">
-            <span class="badge" style="background: linear-gradient(135deg, #059669, #10B981);" animate-in="fade-in" animate-in-duration="0.4s">Free Student Tools</span>
+            <span class="badge" style="background: linear-gradient(135deg, #059669, #10B981);" animate-in="fade-in" animate-in-duration="0.4s">🛠️ Free Student Tools</span>
             <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[3]?.heading || 'Form Photo & Signature Resizer')}</h2>
             <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[3]?.text || 'Photo aur signature size sahi karein taaki form reject na ho.')}</p>
           </div>
         </amp-story-grid-layer>
-        <amp-story-page-outlink layout="nodisplay">
-          <a href="https://www.digitalhomeblog.in/tools">🛠️ Resize Photo & Signature Free</a>
+        <amp-story-page-outlink layout="nodisplay" theme="dark">
+          <a href="https://www.digitalhomeblog.in/tools">🛠️ Resize Photo & Signature (Free Online)</a>
         </amp-story-page-outlink>
       </amp-story-page>
 
-      <!-- Slide 5: Call to Action -->
-      <amp-story-page id="slide5">
+      <!-- Slide 5: Call to Action (Long Hold 15s) -->
+      <amp-story-page id="slide5" auto-advance-after="15s">
         <amp-story-grid-layer template="fill">
           <amp-img src="${formatAmpUrl(story.slides?.[4]?.image)}"
                    width="720" height="1280"
@@ -304,15 +469,32 @@ async function renderWebStory(req, res, next) {
         </amp-story-grid-layer>
         <amp-story-grid-layer template="vertical">
           <div class="text-layer text-layer-center">
-            <span class="badge badge-center" animate-in="fade-in" animate-in-duration="0.4s">Direct Link Active</span>
+            <span class="badge badge-center badge-live" animate-in="fade-in" animate-in-duration="0.4s">⚡ 100% Direct Official Link</span>
             <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[4]?.heading || 'Apply Online Now')}</h2>
-            <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[4]?.text || 'Click below to read full guide and apply.')}</p>
+            <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[4]?.text || 'Click below to read full guide, syllabus and apply.')}</p>
           </div>
         </amp-story-grid-layer>
-        <amp-story-page-outlink layout="nodisplay">
-          <a href="${postUrl}">👉 Read Full Notification & Apply</a>
+        <amp-story-page-outlink layout="nodisplay" theme="dark">
+          <a href="${postUrl}">👉 आधिकारिक नोटिफिकेशन PDF व ऑनलाइन फॉर्म</a>
         </amp-story-page-outlink>
       </amp-story-page>
+
+      <!-- AMP Analytics for Google Discover & AMP Cache View Tracking -->
+      <amp-analytics>
+        <script type="application/json">
+        {
+          "requests": {
+            "pageview": "https://www.digitalhomeblog.in/api/public/web-stories/${story.slug}/amp-ping?ref=\${documentReferrer}&source=amp-cache"
+          },
+          "triggers": {
+            "trackStoryView": {
+              "on": "story-page-visible",
+              "request": "pageview"
+            }
+          }
+        }
+        </script>
+      </amp-analytics>
     </amp-story>
   </body>
 </html>`;
@@ -323,6 +505,29 @@ async function renderWebStory(req, res, next) {
   } catch (err) {
     console.error('[WebStory Render] Error rendering AMP Story:', err);
     return next(err);
+  }
+}
+
+// AMP Analytics ping receiver (for Google AMP Cache viewers)
+async function pingAmpAnalytics(req, res) {
+  try {
+    const { slug } = req.params;
+    const story = await WebStory.findOne({
+      $or: [
+        { slug: slug },
+        ...(mongoose.isValidObjectId(slug) ? [{ _id: slug }] : [])
+      ]
+    }).select('_id');
+    
+    if (story) {
+      recordStoryView(story._id, req, 'Google Discover (AMP Cache)');
+    }
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    return res.status(204).end();
+  } catch (err) {
+    return res.status(204).end();
   }
 }
 
@@ -347,8 +552,40 @@ async function getPublishedWebStories(req, res) {
 
 async function getWebStories(req, res) {
   try {
-    const stories = await WebStory.find({}).sort({ createdAt: -1 }).populate('post', 'title slug category').lean();
-    res.json(stories);
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+    const search = (req.query.search || '').trim();
+
+    const query = {};
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { slug: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const [stories, total] = await Promise.all([
+      WebStory.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('post', 'title slug category')
+        .lean(),
+      WebStory.countDocuments(query)
+    ]);
+
+    res.json({
+      success: true,
+      stories,
+      data: stories,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit) || 1
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -402,9 +639,9 @@ async function pingWebStoryIndexing(req, res) {
     const story = await WebStory.findById(id).lean();
     if (!story) return res.status(404).json({ error: 'Web Story not found' });
 
-    const { pingGoogleIndexing } = require('../../shared/utils/googleIndexing');
+    const { notifyUrl } = require('../../shared/utils/google-indexing');
     const storyUrl = `https://www.digitalhomeblog.in/web-stories/${story.slug}`;
-    const result = await pingGoogleIndexing(storyUrl, 'URL_UPDATED');
+    const result = await notifyUrl(storyUrl, 'URL_UPDATED');
 
     const { logAutomation } = require('../../shared/utils/automationLogger');
     logAutomation({
@@ -422,6 +659,7 @@ async function pingWebStoryIndexing(req, res) {
 
 module.exports = {
   renderWebStory,
+  pingAmpAnalytics,
   getPublishedWebStories,
   getWebStories,
   listAdminWebStories: getWebStories,

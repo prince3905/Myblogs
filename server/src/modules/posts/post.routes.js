@@ -10,9 +10,10 @@ router.get('/categories', listCategories);
 router.get('/meta/site', siteMeta);
 router.post('/posts/:slug/like', likePost);
 
-// Public Web Stories list endpoint
-const { getPublishedWebStories } = require('./webstory.controller');
+// Public Web Stories list endpoint & AMP analytics ping
+const { getPublishedWebStories, pingAmpAnalytics } = require('./webstory.controller');
 router.get('/public/web-stories', getPublishedWebStories);
+router.get('/public/web-stories/:slug/amp-ping', pingAmpAnalytics);
 
 // Public Live Alerts endpoint
 router.get('/public/live-alerts', getAlerts);

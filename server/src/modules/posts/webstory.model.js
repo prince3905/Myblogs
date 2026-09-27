@@ -6,6 +6,31 @@ const slideSchema = new mongoose.Schema({
   image: { type: String, required: true, trim: true }
 });
 
+const referrerLogSchema = new mongoose.Schema({
+  source: { type: String, default: 'Direct' },
+  rawReferer: { type: String, default: '' },
+  device: { type: String, default: 'Mobile' },
+  country: { type: String, default: 'India' },
+  city: { type: String, default: '' },
+  ip: { type: String, default: '' },
+  timestamp: { type: Date, default: Date.now }
+}, { _id: false });
+
+const trafficSourcesSchema = new mongoose.Schema({
+  googleDiscover: { type: Number, default: 0 },
+  googleSearch: { type: Number, default: 0 },
+  internalWebsite: { type: Number, default: 0 },
+  social: { type: Number, default: 0 },
+  direct: { type: Number, default: 0 },
+  bots: { type: Number, default: 0 }
+}, { _id: false });
+
+const devicesSchema = new mongoose.Schema({
+  mobile: { type: Number, default: 0 },
+  desktop: { type: Number, default: 0 },
+  tablet: { type: Number, default: 0 }
+}, { _id: false });
+
 const webStorySchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
@@ -13,7 +38,10 @@ const webStorySchema = new mongoose.Schema(
     post: { type: mongoose.Schema.Types.ObjectId, ref: 'BlogPost', required: true },
     slides: { type: [slideSchema], required: true },
     status: { type: String, enum: ['draft', 'published'], default: 'draft' },
-    views: { type: Number, default: 0 }
+    views: { type: Number, default: 0 },
+    trafficSources: { type: trafficSourcesSchema, default: () => ({}) },
+    devices: { type: devicesSchema, default: () => ({}) },
+    recentReferrers: { type: [referrerLogSchema], default: [] }
   },
   { timestamps: true }
 );
