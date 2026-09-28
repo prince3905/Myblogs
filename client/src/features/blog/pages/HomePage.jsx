@@ -1,5 +1,7 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
+
+const ReelsModalPlayer = lazy(() => import('../components/ReelsModalPlayer'));
 import { Container, Typography, Button, Box, Chip, Avatar, IconButton, CircularProgress } from '@mui/material';
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import ChevronRight from '@mui/icons-material/ChevronRight';
@@ -237,7 +239,7 @@ const InteractiveAlertsMarquee = ({ alerts = [], onLoadMore, hasMore = false, lo
   );
 };
 
-const InteractiveStoriesMarquee = ({ stories = [], onLoadMore, hasMore = false, loadingMore = false }) => {
+const InteractiveStoriesMarquee = ({ stories = [], onLoadMore, hasMore = false, loadingMore = false, onStoryClick }) => {
   const scrollContainerRef = useRef(null);
 
   const handleScroll = (e) => {
@@ -342,6 +344,12 @@ const InteractiveStoriesMarquee = ({ stories = [], onLoadMore, hasMore = false, 
             href={`/web-stories/${story.slug}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => {
+              if (onStoryClick && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                e.preventDefault();
+                onStoryClick(sIdx);
+              }
+            }}
             sx={{
               flex: { xs: '0 0 160px', sm: '0 0 190px', md: '0 0 210px' },
               aspectRatio: '9/16',
@@ -2304,6 +2312,8 @@ export default function HomePage() {
 
   const [stories, setStories] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_STORIES__) && window.__INITIAL_STORIES__.length > 0) ? window.__INITIAL_STORIES__ : []);
   const [loadingStories, setLoadingStories] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_STORIES__) && window.__INITIAL_STORIES__.length > 0) ? false : true);
+  const [reelsOpen, setReelsOpen] = useState(false);
+  const [selectedReelIndex, setSelectedReelIndex] = useState(0);
 
   const [alertsPage, setAlertsPage] = useState(1);
   const [hasMoreAlerts, setHasMoreAlerts] = useState(true);
@@ -2772,6 +2782,10 @@ export default function HomePage() {
               onLoadMore={loadMoreStories} 
               hasMore={hasMoreStories} 
               loadingMore={loadingMoreStories} 
+              onStoryClick={(idx) => {
+                setSelectedReelIndex(idx);
+                setReelsOpen(true);
+              }}
             />
           )}
         </Container>
@@ -2901,6 +2915,17 @@ export default function HomePage() {
           </Box>
         </Container>
       </Box>
+      {/* Instagram / YouTube Shorts Style Butter-Smooth Reels Player (0 KB initial bundle impact) */}
+      {reelsOpen && (
+        <Suspense fallback={null}>
+          <ReelsModalPlayer
+            open={reelsOpen}
+            onClose={() => setReelsOpen(false)}
+            stories={stories}
+            initialIndex={selectedReelIndex}
+          />
+        </Suspense>
+      )}
     </Layout>
   );
 }

@@ -139,7 +139,11 @@ async function recordStoryView(storyId, req, extraSource = null) {
       updateOps.$inc = { 'trafficSources.bots': 1 };
     } else {
       const finalSource = extraSource || traffic.source;
-      const finalKey = extraSource === 'Google Discover (AMP Cache)' ? 'googleDiscover' : traffic.sourceKey;
+      const finalKey = extraSource === 'Google Discover (AMP Cache)' 
+        ? 'googleDiscover' 
+        : extraSource === 'Website Reels Player'
+        ? 'internalWebsite'
+        : traffic.sourceKey;
       
       updateOps.$inc = {
         views: 1,
@@ -333,6 +337,19 @@ async function renderWebStory(req, res, next) {
       .badge-center {
         align-self: center;
       }
+      .next-pill {
+        margin-top: 14px;
+        font-size: 13px;
+        font-weight: 800;
+        color: #fde047;
+        background: rgba(0,0,0,0.65);
+        padding: 8px 18px;
+        border-radius: 9999px;
+        border: 1px solid rgba(253,224,71,0.5);
+        display: inline-block;
+        letter-spacing: 0.02em;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+      }
       amp-img img {
         object-fit: cover;
       }
@@ -472,12 +489,16 @@ async function renderWebStory(req, res, next) {
             <span class="badge badge-center badge-live" animate-in="fade-in" animate-in-duration="0.4s">⚡ 100% Direct Official Link</span>
             <h2 class="slide-title" animate-in="fly-in-bottom" animate-in-duration="0.5s">${escapeXml(story.slides?.[4]?.heading || 'Apply Online Now')}</h2>
             <p class="slide-desc" animate-in="fly-in-bottom" animate-in-duration="0.6s" animate-in-delay="0.1s">${escapeXml(story.slides?.[4]?.text || 'Click below to read full guide, syllabus and apply.')}</p>
+            <div class="next-pill" animate-in="fade-in" animate-in-duration="0.5s" animate-in-delay="0.2s">⏭️ स्वाइप करें अगली भर्ती देखने के लिए ➔</div>
           </div>
         </amp-story-grid-layer>
         <amp-story-page-outlink layout="nodisplay" theme="dark">
           <a href="${postUrl}">👉 आधिकारिक नोटिफिकेशन PDF व ऑनलाइन फॉर्म</a>
         </amp-story-page-outlink>
       </amp-story-page>
+
+      <!-- Google AMP Story Bookend (Next Job Reels on Swipe/End) -->
+      <amp-story-bookend src="https://www.digitalhomeblog.in/api/public/web-stories/${story.slug}/bookend.json" layout="nodisplay"></amp-story-bookend>
 
       <!-- AMP Analytics for Google Discover & AMP Cache View Tracking -->
       <amp-analytics>
@@ -520,7 +541,10 @@ async function pingAmpAnalytics(req, res) {
     }).select('_id');
     
     if (story) {
-      recordStoryView(story._id, req, 'Google Discover (AMP Cache)');
+      const sourceOverride = req.query.source === 'website-reels'
+        ? 'Website Reels Player'
+        : 'Google Discover (AMP Cache)';
+      recordStoryView(story._id, req, sourceOverride);
     }
 
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -657,9 +681,68 @@ async function pingWebStoryIndexing(req, res) {
   }
 }
 
+// Google AMP Web Story Bookend Endpoint (Chains next stories for Google Discover & AMP Viewer)
+async function getWebStoryBookend(req, res) {
+  try {
+    const { slug } = req.params;
+    const currentStory = await WebStory.findOne({
+      $or: [{ slug: slug }, ...(mongoose.isValidObjectId(slug) ? [{ _id: slug }] : [])]
+    }).select('_id createdAt').lean();
+
+    const otherStories = await WebStory.find({
+      status: 'published',
+      _id: { $ne: currentStory?._id }
+    })
+      .sort({ createdAt: -1 })
+      .limit(4)
+      .select('title slug slides createdAt')
+      .lean();
+
+    const components = [
+      {
+        type: 'heading',
+        text: '🔥 अगली सरकारी भर्तियां (Next Job Reels)'
+      }
+    ];
+
+    otherStories.forEach(s => {
+      components.push({
+        type: 'landscape',
+        title: s.title,
+        url: `https://www.digitalhomeblog.in/web-stories/${s.slug}`,
+        image: s.slides?.[0]?.image || 'https://www.digitalhomeblog.in/logo.png',
+        category: 'Sarkari Job Alert'
+      });
+    });
+
+    components.push({
+      type: 'cta-link',
+      links: [
+        {
+          text: '🌐 सभी लाइव सरकारी नौकरियां देखें (Official)',
+          url: 'https://www.digitalhomeblog.in/'
+        }
+      ]
+    });
+
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=3600');
+    return res.json({
+      bookendVersion: 'v1.0',
+      shareProviders: ['whatsapp', 'telegram', 'facebook', 'twitter'],
+      components
+    });
+  } catch (err) {
+    console.error('[WebStory Bookend] Error generating bookend:', err.message);
+    return res.status(500).json({ error: 'Failed to generate bookend' });
+  }
+}
+
 module.exports = {
   renderWebStory,
   pingAmpAnalytics,
+  getWebStoryBookend,
   getPublishedWebStories,
   getWebStories,
   listAdminWebStories: getWebStories,
