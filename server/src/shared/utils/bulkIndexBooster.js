@@ -3,69 +3,139 @@ const { notifyUrl, notifyBatchIndexNow, pingSitemapEngines } = require('./google
 const { logAutomation } = require('./automationLogger');
 
 /**
- * Sweeper Script: Bulk Indexes All Published Blog Posts & Live Alerts
- * 1. Pushes all URLs in batches to IndexNow (Bing, Yandex, Seznam).
- * 2. Pushes top priority un-indexed URLs to Google Indexing API.
- * 3. Triggers Sitemap Ping to Google & Bing.
+ * 360° Comprehensive Sweeper: Bulk Indexes All Live Vacancies, Alerts, Stories & Posts
+ * 1. Collects all canonical URLs across Indian Sarkari, Global Jobs, Web Stories, and Blog Posts.
+ * 2. Pushes all URLs in batches of 500 to IndexNow (Bing, Yandex, Seznam, Naver).
+ * 3. Pushes top priority un-indexed URLs to Google Indexing API (capped safely under daily limit).
+ * 4. Triggers Sitemap Ping to Google & Bing.
  */
 async function runBulkIndexSweep() {
-  console.log('[Bulk Index Sweep] Starting comprehensive site-wide indexing sweep...');
+  console.log('[Bulk Index Sweep] Starting comprehensive 360° site-wide indexing sweep...');
   
   try {
-    require('../../modules/posts/post.model');
-    const BlogPost = mongoose.model('BlogPost');
+    const host = 'https://www.digitalhomeblog.in';
+    const allUrls = [];
 
-    const posts = await BlogPost.find({ status: 'published' })
-      .select('title category slug canonicalUrl updatedAt')
-      .sort({ updatedAt: -1 })
-      .lean();
+    // 1. Core Hub URLs
+    allUrls.push(
+      `${host}`,
+      `${host}/india/sarkari-jobs`,
+      `${host}/global-jobs`,
+      `${host}/global-news`,
+      `${host}/tools`,
+      `${host}/india/current-affairs`
+    );
 
-    if (!posts || posts.length === 0) {
-      console.log('[Bulk Index Sweep] No published posts found.');
+    // 2. Blog Posts
+    try {
+      require('../../modules/posts/post.model');
+      const BlogPost = mongoose.model('BlogPost');
+      const posts = await BlogPost.find({ status: 'published' })
+        .select('title category slug canonicalUrl updatedAt')
+        .sort({ updatedAt: -1 })
+        .limit(300)
+        .lean();
+
+      posts.forEach(p => {
+        const catSlug = (p.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
+        allUrls.push(p.canonicalUrl || `${host}/blog/${catSlug}/${p.slug}`);
+      });
+    } catch (postErr) {
+      console.warn('[Bulk Index Sweep] Notice reading BlogPost:', postErr.message);
+    }
+
+    // 3. Indian Sarkari Live Alerts (Direct individual crawlable URLs)
+    try {
+      const LiveAlert = require('../../modules/liveAlerts/liveAlert.model');
+      const liveAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
+        .select('_id parsedPostDate createdAt')
+        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .limit(800)
+        .lean();
+
+      liveAlerts.forEach(a => {
+        allUrls.push(`${host}/india/sarkari-jobs/${a._id}`);
+      });
+    } catch (alertErr) {
+      console.warn('[Bulk Index Sweep] Notice reading LiveAlert:', alertErr.message);
+    }
+
+    // 4. Global Government Jobs
+    try {
+      const GlobalJob = require('../../modules/globalJobs/globalJob.model');
+      const globalJobs = await GlobalJob.find()
+        .select('officialReferenceId _id createdAt')
+        .sort({ createdAt: -1 })
+        .limit(400)
+        .lean();
+
+      globalJobs.forEach(j => {
+        const ref = j.officialReferenceId || j._id;
+        allUrls.push(`${host}/global-jobs/view/${encodeURIComponent(ref)}`);
+      });
+    } catch (jobErr) {
+      console.warn('[Bulk Index Sweep] Notice reading GlobalJob:', jobErr.message);
+    }
+
+    // 5. Google Discover Web Stories
+    try {
+      const WebStory = mongoose.model('WebStory');
+      const stories = await WebStory.find({ status: 'published' })
+        .select('slug updatedAt')
+        .sort({ updatedAt: -1 })
+        .limit(200)
+        .lean();
+
+      stories.forEach(s => {
+        if (s.slug) {
+          allUrls.push(`${host}/web-stories/${s.slug}`);
+        }
+      });
+    } catch (storyErr) {
+      console.warn('[Bulk Index Sweep] Notice reading WebStory:', storyErr.message);
+    }
+
+    // De-duplicate URLs
+    const uniqueUrls = Array.from(new Set(allUrls.filter(Boolean)));
+    console.log(`[Bulk Index Sweep] Collected ${uniqueUrls.length} total crawlable URLs for multi-engine submission.`);
+
+    if (uniqueUrls.length === 0) {
       return { success: true, count: 0 };
     }
 
-    const host = 'https://www.digitalhomeblog.in';
-    const allUrls = posts.map(p => {
-      const catSlug = (p.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
-      return p.canonicalUrl || `${host}/blog/${catSlug}/${p.slug}`;
-    });
-
-    console.log(`[Bulk Index Sweep] Found ${allUrls.length} total published URLs.`);
-
-    // 1. Send all URLs in batches of 500 to IndexNow
+    // Step A: Send all URLs in batches of 500 to IndexNow (Bing, Yandex, Seznam, Naver)
     const BATCH_SIZE = 500;
     let indexNowSuccessCount = 0;
-    for (let i = 0; i < allUrls.length; i += BATCH_SIZE) {
-      const batch = allUrls.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < uniqueUrls.length; i += BATCH_SIZE) {
+      const batch = uniqueUrls.slice(i, i + BATCH_SIZE);
       const res = await notifyBatchIndexNow(batch);
-      if (res.success) {
+      if (res && res.success) {
         indexNowSuccessCount += batch.length;
       }
     }
 
-    // 2. Ping Google Indexing API for top 50 latest posts (within Google's daily 200 API quota)
-    const topGoogleBatch = allUrls.slice(0, 50);
+    // Step B: Push top priority fresh URLs to Google Indexing API (capped safely to protect daily quota)
+    const topGoogleBatch = uniqueUrls.slice(0, 40);
     let googleSuccessCount = 0;
     for (const url of topGoogleBatch) {
       try {
         const gRes = await notifyUrl(url, 'URL_UPDATED');
-        if (gRes.success) googleSuccessCount++;
+        if (gRes && gRes.success) googleSuccessCount++;
       } catch (e) {}
     }
 
-    // 3. Ping Google & Bing with updated sitemap.xml
+    // Step C: Ping Google & Bing with updated sitemap.xml
     await pingSitemapEngines();
 
-    console.log(`[Bulk Index Sweep] Sweep completed! IndexNow: ${indexNowSuccessCount} URLs, Google API: ${googleSuccessCount} URLs.`);
+    console.log(`[Bulk Index Sweep] Complete! IndexNow: ${indexNowSuccessCount} URLs, Google API: ${googleSuccessCount} URLs.`);
 
     logAutomation({
       service: 'SEO_INDEXING',
       level: 'SUCCESS',
-      action: 'Bulk Index Sweep Completed',
-      message: `Dispatched ${indexNowSuccessCount} URLs to IndexNow Multi-Engine and ${googleSuccessCount} URLs to Google Indexing API.`,
+      action: '360° Bulk Index Sweep Completed',
+      message: `Dispatched ${indexNowSuccessCount} URLs across Indian Sarkari, Global Jobs & Stories to IndexNow, and ${googleSuccessCount} high-priority URLs to Google Indexing API.`,
       metadata: {
-        totalUrls: allUrls.length,
+        totalUrls: uniqueUrls.length,
         indexNowCount: indexNowSuccessCount,
         googleCount: googleSuccessCount
       }
@@ -73,7 +143,7 @@ async function runBulkIndexSweep() {
 
     return {
       success: true,
-      totalUrls: allUrls.length,
+      totalUrls: uniqueUrls.length,
       indexNowCount: indexNowSuccessCount,
       googleCount: googleSuccessCount
     };
