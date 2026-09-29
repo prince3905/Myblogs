@@ -64,7 +64,7 @@ export default function Seo({ title, description, image, url, canonical, keyword
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={desc} />
       <meta property="og:type" content={jsonLd ? 'article' : 'website'} />
-      <meta property="og:url" content={pageUrl} />
+      <meta property="og:url" content={canonicalUrl} />
       <meta property="og:site_name" content={siteName} />
       {image && <meta property="og:image" content={image} />}
       {jsonLd?.datePublished && <meta property="article:published_time" content={jsonLd.datePublished} />}

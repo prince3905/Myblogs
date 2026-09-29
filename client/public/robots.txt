@@ -6,5 +6,9 @@ Disallow: /tags/
 Disallow: /tags/*
 Disallow: /tag/
 Disallow: /tag/*
+Disallow: /*?alert=*
+Disallow: /*?search=*
+Disallow: /*%20*
+Disallow: /* *
 
 Sitemap: https://www.digitalhomeblog.in/sitemap.xml

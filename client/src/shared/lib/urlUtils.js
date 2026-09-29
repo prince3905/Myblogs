@@ -35,7 +35,11 @@ export function normalizeCanonicalUrl(inputUrl) {
     }
     urlObj.pathname = pathname || '/';
 
-    return urlObj.toString();
+    let finalUrl = urlObj.toString();
+    if (finalUrl === 'https://www.digitalhomeblog.in/') {
+      finalUrl = 'https://www.digitalhomeblog.in';
+    }
+    return finalUrl;
   } catch (e) {
     return 'https://www.digitalhomeblog.in';
   }

@@ -485,7 +485,7 @@ const AlertCard = ({ alert, idx }) => {
   const isNew = new Date() - new Date(alert.createdAt) < 3 * 24 * 60 * 60 * 1000;
 
   return (
-    <Link to={`/job-alerts?alert=${alert._id}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+    <Link to={`/india/sarkari-jobs/${alert._id}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
       <Box
         sx={{
           p: { xs: 1.2, sm: 1.5 },
@@ -853,7 +853,7 @@ const HubAlertItem = ({ alert, accentColor }) => {
   const isNew = new Date() - new Date(alert.createdAt) < 7 * 24 * 60 * 60 * 1000;
   return (
     <Link
-      to={`/job-alerts?alert=${alert._id}`}
+      to={`/india/sarkari-jobs/${alert._id}`}
       style={{ textDecoration: 'none', display: 'block' }}
     >
       <Box

@@ -209,10 +209,11 @@ async function buildHomepageHtml() {
 
   try {
     const mongoose = require('mongoose');
-    const WebStory = mongoose.models.WebStory || mongoose.model('WebStory');
-    const LiveAlert = mongoose.models.LiveAlert || mongoose.model('LiveAlert');
-    const BlogPost = mongoose.models.BlogPost || mongoose.model('BlogPost');
-    const CurrentAffairs = mongoose.models.CurrentAffairs || mongoose.model('CurrentAffairs');
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      const WebStory = mongoose.models.WebStory || mongoose.model('WebStory');
+      const LiveAlert = mongoose.models.LiveAlert || mongoose.model('LiveAlert');
+      const BlogPost = mongoose.models.BlogPost || mongoose.model('BlogPost');
+      const CurrentAffairs = mongoose.models.CurrentAffairs || mongoose.model('CurrentAffairs');
 
     let initialResults = [];
     let initialAdmits = [];
@@ -268,6 +269,7 @@ async function buildHomepageHtml() {
     const initialPostsPayload = { posts: sarkariPosts, total: sarkariPosts.length, page: 1, pages: 1 };
     const scriptTag = `<script>window.__INITIAL_POSTS__ = ${JSON.stringify(initialPostsPayload).replace(/</g, '\\u003c')}; window.__INITIAL_STORIES__ = ${JSON.stringify(initialStories || []).replace(/</g, '\\u003c')}; window.__INITIAL_ALERTS__ = ${JSON.stringify(initialAlerts || []).replace(/</g, '\\u003c')}; window.__INITIAL_RESULTS__ = ${JSON.stringify(initialResults || []).replace(/</g, '\\u003c')}; window.__INITIAL_ADMITS__ = ${JSON.stringify(initialAdmits || []).replace(/</g, '\\u003c')}; window.__INITIAL_SARKARI_POSTS__ = ${JSON.stringify(sarkariPosts || []).replace(/</g, '\\u003c')}; window.__INITIAL_CURRENT_AFFAIRS__ = ${JSON.stringify(initialCurrentAffairs || []).replace(/</g, '\\u003c')};</script>`;
     html = html.replace('</head>', `${lcpPreloadTag}\n${scriptTag}\n</head>`);
+    }
   } catch (ssrErr) {
     console.warn('Failed to pre-fetch initial SSR data:', ssrErr.message);
   }
@@ -275,8 +277,9 @@ async function buildHomepageHtml() {
   // Inject static HTML links for SEO crawlers (limited to top 30 latest posts + top 30 live alerts)
   try {
     const mongoose = require('mongoose');
-    const BlogPost = mongoose.model('BlogPost');
-    const LiveAlert = mongoose.model('LiveAlert');
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      const BlogPost = mongoose.model('BlogPost');
+      const LiveAlert = mongoose.model('LiveAlert');
 
     const [topPosts, topAlerts] = await Promise.all([
       BlogPost.find({ status: 'published' })
@@ -300,13 +303,18 @@ async function buildHomepageHtml() {
       seoLinks += `  <a href="${path}">${p.title}</a>\n`;
     });
     topAlerts.forEach(a => {
-      seoLinks += `  <a href="/job-alerts?alert=${a._id}">${a.title}</a>\n`;
+      seoLinks += `  <a href="/india/sarkari-jobs/${a._id}">${a.title}</a>\n`;
     });
     seoLinks += '</div>\n';
 
     html = html.replace('<body>', `<body>${seoLinks}`);
+    }
   } catch (dbErr) {
     console.warn('Failed to inject SEO crawler links:', dbErr.message);
+  }
+
+  if (!html.includes('rel="canonical"')) {
+    html = html.replace('</head>', '    <link rel="canonical" href="https://www.digitalhomeblog.in" />\n</head>');
   }
 
   cachedHomepageHtml = html;
@@ -869,7 +877,9 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
       return res.status(200).send(html);
     }
 
-    next();
+    // If individual alert not found in DB, 301 permanent redirect to Sarkari Hub
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.redirect(301, 'https://www.digitalhomeblog.in/india/sarkari-jobs');
   } catch (err) {
     next(err);
   }
@@ -878,34 +888,33 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
 // Dynamic Server-Side Meta Tag & Crawler Links for Indian Sarkari Jobs Portal Hub
 app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res, next) => {
   try {
-    const alertIdParam = req.query.alert;
-    if (alertIdParam) {
-      const mongoose = require('mongoose');
-      const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
-      if (mongoose.Types.ObjectId.isValid(alertIdParam)) {
-        req.params.id = alertIdParam;
-        return app._router.handle(req, res, next);
-      }
-    }
-
     const indexPath = path.join(publicPath, 'index.html');
     if (!fs.existsSync(indexPath)) {
       return res.status(404).send('index.html not found');
     }
     let html = fs.readFileSync(indexPath, 'utf8');
 
-    const mongoose = require('mongoose');
-    const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
-    const topAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
-      .select('title category state _id parsedPostDate')
-      .sort({ parsedPostDate: -1, createdAt: -1 })
-      .limit(60)
-      .lean();
+    let topAlerts = [];
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection && mongoose.connection.readyState === 1) {
+        const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+        topAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
+          .select('title category state _id parsedPostDate')
+          .sort({ parsedPostDate: -1, createdAt: -1 })
+          .limit(60)
+          .lean();
+      }
+    } catch (dbErr) {
+      console.warn('[SSR Hub] LiveAlert query bypassed:', dbErr.message);
+    }
+
+    const cleanPath = (req.path || '').toLowerCase().replace(/\/+$/, '') || '/india/sarkari-jobs';
+    const canonicalUrl = `https://www.digitalhomeblog.in${cleanPath}`;
 
     const siteName = 'Digital Home Sarkari Result';
     const fullTitle = 'Sarkari Result 2026: Latest Online Forms, Admit Card, Result & Answer Key | Digital Home';
     const desc = 'Latest Sarkari Result 2026 notifications, central & state government recruitment, UPSC, SSC, Railways, Banking, Defense & State PSC exam admit cards and answer keys.';
-    const canonicalUrl = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
     const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
 
     let crawlerLinks = '\n<div style="display:none;" id="seo-crawler-sarkari-links" aria-hidden="true">\n';
@@ -915,12 +924,15 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     });
     crawlerLinks += '</div>\n';
 
+    const breadcrumbTitle = cleanPath.includes('job-alerts') 
+      ? 'Latest Job Alerts' 
+      : (cleanPath.includes('live-alerts') ? 'Live Alerts' : 'Sarkari Result & Govt Jobs');
     const breadcrumbSchema = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       'itemListElement': [
         { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://www.digitalhomeblog.in' },
-        { '@type': 'ListItem', 'position': 2, 'name': 'Sarkari Result & Govt Jobs', 'item': canonicalUrl }
+        { '@type': 'ListItem', 'position': 2, 'name': breadcrumbTitle, 'item': canonicalUrl }
       ]
     };
 
@@ -942,8 +954,9 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     <script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>
     `;
 
-    html = html.replace(/<title>.*?<\/title>/, '');
-    html = html.replace(/<meta name="description" .*?\/>/, '');
+    html = html.replace(/<title>.*?<\/title>/i, '');
+    html = html.replace(/<meta name="description" .*?\/>/i, '');
+    html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
     html = html.replace('</head>', `${metaTags}\n</head>`);
     html = html.replace('<body>', `<body>${crawlerLinks}`);
 
@@ -1019,13 +1032,160 @@ app.get(['/global-jobs', '/global-jobs/:country'], async (req, res, next) => {
   }
 });
 
-// Handle client-side routing (React Router) - only if file doesn't exist
-app.get('*', (req, res) => {
-  const filePath = path.join(publicPath, req.path);
-  if (require('fs').existsSync(filePath)) {
-    return res.sendFile(filePath);
+// Known Valid Client Routes for React Single Page App
+const KNOWN_EXACT_ROUTES = new Set([
+  '/',
+  '/blog',
+  '/job-alerts',
+  '/live-alerts',
+  '/india/sarkari-jobs',
+  '/india/current-affairs',
+  '/india/daily-quiz',
+  '/current-affairs',
+  '/daily-quiz',
+  '/global-jobs',
+  '/global-news',
+  '/about',
+  '/contact',
+  '/privacy',
+  '/terms',
+  '/archive',
+  '/search',
+  '/tools',
+  '/games',
+  '/admin/login'
+]);
+
+const KNOWN_PREFIX_ROUTES = [
+  '/admin',
+  '/category/',
+  '/tags/',
+  '/blog/',
+  '/india/',
+  '/current-affairs/',
+  '/daily-quiz/',
+  '/global-jobs/',
+  '/job-alerts/',
+  '/live-alerts/',
+  '/web-stories/'
+];
+
+function isKnownFrontendRoute(pathname) {
+  const p = (pathname || '/').toLowerCase().replace(/\/+$/, '') || '/';
+  if (KNOWN_EXACT_ROUTES.has(p)) return true;
+  for (const prefix of KNOWN_PREFIX_ROUTES) {
+    if (p.startsWith(prefix)) return true;
   }
-  res.sendFile(path.join(publicPath, 'index.html'));
+  return false;
+}
+
+// Check database for matching slug when a URL is unmapped or malformed
+async function findDatabaseSlug(cleanSlug) {
+  if (!cleanSlug) return null;
+  try {
+    const mongoose = require('mongoose');
+    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+      return null;
+    }
+    const BlogPost = mongoose.model('BlogPost');
+    const LiveAlert = mongoose.model('LiveAlert');
+    const post = await BlogPost.findOne({ slug: cleanSlug, status: 'published' }).select('slug category').lean();
+    if (post) return { type: 'post', item: post };
+    if (mongoose.Types.ObjectId.isValid(cleanSlug)) {
+      const alert = await LiveAlert.findById(cleanSlug).select('_id').lean();
+      if (alert) return { type: 'alert', item: alert };
+    }
+  } catch (e) {}
+  return null;
+}
+
+// Handle client-side routing & Permanent 404/Canonical Sanitization
+app.get('*', async (req, res, next) => {
+  try {
+    const rawPath = req.path || '/';
+    const filePath = path.join(publicPath, rawPath);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      return res.sendFile(filePath);
+    }
+
+    const indexPath = path.join(publicPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(404).send('index.html not found');
+    }
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    // 1. Detect malformed URLs containing raw spaces, %20, unencoded characters, or wildcard characters
+    const rawUrl = req.originalUrl || req.url || rawPath;
+    let decodedPath = '';
+    try {
+      decodedPath = decodeURIComponent(rawUrl);
+    } catch (e) {
+      decodedPath = rawPath;
+    }
+
+    const hasMalformedChars = rawPath.includes(' ') || 
+      rawUrl.includes('%20') || 
+      decodedPath.includes(' ') || 
+      rawPath.includes('*') || 
+      rawUrl.includes('*');
+
+    const cleanCandidate = (decodedPath.split('?')[0] || rawPath)
+      .toLowerCase()
+      .replace(/^\/+/, '')
+      .replace(/[^a-z0-9-]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    const isKnown = isKnownFrontendRoute(rawPath);
+
+    // If malformed or unknown, check if database matches
+    let dbMatch = null;
+    if (hasMalformedChars || !isKnown) {
+      dbMatch = await findDatabaseSlug(cleanCandidate);
+    }
+
+    // If candidate matches a database entry, 301 redirect to canonical destination
+    if (dbMatch) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      if (dbMatch.type === 'post') {
+        const catSlug = (dbMatch.item.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'sarkari-jobs-exams';
+        return res.redirect(301, `https://www.digitalhomeblog.in/blog/${catSlug}/${dbMatch.item.slug}`);
+      } else if (dbMatch.type === 'alert') {
+        return res.redirect(301, `https://www.digitalhomeblog.in/india/sarkari-jobs/${dbMatch.item._id}`);
+      }
+    }
+
+    // 2. Malformed / Broken Search Slugs or Unknown URLs: Return strict HTTP 404 with noindex, follow & canonical
+    if (hasMalformedChars || !isKnown) {
+      const notFoundCanonical = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
+      const noindexMeta = `
+    <title>404 — Page Not Found | Digital Home</title>
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href="${notFoundCanonical}" />
+      `;
+      html = html.replace(/<title>.*?<\/title>/i, '');
+      html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
+      html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
+      html = html.replace('</head>', `${noindexMeta}\n</head>`);
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      return res.status(404).send(html);
+    }
+
+    // 3. Valid Known Route: Render with HTTP 200 OK and clean, self-referential canonical (zero query params)
+    const { normalizeCanonicalUrl } = require('./shared/utils/urlUtils');
+    const cleanCanonicalUrl = normalizeCanonicalUrl(rawPath);
+
+    const canonicalTag = `<link rel="canonical" href="${cleanCanonicalUrl}" />`;
+    html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
+    html = html.replace('</head>', `    ${canonicalTag}\n</head>`);
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+    return res.status(200).send(html);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Error handling (must be last)

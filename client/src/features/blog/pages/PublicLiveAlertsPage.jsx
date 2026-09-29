@@ -1,5 +1,5 @@
 import { useEffect, useState, Fragment, useMemo, useRef } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Typography, Button, Table, TableBody, TableCell, TableContainer,
   TableRow, Paper, Chip, Box, Alert, CircularProgress, LinearProgress,
@@ -1344,6 +1344,7 @@ export function extractPostalAddress(alert) {
 
 export default function PublicLiveAlertsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id: routeAlertId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const alertIdParam = routeAlertId || searchParams.get('alert');
@@ -1597,12 +1598,24 @@ export default function PublicLiveAlertsPage() {
     return { jobs, admitCards, results, answerKeys, syllabus, admissions };
   }, [filteredAlerts]);
 
+  const isJobAlertsPath = location.pathname.startsWith('/job-alerts');
+  const isLiveAlertsPath = location.pathname.startsWith('/live-alerts');
+  const cleanHubCanonical = isJobAlertsPath
+    ? 'https://www.digitalhomeblog.in/job-alerts'
+    : (isLiveAlertsPath
+        ? 'https://www.digitalhomeblog.in/live-alerts'
+        : 'https://www.digitalhomeblog.in/india/sarkari-jobs');
+
+  const pageCanonicalUrl = (selectedAlert && routeAlertId)
+    ? `https://www.digitalhomeblog.in/india/sarkari-jobs/${selectedAlert._id}`
+    : cleanHubCanonical;
+
   return (
     <Layout>
       <Seo 
         title={selectedAlert ? `${selectedAlert.title} (${selectedAlert.boardName || 'Official Board'}) | Sarkari Result & Live Alerts` : "Sarkari Result 2026: Live Job Alerts, Admit Cards & Vacancies | Digital Home"} 
         description={selectedAlert ? `Official notification for ${selectedAlert.title} by ${selectedAlert.boardName || 'Official Board'}. Apply online, check eligibility, fee, syllabus, and last date: ${selectedAlert.lastDate || 'Active'}.` : "Browse, filter, and search active Indian Sarkari job vacancies, admit cards, and results fetched dynamically from official government boards."} 
-        canonical={selectedAlert ? `https://www.digitalhomeblog.in/india/sarkari-jobs/${selectedAlert._id}` : "https://www.digitalhomeblog.in/india/sarkari-jobs"}
+        canonical={pageCanonicalUrl}
         noindex={Boolean(searchParams.get('search') && !selectedAlert)}
       />
 

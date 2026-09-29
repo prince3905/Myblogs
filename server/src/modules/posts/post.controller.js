@@ -815,6 +815,10 @@ Disallow: /tags/
 Disallow: /tags/*
 Disallow: /tag/
 Disallow: /tag/*
+Disallow: /*?alert=*
+Disallow: /*?search=*
+Disallow: /*%20*
+Disallow: /* *
 
 Sitemap: https://www.digitalhomeblog.in/sitemap.xml
 `);
@@ -991,6 +995,10 @@ async function getHomepageData() {
   const now = Date.now();
   if (cachedPostsFeed && (now - cacheTimestamp < CACHE_TTL)) {
     return { posts: cachedPostsFeed, total: cachedPostsTotal, page: 1, pages: Math.ceil(cachedPostsTotal / 10) };
+  }
+  const mongoose = require('mongoose');
+  if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+    return null;
   }
   try {
     const query = { status: 'published' };
