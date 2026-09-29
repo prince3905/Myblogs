@@ -378,19 +378,6 @@ async function renderWebStory(req, res, next) {
         </script>
       </amp-story-auto-ads>
 
-      <!-- 1-Click Social Share Sheet (WhatsApp, Telegram, etc.) -->
-      <amp-story-social-share layout="nodisplay">
-        <script type="application/json">
-        [
-          { "provider": "whatsapp" },
-          { "provider": "telegram" },
-          { "provider": "facebook" },
-          { "provider": "twitter" },
-          { "provider": "system" }
-        ]
-        </script>
-      </amp-story-social-share>
-
       <!-- Slide 1: Cover/Hook (Auto-Advance 5s) -->
       <amp-story-page id="slide1" auto-advance-after="5s">
         <amp-story-grid-layer template="fill">
@@ -497,9 +484,6 @@ async function renderWebStory(req, res, next) {
         </amp-story-page-outlink>
       </amp-story-page>
 
-      <!-- Google AMP Story Bookend (Next Job Reels on Swipe/End) -->
-      <amp-story-bookend src="https://www.digitalhomeblog.in/api/public/web-stories/${story.slug}/bookend.json" layout="nodisplay"></amp-story-bookend>
-
       <!-- AMP Analytics for Google Discover & AMP Cache View Tracking -->
       <amp-analytics>
         <script type="application/json">
@@ -516,6 +500,9 @@ async function renderWebStory(req, res, next) {
         }
         </script>
       </amp-analytics>
+
+      <!-- Google AMP Story Bookend (Next Job Reels - Must be the last child of amp-story) -->
+      <amp-story-bookend src="https://www.digitalhomeblog.in/api/public/web-stories/${story.slug}/bookend.json" layout="nodisplay"></amp-story-bookend>
     </amp-story>
   </body>
 </html>`;
