@@ -66,6 +66,15 @@ function validatePost(data) {
   if (!data.title || !data.excerpt || !data.content || !data.category) {
     return 'Title, excerpt, content and category are required';
   }
+  // Minimum Word-Count Guard for Active Jobs & Posts:
+  // Do NOT allow empty or thin single-paragraph posts to be published (minimum 250+ words of structured information per job page)
+  if (data.status === 'published') {
+    const textOnly = (data.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const wordCount = textOnly ? textOnly.split(' ').length : 0;
+    if (wordCount < 250) {
+      return `Article content is too thin (${wordCount} words). A minimum of 250+ words of structured information is required to publish.`;
+    }
+  }
   return null;
 }
 

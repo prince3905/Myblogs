@@ -65,8 +65,8 @@ const InteractivePillMarquee = () => {
           const targetUrl = f.query === '__tools__' 
             ? '/tools' 
             : f.query === '__current_affairs__'
-            ? '/current-affairs'
-            : (f.query ? `/job-alerts?search=${encodeURIComponent(f.query)}` : '/job-alerts');
+            ? '/india/current-affairs'
+            : '/india/sarkari-jobs';
           return (
             <Chip
               key={i}
