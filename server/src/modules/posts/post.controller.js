@@ -642,33 +642,45 @@ async function siteMeta(req, res) {
   });
 }
 
+// Strict validator to ensure only 200 OK canonical public URLs enter sitemap.xml
+function isValidSitemapUrl(urlStr) {
+  if (!urlStr || typeof urlStr !== 'string') return false;
+  const u = urlStr.trim();
+  // Must be an absolute canonical URL on digitalhomeblog.in
+  if (!u.startsWith('https://www.digitalhomeblog.in')) return false;
+
+  // Filter out any query params (?search=, ?alert=, etc.) or hashes
+  if (u.includes('?') || u.includes('&') || u.includes('#')) return false;
+
+  // Filter out any admin or api paths
+  if (u.includes('/admin') || u.includes('/api/')) return false;
+
+  // Filter out tag paths (/tags/*, /tag/*)
+  if (u.includes('/tags') || u.includes('/tag/')) return false;
+
+  // Filter out search, archive, test, or non-content utility routes
+  if (u.includes('/search') || u.includes('/test') || u.includes('/archive')) return false;
+
+  // Filter out unencoded/malformed spaces, %20, wildcard characters
+  if (u.includes(' ') || u.includes('%20') || u.includes('*')) return false;
+
+  return true;
+}
+
+function formatSitemapEntry(loc, lastmod, changefreq = 'daily', priority = '0.8') {
+  if (!isValidSitemapUrl(loc)) return '';
+  return `<url><loc>${loc}</loc><lastmod>${lastmod}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
+}
+
 async function sitemap(req, res) {
   try {
     // Prevent CDN and browser caching of sitemap XML to ensure updates show immediately
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
     const { normalizeCanonicalUrl } = require('../../shared/utils/urlUtils');
+    const homeMod = new Date().toISOString();
 
-    // Strictly query LIVE, PUBLISHED Sarkari Job articles (Prevents niche confusion by excluding generic AI/Tech/Health posts)
-    const posts = await BlogPost.find({ 
-      status: 'published',
-      category: { $regex: /job|sarkari|exam|result|recruitment/i },
-      slug: { $exists: true, $type: 'string', $ne: '' }
-    })
-      .select('canonicalUrl category slug updatedAt publishedAt')
-      .sort({ updatedAt: -1 })
-      .lean();
-
-    const urls = posts
-      .filter(p => p.slug && p.category)
-      .map((post) => {
-        const canonical = normalizeCanonicalUrl(post.canonicalUrl || postUrl(post));
-        const lastmod = post.updatedAt ? new Date(post.updatedAt).toISOString() : (post.publishedAt ? new Date(post.publishedAt).toISOString() : new Date().toISOString());
-        return `<url><loc>${canonical}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
-      })
-      .join('');
-
-    // Strictly INDEXABLE static pages & International Country Hubs for all active nations
+    // 1. Strictly INDEXABLE static pages & International Country Hubs for all active nations
     const baseStaticPages = [
       '/india/sarkari-jobs',
       '/about', '/contact', '/privacy', '/terms',
@@ -676,126 +688,162 @@ async function sitemap(req, res) {
     ];
 
     let countryHubs = ['IN', 'US', 'AE', 'GB', 'CA', 'AU', 'SA', 'DE'];
-    try {
-      const GlobalJob = require('../globalJobs/globalJob.model');
-      const activeCountryCodes = await GlobalJob.distinct('countryCode');
-      if (activeCountryCodes && activeCountryCodes.length > 0) {
-        countryHubs = Array.from(new Set([...countryHubs, ...activeCountryCodes]));
-      }
-    } catch (cErr) {}
+    const isDbConnected = mongoose.connection && mongoose.connection.readyState === 1;
+
+    if (isDbConnected) {
+      try {
+        const GlobalJob = require('../globalJobs/globalJob.model');
+        const activeCountryCodes = await GlobalJob.distinct('countryCode');
+        if (activeCountryCodes && activeCountryCodes.length > 0) {
+          countryHubs = Array.from(new Set([...countryHubs, ...activeCountryCodes]));
+        }
+      } catch (cErr) {}
+    }
 
     const staticPages = [
-      ...baseStaticPages,
-      ...countryHubs.map(c => `/global-jobs/${c}`)
-    ].map(p => {
-      const priority = p.includes('sarkari') || p.includes('global-jobs') ? '0.9' : '0.8';
-      return `<url><loc>${normalizeCanonicalUrl(p)}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>${priority}</priority></url>`;
-    }).join('');
+      ...baseStaticPages.map(p => {
+        const priority = p.includes('sarkari') || p.includes('global-jobs') ? '0.9' : '0.8';
+        return formatSitemapEntry(normalizeCanonicalUrl(p), homeMod, 'daily', priority);
+      }),
+      ...countryHubs.map(c => formatSitemapEntry(normalizeCanonicalUrl(`/global-jobs/${c}`), homeMod, 'daily', '0.9'))
+    ].join('');
 
-    // Only include job-related categories in sitemap.xml
-    const categories = await BlogPost.distinct('category', { 
-      status: 'published',
-      category: { $regex: /job|sarkari|exam|result|recruitment/i }
-    });
-    const categoryUrls = categories
-      .filter(Boolean)
-      .map((cat) => {
-        return `<url><loc>${normalizeCanonicalUrl(`/category/${catUrlSlug(cat)}`)}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>`;
-      })
-      .join('');
-
-    // Note: Tag pages (/tags/:tag) are strictly marked noindex in TagPage.jsx and blocked in robots.txt, so they are excluded from sitemap.xml!
-
-    // Include published Web Stories dynamically
+    let urls = '';
+    let categoryUrls = '';
     let storyUrls = '';
-    try {
-      const WebStory = mongoose.model('WebStory');
-      const stories = await WebStory.find({ 
-        status: 'published',
-        slug: { $exists: true, $type: 'string', $ne: '' }
-      })
-        .select('slug updatedAt')
-        .sort({ updatedAt: -1 })
-        .lean();
-      storyUrls = stories
-        .filter(s => s.slug)
-        .map((story) => {
-          const lastmod = story.updatedAt ? new Date(story.updatedAt).toISOString() : new Date().toISOString();
-          return `<url><loc>${normalizeCanonicalUrl(`/web-stories/${story.slug}`)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
-        })
-        .join('');
-    } catch (storyErr) {
-      console.error('[Sitemap] Failed to append Web Stories:', storyErr.message);
-    }
-
-    // Include active Indian Sarkari Live Alerts dynamically (Crawlable URLs with High Priority 0.9)
     let liveAlertUrls = '';
-    try {
-      const LiveAlert = require('../liveAlerts/liveAlert.model');
-      const liveAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
-        .select('_id title updatedAt parsedPostDate createdAt')
-        .sort({ parsedPostDate: -1, createdAt: -1 })
-        .limit(1000)
-        .lean();
-
-      liveAlertUrls = liveAlerts
-        .map((a) => {
-          const lastmod = a.updatedAt ? new Date(a.updatedAt).toISOString() : (a.parsedPostDate ? new Date(a.parsedPostDate).toISOString() : new Date(a.createdAt).toISOString());
-          return `<url><loc>https://www.digitalhomeblog.in/india/sarkari-jobs/${a._id}</loc><lastmod>${lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>`;
-        })
-        .join('');
-    } catch (alertErr) {
-      console.error('[Sitemap] Failed to append Live Alerts:', alertErr.message);
-    }
-
-    // Include published Daily Current Affairs dynamically
     let caUrls = '';
-    try {
-      const CurrentAffairs = require('../currentAffairs/currentAffairs.model');
-      const caPosts = await CurrentAffairs.find({
-        status: 'published',
-        slug: { $exists: true, $type: 'string', $ne: '' }
-      })
-        .select('slug publishDate updatedAt')
-        .sort({ publishDate: -1 })
-        .limit(100)
-        .lean();
-
-      caUrls = `<url><loc>https://www.digitalhomeblog.in/current-affairs</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>`;
-      caUrls += caPosts
-        .filter(c => c.slug)
-        .map((ca) => {
-          const lastmod = ca.updatedAt ? new Date(ca.updatedAt).toISOString() : (ca.publishDate ? new Date(ca.publishDate).toISOString() : new Date().toISOString());
-          return `<url><loc>${normalizeCanonicalUrl(`/current-affairs/${ca.slug}`)}</loc><lastmod>${lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>`;
-        })
-        .join('');
-    } catch (caErr) {
-      console.error('[Sitemap] Failed to append Current Affairs:', caErr.message);
-    }
-
-    // Include verified Global Government Vacancies dynamically
     let globalJobUrls = '';
-    try {
-      const GlobalJob = require('../globalJobs/globalJob.model');
-      const globalJobs = await GlobalJob.find()
-        .select('officialReferenceId createdAt updatedAt')
-        .sort({ createdAt: -1 })
-        .limit(350)
-        .lean();
 
-      globalJobUrls = globalJobs
-        .map((j) => {
-          const ref = j.officialReferenceId || j._id;
-          const lastmod = j.updatedAt ? new Date(j.updatedAt).toISOString() : new Date(j.createdAt).toISOString();
-          return `<url><loc>https://www.digitalhomeblog.in/global-jobs/view/${encodeURIComponent(ref)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>`;
+    if (isDbConnected) {
+      // 2. Published Sarkari Job articles
+      try {
+        const posts = await BlogPost.find({ 
+          status: 'published',
+          category: { $regex: /job|sarkari|exam|result|recruitment/i },
+          slug: { $exists: true, $type: 'string', $ne: '' }
         })
-        .join('');
-    } catch (jobErr) {
-      console.error('[Sitemap] Failed to append Global Jobs:', jobErr.message);
+          .select('canonicalUrl category slug updatedAt publishedAt')
+          .sort({ updatedAt: -1 })
+          .lean();
+
+        urls = posts
+          .filter(p => p.slug && p.category)
+          .map((post) => {
+            const canonical = normalizeCanonicalUrl(post.canonicalUrl || postUrl(post));
+            const lastmod = post.updatedAt ? new Date(post.updatedAt).toISOString() : (post.publishedAt ? new Date(post.publishedAt).toISOString() : new Date().toISOString());
+            return formatSitemapEntry(canonical, lastmod, 'weekly', '0.8');
+          })
+          .join('');
+      } catch (postErr) {
+        console.warn('[Sitemap] Failed to query posts:', postErr.message);
+      }
+
+      // 3. Category Hubs (only job-related, no tags)
+      try {
+        const categories = await BlogPost.distinct('category', { 
+          status: 'published',
+          category: { $regex: /job|sarkari|exam|result|recruitment/i }
+        });
+        categoryUrls = categories
+          .filter(Boolean)
+          .map((cat) => {
+            return formatSitemapEntry(normalizeCanonicalUrl(`/category/${catUrlSlug(cat)}`), homeMod, 'daily', '0.7');
+          })
+          .join('');
+      } catch (catErr) {
+        console.warn('[Sitemap] Failed to query categories:', catErr.message);
+      }
+
+      // 4. Published Web Stories
+      try {
+        const WebStory = mongoose.model('WebStory');
+        const stories = await WebStory.find({ 
+          status: 'published',
+          slug: { $exists: true, $type: 'string', $ne: '' }
+        })
+          .select('slug updatedAt')
+          .sort({ updatedAt: -1 })
+          .lean();
+        storyUrls = stories
+          .filter(s => s.slug)
+          .map((story) => {
+            const lastmod = story.updatedAt ? new Date(story.updatedAt).toISOString() : new Date().toISOString();
+            return formatSitemapEntry(normalizeCanonicalUrl(`/web-stories/${story.slug}`), lastmod, 'weekly', '0.8');
+          })
+          .join('');
+      } catch (storyErr) {
+        console.warn('[Sitemap] Failed to append Web Stories:', storyErr.message);
+      }
+
+      // 5. Active Indian Sarkari Live Alerts
+      try {
+        const LiveAlert = require('../liveAlerts/liveAlert.model');
+        const liveAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
+          .select('_id title updatedAt parsedPostDate createdAt')
+          .sort({ parsedPostDate: -1, createdAt: -1 })
+          .limit(1000)
+          .lean();
+
+        liveAlertUrls = liveAlerts
+          .map((a) => {
+            const lastmod = a.updatedAt ? new Date(a.updatedAt).toISOString() : (a.parsedPostDate ? new Date(a.parsedPostDate).toISOString() : new Date(a.createdAt).toISOString());
+            return formatSitemapEntry(`https://www.digitalhomeblog.in/india/sarkari-jobs/${a._id}`, lastmod, 'daily', '0.9');
+          })
+          .join('');
+      } catch (alertErr) {
+        console.warn('[Sitemap] Failed to append Live Alerts:', alertErr.message);
+      }
+
+      // 6. Published Daily Current Affairs
+      try {
+        const CurrentAffairs = require('../currentAffairs/currentAffairs.model');
+        const caPosts = await CurrentAffairs.find({
+          status: 'published',
+          slug: { $exists: true, $type: 'string', $ne: '' }
+        })
+          .select('slug publishDate updatedAt')
+          .sort({ publishDate: -1 })
+          .limit(100)
+          .lean();
+
+        caUrls = formatSitemapEntry('https://www.digitalhomeblog.in/current-affairs', homeMod, 'daily', '0.95');
+        caUrls += caPosts
+          .filter(c => c.slug)
+          .map((ca) => {
+            const lastmod = ca.updatedAt ? new Date(ca.updatedAt).toISOString() : (ca.publishDate ? new Date(ca.publishDate).toISOString() : new Date().toISOString());
+            return formatSitemapEntry(normalizeCanonicalUrl(`/current-affairs/${ca.slug}`), lastmod, 'daily', '0.9');
+          })
+          .join('');
+      } catch (caErr) {
+        console.warn('[Sitemap] Failed to append Current Affairs:', caErr.message);
+      }
+
+      // 7. Verified Global Government Vacancies
+      try {
+        const GlobalJob = require('../globalJobs/globalJob.model');
+        const globalJobs = await GlobalJob.find()
+          .select('officialReferenceId createdAt updatedAt')
+          .sort({ createdAt: -1 })
+          .limit(350)
+          .lean();
+
+        globalJobUrls = globalJobs
+          .map((j) => {
+            const ref = j.officialReferenceId || j._id;
+            const lastmod = j.updatedAt ? new Date(j.updatedAt).toISOString() : new Date(j.createdAt).toISOString();
+            return formatSitemapEntry(`https://www.digitalhomeblog.in/global-jobs/view/${encodeURIComponent(ref)}`, lastmod, 'weekly', '0.9');
+          })
+          .join('');
+      } catch (jobErr) {
+        console.warn('[Sitemap] Failed to append Global Jobs:', jobErr.message);
+      }
     }
 
-    const homeMod = new Date().toISOString();
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://www.digitalhomeblog.in</loc><lastmod>${homeMod}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url><url><loc>https://www.digitalhomeblog.in/blog</loc><lastmod>${homeMod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>${staticPages}${categoryUrls}${urls}${liveAlertUrls}${caUrls}${storyUrls}${globalJobUrls}</urlset>`;
+    const homeEntry = formatSitemapEntry('https://www.digitalhomeblog.in', homeMod, 'hourly', '1.0');
+    const blogEntry = formatSitemapEntry('https://www.digitalhomeblog.in/blog', homeMod, 'daily', '0.9');
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${homeEntry}${blogEntry}${staticPages}${categoryUrls}${urls}${liveAlertUrls}${caUrls}${storyUrls}${globalJobUrls}</urlset>`;
     res.type('application/xml');
     return res.send(xml);
   } catch (err) {
@@ -808,17 +856,12 @@ async function sitemap(req, res) {
 function robots(req, res) {
   res.type('text/plain');
   return res.send(`User-agent: *
-Allow: /
-Disallow: /admin/
 Disallow: /api/
-Disallow: /tags/
-Disallow: /tags/*
-Disallow: /tag/
-Disallow: /tag/*
-Disallow: /*?alert=*
-Disallow: /*?search=*
+Disallow: /admin/
+Disallow: /*?*alert=
+Disallow: /*?*search=
 Disallow: /*%20*
-Disallow: /* *
+Allow: /
 
 Sitemap: https://www.digitalhomeblog.in/sitemap.xml
 `);

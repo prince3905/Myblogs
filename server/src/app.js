@@ -1053,6 +1053,8 @@ const KNOWN_EXACT_ROUTES = new Set([
   '/search',
   '/tools',
   '/games',
+  '/tags',
+  '/tag',
   '/admin/login'
 ]);
 
@@ -1060,6 +1062,7 @@ const KNOWN_PREFIX_ROUTES = [
   '/admin',
   '/category/',
   '/tags/',
+  '/tag/',
   '/blog/',
   '/india/',
   '/current-affairs/',
@@ -1167,6 +1170,7 @@ app.get('*', async (req, res, next) => {
       html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
       html = html.replace('</head>', `${noindexMeta}\n</head>`);
 
+      res.setHeader('X-Robots-Tag', 'noindex, follow');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
       return res.status(404).send(html);
@@ -1175,6 +1179,23 @@ app.get('*', async (req, res, next) => {
     // 3. Valid Known Route: Render with HTTP 200 OK and clean, self-referential canonical (zero query params)
     const { normalizeCanonicalUrl } = require('./shared/utils/urlUtils');
     const cleanCanonicalUrl = normalizeCanonicalUrl(rawPath);
+
+    // Non-indexed public pages (tags, search, archive) return X-Robots-Tag: noindex, follow
+    const isNonIndexedPublicPage = 
+      rawPath === '/tags' ||
+      rawPath.startsWith('/tags/') || 
+      rawPath === '/tag' ||
+      rawPath.startsWith('/tag/') || 
+      rawPath === '/search' || 
+      rawPath.startsWith('/search/') || 
+      rawPath === '/archive' ||
+      rawPath.startsWith('/archive/');
+
+    if (isNonIndexedPublicPage) {
+      res.setHeader('X-Robots-Tag', 'noindex, follow');
+      html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
+      html = html.replace('</head>', '    <meta name="robots" content="noindex, follow" />\n</head>');
+    }
 
     const canonicalTag = `<link rel="canonical" href="${cleanCanonicalUrl}" />`;
     html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');

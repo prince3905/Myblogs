@@ -1,14 +1,9 @@
 User-agent: *
-Allow: /
-Disallow: /admin/
 Disallow: /api/
-Disallow: /tags/
-Disallow: /tags/*
-Disallow: /tag/
-Disallow: /tag/*
-Disallow: /*?alert=*
-Disallow: /*?search=*
+Disallow: /admin/
+Disallow: /*?*alert=
+Disallow: /*?*search=
 Disallow: /*%20*
-Disallow: /* *
+Allow: /
 
 Sitemap: https://www.digitalhomeblog.in/sitemap.xml
