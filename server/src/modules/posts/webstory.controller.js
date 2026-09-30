@@ -185,13 +185,48 @@ async function renderWebStory(req, res, next) {
     }).populate('post').lean();
 
     if (!story) {
-      return res.status(404).send('Web Story not found. Please verify the URL or slug in Admin.');
+      res.setHeader('X-Robots-Tag', 'noindex, follow');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(404).send(`<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <title>404 — Web Story Not Found | Digital Home</title>
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; padding: 60px 20px;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="color: #0284c7; font-size: 3.5rem; margin-bottom: 8px; font-weight: 900;">404</h1>
+    <h2 style="color: #0f172a; margin-bottom: 12px; font-weight: 800;">वेब स्टोरी नहीं मिली — Web Story Not Found</h2>
+    <p style="color: #475569; margin-bottom: 24px; font-size: 1rem;">यह वेब स्टोरी उपलब्ध नहीं है या हटाई जा चुकी है।</p>
+    <a href="/india/sarkari-jobs" style="display: inline-block; padding: 12px 24px; background: #16a34a; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 700;">🇮🇳 सरकारी नौकरी लाइव अलर्ट्स देखें</a>
+  </div>
+</body>
+</html>`);
     }
 
     // Direct preview for admins, or block drafted stories from indexing
     const isAdminPreview = req.query.preview === 'true';
     if (story.status !== 'published' && !isAdminPreview) {
-      return res.status(404).send('Web Story is currently a draft. Please publish it or use ?preview=true to view.');
+      res.setHeader('X-Robots-Tag', 'noindex, follow');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(404).send(`<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <title>404 — Story Draft | Digital Home</title>
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; padding: 60px 20px;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="color: #f59e0b; font-size: 3rem; margin-bottom: 8px;">Draft</h1>
+    <h2 style="color: #0f172a; margin-bottom: 12px;">यह वेब स्टोरी अभी ड्राफ्ट में है</h2>
+    <a href="/india/sarkari-jobs" style="display: inline-block; padding: 12px 24px; background: #16a34a; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 700;">होमपेज पर जाएं</a>
+  </div>
+</body>
+</html>`);
     }
 
     // Record view & traffic analytics in background

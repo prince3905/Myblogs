@@ -819,10 +819,16 @@ async function sitemap(req, res) {
         console.warn('[Sitemap] Failed to append Current Affairs:', caErr.message);
       }
 
-      // 7. Verified Global Government Vacancies
+      // 7. Verified Global Government Vacancies (strictly active vacancies)
       try {
         const GlobalJob = require('../globalJobs/globalJob.model');
-        const globalJobs = await GlobalJob.find()
+        const now = new Date();
+        const globalJobs = await GlobalJob.find({
+          $or: [
+            { applicationDeadline: { $exists: false } },
+            { applicationDeadline: { $gte: now } }
+          ]
+        })
           .select('officialReferenceId createdAt updatedAt')
           .sort({ createdAt: -1 })
           .limit(350)

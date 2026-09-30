@@ -169,6 +169,7 @@ function buildHreflangMatrix(activeCountryCode) {
 }
 
 module.exports = {
+  COUNTRY_MAP,
   COUNTRY_SEO_CONFIG,
   getCountrySeoMeta,
   buildHreflangMatrix

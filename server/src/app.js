@@ -371,11 +371,55 @@ app.use(express.static(publicPath, {
 const postSsrCache = new Map();
 const POST_SSR_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Dedicated 404/410 Error Page Renderer for Missing, Deleted or Expired Content
+function render404Page(req, res, customMessage = 'यह पेज, सरकारी भर्ती या लेख उपलब्ध नहीं है या हटाया जा चुका है। (This page, job vacancy, or article does not exist or has been removed.)', statusCode = 404) {
+  try {
+    const indexPath = path.join(publicPath, 'index.html');
+    let html = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : '<!DOCTYPE html><html><head></head><body></body></html>';
+
+    const notFoundCanonical = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
+    const noindexMeta = `
+    <title>404 — Page Not Found | Digital Home</title>
+    <meta name="description" content="${customMessage.replace(/"/g, '&quot;')}" />
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href="${notFoundCanonical}" />
+    `;
+
+    const visible404Body = `
+    <div id="not-found-container" style="max-width: 720px; margin: 50px auto; padding: 40px 24px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+      <div style="font-size: 5rem; font-weight: 900; line-height: 1; color: #0284c7; margin-bottom: 12px; letter-spacing: -2px;">404</div>
+      <h1 style="font-size: 1.6rem; color: #0f172a; margin-bottom: 12px; font-weight: 800;">पेज नहीं मिला — Page Not Found</h1>
+      <p style="color: #475569; font-size: 1rem; line-height: 1.6; margin-bottom: 28px; max-width: 540px; margin-left: auto; margin-right: auto;">${customMessage}</p>
+      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <a href="/india/sarkari-jobs" style="display: inline-flex; align-items: center; padding: 12px 24px; background: #16a34a; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);">🇮🇳 सरकारी नौकरी (Sarkari Jobs)</a>
+        <a href="/global-jobs" style="display: inline-flex; align-items: center; padding: 12px 24px; background: #0284c7; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);">🌐 Global Gov Jobs</a>
+        <a href="/" style="display: inline-flex; align-items: center; padding: 12px 24px; background: #334155; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 0.95rem;">🏠 Home</a>
+      </div>
+    </div>
+    `;
+
+    html = html.replace(/<title>.*?<\/title>/i, '');
+    html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
+    html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
+    html = html.replace(/<meta[^>]+name=["']description["'][^>]*>/gi, '');
+    html = html.replace('</head>', `${noindexMeta}\n</head>`);
+    html = html.replace('<body>', `<body>\n${visible404Body}`);
+
+    res.setHeader('X-Robots-Tag', 'noindex, follow');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return res.status(statusCode).send(html);
+  } catch (e) {
+    res.setHeader('X-Robots-Tag', 'noindex, follow');
+    return res.status(statusCode).send('404 Not Found');
+  }
+}
+
 // Server-Side 301 Redirect for legacy /blog/:slug (Eliminates SPA Orphan Redirects)
 app.get('/blog/:slug', async (req, res, next) => {
   try {
     const slug = req.params.slug ? String(req.params.slug).trim() : '';
-    if (!slug) return next();
+    if (!slug) return render404Page(req, res);
 
     const catMap = {
       'sarkari-jobs-exams': 'sarkari-jobs-exams',
@@ -390,15 +434,18 @@ app.get('/blog/:slug', async (req, res, next) => {
     }
 
     const mongoose = require('mongoose');
+    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+      return render404Page(req, res);
+    }
     const BlogPost = mongoose.model('BlogPost');
     const post = await BlogPost.findOne({ slug, status: 'published' }).select('category slug').lean();
     if (post) {
       const catUrl = (post.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'sarkari-jobs-exams';
       return res.redirect(301, `https://www.digitalhomeblog.in/blog/${catUrl}/${post.slug}`);
     }
-    next();
+    return render404Page(req, res, 'यह लेख या ब्लॉग पोस्ट उपलब्ध नहीं है। (This blog article does not exist or has been removed.)');
   } catch {
-    next();
+    return render404Page(req, res);
   }
 });
 
@@ -425,6 +472,9 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
     let html = fs.readFileSync(indexPath, 'utf8');
 
     const mongoose = require('mongoose');
+    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+      return render404Page(req, res);
+    }
     const BlogPost = mongoose.model('BlogPost');
     let post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' }).lean();
     if (!post && req.params.slug) {
@@ -534,30 +584,8 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
       return res.status(200).send(html);
     } else {
-      // Smart 301 Permanent Redirect for missing/deleted/pruned posts:
-      // Eliminates 404 Not Found errors for users & Googlebot!
-      // Passes link authority to active category hubs and de-indexes cleanly in GSC.
-      const cat = (req.params.category || '').toLowerCase();
-      let targetRedirect = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
-
-      if (cat.includes('sarkari') || cat.includes('job') || cat.includes('result') || cat.includes('admit')) {
-        targetRedirect = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
-      } else if (cat.includes('tech') || cat.includes('tutorial')) {
-        targetRedirect = 'https://www.digitalhomeblog.in/category/tech-tutorials';
-      } else if (cat.includes('ai') || cat.includes('tool')) {
-        targetRedirect = 'https://www.digitalhomeblog.in/category/ai-web-tools';
-      } else if (cat.includes('finance') || cat.includes('business')) {
-        targetRedirect = 'https://www.digitalhomeblog.in/category/finance-business';
-      } else if (cat.includes('health') || cat.includes('wellness')) {
-        targetRedirect = 'https://www.digitalhomeblog.in/category/health-wellness';
-      } else if (cat.includes('news') || cat.includes('trend')) {
-        targetRedirect = 'https://www.digitalhomeblog.in/category/news-trends';
-      } else {
-        targetRedirect = 'https://www.digitalhomeblog.in/blog';
-      }
-
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-      return res.redirect(301, targetRedirect);
+      // Missing / deleted blog post: Return strict HTTP 404 with noindex, follow (Eliminates Soft 404)
+      return render404Page(req, res, 'यह लेख या ब्लॉग पोस्ट उपलब्ध नहीं है। (This blog article does not exist or has been removed.)');
     }
   } catch (err) {
     next(err);
@@ -573,6 +601,10 @@ app.get('/current-affairs/:slug', async (req, res, next) => {
     }
     let html = fs.readFileSync(indexPath, 'utf8');
 
+    const mongoose = require('mongoose');
+    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+      return render404Page(req, res);
+    }
     const CurrentAffairs = require('./modules/currentAffairs/currentAffairs.model');
     const item = await CurrentAffairs.findOne({
       $or: [{ slug: req.params.slug }, { dateString: req.params.slug }],
@@ -665,8 +697,8 @@ app.get('/current-affairs/:slug', async (req, res, next) => {
       return res.status(200).send(html);
     }
 
-    // Fallback to React SPA
-    next();
+    // Missing Current Affairs article: Return strict HTTP 404 with noindex, follow
+    return render404Page(req, res, 'यह करेंट अफेयर्स सामग्री उपलब्ध नहीं है। (This current affairs update does not exist or has been removed.)');
   } catch (err) {
     next(err);
   }
@@ -685,6 +717,9 @@ app.get(['/global-jobs/view/:id', '/global-jobs/:country/:id'], async (req, res,
     let html = fs.readFileSync(indexPath, 'utf8');
 
     const mongoose = require('mongoose');
+    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+      return render404Page(req, res);
+    }
     const GlobalJob = require('./modules/globalJobs/globalJob.model');
     const isValidObjectId = mongoose.Types.ObjectId.isValid(rawId);
 
@@ -757,16 +792,31 @@ app.get(['/global-jobs/view/:id', '/global-jobs/:country/:id'], async (req, res,
     <script type="application/ld+json">${JSON.stringify(jobPostingSchema)}</script>
       `;
 
+      const isExpired = job.applicationDeadline && new Date(job.applicationDeadline) < new Date();
+      let crawlerContent = `
+<div id="seo-crawler-global-job" style="display:none;" aria-hidden="true">
+  ${isExpired ? '<div style="background:#fee2e2;color:#991b1b;padding:10px;font-weight:bold;">⏳ Application Closed — Deadline has passed.</div>' : ''}
+  <h1>${cleanTitle}</h1>
+  <p><strong>Agency / Ministry:</strong> ${job.agencyOrMinistry || job.countryName}</p>
+  <p><strong>Country:</strong> ${job.countryName} (${job.countryCode || 'Global'})</p>
+  <p><strong>Duty Station:</strong> ${job.dutyStation || 'Headquarters'}</p>
+  <p><strong>Deadline:</strong> ${job.applicationDeadline ? new Date(job.applicationDeadline).toLocaleDateString() : 'See Official Notice'}</p>
+  <p>${desc}</p>
+  ${job.officialNoticeUrl ? `<a href="${job.officialNoticeUrl}">Official Government Notice Link</a>` : ''}
+</div>`;
+
       html = html.replace(/<title>.*?<\/title>/, '');
       html = html.replace(/<meta name="description" .*?\/>/, '');
       html = html.replace('</head>', `${metaTags}\n</head>`);
+      html = html.replace('<body>', `<body>\n${crawlerContent}`);
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
       return res.status(200).send(html);
     }
 
-    next();
+    // Missing Global Job: Return strict HTTP 404 with noindex, follow
+    return render404Page(req, res, 'This global government vacancy does not exist or has been removed.');
   } catch (err) {
     next(err);
   }
@@ -785,6 +835,9 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
     let html = fs.readFileSync(indexPath, 'utf8');
 
     const mongoose = require('mongoose');
+    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+      return render404Page(req, res);
+    }
     const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
     const isValidObjectId = mongoose.Types.ObjectId.isValid(rawId);
 
@@ -837,9 +890,35 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
         'occupationalCategory': alert.category || 'Latest Job'
       };
 
+      const isExpired = alert.status === 'expired' || 
+        (alert.lastDate && !isNaN(new Date(alert.lastDate).getTime()) && new Date(alert.lastDate) < new Date(Date.now() - 24 * 60 * 60 * 1000));
+      let recommendedHtml = '';
+      if (isExpired) {
+        try {
+          const recAlerts = await LiveAlert.find({ 
+            _id: { $ne: alert._id },
+            status: { $in: ['active', 'published'] } 
+          })
+            .select('_id title state category')
+            .sort({ parsedPostDate: -1, createdAt: -1 })
+            .limit(4)
+            .lean();
+          if (recAlerts && recAlerts.length > 0) {
+            recommendedHtml = `
+  <div style="margin-top: 20px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+    <strong style="color: #0f172a; font-size: 1rem; display: block; margin-bottom: 8px;">🔥 वर्तमान में चालू प्रमुख सरकारी नौकरियां (Active Live Vacancies):</strong>
+    <ul style="margin: 0; padding-left: 20px;">
+      ${recAlerts.map(r => `<li style="margin-bottom: 6px;"><a href="/india/sarkari-jobs/${r._id}">${r.title} (${r.state || 'All India'})</a></li>`).join('\n')}
+    </ul>
+  </div>`;
+          }
+        } catch (recErr) {}
+      }
+
       // Pre-rendered crawler-visible static text & direct links for zero JS bots
       let crawlerContent = `
 <div id="seo-crawler-alert" style="display:none;" aria-hidden="true">
+  ${isExpired ? '<div style="background: #fef2f2; border: 1px solid #ef4444; color: #991b1b; padding: 10px; font-weight: 700; margin-bottom: 12px;">⏳ आवेदन की अंतिम तिथि समाप्त (Application Closed) — इस भर्ती के लिए ऑनलाइन आवेदन बंद हो चुके हैं।</div>' : ''}
   <h1>${cleanTitle}</h1>
   <p><strong>Department / Board:</strong> ${alert.boardName || 'Government of India'}</p>
   <p><strong>Category:</strong> ${alert.category || 'Sarkari Job'}</p>
@@ -847,6 +926,7 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
   <p><strong>Last Date:</strong> ${alert.lastDate || 'See Official Circular'}</p>
   <p>${desc}</p>
   ${alert.sourceUrl ? `<a href="${alert.sourceUrl}">Official Gazette Notification Link</a>` : ''}
+  ${recommendedHtml}
 </div>`;
 
       const metaTags = `
@@ -877,9 +957,8 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
       return res.status(200).send(html);
     }
 
-    // If individual alert not found in DB, 301 permanent redirect to Sarkari Hub
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    return res.redirect(301, 'https://www.digitalhomeblog.in/india/sarkari-jobs');
+    // If individual alert not found in DB, return strict HTTP 404 with noindex, follow (Eliminates Soft 404)
+    return render404Page(req, res, 'यह सरकारी नौकरी भर्ती सूचना हटाई जा चुकी है या उपलब्ध नहीं है। (This government vacancy notification has been removed or does not exist.)');
   } catch (err) {
     next(err);
   }
@@ -987,7 +1066,11 @@ app.get(['/global-jobs', '/global-jobs/:country'], async (req, res, next) => {
     let html = fs.readFileSync(indexPath, 'utf8');
 
     const rawCountry = (rawParam || req.query.country || 'ALL').trim();
-    const { getCountrySeoMeta, buildHreflangMatrix } = require('./modules/globalJobs/countrySeoConfig');
+    const { getCountrySeoMeta, buildHreflangMatrix, COUNTRY_MAP } = require('./modules/globalJobs/countrySeoConfig');
+
+    if (rawParam && rawParam.toUpperCase() !== 'ALL' && COUNTRY_MAP && !COUNTRY_MAP.has(rawParam.toUpperCase())) {
+      return render404Page(req, res, 'This country career hub does not exist.');
+    }
 
     const seoMeta = getCountrySeoMeta(rawCountry);
     const hreflangMatrix = buildHreflangMatrix(rawCountry);
@@ -1058,19 +1141,47 @@ const KNOWN_EXACT_ROUTES = new Set([
   '/admin/login'
 ]);
 
+// Dynamic Category Page Route with Validation
+const VALID_CATEGORIES = new Set([
+  'sarkari-jobs-exams',
+  'health-wellness',
+  'tech-tutorials',
+  'ai-web-tools',
+  'finance-business',
+  'news-trends'
+]);
+
+app.get('/category/:category', async (req, res, next) => {
+  try {
+    const rawCat = (req.params.category || '').toLowerCase().trim();
+    if (!VALID_CATEGORIES.has(rawCat)) {
+      const mongoose = require('mongoose');
+      let catExists = false;
+      if (mongoose.connection && mongoose.connection.readyState === 1) {
+        const BlogPost = mongoose.model('BlogPost');
+        const count = await BlogPost.countDocuments({ 
+          status: 'published',
+          $or: [
+            { category: new RegExp('^' + rawCat.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '$', 'i') },
+            { category: new RegExp('^' + rawCat.replace(/-/g, ' ').replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '$', 'i') }
+          ]
+        });
+        catExists = count > 0;
+      }
+      if (!catExists) {
+        return render404Page(req, res, 'यह श्रेणी (Category) उपलब्ध नहीं है या हटा दी गई है।');
+      }
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 const KNOWN_PREFIX_ROUTES = [
   '/admin',
-  '/category/',
   '/tags/',
-  '/tag/',
-  '/blog/',
-  '/india/',
-  '/current-affairs/',
-  '/daily-quiz/',
-  '/global-jobs/',
-  '/job-alerts/',
-  '/live-alerts/',
-  '/web-stories/'
+  '/tag/'
 ];
 
 function isKnownFrontendRoute(pathname) {
@@ -1078,6 +1189,17 @@ function isKnownFrontendRoute(pathname) {
   if (KNOWN_EXACT_ROUTES.has(p)) return true;
   for (const prefix of KNOWN_PREFIX_ROUTES) {
     if (p.startsWith(prefix)) return true;
+  }
+  // Allow valid category hubs
+  if (p.startsWith('/category/')) {
+    const cat = p.replace(/^\/category\//, '').trim();
+    if (VALID_CATEGORIES.has(cat)) return true;
+  }
+  // Allow valid sovereign country hubs
+  if (p.startsWith('/global-jobs/')) {
+    const { COUNTRY_MAP } = require('./modules/globalJobs/countrySeoConfig');
+    const country = p.replace(/^\/global-jobs\//, '').trim().toUpperCase();
+    if (COUNTRY_MAP && COUNTRY_MAP.has(country)) return true;
   }
   return false;
 }
@@ -1159,21 +1281,7 @@ app.get('*', async (req, res, next) => {
 
     // 2. Malformed / Broken Search Slugs or Unknown URLs: Return strict HTTP 404 with noindex, follow & canonical
     if (hasMalformedChars || !isKnown) {
-      const notFoundCanonical = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
-      const noindexMeta = `
-    <title>404 — Page Not Found | Digital Home</title>
-    <meta name="robots" content="noindex, follow" />
-    <link rel="canonical" href="${notFoundCanonical}" />
-      `;
-      html = html.replace(/<title>.*?<\/title>/i, '');
-      html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
-      html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
-      html = html.replace('</head>', `${noindexMeta}\n</head>`);
-
-      res.setHeader('X-Robots-Tag', 'noindex, follow');
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-      return res.status(404).send(html);
+      return render404Page(req, res);
     }
 
     // 3. Valid Known Route: Render with HTTP 200 OK and clean, self-referential canonical (zero query params)
