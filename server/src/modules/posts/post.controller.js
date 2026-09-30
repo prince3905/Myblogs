@@ -862,11 +862,11 @@ async function sitemap(req, res) {
 function robots(req, res) {
   res.type('text/plain');
   return res.send(`User-agent: *
+Disallow: /*?*
+Disallow: /*%20*
+Disallow: /* *
 Disallow: /api/
 Disallow: /admin/
-Disallow: /*?*alert=
-Disallow: /*?*search=
-Disallow: /*%20*
 Allow: /
 
 Sitemap: https://www.digitalhomeblog.in/sitemap.xml

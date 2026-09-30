@@ -6,7 +6,7 @@
 export function normalizeCanonicalUrl(inputUrl) {
   if (!inputUrl) return 'https://www.digitalhomeblog.in';
 
-  let cleaned = String(inputUrl).trim();
+  let cleaned = String(inputUrl).trim().split('?')[0].split('#')[0];
 
   // Handle relative paths
   if (cleaned.startsWith('/')) {

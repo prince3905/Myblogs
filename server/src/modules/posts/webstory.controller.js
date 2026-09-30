@@ -185,14 +185,14 @@ async function renderWebStory(req, res, next) {
     }).populate('post').lean();
 
     if (!story) {
-      res.setHeader('X-Robots-Tag', 'noindex, follow');
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(404).send(`<!DOCTYPE html>
 <html lang="hi">
 <head>
   <meta charset="utf-8">
   <title>404 — Web Story Not Found | Digital Home</title>
-  <meta name="robots" content="noindex, follow">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; padding: 60px 20px;">
@@ -209,14 +209,14 @@ async function renderWebStory(req, res, next) {
     // Direct preview for admins, or block drafted stories from indexing
     const isAdminPreview = req.query.preview === 'true';
     if (story.status !== 'published' && !isAdminPreview) {
-      res.setHeader('X-Robots-Tag', 'noindex, follow');
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(404).send(`<!DOCTYPE html>
 <html lang="hi">
 <head>
   <meta charset="utf-8">
   <title>404 — Story Draft | Digital Home</title>
-  <meta name="robots" content="noindex, follow">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; padding: 60px 20px;">

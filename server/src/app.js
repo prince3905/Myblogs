@@ -381,7 +381,7 @@ function render404Page(req, res, customMessage = 'यह पेज, सरका
     const noindexMeta = `
     <title>404 — Page Not Found | Digital Home</title>
     <meta name="description" content="${customMessage.replace(/"/g, '&quot;')}" />
-    <meta name="robots" content="noindex, follow" />
+    <meta name="robots" content="noindex, nofollow" />
     <link rel="canonical" href="${notFoundCanonical}" />
     `;
 
@@ -405,12 +405,12 @@ function render404Page(req, res, customMessage = 'यह पेज, सरका
     html = html.replace('</head>', `${noindexMeta}\n</head>`);
     html = html.replace('<body>', `<body>\n${visible404Body}`);
 
-    res.setHeader('X-Robots-Tag', 'noindex, follow');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     return res.status(statusCode).send(html);
   } catch (e) {
-    res.setHeader('X-Robots-Tag', 'noindex, follow');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
     return res.status(statusCode).send('404 Not Found');
   }
 }
