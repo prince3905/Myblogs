@@ -423,14 +423,24 @@ async function getAlerts(req, res) {
 
 const mongoose = require('mongoose');
 
-// Fetch a single alert by ID (with detailsText payload)
+// Fetch a single alert by ID or clean slug (with detailsText payload)
 async function getAlertById(req, res) {
   try {
-    const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(404).json({ success: false, message: 'Invalid alert ID' });
+    const rawParam = (req.params.id || '').trim();
+    if (!rawParam) {
+      return res.status(404).json({ success: false, message: 'Invalid alert identifier' });
     }
-    const alert = await LiveAlert.findById(id);
+    let alert = null;
+    if (mongoose.isValidObjectId(rawParam)) {
+      alert = await LiveAlert.findById(rawParam);
+    }
+    if (!alert) {
+      alert = await LiveAlert.findOne({ slug: rawParam.toLowerCase() });
+    }
+    if (!alert) {
+      // Fallback: check if slug has sourceUrl match
+      alert = await LiveAlert.findOne({ sourceUrl: new RegExp(rawParam.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') });
+    }
     if (!alert) {
       return res.status(404).json({ success: false, message: 'Alert not found' });
     }

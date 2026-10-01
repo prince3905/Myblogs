@@ -34,6 +34,10 @@ async function start() {
   initMultiCategoryCron();
   initJobGuideCron();
   initGlobalJobsSupervisor();
+  try {
+    const { ensureLiveAlertSlugs } = require('./shared/utils/populateLiveAlertSlugs');
+    ensureLiveAlertSlugs().catch(err => console.warn('[Slug Migration] Notice:', err.message));
+  } catch (slugErr) {}
   const server = app.listen(env.port, () => {
     console.log(`Server running on port ${env.port}`);
     if (app.buildHomepageHtml) {

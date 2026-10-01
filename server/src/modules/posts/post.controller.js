@@ -789,7 +789,7 @@ async function sitemap(req, res) {
       try {
         const LiveAlert = require('../liveAlerts/liveAlert.model');
         const liveAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
-          .select('_id title updatedAt parsedPostDate createdAt')
+          .select('_id slug title updatedAt parsedPostDate createdAt')
           .sort({ parsedPostDate: -1, createdAt: -1 })
           .limit(1000)
           .lean();
@@ -797,7 +797,8 @@ async function sitemap(req, res) {
         liveAlertUrls = liveAlerts
           .map((a) => {
             const lastmod = a.updatedAt ? new Date(a.updatedAt).toISOString() : (a.parsedPostDate ? new Date(a.parsedPostDate).toISOString() : new Date(a.createdAt).toISOString());
-            return formatSitemapEntry(`https://www.digitalhomeblog.in/india/sarkari-jobs/${a._id}`, lastmod, 'daily', '0.9');
+            const slugRef = a.slug || a._id;
+            return formatSitemapEntry(`https://www.digitalhomeblog.in/india/sarkari-jobs/${slugRef}`, lastmod, 'daily', '0.9');
           })
           .join('');
       } catch (alertErr) {

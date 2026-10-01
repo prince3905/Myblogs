@@ -291,7 +291,7 @@ async function buildHomepageHtml() {
         .limit(25)
         .lean(),
       LiveAlert.find({ status: { $in: ['active', 'published'] } })
-        .select('title _id state category')
+        .select('title _id slug state category')
         .sort({ parsedPostDate: -1, createdAt: -1 })
         .limit(35)
         .lean()
@@ -308,7 +308,7 @@ async function buildHomepageHtml() {
     <section style="margin-bottom: 32px;">
       <h2 style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin-bottom: 14px; border-bottom: 2px solid #38bdf8; padding-bottom: 6px;">🔥 वर्तमान में सक्रिय प्रमुख सरकारी भर्तियां (Active Live Sarkari Vacancies 2026)</h2>
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
-        ${topAlerts.map(a => `<a href="/india/sarkari-jobs/${a._id}" style="display: block; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #0369a1; text-decoration: none; font-weight: 600; font-size: 0.9rem; line-height: 1.4;"><span style="display:block; font-size:0.75rem; color:#64748b; margin-bottom:2px;">${escapeHtml(a.state || 'All India')}</span>🏛️ ${escapeHtml(a.title)}</a>`).join('\n        ')}
+        ${topAlerts.map(a => `<a href="/india/sarkari-jobs/${a.slug || a._id}" style="display: block; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #0369a1; text-decoration: none; font-weight: 600; font-size: 0.9rem; line-height: 1.4;"><span style="display:block; font-size:0.75rem; color:#64748b; margin-bottom:2px;">${escapeHtml(a.state || 'All India')}</span>🏛️ ${escapeHtml(a.title)}</a>`).join('\n        ')}
       </div>
     </section>
 
@@ -888,6 +888,7 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
     const alert = await LiveAlert.findOne({
       $or: [
         ...(isValidObjectId ? [{ _id: rawId }] : []),
+        { slug: rawId.toLowerCase() },
         { sourceUrl: new RegExp(rawId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') }
       ]
     }).lean();
@@ -904,11 +905,22 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
       }
 
       const { buildIndianJobScaffoldHtml } = require('./shared/utils/jobScaffoldEngine');
+      const {
+        parseJobMetadata,
+        buildHighCtrJobTitle,
+        buildHighCtrMetaDesc,
+        generateJobFaqSchema,
+        sanitizeJobSlug
+      } = require('./shared/utils/jobSeoOptimizer');
+
       const siteName = 'Digital Home Sarkari Result';
-      const cleanTitle = (alert.title || '').replace(/\s*\|\s*(Digital Home|Sarkari Result)\s*$/i, '');
-      const fullTitle = `${cleanTitle} - ${alert.state || 'All India'} | Sarkari Result 2026`;
-      const desc = (alert.detailsText || `${cleanTitle}. Apply online form, eligibility, notification PDF, admit card and result link on Digital Home.`).slice(0, 160).replace(/[\r\n]+/g, ' ');
-      const canonicalUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${alert._id}`;
+      const meta = parseJobMetadata(alert);
+      const highCtrTitle = buildHighCtrJobTitle(meta);
+      const highCtrDesc = buildHighCtrMetaDesc(meta);
+      const faqSchema = generateJobFaqSchema(meta);
+
+      const canonicalSlug = alert.slug || sanitizeJobSlug(alert.title, alert.boardName, alert._id.toString());
+      const canonicalUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${canonicalSlug}`;
       const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
 
       const isExpired = alert.status === 'expired' || 
@@ -937,60 +949,61 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
           _id: { $ne: alert._id },
           status: { $in: ['active', 'published'] } 
         })
-          .select('_id title state category')
+          .select('_id slug title state category')
           .sort({ parsedPostDate: -1, createdAt: -1 })
           .limit(5)
           .lean();
       } catch (recErr) {}
 
       // Rich schema description (250+ words of structured information)
-      const schemaDesc = `${cleanTitle}. Official recruitment notification issued by ${alert.boardName || 'Government of India'} for candidates across ${alert.state || 'All India'}. Category: ${alert.category || 'Sarkari Job'}. Important dates: notification circular released on ${alert.postDate || '2026'}, application deadline ${alert.lastDate || 'as per schedule'}. Candidates must review educational qualifications, age limit relaxations, and vacancy breakdown. Apply online directly through official government portals.`;
+      const schemaDesc = `${highCtrTitle}. Official recruitment notification issued by ${meta.board} for candidates across ${meta.state}. Category: ${meta.category}. Important dates: notification circular released on ${meta.postDate}, application deadline ${meta.lastDate}. Candidates must review educational qualifications (${meta.qualification}), age limit relaxations, and vacancy breakdown. Apply online directly through official government portals.`;
 
       // Official Google for Jobs structured data (100% Schema Validation compliant)
       const jobPostingSchema = {
         '@context': 'https://schema.org',
         '@type': 'JobPosting',
-        'title': cleanTitle,
+        'title': highCtrTitle,
         'description': schemaDesc,
         'datePosted': datePosted,
         'validThrough': validThrough,
         'employmentType': 'FULL_TIME',
         'hiringOrganization': {
           '@type': 'Organization',
-          'name': alert.boardName || 'Government of India / State Public Service Commission',
-          'sameAs': alert.officialApplyUrl || alert.officialUrl || alert.sourceUrl || 'https://www.digitalhomeblog.in'
+          'name': meta.board || 'Government of India / State Public Service Commission',
+          'sameAs': meta.applyUrl || meta.pdfUrl || 'https://www.digitalhomeblog.in'
         },
         'jobLocation': {
           '@type': 'Place',
           'address': {
             '@type': 'PostalAddress',
             'addressCountry': 'IN',
-            'addressRegion': alert.state || 'Central/All India'
+            'addressRegion': meta.state || 'Central/All India'
           }
         },
-        'occupationalCategory': alert.category || 'Latest Sarkari Job',
+        'occupationalCategory': meta.category || 'Latest Sarkari Job',
         'directApply': true
       };
 
-      // Generate complete 250+ word structured HTML layout
+      // Generate complete 300+ word structured HTML layout
       const scaffoldHtml = buildIndianJobScaffoldHtml(alert, isExpired, recAlerts);
 
       const metaTags = `
-    <title>${fullTitle}</title>
-    <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
+    <title>${highCtrTitle}</title>
+    <meta name="description" content="${highCtrDesc.replace(/"/g, '&quot;')}" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <link rel="canonical" href="${canonicalUrl}" />
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="${siteName}" />
-    <meta property="og:title" content="${fullTitle.replace(/"/g, '&quot;')}" />
-    <meta property="og:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta property="og:title" content="${highCtrTitle.replace(/"/g, '&quot;')}" />
+    <meta property="og:description" content="${highCtrDesc.replace(/"/g, '&quot;')}" />
     <meta property="og:url" content="${canonicalUrl}" />
     <meta property="og:image" content="${imageUrl}" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${fullTitle.replace(/"/g, '&quot;')}" />
-    <meta name="twitter:description" content="${desc.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:title" content="${highCtrTitle.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:description" content="${highCtrDesc.replace(/"/g, '&quot;')}" />
     <meta name="twitter:image" content="${imageUrl}" />
     <script type="application/ld+json">${JSON.stringify(jobPostingSchema)}</script>
+    <script type="application/ld+json">${JSON.stringify(faqSchema)}</script>
       `;
 
       html = html.replace(/<title>.*?<\/title>/, '');
@@ -1026,7 +1039,7 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
       if (mongoose.connection && mongoose.connection.readyState === 1) {
         const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
         topAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
-          .select('title category state _id parsedPostDate')
+          .select('title category state _id slug parsedPostDate')
           .sort({ parsedPostDate: -1, createdAt: -1 })
           .limit(60)
           .lean();
@@ -1052,7 +1065,7 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     <p style="color: #475569; font-size: 0.98rem; line-height: 1.6; margin-bottom: 24px; max-width: 840px;">केंद्रीय व राज्य सरकार के सभी विभागों (UPSC, SSC, रेलवे, बैंकिंग, पुलिस, डिफेंस व राज्य PSC) की नवीनतम भर्तियों की 100% आधिकारिक अधिसूचनाएं और सीधे आवेदन लिंक।</p>
     
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px;">
-      ${topAlerts.map(a => `<a href="/india/sarkari-jobs/${a._id}" style="display: block; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #0f172a; text-decoration: none;">
+      ${topAlerts.map(a => `<a href="/india/sarkari-jobs/${a.slug || a._id}" style="display: block; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #0f172a; text-decoration: none;">
         <span style="font-size: 0.75rem; font-weight: 700; color: #0284c7; display: block; margin-bottom: 4px;">${escapeHtml(a.state || 'All India')} • ${escapeHtml(a.category || 'Recruitment')}</span>
         <strong style="font-size: 0.92rem; color: #1e293b; display: block; line-height: 1.4;">${escapeHtml(a.title)}</strong>
       </a>`).join('\n      ')}

@@ -729,7 +729,7 @@ function renderBlogContent(alert, onActionClick) {
           }
         };
 
-        const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/india/sarkari-jobs/${alert._id || ''}` : '';
+        const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/india/sarkari-jobs/${alert.slug || alert._id || ''}` : '';
         const shareText = `🏛️ *${alert.title || 'Sarkari Job Notification'}*\n🏢 बोर्ड: ${alert.boardName || 'Government Board'}\n📍 राज्य: ${alert.state || 'All India'}\n📅 अंतिम तिथि: ${alert.lastDate || 'जल्द देखें'}\n\n👉 100% आधिकारिक विवरण व आवेदन करें:\n${shareUrl}`;
 
         return (
@@ -1394,7 +1394,8 @@ export default function PublicLiveAlertsPage() {
       setDetailsLoading(false);
       setErrorLoadingDetails('');
       if (window.history.pushState && !routeAlertId) {
-        window.history.pushState(null, '', `/india/sarkari-jobs/${alertId}`);
+        const urlSlug = alert.slug || alertId;
+        window.history.pushState(null, '', `/india/sarkari-jobs/${urlSlug}`);
       }
       return;
     }
@@ -1404,7 +1405,8 @@ export default function PublicLiveAlertsPage() {
     if (alertId) {
       openedAlertIdRef.current = alertId;
       if (window.history.pushState && !routeAlertId) {
-        window.history.pushState(null, '', `/india/sarkari-jobs/${alertId}`);
+        const urlSlug = alert.slug || alertId;
+        window.history.pushState(null, '', `/india/sarkari-jobs/${urlSlug}`);
       }
     }
 
@@ -1607,14 +1609,14 @@ export default function PublicLiveAlertsPage() {
         : 'https://www.digitalhomeblog.in/india/sarkari-jobs');
 
   const pageCanonicalUrl = (selectedAlert && routeAlertId)
-    ? `https://www.digitalhomeblog.in/india/sarkari-jobs/${selectedAlert._id}`
+    ? `https://www.digitalhomeblog.in/india/sarkari-jobs/${selectedAlert.slug || selectedAlert._id}`
     : cleanHubCanonical;
 
   return (
     <Layout>
       <Seo 
-        title={selectedAlert ? `${selectedAlert.title} (${selectedAlert.boardName || 'Official Board'}) | Sarkari Result & Live Alerts` : "Sarkari Result 2026: Live Job Alerts, Admit Cards & Vacancies | Digital Home"} 
-        description={selectedAlert ? `Official notification for ${selectedAlert.title} by ${selectedAlert.boardName || 'Official Board'}. Apply online, check eligibility, fee, syllabus, and last date: ${selectedAlert.lastDate || 'Active'}.` : "Browse, filter, and search active Indian Sarkari job vacancies, admit cards, and results fetched dynamically from official government boards."} 
+        title={selectedAlert ? `${selectedAlert.title} Recruitment: Eligibility, Last Date & Apply Online` : "Sarkari Result 2026: Live Job Alerts, Admit Cards & Vacancies | Digital Home"} 
+        description={selectedAlert ? `${selectedAlert.title} 2026 Online Form: Check eligibility criteria, age limit, application fee, exam date, and official direct application link at Digital Home.` : "Browse, filter, and search active Indian Sarkari job vacancies, admit cards, and results fetched dynamically from official government boards."} 
         canonical={pageCanonicalUrl}
         noindex={Boolean(searchParams.get('search') && !selectedAlert)}
       />

@@ -149,7 +149,7 @@ export default function SearchPage() {
     const title = alert.title || 'Sarkari Job Alert';
     const board = alert.boardName || 'Govt Department';
     const lastDate = alert.lastDate && alert.lastDate !== 'N/A' ? `📅 अंतिम तिथि: ${alert.lastDate}\n` : '';
-    const link = `https://www.digitalhomeblog.in/india/sarkari-jobs/${alert._id}`;
+    const link = `https://www.digitalhomeblog.in/india/sarkari-jobs/${alert.slug || alert._id}`;
     const text = `🏛️ *${board} Recruitment Update*\n📌 *${title}*\n${lastDate}🔗 *100% सत्यापित अधिसूचना व ऑनलाइन आवेदन:*\n${link}`;
 
     if (channel === 'whatsapp') {

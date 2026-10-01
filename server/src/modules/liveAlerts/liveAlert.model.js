@@ -18,6 +18,7 @@ const liveAlertSchema = new mongoose.Schema(
     isHighlight: { type: Boolean, default: false },
     isOffline: { type: Boolean, default: false },
     offlineAddress: { type: String, default: '', trim: true },
+    slug: { type: String, trim: true, index: true },
     status: { type: String, enum: ['active', 'drafted', 'published', 'expired'], default: 'active' }
   },
   { timestamps: true }
@@ -31,6 +32,14 @@ liveAlertSchema.index({ parsedPostDate: -1, createdAt: -1 });
 // Pre-save hook to guarantee 100% real government portal URLs in DB & auto-expire past-year alerts
 liveAlertSchema.pre('save', function (next) {
   const now = new Date();
+
+  // Generate clean, hyphenated SEO-optimized slug if missing
+  if (!this.slug && this.title) {
+    try {
+      const { sanitizeJobSlug } = require('../../shared/utils/jobSeoOptimizer');
+      this.slug = sanitizeJobSlug(this.title, this.boardName, this._id ? this._id.toString() : '');
+    } catch (slugErr) {}
+  }
 
   // Strict Date Clamp: Never allow a future parsedPostDate in the database
   if (this.parsedPostDate && this.parsedPostDate > now) {
