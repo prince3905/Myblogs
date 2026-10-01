@@ -1180,7 +1180,8 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     html = html.replace(/<title>.*?<\/title>/i, '');
     html = html.replace(/<meta name="description" .*?\/>/i, '');
     html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
-    html = html.replace('</head>', `${metaTags}\n</head>`);
+    const initialAlertsScript = `<script>window.__INITIAL_ALERTS__ = ${JSON.stringify(topAlerts || []).replace(/</g, '\\u003c')};</script>`;
+    html = html.replace('</head>', `${metaTags}\n${initialAlertsScript}\n</head>`);
     html = html.replace('<div id="root"></div>', `<div id="root">${visibleHub}</div>`);
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');

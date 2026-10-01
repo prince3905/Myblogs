@@ -1365,8 +1365,9 @@ export default function PublicLiveAlertsPage() {
   const openedAlertIdRef = useRef(null);
   const alertCacheRef = useRef(new Map());
 
-  const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_ALERTS__) && window.__INITIAL_ALERTS__.length > 0) ? window.__INITIAL_ALERTS__ : []);
+  const [loading, setLoading] = useState(() => (typeof window !== 'undefined' && Array.isArray(window.__INITIAL_ALERTS__) && window.__INITIAL_ALERTS__.length > 0) ? false : true);
+  const [error, setError] = useState('');
   const urlSearchParam = searchParams.get('search') || searchParams.get('q') || '';
   const urlStateParam = searchParams.get('state') || 'All States';
   const [searchQuery, setSearchQuery] = useState(urlSearchParam);
@@ -1482,7 +1483,9 @@ export default function PublicLiveAlertsPage() {
   };
 
   function loadAlerts(query = '') {
-    setLoading(true);
+    if (alerts.length === 0 || query) {
+      setLoading(true);
+    }
     setError('');
     const qTrim = query.trim();
     let url = '/api/public/live-alerts?status=all&limit=120';
@@ -1494,13 +1497,14 @@ export default function PublicLiveAlertsPage() {
 
     request(url)
       .then(res => {
-        if (res.success) {
+        if (res && res.success) {
           setAlerts(res.data || []);
         } else {
-          setError(res.message || 'Failed to fetch alerts');
+          setError(res?.message || 'Failed to fetch alerts');
         }
       })
       .catch(err => {
+        console.error('Failed to load alerts:', err);
         setError(err.message || 'Failed to connect to server');
       })
       .finally(() => {
@@ -1511,7 +1515,7 @@ export default function PublicLiveAlertsPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       loadAlerts(searchQuery);
-    }, 300);
+    }, alerts.length > 0 && !searchQuery ? 1500 : 100);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -1829,21 +1833,21 @@ export default function PublicLiveAlertsPage() {
 
         {/* 1-Tap Top 10 High-Traffic State Quick Filter Bar (UP, Bihar, Rajasthan, MP, Jharkhand, Odisha, Delhi, etc.) */}
         <Box sx={{ mb: 2.2, maxWidth: '1200px', mx: 'auto', width: '100%' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, px: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 0.8, mb: 1, px: 0.5 }}>
             <Typography
               variant="caption"
               sx={{
                 fontWeight: 800,
                 textTransform: 'uppercase',
-                letterSpacing: 0.6,
+                letterSpacing: 0.5,
                 color: '#475569',
-                fontSize: '0.78rem',
+                fontSize: { xs: '0.72rem', sm: '0.78rem' },
                 display: 'flex',
                 alignItems: 'center',
                 gap: 0.6
               }}
             >
-              📍 लोकप्रिय राज्य अनुसार भर्तियां (Top States Special):
+              📍 लोकप्रिय राज्य अनुसार भर्तियां (Top States):
             </Typography>
             {selectedState !== 'All States' && (
               <Button
@@ -1854,7 +1858,7 @@ export default function PublicLiveAlertsPage() {
                 }}
                 sx={{
                   color: '#DC2626',
-                  fontSize: '0.75rem',
+                  fontSize: '0.72rem',
                   fontWeight: 800,
                   textTransform: 'none',
                   p: 0,
@@ -2011,8 +2015,17 @@ export default function PublicLiveAlertsPage() {
           })}
         </Box>
 
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: { xs: '650px', md: '800px' }, py: 8 }}><CircularProgress size={44} /></Box>
+        {loading && alerts.length === 0 ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: { xs: '350px', md: '500px' }, py: 6, gap: 2 }}>
+            <CircularProgress size={44} />
+            <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 600 }}>नवीनतम सरकारी नौकरियां लोड हो रही हैं...</Typography>
+          </Box>
+        ) : error && alerts.length === 0 ? (
+          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: '16px', border: '1.5px dashed #FCA5A5', bgcolor: '#FEF2F2', my: 3, maxWidth: '600px', mx: 'auto' }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: '#991B1B', mb: 1 }}>सर्वर से कनेक्ट करने में समस्या आई</Typography>
+            <Typography variant="body2" sx={{ color: '#B91C1C', mb: 2.5 }}>कृपया अपना इंटरनेट कनेक्शन जांचें अथवा पुनः प्रयास करें।</Typography>
+            <Button variant="contained" onClick={() => loadAlerts(searchQuery)} sx={{ bgcolor: '#DC2626', fontWeight: 700, borderRadius: '24px', px: 3 }}>पुनः प्रयास करें (Retry)</Button>
+          </Paper>
         ) : (
           <Box>
             {/* Direct Priority Search Results Grid (Displayed FIRST when user searches or filters) */}

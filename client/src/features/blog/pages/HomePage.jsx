@@ -2671,6 +2671,8 @@ export default function HomePage() {
                     px: 2,
                     py: 0.8,
                     fontSize: '0.82rem',
+                    width: { xs: '100%', sm: 'auto' },
+                    textAlign: 'center',
                     '&:hover': { bgcolor: '#0369A1' }
                   }}
                 >
