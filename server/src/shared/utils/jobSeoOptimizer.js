@@ -144,16 +144,47 @@ function parseJobMetadata(alert = {}) {
   };
 }
 
+const STATE_SHORT_MAP = {
+  'uttar pradesh': 'UP',
+  'madhya pradesh': 'MP',
+  'himachal pradesh': 'HP',
+  'andhra pradesh': 'AP',
+  'west bengal': 'WB',
+  'bihar': 'Bihar',
+  'rajasthan': 'Rajasthan',
+  'jharkhand': 'Jharkhand',
+  'odisha': 'Odisha',
+  'haryana': 'Haryana',
+  'delhi': 'Delhi',
+  'maharashtra': 'Maharashtra',
+  'chhattisgarh': 'CG',
+  'uttarakhand': 'Uttarakhand',
+  'punjab': 'Punjab',
+  'gujarat': 'Gujarat'
+};
+
 /**
  * Strict High-CTR Long-Tail Title Template:
  * {Job Name / Department} Recruitment {Year}: {Vacancy Count} Posts, Eligibility, Last Date & Apply Online
  */
 function buildHighCtrJobTitle(meta) {
-  const { jobName, year, vacancyCount } = meta;
-  if (vacancyCount) {
-    return `${jobName} Recruitment ${year}: ${vacancyCount} Posts, Eligibility, Last Date & Apply Online`;
+  const { jobName, year, vacancyCount, state } = meta;
+  let formattedName = jobName;
+
+  if (state && state !== 'Central/All India') {
+    const stLower = state.toLowerCase();
+    const shortCode = STATE_SHORT_MAP[stLower] || state;
+    const nameLower = formattedName.toLowerCase();
+    const hasState = nameLower.includes(stLower) || nameLower.includes(shortCode.toLowerCase());
+    if (!hasState) {
+      formattedName = `${shortCode} ${formattedName}`;
+    }
   }
-  return `${jobName} Recruitment ${year}: Eligibility Criteria, Age Limit, Last Date & Apply Online`;
+
+  if (vacancyCount) {
+    return `${formattedName} Recruitment ${year}: ${vacancyCount} Posts, Eligibility, Last Date & Apply Online`;
+  }
+  return `${formattedName} Recruitment ${year}: Eligibility Criteria, Age Limit, Last Date & Apply Online`;
 }
 
 /**
@@ -161,14 +192,26 @@ function buildHighCtrJobTitle(meta) {
  * {Job Name} 2026 Online Form: Check eligibility criteria, age limit, application fee, exam date, and official direct application link at Digital Home.
  */
 function buildHighCtrMetaDesc(meta) {
-  const { jobName, year } = meta;
-  let baseDesc = `${jobName} ${year} Online Form: Check eligibility criteria, age limit, application fee, exam date, and official direct application link at Digital Home.`;
+  const { jobName, year, state } = meta;
+  let formattedName = jobName;
+
+  if (state && state !== 'Central/All India') {
+    const stLower = state.toLowerCase();
+    const shortCode = STATE_SHORT_MAP[stLower] || state;
+    const nameLower = formattedName.toLowerCase();
+    const hasState = nameLower.includes(stLower) || nameLower.includes(shortCode.toLowerCase());
+    if (!hasState) {
+      formattedName = `${shortCode} ${formattedName}`;
+    }
+  }
+
+  let baseDesc = `${formattedName} ${year} Online Form: Check eligibility criteria, age limit, application fee, exam date, and official direct application link at Digital Home.`;
 
   // Enforce 140-155 characters target range
   if (baseDesc.length > 155) {
     // Shorten job name portion if needed
     const allowedJobLen = 155 - ` ${year} Online Form: Check eligibility criteria, age limit, fee, exam date & direct link at Digital Home.`.length;
-    const shortJob = jobName.slice(0, Math.max(15, allowedJobLen)).trim();
+    const shortJob = formattedName.slice(0, Math.max(15, allowedJobLen)).trim();
     baseDesc = `${shortJob} ${year} Online Form: Check eligibility criteria, age limit, fee, exam date & direct link at Digital Home.`;
   }
 

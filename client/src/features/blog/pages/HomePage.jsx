@@ -756,11 +756,12 @@ const POPULAR_STATES = [
   { label: 'Bihar', code: 'bihar', icon: '🏛️' },
   { label: 'Rajasthan', code: 'rajasthan', icon: '🏛️' },
   { label: 'Madhya Pradesh', code: 'mp', icon: '🏛️' },
-  { label: 'Maharashtra', code: 'maharashtra', icon: '🏛️' },
-  { label: 'Haryana', code: 'haryana', icon: '🏛️' },
-  { label: 'Delhi / NCR', code: 'delhi', icon: '🏛️' },
-  { label: 'West Bengal', code: 'wb', icon: '🏛️' },
   { label: 'Jharkhand', code: 'jharkhand', icon: '🏛️' },
+  { label: 'Odisha', code: 'odisha', icon: '🏛️' },
+  { label: 'Delhi / NCR', code: 'delhi', icon: '🏛️' },
+  { label: 'Haryana', code: 'haryana', icon: '🏛️' },
+  { label: 'West Bengal', code: 'wb', icon: '🏛️' },
+  { label: 'Maharashtra', code: 'maharashtra', icon: '🏛️' },
   { label: 'Gujarat', code: 'gujarat', icon: '🏛️' },
   { label: 'Uttarakhand', code: 'uttarakhand', icon: '🏛️' },
   { label: 'Punjab', code: 'punjab', icon: '🏛️' },
@@ -769,7 +770,6 @@ const POPULAR_STATES = [
   { label: 'Tamil Nadu', code: 'tn', icon: '🏛️' },
   { label: 'Telangana', code: 'telangana', icon: '🏛️' },
   { label: 'Andhra Pradesh', code: 'ap', icon: '🏛️' },
-  { label: 'Odisha', code: 'odisha', icon: '🏛️' },
   { label: 'Assam', code: 'assam', icon: '🏛️' },
   { label: 'Himachal', code: 'hp', icon: '🏛️' },
   { label: 'J&K', code: 'jk', icon: '🏛️' }
@@ -2628,6 +2628,113 @@ export default function HomePage() {
               >
                 Open {countryMeta.name} Portal →
               </Button>
+            </Box>
+          )}
+
+          {/* Indian Visitor State Spotlight Banner (High CTR & Instant State Access) */}
+          {isIndia && (
+            <Box
+              sx={{
+                mb: 2.5,
+                p: { xs: 2, sm: 2.2 },
+                bgcolor: '#0F172A',
+                borderRadius: '16px',
+                border: '1px solid #1E293B',
+                boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1.5
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ fontSize: '1.8rem', lineHeight: 1 }}>🇮🇳</Box>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ color: '#F8FAFC', fontWeight: 800, fontSize: { xs: '0.92rem', sm: '1rem' } }}>
+                      🎯 प्रमुख राज्यों की नई सरकारी भर्तियां (Top States Sarkari Jobs 2026)
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#94A3B8', fontSize: '0.8rem' }}>
+                      उत्तर प्रदेश (UP), बिहार, मध्य प्रदेश, राजस्थान, झारखंड, ओडिशा व अन्य राज्यों के 100% सत्यापित ऑनलाइन फॉर्म
+                    </Typography>
+                  </Box>
+                </Box>
+                <Button
+                  component={Link}
+                  to="/india/sarkari-jobs"
+                  variant="contained"
+                  sx={{
+                    bgcolor: '#0284C7',
+                    color: '#FFFFFF',
+                    fontWeight: 800,
+                    textTransform: 'none',
+                    borderRadius: '10px',
+                    px: 2,
+                    py: 0.8,
+                    fontSize: '0.82rem',
+                    '&:hover': { bgcolor: '#0369A1' }
+                  }}
+                >
+                  सभी राज्य भर्तियां देखें →
+                </Button>
+              </Box>
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.8,
+                  overflowX: 'auto',
+                  pb: 0.5,
+                  WebkitOverflowScrolling: 'touch',
+                  '&::-webkit-scrollbar': { height: '3px' },
+                  '&::-webkit-scrollbar-thumb': { bgcolor: '#334155', borderRadius: '10px' }
+                }}
+              >
+                {[
+                  { name: 'Uttar Pradesh', label: '🏛️ उत्तर प्रदेश (UP)', count: '185+' },
+                  { name: 'Bihar', label: '🏛️ बिहार (Bihar)', count: '53+' },
+                  { name: 'Madhya Pradesh', label: '🏛️ मध्य प्रदेश (MP)', count: '64+' },
+                  { name: 'Rajasthan', label: '🏛️ राजस्थान (RJ)', count: '45+' },
+                  { name: 'Jharkhand', label: '🏛️ झारखंड (JH)', count: '12+' },
+                  { name: 'Odisha', label: '🏛️ ओडिशा (OD)', count: '26+' },
+                  { name: 'Delhi', label: '🏛️ दिल्ली (Delhi)', count: '128+' },
+                  { name: 'Haryana', label: '🏛️ हरियाणा (HR)', count: '28+' },
+                  { name: 'Maharashtra', label: '🏛️ महाराष्ट्र (MH)', count: '68+' },
+                  { name: 'West Bengal', label: '🏛️ पश्चिम बंगाल (WB)', count: '34+' }
+                ].map((st) => (
+                  <Chip
+                    key={st.name}
+                    component={Link}
+                    to={`/india/sarkari-jobs?state=${encodeURIComponent(st.name)}`}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
+                        <span>{st.label}</span>
+                        <span style={{ fontSize: '0.68rem', opacity: 0.85, fontWeight: 800 }}>{st.count}</span>
+                      </Box>
+                    }
+                    clickable
+                    sx={{
+                      bgcolor: 'rgba(255, 255, 255, 0.08)',
+                      color: '#F1F5F9',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      py: 1.6,
+                      px: 0.8,
+                      borderRadius: '20px',
+                      whiteSpace: 'nowrap',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        bgcolor: '#0284C7',
+                        color: '#FFFFFF',
+                        borderColor: '#0284C7',
+                        transform: 'translateY(-1px)'
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
             </Box>
           )}
 

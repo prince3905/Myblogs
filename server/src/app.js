@@ -281,19 +281,28 @@ async function buildHomepageHtml() {
       const BlogPost = mongoose.model('BlogPost');
       const LiveAlert = mongoose.model('LiveAlert');
 
-    const [topPosts, topAlerts] = await Promise.all([
+    const TOP_STATES_REGEX = /uttar pradesh|bihar|rajasthan|madhya pradesh|jharkhand|odisha|delhi|haryana|west bengal|maharashtra/i;
+    const [topPosts, topAlerts, topStateAlerts] = await Promise.all([
       BlogPost.find({ 
         status: 'published',
         category: { $regex: /job|sarkari|exam|result|recruitment/i }
       })
         .select('title category slug')
         .sort({ publishedAt: -1, createdAt: -1 })
-        .limit(25)
+        .limit(20)
         .lean(),
       LiveAlert.find({ status: { $in: ['active', 'published'] } })
         .select('title _id slug state category')
         .sort({ parsedPostDate: -1, createdAt: -1 })
-        .limit(35)
+        .limit(25)
+        .lean(),
+      LiveAlert.find({ 
+        status: { $in: ['active', 'published'] },
+        state: { $regex: TOP_STATES_REGEX }
+      })
+        .select('title _id slug state category')
+        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .limit(20)
         .lean()
     ]);
 
@@ -305,6 +314,27 @@ async function buildHomepageHtml() {
     <h1 style="font-size: 1.7rem; font-weight: 900; color: #0f172a; margin-bottom: 10px; line-height: 1.3;">Digital Home: Latest Sarkari Result, Govt Jobs & Admit Cards 2026 (सरकारी रिजल्ट)</h1>
     <p style="color: #475569; font-size: 0.98rem; line-height: 1.6; margin-bottom: 24px; max-width: 840px;">सत्यापित सरकारी नौकरी, एडमिट कार्ड, परीक्षा परिणाम व उत्तर कुंजी के नवीनतम अपडेट्स। सभी भर्तियों के लिए सीधे 100% आधिकारिक लिंक उपलब्ध हैं।</p>
     
+    <section style="margin-bottom: 30px;">
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; border-bottom: 2px solid #f59e0b; padding-bottom: 6px;">🎯 प्रमुख राज्यों की सरकारी नौकरी (Top States Sarkari Jobs: UP, Bihar, MP, Rajasthan, Jharkhand, Odisha)</h2>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;">
+        <span style="font-size: 0.82rem; font-weight: 700; color: #475569; align-self: center;">राज्य अनुसार देखें:</span>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #e0f2fe; color: #0369a1; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🇮🇳 All India (सभी)</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ उत्तर प्रदेश (UP) 185+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ बिहार (Bihar) 53+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ मध्य प्रदेश (MP) 64+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ राजस्थान (RJ) 45+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ झारखंड (JH) 12+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ ओडिशा (OD) 26+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ दिल्ली (Delhi) 128+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ हरियाणा (HR) 28+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ महाराष्ट्र (MH) 68+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ पश्चिम बंगाल (WB) 34+</a>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
+        ${topStateAlerts.map(a => `<a href="/india/sarkari-jobs/${a.slug || a._id}" style="display: block; padding: 12px 14px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; color: #92400e; text-decoration: none; font-weight: 600; font-size: 0.9rem; line-height: 1.4;"><span style="display:block; font-size:0.75rem; color:#b45309; font-weight:700; margin-bottom:2px;">🏛️ ${escapeHtml(a.state || 'State')} Special</span>${escapeHtml(a.title)}</a>`).join('\n        ')}
+      </div>
+    </section>
+
     <section style="margin-bottom: 32px;">
       <h2 style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin-bottom: 14px; border-bottom: 2px solid #38bdf8; padding-bottom: 6px;">🔥 वर्तमान में सक्रिय प्रमुख सरकारी भर्तियां (Active Live Sarkari Vacancies 2026)</h2>
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
@@ -1034,15 +1064,27 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     let html = fs.readFileSync(indexPath, 'utf8');
 
     let topAlerts = [];
+    let stateAlerts = [];
     try {
       const mongoose = require('mongoose');
       if (mongoose.connection && mongoose.connection.readyState === 1) {
         const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
-        topAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
-          .select('title category state _id slug parsedPostDate')
-          .sort({ parsedPostDate: -1, createdAt: -1 })
-          .limit(60)
-          .lean();
+        const TOP_STATES_REGEX = /uttar pradesh|bihar|rajasthan|madhya pradesh|jharkhand|odisha|delhi|haryana|west bengal|maharashtra/i;
+        [topAlerts, stateAlerts] = await Promise.all([
+          LiveAlert.find({ status: { $in: ['active', 'published'] } })
+            .select('title category state _id slug parsedPostDate')
+            .sort({ parsedPostDate: -1, createdAt: -1 })
+            .limit(40)
+            .lean(),
+          LiveAlert.find({ 
+            status: { $in: ['active', 'published'] },
+            state: { $regex: TOP_STATES_REGEX }
+          })
+            .select('title category state _id slug parsedPostDate')
+            .sort({ parsedPostDate: -1, createdAt: -1 })
+            .limit(30)
+            .lean()
+        ]);
       }
     } catch (dbErr) {
       console.warn('[SSR Hub] LiveAlert query bypassed:', dbErr.message);
@@ -1052,8 +1094,8 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     const canonicalUrl = `https://www.digitalhomeblog.in${cleanPath}`;
 
     const siteName = 'Digital Home Sarkari Result';
-    const fullTitle = 'Sarkari Result 2026: Latest Online Forms, Admit Card, Result & Answer Key | Digital Home';
-    const desc = 'Latest Sarkari Result 2026 notifications, central & state government recruitment, UPSC, SSC, Railways, Banking, Defense & State PSC exam admit cards and answer keys.';
+    const fullTitle = 'Sarkari Result 2026: UP, Bihar, MP, Rajasthan & All India Govt Jobs | Digital Home';
+    const desc = 'Latest Sarkari Result 2026 notifications, UPSSSC, BPSC, MPESB, RSMSSB, JSSC, OSSSC, UPSC, SSC, Railways, Banking, Police & State PSC exam forms and admit cards.';
     const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
 
     const escapeHtml = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -1062,14 +1104,47 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     const visibleHub = `
   <main class="ssr-sarkari-directory" aria-label="Sarkari Jobs Directory 2026" style="max-width: 1200px; margin: 0 auto; padding: 24px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
     <h1 style="font-size: 1.7rem; font-weight: 900; color: #0f172a; margin-bottom: 10px; line-height: 1.3;">Sarkari Result 2026: सरकारी नौकरी लाइव अलर्ट्स, ऑनलाइन फॉर्म व एडमिट कार्ड</h1>
-    <p style="color: #475569; font-size: 0.98rem; line-height: 1.6; margin-bottom: 24px; max-width: 840px;">केंद्रीय व राज्य सरकार के सभी विभागों (UPSC, SSC, रेलवे, बैंकिंग, पुलिस, डिफेंस व राज्य PSC) की नवीनतम भर्तियों की 100% आधिकारिक अधिसूचनाएं और सीधे आवेदन लिंक।</p>
+    <p style="color: #475569; font-size: 0.98rem; line-height: 1.6; margin-bottom: 24px; max-width: 840px;">उत्तर प्रदेश, बिहार, मध्य प्रदेश, राजस्थान, झारखंड, ओडिशा व केंद्रीय विभागों (UPSC, SSC, रेलवे, बैंकिंग, पुलिस, डिफेंस व राज्य PSC) की नवीनतम भर्तियों की 100% आधिकारिक अधिसूचनाएं और सीधे आवेदन लिंक।</p>
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px;">
-      ${topAlerts.map(a => `<a href="/india/sarkari-jobs/${a.slug || a._id}" style="display: block; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #0f172a; text-decoration: none;">
-        <span style="font-size: 0.75rem; font-weight: 700; color: #0284c7; display: block; margin-bottom: 4px;">${escapeHtml(a.state || 'All India')} • ${escapeHtml(a.category || 'Recruitment')}</span>
-        <strong style="font-size: 0.92rem; color: #1e293b; display: block; line-height: 1.4;">${escapeHtml(a.title)}</strong>
-      </a>`).join('\n      ')}
-    </div>
+    <!-- Top 10 Indian States Anchor Links for Googlebot & Aspirants -->
+    <section style="margin-bottom: 28px; padding: 18px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px;">
+      <h2 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-top: 0; margin-bottom: 10px;">🎯 राज्य अनुसार सरकारी नौकरियां (Top States Sarkari Jobs):</h2>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #e0f2fe; color: #0369a1; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🇮🇳 All India (सभी राज्य)</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ उत्तर प्रदेश (UP Jobs) 185+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ बिहार (Bihar Jobs) 53+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ मध्य प्रदेश (MP Jobs) 64+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ राजस्थान (Rajasthan) 45+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ झारखंड (Jharkhand) 12+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ ओडिशा (Odisha) 26+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ दिल्ली (Delhi) 128+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ हरियाणा (Haryana) 28+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ महाराष्ट्र (Maharashtra) 68+</a>
+        <a href="/india/sarkari-jobs" style="padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 700;">🏛️ पश्चिम बंगाल (WB) 34+</a>
+      </div>
+    </section>
+
+    <!-- Top State Live Vacancies Grid -->
+    ${stateAlerts.length > 0 ? `
+    <section style="margin-bottom: 30px;">
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin-bottom: 14px; border-bottom: 2px solid #f59e0b; padding-bottom: 6px;">⭐ प्रमुख राज्यों की नवीनतम भर्तियां (Featured State Vacancies 2026)</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; margin-bottom: 24px;">
+        ${stateAlerts.map(a => `<a href="/india/sarkari-jobs/${a.slug || a._id}" style="display: block; padding: 14px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; color: #0f172a; text-decoration: none;">
+          <span style="font-size: 0.75rem; font-weight: 800; color: #b45309; display: block; margin-bottom: 4px;">🏛️ ${escapeHtml(a.state || 'State')} • ${escapeHtml(a.category || 'Recruitment')}</span>
+          <strong style="font-size: 0.92rem; color: #1e293b; display: block; line-height: 1.4;">${escapeHtml(a.title)}</strong>
+        </a>`).join('\n        ')}
+      </div>
+    </section>` : ''}
+
+    <section>
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin-bottom: 14px; border-bottom: 2px solid #0284c7; padding-bottom: 6px;">🔥 सभी सक्रिय केंद्रीय व राज्य सरकारी नौकरियां (All India Live Vacancies 2026)</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px;">
+        ${topAlerts.map(a => `<a href="/india/sarkari-jobs/${a.slug || a._id}" style="display: block; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #0f172a; text-decoration: none;">
+          <span style="font-size: 0.75rem; font-weight: 700; color: #0284c7; display: block; margin-bottom: 4px;">${escapeHtml(a.state || 'All India')} • ${escapeHtml(a.category || 'Recruitment')}</span>
+          <strong style="font-size: 0.92rem; color: #1e293b; display: block; line-height: 1.4;">${escapeHtml(a.title)}</strong>
+        </a>`).join('\n        ')}
+      </div>
+    </section>
   </main>`;
 
     const breadcrumbTitle = cleanPath.includes('job-alerts') 

@@ -1045,16 +1045,17 @@ function renderAlertListItem(alert, setSelectedAlert, themeColor) {
               }} 
             />
           )}
-          {alert.state && alert.state !== 'Central/All India' && (
+          {alert.state && (
             <Chip 
-              label={alert.state} 
+              label={alert.state === 'Central/All India' ? '🇮🇳 All India' : `🏛️ ${alert.state}`} 
               size="small" 
               sx={{ 
-                height: 16, 
-                fontSize: '0.55rem', 
-                fontWeight: 700, 
-                bgcolor: '#FEF3C7', 
-                color: '#B45309',
+                height: 17, 
+                fontSize: '0.58rem', 
+                fontWeight: 800, 
+                bgcolor: /uttar pradesh|bihar|rajasthan|madhya pradesh|jharkhand|odisha|delhi/i.test(alert.state || '') ? '#EFF6FF' : '#FEF3C7', 
+                color: /uttar pradesh|bihar|rajasthan|madhya pradesh|jharkhand|odisha|delhi/i.test(alert.state || '') ? '#1D4ED8' : '#B45309',
+                border: /uttar pradesh|bihar|rajasthan|madhya pradesh|jharkhand|odisha|delhi/i.test(alert.state || '') ? '1px solid #BFDBFE' : '1px solid #FDE68A',
                 borderRadius: '4px',
                 '& .MuiChip-label': { px: 0.6 }
               }} 
@@ -1282,8 +1283,21 @@ const STATE_ALIASES = {
   'telangana': ['telangana', 'tspsc', 'hyderabad'],
   'tamil nadu': ['tamil nadu', 'tnpsc', 'chennai'],
   'himachal pradesh': ['himachal pradesh', 'hp', 'hppsc', 'hpsssb', 'shimla'],
-  'hp': ['himachal pradesh', 'hp', 'hppsc', 'hpsssb', 'shimla']
 };
+
+const TOP_INDIAN_STATES = [
+  { name: 'All States', label: 'सभी राज्य (All India)', short: 'All', icon: '🔥', count: '1300+' },
+  { name: 'Uttar Pradesh', label: 'उत्तर प्रदेश (UP)', short: 'UP', icon: '🏛️', count: '185+' },
+  { name: 'Bihar', label: 'बिहार (Bihar)', short: 'Bihar', icon: '🏛️', count: '53+' },
+  { name: 'Madhya Pradesh', label: 'मध्य प्रदेश (MP)', short: 'MP', icon: '🏛️', count: '64+' },
+  { name: 'Rajasthan', label: 'राजस्थान (RJ)', short: 'Rajasthan', icon: '🏛️', count: '45+' },
+  { name: 'Jharkhand', label: 'झारखंड (JH)', short: 'Jharkhand', icon: '🏛️', count: '12+' },
+  { name: 'Odisha', label: 'ओडिशा (OD)', short: 'Odisha', icon: '🏛️', count: '26+' },
+  { name: 'Delhi', label: 'दिल्ली (Delhi)', short: 'Delhi', icon: '🏛️', count: '128+' },
+  { name: 'Haryana', label: 'हरियाणा (HR)', short: 'Haryana', icon: '🏛️', count: '28+' },
+  { name: 'West Bengal', label: 'पश्चिम बंगाल (WB)', short: 'WB', icon: '🏛️', count: '34+' },
+  { name: 'Maharashtra', label: 'महाराष्ट्र (MH)', short: 'MH', icon: '🏛️', count: '68+' }
+];
 
 function isAlertMatchingState(alert, stateQuery) {
   if (!alert || !stateQuery || stateQuery === 'all' || stateQuery === 'All States') return true;
@@ -1353,10 +1367,10 @@ export default function PublicLiveAlertsPage() {
 
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const urlSearchParam = searchParams.get('search') || searchParams.get('q') || '';
+  const urlStateParam = searchParams.get('state') || 'All States';
   const [searchQuery, setSearchQuery] = useState(urlSearchParam);
-  const [selectedState, setSelectedState] = useState('All States');
+  const [selectedState, setSelectedState] = useState(urlStateParam);
   const [selectedAlert, setSelectedAlertState] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [errorLoadingDetails, setErrorLoadingDetails] = useState('');
@@ -1366,6 +1380,10 @@ export default function PublicLiveAlertsPage() {
   useEffect(() => {
     const q = searchParams.get('search') || searchParams.get('q') || '';
     setSearchQuery(q);
+    const st = searchParams.get('state');
+    if (st) {
+      setSelectedState(st);
+    }
   }, [searchParams]);
 
   const setSelectedAlert = async (alert) => {
@@ -1538,7 +1556,7 @@ export default function PublicLiveAlertsPage() {
   }, [alerts]);
 
   const filteredAlerts = useMemo(() => {
-    return alerts.filter(alert => {
+    let list = alerts.filter(alert => {
       const q = searchQuery.toLowerCase().trim();
       let queryMatch = !q;
       if (q === 'offline') {
@@ -1550,6 +1568,35 @@ export default function PublicLiveAlertsPage() {
       const stateMatch = isAlertMatchingState(alert, selectedState);
       return queryMatch && stateMatch;
     });
+
+    // When viewing "All States" without search filter, prioritize high-demand Top 10 Indian States + Central
+    if (selectedState === 'All States' && !searchQuery) {
+      const TOP_PRIORITY_STATES = [
+        'uttar pradesh', 'bihar', 'rajasthan', 'madhya pradesh',
+        'jharkhand', 'odisha', 'delhi', 'haryana', 'west bengal',
+        'maharashtra', 'central/all india'
+      ];
+      list = [...list].sort((a, b) => {
+        // Priority 1: isHighlight
+        const aHigh = a.isHighlight ? 1 : 0;
+        const bHigh = b.isHighlight ? 1 : 0;
+        if (aHigh !== bHigh) return bHigh - aHigh;
+
+        // Priority 2: Top States / Central prominence
+        const aState = (a.state || '').toLowerCase();
+        const bState = (b.state || '').toLowerCase();
+        const aIsTop = TOP_PRIORITY_STATES.some(ts => aState.includes(ts)) ? 1 : 0;
+        const bIsTop = TOP_PRIORITY_STATES.some(ts => bState.includes(ts)) ? 1 : 0;
+        if (aIsTop !== bIsTop) return bIsTop - aIsTop;
+
+        // Priority 3: Freshness / Date
+        const aTime = a.parsedPostDate ? new Date(a.parsedPostDate).getTime() : 0;
+        const bTime = b.parsedPostDate ? new Date(b.parsedPostDate).getTime() : 0;
+        return bTime - aTime;
+      });
+    }
+
+    return list;
   }, [alerts, searchQuery, selectedState]);
 
   const categoryData = useMemo(() => {
@@ -1780,6 +1827,125 @@ export default function PublicLiveAlertsPage() {
           )}
         </Paper>
 
+        {/* 1-Tap Top 10 High-Traffic State Quick Filter Bar (UP, Bihar, Rajasthan, MP, Jharkhand, Odisha, Delhi, etc.) */}
+        <Box sx={{ mb: 2.2, maxWidth: '1200px', mx: 'auto', width: '100%' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, px: 0.5 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: 0.6,
+                color: '#475569',
+                fontSize: '0.78rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.6
+              }}
+            >
+              📍 लोकप्रिय राज्य अनुसार भर्तियां (Top States Special):
+            </Typography>
+            {selectedState !== 'All States' && (
+              <Button
+                size="small"
+                onClick={() => {
+                  setSelectedState('All States');
+                  if (window.history.pushState) window.history.pushState(null, '', '/india/sarkari-jobs');
+                }}
+                sx={{
+                  color: '#DC2626',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  p: 0,
+                  minWidth: 'auto',
+                  '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' }
+                }}
+              >
+                ✕ सभी राज्य देखें (Show All)
+              </Button>
+            )}
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              overflowX: 'auto',
+              py: 0.6,
+              px: 0.5,
+              scrollSnapType: 'x proximity',
+              WebkitOverflowScrolling: 'touch',
+              '&::-webkit-scrollbar': { height: '4px' },
+              '&::-webkit-scrollbar-thumb': { bgcolor: '#CBD5E1', borderRadius: '10px' },
+              '&::-webkit-scrollbar-track': { bgcolor: 'rgba(0,0,0,0.02)' }
+            }}
+          >
+            {TOP_INDIAN_STATES.map((st) => {
+              const isSelected = selectedState.toLowerCase() === st.name.toLowerCase() || (st.name === 'All States' && selectedState === 'All States');
+              return (
+                <Chip
+                  key={st.name}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
+                      <span>{st.icon}</span>
+                      <span>{st.label}</span>
+                      {st.count ? (
+                        <span
+                          style={{
+                            fontSize: '0.68rem',
+                            padding: '1px 6px',
+                            borderRadius: '10px',
+                            backgroundColor: isSelected ? 'rgba(255,255,255,0.28)' : '#E2E8F0',
+                            color: isSelected ? '#FFFFFF' : '#475569',
+                            fontWeight: 800
+                          }}
+                        >
+                          {st.count}
+                        </span>
+                      ) : null}
+                    </Box>
+                  }
+                  clickable
+                  onClick={() => {
+                    setSelectedState(st.name);
+                    setSearchQuery('');
+                    if (window.history.pushState) {
+                      const url = st.name === 'All States' ? '/india/sarkari-jobs' : `/india/sarkari-jobs?state=${encodeURIComponent(st.name)}`;
+                      window.history.pushState(null, '', url);
+                    }
+                    setTimeout(() => {
+                      const el = document.getElementById('alerts-lists-grid') || document.getElementById('search-filter-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
+                  sx={{
+                    scrollSnapAlign: 'start',
+                    fontWeight: isSelected ? 850 : 650,
+                    fontSize: '0.78rem',
+                    py: 2,
+                    px: 1.2,
+                    borderRadius: '24px',
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    bgcolor: isSelected ? '#1E40AF' : '#FFFFFF',
+                    color: isSelected ? '#FFFFFF' : '#1E293B',
+                    border: isSelected ? '1.5px solid #1E40AF' : '1px solid #E2E8F0',
+                    boxShadow: isSelected ? '0 4px 12px rgba(30, 64, 175, 0.28)' : '0 1px 3px rgba(0,0,0,0.03)',
+                    '&:hover': {
+                      bgcolor: isSelected ? '#1D4ED8' : '#F1F5F9',
+                      borderColor: isSelected ? '#1D4ED8' : '#CBD5E1',
+                      transform: 'translateY(-1px)'
+                    }
+                  }}
+                />
+              );
+            })}
+          </Box>
+        </Box>
+
         {/* 1-Click Fast Exam & Board Filter Pills Hub (User Swipeable / Scrollable) */}
         <Box 
           sx={{ 
@@ -1852,29 +2018,32 @@ export default function PublicLiveAlertsPage() {
             {/* Direct Priority Search Results Grid (Displayed FIRST when user searches or filters) */}
             {Boolean(searchQuery.trim() || (selectedState && selectedState !== 'All States')) ? (
               <Box sx={{ mb: 4, width: '100%', maxWidth: '1200px', mx: 'auto' }}>
-                {/* Search Results Banner Header */}
+                {/* Search / State Filter Header Banner */}
                 <Box 
                   sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between', 
-                    p: { xs: 1.5, md: 2 },
+                    p: { xs: 2, md: 2.2 },
                     mb: 2.5,
-                    bgcolor: '#EFF6FF',
-                    border: '1.5px solid #BFDBFE',
+                    bgcolor: selectedState !== 'All States' && !searchQuery ? '#0F172A' : '#EFF6FF',
+                    border: selectedState !== 'All States' && !searchQuery ? '1.5px solid #1E293B' : '1.5px solid #BFDBFE',
                     borderRadius: '16px',
+                    boxShadow: selectedState !== 'All States' && !searchQuery ? '0 8px 20px rgba(15, 23, 42, 0.3)' : 'none',
                     flexWrap: 'wrap',
                     gap: 1.5
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 850, color: '#1E40AF', fontSize: { xs: '0.95rem', md: '1.15rem' } }}>
-                      🔍 खोज परिणाम (Search Results) {searchQuery ? `"${searchQuery}"` : ''} {selectedState !== 'All States' ? `• ${selectedState}` : ''}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, flexWrap: 'wrap' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 850, color: selectedState !== 'All States' && !searchQuery ? '#F8FAFC' : '#1E40AF', fontSize: { xs: '0.98rem', md: '1.18rem' } }}>
+                      {selectedState !== 'All States' && !searchQuery 
+                        ? `🏛️ ${selectedState} सरकारी नौकरी व भर्ती 2026 (Live Vacancies)` 
+                        : `🔍 खोज परिणाम (Search Results) ${searchQuery ? `"${searchQuery}"` : ''} ${selectedState !== 'All States' ? `• ${selectedState}` : ''}`}
                     </Typography>
                     <Chip 
                       label={`${filteredAlerts.length} ${filteredAlerts.length === 1 ? 'भर्ती' : 'भर्तियां'} मिलीं`} 
                       size="small" 
-                      sx={{ bgcolor: '#2563EB', color: '#FFFFFF', fontWeight: 800, fontSize: '0.72rem' }} 
+                      sx={{ bgcolor: selectedState !== 'All States' && !searchQuery ? '#10B981' : '#2563EB', color: '#FFFFFF', fontWeight: 800, fontSize: '0.72rem' }} 
                     />
                   </Box>
 
