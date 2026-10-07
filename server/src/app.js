@@ -57,7 +57,7 @@ app.use(async (req, res, next) => {
     // Malformed URI encoding (e.g. invalid % sequence)
     res.setHeader('X-Robots-Tag', 'noindex, follow');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(410).send('<h1>410 Gone</h1><p>This resource has been permanently removed.</p>');
+    return res.status(410).send("<h1>410 Gone</h1><p>Resource permanently removed.</p>");
   }
 
   const decodedPath = decodedUrl.split('?')[0] || '';
@@ -65,16 +65,16 @@ app.use(async (req, res, next) => {
 
   // 1A. DECODED URL CHECK:
   // Inspect if the URL path contains spaces, square brackets `[` or `]`, Hindi/Devanagari characters,
-  // or unmatched query patterns (e.g. /sewayojna vibhag, /[आवेदन समाप्त]..., /sub inspector)
-  const hasSpacesInPath = decodedPath.includes(' ') || req.path.includes(' ') || decodedPath.includes('%20') || rawUrl.includes('%20');
+  // or unmatched query patterns (e.g. /bihar stet, /fatigue simple, /aktu uptac, /[आवेदन समाप्त]...)
+  const hasSpacesInPath = decodedPath.includes(' ') || req.path.includes(' ') || decodedPath.includes('%20') || rawUrl.includes('%20') || /\s/.test(decodedPath) || /\s/.test(rawUrl);
   const hasBracketsInPath = decodedPath.includes('[') || decodedPath.includes(']') || decodedPath.includes('%5B') || decodedPath.includes('%5D');
-  const hasDevanagariInPath = /[\u0900-\u097F]/.test(decodedPath);
+  const hasDevanagariInPath = /[\u0900-\u097F]/.test(decodedPath) || /[\u0900-\u097F]/.test(rawUrl);
   const hasGarbageBracketsInQuery = decodedQuery.includes('[') || decodedQuery.includes(']') || decodedQuery.includes('आवेदन समाप्त');
 
   if (hasSpacesInPath || hasBracketsInPath || hasDevanagariInPath || hasGarbageBracketsInQuery) {
     res.setHeader('X-Robots-Tag', 'noindex, follow');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(410).send('<h1>410 Gone</h1><p>This resource has been permanently removed.</p>');
+    return res.status(410).send("<h1>410 Gone</h1><p>Resource permanently removed.</p>");
   }
 
   // 1B. CLEANUP FOR DEFUNCT OR UNMATCHED SYSTEM ROUTES:
@@ -82,7 +82,7 @@ app.use(async (req, res, next) => {
   if (decodedPath === '/future' || decodedPath.startsWith('/future/') || decodedPath.startsWith('/future.')) {
     res.setHeader('X-Robots-Tag', 'noindex, follow');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(410).send('<h1>410 Gone</h1><p>This resource has been permanently removed.</p>');
+    return res.status(410).send("<h1>410 Gone</h1><p>Resource permanently removed.</p>");
   }
 
   const isProd = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production';
@@ -1258,11 +1258,20 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
           const cleanSlug = alertDoc.slug || sanitizeJobSlug(alertDoc.title, alertDoc.boardName, alertDoc._id.toString());
           res.setHeader('Cache-Control', 'public, max-age=86400');
           return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs/${cleanSlug}`);
-        } else {
-          // Alert requested via ?alert= does NOT exist in DB: Return strict HTTP 410 Gone (Eliminates Soft 404 & drops URL from GSC crawl queue)
-          return render404Page(req, res, 'यह सरकारी नौकरी भर्ती सूचना आधिकारिक रूप से समाप्त हो चुकी है या उपलब्ध नहीं है। (This government vacancy notification has expired or does not exist.)', 410);
         }
       }
+
+      // Alert requested via ?alert= does NOT exist in DB: Return strict HTTP 410 Gone
+      res.setHeader('X-Robots-Tag', 'noindex, follow');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(410).send("<h1>410 Gone</h1><p>Resource permanently removed.</p>");
+    }
+
+    // Generic list without parameters:
+    // If /job-alerts or /live-alerts is visited without parameters or as a generic list, serve with X-Robots-Tag: noindex, follow
+    const isLegacyHub = req.path.startsWith('/job-alerts') || req.path.startsWith('/live-alerts');
+    if (isLegacyHub) {
+      res.setHeader('X-Robots-Tag', 'noindex, follow');
     }
 
     const indexPath = path.join(publicPath, 'index.html');
@@ -1373,10 +1382,11 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
       ]
     };
 
+    const robotsDirective = isLegacyHub ? 'noindex, follow' : 'index, follow, max-image-preview:large';
     const metaTags = `
     <title>${fullTitle}</title>
     <meta name="description" content="${desc}" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="robots" content="${robotsDirective}" />
     <link rel="canonical" href="${canonicalUrl}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="${siteName}" />
@@ -1566,6 +1576,55 @@ app.get(['/daily-quiz/:date', '/india/daily-quiz/:date'], async (req, res, next)
     }
 
     next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Dedicated Route for Tag Hubs: /tags/:tag and /tag/:tag
+app.get(['/tags/:tag', '/tag/:tag'], async (req, res, next) => {
+  try {
+    const rawTag = req.params.tag ? String(req.params.tag).trim() : '';
+    if (!rawTag) return next();
+
+    let decodedTag = '';
+    try {
+      decodedTag = decodeURIComponent(rawTag);
+    } catch (e) {
+      decodedTag = rawTag;
+    }
+
+    // Inspect the incoming tag parameter:
+    // If the tag contains spaces, non-ASCII/Devanagari characters, or matches raw scraped strings (e.g. tags/best laptop..., tags/रेलवे...):
+    const hasSpaces = decodedTag.includes(' ') || rawTag.includes(' ') || rawTag.includes('%20') || decodedTag.includes('%20') || /\s/.test(decodedTag);
+    const hasNonAscii = /[^\x20-\x7E]/.test(decodedTag) || /[\u0900-\u097F]/.test(decodedTag);
+    const isScrapedGarbage = decodedTag.toLowerCase().includes('best laptop') || 
+                             decodedTag.includes('रेलवे') || 
+                             /[\[\]{}<>]/.test(decodedTag);
+
+    if (hasSpaces || hasNonAscii || isScrapedGarbage) {
+      res.setHeader('X-Robots-Tag', 'noindex, follow');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(410).send("<h1>410 Gone</h1><p>Resource permanently removed.</p>");
+    }
+
+    // For valid existing tag pages:
+    // Serve HTTP 200, but add this header and meta tag:
+    // Header: res.set('X-Robots-Tag', 'noindex, follow');
+    // HTML: <meta name="robots" content="noindex, follow" />
+    const indexPath = path.join(publicPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(404).send('index.html not found');
+    }
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    res.set('X-Robots-Tag', 'noindex, follow');
+    html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
+    html = html.replace('</head>', '    <meta name="robots" content="noindex, follow" />\n</head>');
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+    return res.status(200).send(html);
   } catch (err) {
     next(err);
   }

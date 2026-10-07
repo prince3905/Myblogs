@@ -879,14 +879,10 @@ async function sitemap(req, res) {
 function robots(req, res) {
   res.type('text/plain');
   return res.send(`User-agent: *
-Disallow: /*?*
-Disallow: /*%20*
-Disallow: /* *
-Disallow: /api/
 Disallow: /admin/
-Allow: /
+Disallow: /api/
 
-Sitemap: https://www.digitalhomeblog.in/sitemap.xml
+Sitemap: https://digitalhomeblog.in/sitemap.xml
 `);
 }
 
