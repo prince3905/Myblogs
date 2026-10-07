@@ -171,10 +171,34 @@ async function runTests() {
       resTagValid.body.includes('<meta name="robots" content="noindex, follow" />'));
 
     // 9. Legacy Query Alerts Route (/job-alerts)
+    // 9a. Specific test case: /job-alerts?alert=6aba65b95f6a3d22a08fddbb
+    const resSpecificAlert = await makeRequest('/job-alerts?alert=6aba65b95f6a3d22a08fddbb');
+    assert('/job-alerts?alert=6aba65b95f6a3d22a08fddbb returns 301 or 410 (NEVER 500)', 
+      resSpecificAlert.statusCode === 301 || resSpecificAlert.statusCode === 410);
+    assert('Specific alert test never returns 500', resSpecificAlert.statusCode !== 500);
+    if (resSpecificAlert.statusCode === 410) {
+      assert('Specific alert 410 returns exact message', 
+        resSpecificAlert.body.includes('<h1>410 Gone</h1><p>This job alert has expired.</p>'));
+    }
+
+    // 9b. Missing ObjectId -> 410 Gone
     const resAlertMissing = await makeRequest(`/job-alerts?alert=${fakeObjectId}`);
     assert('/job-alerts?alert=missing returns 410 Gone', resAlertMissing.statusCode === 410);
-    assert('/job-alerts?alert=missing returns exact 410 message', resAlertMissing.body.includes('<h1>410 Gone</h1><p>Resource permanently removed.</p>'));
+    assert('/job-alerts?alert=missing returns exact 410 message', 
+      resAlertMissing.body.includes('<h1>410 Gone</h1><p>This job alert has expired.</p>'));
 
+    // 9c. Malformed / invalid ObjectId format -> 410 Gone immediately (without querying DB)
+    const resAlertMalformed = await makeRequest('/job-alerts?alert=invalid_hex_format_123');
+    assert('/job-alerts?alert=malformed returns 410 Gone', resAlertMalformed.statusCode === 410);
+    assert('/job-alerts?alert=malformed never returns 500', resAlertMalformed.statusCode !== 500);
+    assert('/job-alerts?alert=malformed returns exact 410 message', 
+      resAlertMalformed.body.includes('<h1>410 Gone</h1><p>This job alert has expired.</p>'));
+
+    // 9d. Empty alert query -> 410 Gone
+    const resAlertEmpty = await makeRequest('/job-alerts?alert=');
+    assert('/job-alerts?alert=empty returns 410 Gone', resAlertEmpty.statusCode === 410);
+
+    // 9e. Generic list without query parameters -> 200 OK with noindex, follow
     const resJobAlertsGeneric = await makeRequest('/job-alerts');
     assert('/job-alerts generic list returns 200 OK', resJobAlertsGeneric.statusCode === 200);
     assert('/job-alerts sends X-Robots-Tag: noindex, follow header', resJobAlertsGeneric.headers['x-robots-tag'] === 'noindex, follow');
@@ -230,6 +254,43 @@ async function runTests() {
         console.log('ℹ️ No active LiveAlert with slug in DB to test live 200/301 ID resolution');
       }
     }
+
+    // 12. Global Error Handler Verification (CastError / BSONError -> 410, Unhandled 500)
+    const errorHandler = require('/Users/harry/Prince/Myblogs/server/src/middleware/errorHandler');
+    let castHandledStatus = null;
+    let castHandledBody = null;
+    const mockCastErr = new Error('Cast error');
+    mockCastErr.name = 'CastError';
+    const mockResCast = {
+      setHeader: () => {},
+      status: (s) => { castHandledStatus = s; return { send: (b) => { castHandledBody = b; } }; }
+    };
+    errorHandler(mockCastErr, { path: '/job-alerts' }, mockResCast, () => {});
+    assert('CastError returns 410 Gone', castHandledStatus === 410);
+    assert('CastError returns exact 410 body', castHandledBody === '<h1>410 Gone</h1><p>Invalid entity reference.</p>');
+
+    let bsonHandledStatus = null;
+    let bsonHandledBody = null;
+    const mockBsonErr = new Error('BSON error');
+    mockBsonErr.name = 'BSONError';
+    const mockResBson = {
+      setHeader: () => {},
+      status: (s) => { bsonHandledStatus = s; return { send: (b) => { bsonHandledBody = b; } }; }
+    };
+    errorHandler(mockBsonErr, { path: '/job-alerts' }, mockResBson, () => {});
+    assert('BSONError returns 410 Gone', bsonHandledStatus === 410);
+    assert('BSONError returns exact 410 body', bsonHandledBody === '<h1>410 Gone</h1><p>Invalid entity reference.</p>');
+
+    let genericHandledStatus = null;
+    let genericHandledBody = null;
+    const mockGenericErr = new Error('Unexpected crash');
+    const mockResGeneric = {
+      setHeader: () => {},
+      status: (s) => { genericHandledStatus = s; return { send: (b) => { genericHandledBody = b; } }; }
+    };
+    errorHandler(mockGenericErr, { path: '/some-page' }, mockResGeneric, () => {});
+    assert('Generic unhandled error returns 500 Server Error', genericHandledStatus === 500);
+    assert('Generic error returns exact 500 body', genericHandledBody === '<h1>Server Error</h1><p>Please try again later.</p>');
 
     console.log(`\n================================`);
     console.log(`Test Summary: Passed: ${passed}, Failed: ${failed}`);

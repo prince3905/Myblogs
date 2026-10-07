@@ -257,6 +257,70 @@ app.use('/blog/sarkari-jobs-exams', async (req, res, next) => {
   }
 });
 
+// 1. DEFENSIVE HANDLER FOR /job-alerts (Prevents 500 Server Errors & CastErrors on Query Parameters)
+app.use('/job-alerts', async (req, res, next) => {
+  try {
+    // If requesting subpath like /job-alerts/:id, defer to path param handler below
+    if (req.path !== '/' && req.path !== '') {
+      return next();
+    }
+
+    if (req.query && req.query.alert !== undefined) {
+      const alertParam = typeof req.query.alert === 'string' ? req.query.alert.trim() : '';
+
+      // Validate format: Verify it is a valid 24-character hex string (/^[0-9a-fA-F]{24}$/)
+      // If not valid, immediately return HTTP 410 Gone (do NOT proceed to query the database)
+      if (!alertParam || !/^[0-9a-fA-F]{24}$/.test(alertParam)) {
+        res.setHeader('X-Robots-Tag', 'noindex, follow');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.status(410).send("<h1>410 Gone</h1><p>This job alert has expired.</p>");
+      }
+
+      // Query MongoDB inside try/catch
+      let job = null;
+      try {
+        const mongoose = require('mongoose');
+        if (mongoose.connection && mongoose.connection.readyState === 1) {
+          const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+          const Job = LiveAlert;
+          job = await Job.findById(alertParam).select('slug status title boardName').lean();
+        }
+      } catch (dbErr) {
+        console.error("Job alert lookup error:", dbErr.message);
+        if (dbErr.name === 'CastError' || dbErr.name === 'BSONError') {
+          res.setHeader('X-Robots-Tag', 'noindex, follow');
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.status(410).send("<h1>410 Gone</h1><p>This job alert has expired.</p>");
+        }
+        throw dbErr;
+      }
+
+      // If job exists and has a clean slug:
+      if (job) {
+        const { sanitizeJobSlug } = require('./shared/utils/jobSeoOptimizer');
+        const cleanSlug = job.slug || sanitizeJobSlug(job.title, job.boardName, job._id ? job._id.toString() : alertParam);
+        if (cleanSlug) {
+          const isProd = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production';
+          const canonicalDomain = isProd ? 'https://www.digitalhomeblog.in' : '';
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs/${encodeURIComponent(cleanSlug)}`);
+        }
+      }
+
+      // If job does NOT exist in the database (deleted or expired):
+      res.setHeader('X-Robots-Tag', 'noindex, follow');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(410).send("<h1>410 Gone</h1><p>This job alert has expired.</p>");
+    }
+
+    // If /job-alerts is requested without ?alert= parameter (or for general alert search):
+    res.set('X-Robots-Tag', 'noindex, follow');
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Unified 301 Canonical Redirect Middleware (Eliminates Multi-hop Redirect Chains & Flattens to 1 Hop)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/assets') || req.path.startsWith('/static')) {
@@ -1312,32 +1376,47 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     const canonicalDomain = isProd ? 'https://www.digitalhomeblog.in' : '';
 
     // 3. QUERY PARAMETER HANDLER (/job-alerts?alert=:alertId or /india/sarkari-jobs?alert=:alertId)
-    const alertParam = req.query.alert ? String(req.query.alert).trim() : '';
-    if (alertParam) {
-      const mongoose = require('mongoose');
-      if (mongoose.connection && mongoose.connection.readyState === 1) {
-        const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+    if (req.query && req.query.alert !== undefined) {
+      const alertParam = typeof req.query.alert === 'string' ? req.query.alert.trim() : '';
+
+      // Validate format: Verify it is a valid 24-character hex string (/^[0-9a-fA-F]{24}$/)
+      if (!alertParam || !/^[0-9a-fA-F]{24}$/.test(alertParam)) {
+        res.setHeader('X-Robots-Tag', 'noindex, follow');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.status(410).send("<h1>410 Gone</h1><p>This job alert has expired.</p>");
+      }
+
+      let job = null;
+      try {
+        const mongoose = require('mongoose');
+        if (mongoose.connection && mongoose.connection.readyState === 1) {
+          const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+          const Job = LiveAlert;
+          job = await Job.findById(alertParam).select('slug status title boardName').lean();
+        }
+      } catch (dbErr) {
+        console.error("Job alert lookup error:", dbErr.message);
+        if (dbErr.name === 'CastError' || dbErr.name === 'BSONError') {
+          res.setHeader('X-Robots-Tag', 'noindex, follow');
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.status(410).send("<h1>410 Gone</h1><p>This job alert has expired.</p>");
+        }
+        throw dbErr;
+      }
+
+      if (job) {
         const { sanitizeJobSlug } = require('./shared/utils/jobSeoOptimizer');
-        const isValidObjectId = mongoose.Types.ObjectId.isValid(alertParam) && /^[0-9a-fA-F]{24}$/.test(alertParam);
-
-        const alertDoc = await LiveAlert.findOne({
-          $or: [
-            ...(isValidObjectId ? [{ _id: alertParam }] : []),
-            { slug: alertParam.toLowerCase() }
-          ]
-        }).select('_id slug title boardName').lean();
-
-        if (alertDoc) {
-          const cleanSlug = alertDoc.slug || sanitizeJobSlug(alertDoc.title, alertDoc.boardName, alertDoc._id.toString());
+        const cleanSlug = job.slug || sanitizeJobSlug(job.title, job.boardName, job._id ? job._id.toString() : alertParam);
+        if (cleanSlug) {
           res.setHeader('Cache-Control', 'public, max-age=86400');
-          return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs/${cleanSlug}`);
+          return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs/${encodeURIComponent(cleanSlug)}`);
         }
       }
 
       // Alert requested via ?alert= does NOT exist in DB: Return strict HTTP 410 Gone
       res.setHeader('X-Robots-Tag', 'noindex, follow');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(410).send("<h1>410 Gone</h1><p>Resource permanently removed.</p>");
+      return res.status(410).send("<h1>410 Gone</h1><p>This job alert has expired.</p>");
     }
 
     // Generic list without parameters:
@@ -1850,7 +1929,24 @@ app.get('*', async (req, res, next) => {
 
 // Error handling (must be last)
 app.use(notFound);
-app.use(errorHandler);
+app.use((err, req, res, next) => {
+  console.error("Unhandled Route Error:", err.message);
+  // Never send raw stack traces or unhandled 500 to search engine bots
+  if (err.name === 'CastError' || err.name === 'BSONError') {
+    res.setHeader('X-Robots-Tag', 'noindex, follow');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(410).send("<h1>410 Gone</h1><p>Invalid entity reference.</p>");
+  }
+  if (req.path && req.path.startsWith('/api')) {
+    const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+    return res.status(statusCode).json({
+      success: false,
+      message: err.message || 'Internal Server Error'
+    });
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.status(500).send("<h1>Server Error</h1><p>Please try again later.</p>");
+});
 
 app.buildHomepageHtml = buildHomepageHtml;
 app.purgePostSsrCache = () => postSsrCache.clear();
