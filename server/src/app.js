@@ -43,6 +43,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// Helper to extract clean final slug from noisy or nested paths
+const extractCleanSlug = (pathStr) => {
+  const parts = (pathStr || '').split('/').filter(Boolean);
+  const validParts = parts.filter(p => {
+    const lower = p.toLowerCase();
+    return lower !== 'blog' &&
+           lower !== 'category' &&
+           lower !== 'india' &&
+           lower !== 'sarkari-jobs-exams' &&
+           !lower.includes('sarkari-jobs') &&
+           !lower.includes('digitalhomeblog.in') &&
+           !lower.startsWith('http');
+  });
+  let raw = validParts.length > 0 ? validParts[validParts.length - 1] : '';
+  // Strip trailing .html or .php if present
+  raw = raw.replace(/\.(html?|php)$/i, '');
+  return raw;
+};
+
 // 1. EXPRESS MIDDLEWARE: Nested Route & Domain Cleaner + Garbage URL 410 Guard
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/assets') || req.path.startsWith('/static')) {
@@ -85,27 +104,13 @@ app.use(async (req, res, next) => {
     return res.status(410).send("<h1>410 Gone</h1><p>Resource permanently removed.</p>");
   }
 
+  // Defer /blog/sarkari-jobs-exams to dedicated DB-backed resolver below
+  if (decodedPath.startsWith('/blog/sarkari-jobs-exams')) {
+    return next();
+  }
+
   const isProd = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production';
   const canonicalDomain = isProd ? 'https://www.digitalhomeblog.in' : '';
-
-  // Helper to extract clean final slug from noisy or nested paths
-  const extractCleanSlug = (pathStr) => {
-    const parts = (pathStr || '').split('/').filter(Boolean);
-    const validParts = parts.filter(p => {
-      const lower = p.toLowerCase();
-      return lower !== 'blog' &&
-             lower !== 'category' &&
-             lower !== 'india' &&
-             lower !== 'sarkari-jobs-exams' &&
-             !lower.includes('sarkari-jobs') &&
-             !lower.includes('digitalhomeblog.in') &&
-             !lower.startsWith('http');
-    });
-    let raw = validParts.length > 0 ? validParts[validParts.length - 1] : '';
-    // Strip trailing .html or .php if present
-    raw = raw.replace(/\.(html?|php)$/i, '');
-    return raw;
-  };
 
   // Helper to safely redirect without circular loops
   const safeRedirect301 = (targetPath) => {
@@ -117,31 +122,54 @@ app.use(async (req, res, next) => {
     return res.redirect(301, fullTarget);
   };
 
-  // 1C. NESTED ROUTE CLEANER: Handle nested /blog/blog/ prefixes
-  // If the path starts with or contains /blog/blog/:slug, issue an HTTP 301 Permanent Redirect to /india/sarkari-jobs/:slug (or /blog/:slug if it is a general blog post)
+  // 1C. DOUBLE NESTED BLOG PATHS (/blog/blog/*):
+  // For any route starting with /blog/blog/:slug:
+  // - Check if it exists as a blog or job post.
+  // - 301 redirect to /india/sarkari-jobs/:slug or /blog/:slug.
+  // - If neither exists: Return HTTP 410 Gone.
   if (/\/(?:blog\/){2,}/i.test(decodedPath)) {
     const targetSlug = extractCleanSlug(decodedPath);
     if (!targetSlug) {
       return safeRedirect301('/india/sarkari-jobs');
     }
 
-    let targetPath = `/india/sarkari-jobs/${encodeURIComponent(targetSlug)}`;
+    let destinationPath = null;
     try {
       const mongoose = require('mongoose');
       if (mongoose.connection && mongoose.connection.readyState === 1) {
         const BlogPost = mongoose.model('BlogPost');
         const post = await BlogPost.findOne({ slug: targetSlug, status: 'published' }).select('slug category').lean();
         if (post) {
-          targetPath = `/blog/${encodeURIComponent(post.slug)}`;
+          destinationPath = `/blog/${encodeURIComponent(post.slug)}`;
+        } else {
+          const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+          const isValidObjectId = mongoose.Types.ObjectId.isValid(targetSlug) && /^[0-9a-fA-F]{24}$/.test(targetSlug);
+          const alert = await LiveAlert.findOne({
+            $or: [
+              ...(isValidObjectId ? [{ _id: targetSlug }] : []),
+              { slug: targetSlug.toLowerCase() }
+            ]
+          }).select('_id slug title boardName').lean();
+          if (alert) {
+            const finalSlug = alert.slug || targetSlug;
+            destinationPath = `/india/sarkari-jobs/${encodeURIComponent(finalSlug)}`;
+          }
         }
       }
     } catch (e) {}
 
-    return safeRedirect301(targetPath);
+    if (destinationPath) {
+      return safeRedirect301(destinationPath);
+    }
+
+    // If neither exists: Return HTTP 410 Gone
+    res.setHeader('X-Robots-Tag', 'noindex, follow');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(410).send("<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>");
   }
 
   // 1D. EMBEDDED DOMAIN STRINGS IN PATHS:
-  // Detect patterns like /blog/sarkari-jobs-exams/digitalhomeblog.in/* or /digitalhomeblog.in/*
+  // Detect patterns like /digitalhomeblog.in/*
   if (decodedPath.toLowerCase().includes('digitalhomeblog.in')) {
     const targetSlug = extractCleanSlug(decodedPath);
     const targetPath = targetSlug ? `/india/sarkari-jobs/${encodeURIComponent(targetSlug)}` : '/india/sarkari-jobs';
@@ -156,16 +184,7 @@ app.use(async (req, res, next) => {
     return safeRedirect301(targetPath);
   }
 
-  // 1F. NORMALIZE /blog/sarkari-jobs-exams/:slug & /blog/sarkari-jobs-exams:
-  // Redirect 301 to /india/sarkari-jobs/:slug or /india/sarkari-jobs
-  const blogSarkariMatch = decodedPath.match(/^\/blog\/sarkari-jobs-exams\/?(.*)/i);
-  if (blogSarkariMatch) {
-    const rawSlug = extractCleanSlug(blogSarkariMatch[1] || '') || (blogSarkariMatch[1] || '').replace(/^\/+|\/+$/g, '');
-    const targetPath = rawSlug ? `/india/sarkari-jobs/${encodeURIComponent(rawSlug)}` : '/india/sarkari-jobs';
-    return safeRedirect301(targetPath);
-  }
-
-  // 1G. NORMALIZE /category/sarkari-jobs-exams/:slug & /category/sarkari-jobs-exams:
+  // 1F. NORMALIZE /category/sarkari-jobs-exams/:slug & /category/sarkari-jobs-exams:
   const catSarkariMatch = decodedPath.match(/^\/category\/sarkari-jobs-exams\/?(.*)/i);
   if (catSarkariMatch) {
     const rawSlug = extractCleanSlug(catSarkariMatch[1] || '') || (catSarkariMatch[1] || '').replace(/^\/+|\/+$/g, '');
@@ -173,7 +192,7 @@ app.use(async (req, res, next) => {
     return safeRedirect301(targetPath);
   }
 
-  // 1H. STANDALONE /sarkari-jobs-exams/:slug or /sarkari-jobs-exams:
+  // 1G. STANDALONE /sarkari-jobs-exams/:slug or /sarkari-jobs-exams:
   const singleSarkariMatch = decodedPath.match(/^\/sarkari-jobs-exams\/?(.*)/i);
   if (singleSarkariMatch) {
     const rawSlug = extractCleanSlug(singleSarkariMatch[1] || '') || (singleSarkariMatch[1] || '').replace(/^\/+|\/+$/g, '');
@@ -182,6 +201,60 @@ app.use(async (req, res, next) => {
   }
 
   next();
+});
+
+// 1. LEGACY BLOG PREFIX REDIRECTOR (/blog/sarkari-jobs-exams/*)
+app.use('/blog/sarkari-jobs-exams', async (req, res, next) => {
+  try {
+    const isProd = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production';
+    const canonicalDomain = isProd ? 'https://www.digitalhomeblog.in' : '';
+
+    const rawUrl = req.originalUrl || req.url || '';
+    let decodedUrl = '';
+    try {
+      decodedUrl = decodeURIComponent(rawUrl);
+    } catch (e) {
+      decodedUrl = rawUrl;
+    }
+    const decodedPath = decodedUrl.split('?')[0] || '';
+
+    // Clean up the sub-path: extract the clean :slug, ignoring nested junk like digitalhomeblog.in/sarkari-jobs-&-exams/
+    const cleanSlug = extractCleanSlug(decodedPath);
+
+    // If no slug at all (e.g. visiting /blog/sarkari-jobs-exams or /blog/sarkari-jobs-exams/):
+    if (!cleanSlug) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs`);
+    }
+
+    // Lookup the vacancy in MongoDB:
+    const mongoose = require('mongoose');
+    let alertDoc = null;
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(cleanSlug) && /^[0-9a-fA-F]{24}$/.test(cleanSlug);
+      alertDoc = await LiveAlert.findOne({
+        $or: [
+          ...(isValidObjectId ? [{ _id: cleanSlug }] : []),
+          { slug: cleanSlug.toLowerCase() }
+        ]
+      }).select('_id slug title boardName').lean();
+    }
+
+    if (alertDoc) {
+      const { sanitizeJobSlug } = require('./shared/utils/jobSeoOptimizer');
+      const finalSlug = alertDoc.slug || sanitizeJobSlug(alertDoc.title, alertDoc.boardName, alertDoc._id.toString());
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs/${encodeURIComponent(finalSlug)}`);
+    }
+
+    // If not found in DB: Return HTTP 410 Gone (Never return a generic 404 or empty template)
+    res.setHeader('X-Robots-Tag', 'noindex, follow');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(410).send("<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>");
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Unified 301 Canonical Redirect Middleware (Eliminates Multi-hop Redirect Chains & Flattens to 1 Hop)
@@ -1079,7 +1152,7 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
       // Legacy ID does NOT exist in DB: Return strict HTTP 410 Gone with minimal message
       res.setHeader('X-Robots-Tag', 'noindex, follow');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(410).send("<h1>410 Gone</h1><p>This job vacancy has expired or was removed.</p>");
+      return res.status(410).send("<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>");
     }
 
     // 2. SLUG RESOLVER:
@@ -1091,7 +1164,7 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
       // Slug does NOT exist in DB: Return strict HTTP 410 Gone (Never return 200 with empty state or soft 404)
       res.setHeader('X-Robots-Tag', 'noindex, follow');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(410).send("<h1>410 Gone</h1><p>This job vacancy has expired or was removed.</p>");
+      return res.status(410).send("<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>");
     }
 
     // If incoming path was legacy /job-alerts/:slug or /live-alerts/:slug, 301 redirect to canonical /india/sarkari-jobs/:slug
@@ -1572,7 +1645,7 @@ app.get(['/daily-quiz/:date', '/india/daily-quiz/:date'], async (req, res, next)
       // Empty or defunct date-based quiz page: Explicit HTTP 410 Gone
       res.setHeader('X-Robots-Tag', 'noindex, follow');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(410).send("<h1>410 Gone</h1><p>This daily quiz has expired or is not maintained.</p>");
+      return res.status(410).send("<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>");
     }
 
     next();
