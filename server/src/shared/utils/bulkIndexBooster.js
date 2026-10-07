@@ -44,17 +44,24 @@ async function runBulkIndexSweep() {
       console.warn('[Bulk Index Sweep] Notice reading BlogPost:', postErr.message);
     }
 
-    // 3. Indian Sarkari Live Alerts (Direct individual crawlable URLs)
+    // 3. Indian Sarkari Live Alerts (Strictly Clean Slug URLs)
     try {
       const LiveAlert = require('../../modules/liveAlerts/liveAlert.model');
-      const liveAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
-        .select('_id parsedPostDate createdAt')
+      const { sanitizeJobSlug } = require('./jobSeoOptimizer');
+      const liveAlerts = await LiveAlert.find({ 
+        status: { $in: ['active', 'published'] },
+        title: { $exists: true, $ne: '' }
+      })
+        .select('_id slug title boardName parsedPostDate createdAt')
         .sort({ parsedPostDate: -1, createdAt: -1 })
         .limit(800)
         .lean();
 
       liveAlerts.forEach(a => {
-        allUrls.push(`${host}/india/sarkari-jobs/${a._id}`);
+        const cleanSlug = a.slug || sanitizeJobSlug(a.title, a.boardName, a._id ? a._id.toString() : '');
+        if (cleanSlug && !/^[0-9a-fA-F]{24}$/.test(cleanSlug)) {
+          allUrls.push(`${host}/india/sarkari-jobs/${cleanSlug}`);
+        }
       });
     } catch (alertErr) {
       console.warn('[Bulk Index Sweep] Notice reading LiveAlert:', alertErr.message);

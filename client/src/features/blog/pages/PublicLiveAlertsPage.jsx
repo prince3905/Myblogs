@@ -1541,7 +1541,12 @@ export default function PublicLiveAlertsPage() {
     openedAlertIdRef.current = alertIdParam;
 
     if (alertCacheRef.current.has(alertIdParam)) {
-      setSelectedAlertState(alertCacheRef.current.get(alertIdParam));
+      const cached = alertCacheRef.current.get(alertIdParam);
+      setSelectedAlertState(cached);
+      const cleanSlug = cached.slug || cached._id;
+      if (cleanSlug && (searchParams.has('alert') || routeAlertId !== cleanSlug)) {
+        window.history.replaceState(null, '', `/india/sarkari-jobs/${cleanSlug}`);
+      }
       return;
     }
 
@@ -1550,6 +1555,11 @@ export default function PublicLiveAlertsPage() {
         if (res.success && res.data) {
           alertCacheRef.current.set(alertIdParam, res.data);
           setSelectedAlertState(res.data);
+          // If loaded via ?alert= query param or legacy ID, update URL to clean slug without query params
+          const cleanSlug = res.data.slug || res.data._id;
+          if (cleanSlug && (searchParams.has('alert') || routeAlertId !== cleanSlug)) {
+            window.history.replaceState(null, '', `/india/sarkari-jobs/${cleanSlug}`);
+          }
         }
       })
       .catch(err => console.error('Failed to auto-load alert details:', err.message));
@@ -1651,15 +1661,10 @@ export default function PublicLiveAlertsPage() {
     return { jobs, admitCards, results, answerKeys, syllabus, admissions };
   }, [filteredAlerts]);
 
-  const isJobAlertsPath = location.pathname.startsWith('/job-alerts');
-  const isLiveAlertsPath = location.pathname.startsWith('/live-alerts');
-  const cleanHubCanonical = isJobAlertsPath
-    ? 'https://www.digitalhomeblog.in/job-alerts'
-    : (isLiveAlertsPath
-        ? 'https://www.digitalhomeblog.in/live-alerts'
-        : 'https://www.digitalhomeblog.in/india/sarkari-jobs');
+  // Strict Unified Canonical URL: Always points to the official /india/sarkari-jobs canonical route
+  const cleanHubCanonical = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
 
-  const pageCanonicalUrl = (selectedAlert && routeAlertId)
+  const pageCanonicalUrl = (selectedAlert && (routeAlertId || selectedAlert.slug))
     ? `https://www.digitalhomeblog.in/india/sarkari-jobs/${selectedAlert.slug || selectedAlert._id}`
     : cleanHubCanonical;
 

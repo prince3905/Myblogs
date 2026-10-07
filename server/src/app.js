@@ -43,6 +43,68 @@ app.use((req, res, next) => {
   next();
 });
 
+// 1. EXPRESS MIDDLEWARE: Catch Garbage, Broken Scraped URLs & Chained Path Repetitions Early
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/assets') || req.path.startsWith('/static')) {
+    return next();
+  }
+
+  const rawUrl = req.originalUrl || req.url || '';
+  let decodedUrl = '';
+  try {
+    decodedUrl = decodeURIComponent(rawUrl);
+  } catch (e) {
+    // Malformed URI encoding (e.g. invalid % sequence)
+    res.setHeader('X-Robots-Tag', 'noindex, follow');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(410).send('<h1>410 Gone</h1><p>This resource has been permanently removed.</p>');
+  }
+
+  const decodedPath = decodedUrl.split('?')[0] || '';
+  const decodedQuery = decodedUrl.includes('?') ? decodedUrl.slice(decodedUrl.indexOf('?') + 1) : '';
+
+  // DECODED URL CHECK:
+  // Inspect if the URL path contains spaces, square brackets `[` or `]`, Hindi/Devanagari characters,
+  // or unmatched query patterns (e.g. /sewayojna vibhag, /[आवेदन समाप्त]..., /sub inspector)
+  const hasSpacesInPath = decodedPath.includes(' ') || req.path.includes(' ') || decodedPath.includes('%20');
+  const hasBracketsInPath = decodedPath.includes('[') || decodedPath.includes(']') || decodedPath.includes('%5B') || decodedPath.includes('%5D');
+  const hasDevanagariInPath = /[\u0900-\u097F]/.test(decodedPath);
+  const hasGarbageBracketsInQuery = decodedQuery.includes('[') || decodedQuery.includes(']') || decodedQuery.includes('आवेदन समाप्त');
+
+  if (hasSpacesInPath || hasBracketsInPath || hasDevanagariInPath || hasGarbageBracketsInQuery) {
+    res.setHeader('X-Robots-Tag', 'noindex, follow');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(410).send('<h1>410 Gone</h1><p>This resource has been permanently removed.</p>');
+  }
+
+  // PATH REPETITION REDIRECT:
+  // If the path contains chained segments like /blog/sarkari-jobs-exams/sarkari-jobs-exams/:slug or /sarkari-jobs-exams/:slug,
+  // issue a clean 301 Permanent Redirect to /india/sarkari-jobs/:slug
+  const isProd = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production';
+  const canonicalDomain = isProd ? 'https://www.digitalhomeblog.in' : '';
+
+  // Chained repeated segments: /blog/sarkari-jobs-exams/sarkari-jobs-exams/:slug or /sarkari-jobs-exams/sarkari-jobs-exams/:slug
+  const repeatedSarkariMatch = decodedPath.match(/\/(?:blog\/)?(?:sarkari-jobs-exams\/){2,}(.*)/i) ||
+                               decodedPath.match(/\/(?:blog\/)?sarkari-jobs-exams\/sarkari-jobs-exams\/?(.*)/i);
+  if (repeatedSarkariMatch) {
+    const rawSlug = (repeatedSarkariMatch[1] || '').replace(/^\/+|\/+$/g, '');
+    const target = rawSlug ? `${canonicalDomain}/india/sarkari-jobs/${encodeURIComponent(rawSlug)}` : `${canonicalDomain}/india/sarkari-jobs`;
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.redirect(301, target);
+  }
+
+  // Standalone /sarkari-jobs-exams/:slug or /sarkari-jobs-exams
+  const singleSarkariMatch = decodedPath.match(/^\/sarkari-jobs-exams\/?(.*)/i);
+  if (singleSarkariMatch) {
+    const rawSlug = (singleSarkariMatch[1] || '').replace(/^\/+|\/+$/g, '');
+    const target = rawSlug ? `${canonicalDomain}/india/sarkari-jobs/${encodeURIComponent(rawSlug)}` : `${canonicalDomain}/india/sarkari-jobs`;
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.redirect(301, target);
+  }
+
+  next();
+});
+
 // Unified 301 Canonical Redirect Middleware (Eliminates Multi-hop Redirect Chains & Flattens to 1 Hop)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/assets') || req.path.startsWith('/static')) {
@@ -896,128 +958,175 @@ app.get(['/global-jobs/view/:id', '/global-jobs/:country/:id'], async (req, res,
   }
 });
 
-// Dynamic Server-Side Meta Tag & JobPosting Schema Injection for Individual Indian Sarkari Jobs
+// Dynamic Server-Side Meta Tag & JobPosting Schema Injection for Individual Indian Sarkari Jobs (DUAL-ID TO SLUG RESOLVER)
 app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], async (req, res, next) => {
   try {
     const rawId = req.params.id ? String(req.params.id).trim() : '';
     if (!rawId) return next();
 
+    const isProd = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production';
+    const canonicalDomain = isProd ? 'https://www.digitalhomeblog.in' : '';
+
+    const mongoose = require('mongoose');
+    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+      return render404Page(req, res, 'Database connection is temporarily unavailable. Please retry in a few moments.', 503);
+    }
+
+    const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+    const { sanitizeJobSlug } = require('./shared/utils/jobSeoOptimizer');
+
+    // Check if the identifier matches a MongoDB ObjectId (24-character hexadecimal ID)
+    const isLegacyObjectId = /^[0-9a-fA-F]{24}$/.test(rawId);
+
+    if (isLegacyObjectId) {
+      // 1. LEGACY ID RESOLVER:
+      // Query MongoDB to find the job document
+      const job = await LiveAlert.findById(rawId).select('_id slug title boardName status').lean();
+
+      if (job) {
+        // Document exists in DB: determine clean slug
+        let cleanSlug = job.slug;
+        if (!cleanSlug && job.title) {
+          cleanSlug = sanitizeJobSlug(job.title, job.boardName, job._id.toString());
+          LiveAlert.updateOne({ _id: job._id }, { $set: { slug: cleanSlug } }).catch(() => {});
+        }
+
+        if (cleanSlug) {
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs/${cleanSlug}`);
+        }
+      }
+
+      // Legacy ID does NOT exist in DB: Return strict HTTP 410 Gone (Eliminates Soft 404 & drops URL from GSC crawl queue)
+      return render404Page(
+        req, 
+        res, 
+        'यह सरकारी नौकरी भर्ती सूचना आधिकारिक रूप से समाप्त हो चुकी है या हटाई जा चुकी है। (This government vacancy notification has officially expired or was permanently removed.)', 
+        410
+      );
+    }
+
+    // 2. SLUG RESOLVER:
+    // Identifier is already a slug (kebab-case)
+    const normalizedSlug = rawId.toLowerCase();
+    const alert = await LiveAlert.findOne({ slug: normalizedSlug }).lean();
+
+    if (!alert) {
+      // Slug does NOT exist in DB: Return strict HTTP 410 Gone (Never return 200 with empty state or soft 404)
+      return render404Page(
+        req, 
+        res, 
+        'यह सरकारी नौकरी भर्ती सूचना आधिकारिक रूप से समाप्त हो चुकी है या हटाई जा चुकी है। (This vacancy notification does not exist or has expired.)', 
+        410
+      );
+    }
+
+    // If incoming path was legacy /job-alerts/:slug or /live-alerts/:slug, 301 redirect to canonical /india/sarkari-jobs/:slug
+    if (req.path.startsWith('/job-alerts/') || req.path.startsWith('/live-alerts/')) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs/${alert.slug || normalizedSlug}`);
+    }
+
+    // Clean Archive / 410 Policy: If vacancy is archived/closed cycle, issue strict HTTP 410 Gone with noindex, follow
+    if (alert.status === 'archived') {
+      return render404Page(
+        req, 
+        res, 
+        `यह सरकारी नौकरी भर्ती सूचना अब आधिकारिक रूप से समाप्त/अभिलेखित हो चुकी है (The vacancy cycle for "${alert.title}" has officially closed and archived).`, 
+        410
+      );
+    }
+
+    // Valid job found: Render page with HTTP 200 and strict self-referencing canonical tag
     const indexPath = path.join(publicPath, 'index.html');
     if (!fs.existsSync(indexPath)) {
       return res.status(404).send('index.html not found');
     }
     let html = fs.readFileSync(indexPath, 'utf8');
 
-    const mongoose = require('mongoose');
-    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
-      return render404Page(req, res);
+    const { buildIndianJobScaffoldHtml } = require('./shared/utils/jobScaffoldEngine');
+    const {
+      parseJobMetadata,
+      buildHighCtrJobTitle,
+      buildHighCtrMetaDesc,
+      generateJobFaqSchema
+    } = require('./shared/utils/jobSeoOptimizer');
+
+    const siteName = 'Digital Home Sarkari Result';
+    const meta = parseJobMetadata(alert);
+    const highCtrTitle = buildHighCtrJobTitle(meta);
+    const highCtrDesc = buildHighCtrMetaDesc(meta);
+    const faqSchema = generateJobFaqSchema(meta);
+
+    const canonicalSlug = alert.slug || normalizedSlug;
+    const canonicalUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${canonicalSlug}`;
+    const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
+
+    const isExpired = alert.status === 'expired' || 
+      (alert.lastDate && alert.lastDate !== 'N/A' && !isNaN(new Date(alert.lastDate).getTime()) && new Date(alert.lastDate) < new Date(Date.now() - 24 * 60 * 60 * 1000));
+
+    const datePosted = alert.parsedPostDate ? new Date(alert.parsedPostDate).toISOString() : (alert.createdAt ? new Date(alert.createdAt).toISOString() : new Date().toISOString());
+
+    // Guaranteed validThrough: always a valid ISO 8601 string
+    let validThrough = '';
+    if (alert.lastDate && alert.lastDate !== 'N/A' && alert.lastDate !== 'Check Detail Page') {
+      const parsed = new Date(alert.lastDate);
+      if (!isNaN(parsed.getTime())) {
+        validThrough = parsed.toISOString();
+      }
     }
-    const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(rawId);
+    if (!validThrough) {
+      const defaultFuture = new Date();
+      defaultFuture.setDate(defaultFuture.getDate() + 45);
+      validThrough = isExpired ? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() : defaultFuture.toISOString();
+    }
 
-    const alert = await LiveAlert.findOne({
-      $or: [
-        ...(isValidObjectId ? [{ _id: rawId }] : []),
-        { slug: rawId.toLowerCase() },
-        { sourceUrl: new RegExp(rawId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') }
-      ]
-    }).lean();
+    // Fetch 4-5 related active 2026 vacancies for internal linking refresh
+    let recAlerts = [];
+    try {
+      recAlerts = await LiveAlert.find({ 
+        _id: { $ne: alert._id },
+        status: { $in: ['active', 'published'] } 
+      })
+        .select('_id slug title state category')
+        .sort({ parsedPostDate: -1, createdAt: -1 })
+        .limit(5)
+        .lean();
+    } catch (recErr) {}
 
-    if (alert) {
-      // 1. Clean Archive / 410 Policy: If vacancy is archived/closed cycle, issue strict HTTP 410 Gone with noindex, follow
-      if (alert.status === 'archived') {
-        return render404Page(
-          req, 
-          res, 
-          `यह सरकारी नौकरी भर्ती सूचना अब आधिकारिक रूप से समाप्त/अभिलेखित हो चुकी है (The vacancy cycle for "${alert.title}" has officially closed and archived).`, 
-          410
-        );
-      }
+    // Rich schema description (250+ words of structured information)
+    const schemaDesc = `${highCtrTitle}. Official recruitment notification issued by ${meta.board} for candidates across ${meta.state}. Category: ${meta.category}. Important dates: notification circular released on ${meta.postDate}, application deadline ${meta.lastDate}. Candidates must review educational qualifications (${meta.qualification}), age limit relaxations, and vacancy breakdown. Apply online directly through official government portals.`;
 
-      const { buildIndianJobScaffoldHtml } = require('./shared/utils/jobScaffoldEngine');
-      const {
-        parseJobMetadata,
-        buildHighCtrJobTitle,
-        buildHighCtrMetaDesc,
-        generateJobFaqSchema,
-        sanitizeJobSlug
-      } = require('./shared/utils/jobSeoOptimizer');
-
-      const siteName = 'Digital Home Sarkari Result';
-      const meta = parseJobMetadata(alert);
-      const highCtrTitle = buildHighCtrJobTitle(meta);
-      const highCtrDesc = buildHighCtrMetaDesc(meta);
-      const faqSchema = generateJobFaqSchema(meta);
-
-      const canonicalSlug = alert.slug || sanitizeJobSlug(alert.title, alert.boardName, alert._id.toString());
-      const canonicalUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${canonicalSlug}`;
-      const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
-
-      const isExpired = alert.status === 'expired' || 
-        (alert.lastDate && alert.lastDate !== 'N/A' && !isNaN(new Date(alert.lastDate).getTime()) && new Date(alert.lastDate) < new Date(Date.now() - 24 * 60 * 60 * 1000));
-
-      const datePosted = alert.parsedPostDate ? new Date(alert.parsedPostDate).toISOString() : (alert.createdAt ? new Date(alert.createdAt).toISOString() : new Date().toISOString());
-
-      // Guaranteed validThrough: always a valid ISO 8601 string
-      let validThrough = '';
-      if (alert.lastDate && alert.lastDate !== 'N/A' && alert.lastDate !== 'Check Detail Page') {
-        const parsed = new Date(alert.lastDate);
-        if (!isNaN(parsed.getTime())) {
-          validThrough = parsed.toISOString();
+    // Official Google for Jobs structured data (100% Schema Validation compliant)
+    const jobPostingSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'JobPosting',
+      'title': highCtrTitle,
+      'description': schemaDesc,
+      'datePosted': datePosted,
+      'validThrough': validThrough,
+      'employmentType': 'FULL_TIME',
+      'hiringOrganization': {
+        '@type': 'Organization',
+        'name': meta.board || 'Government of India / State Public Service Commission',
+        'sameAs': meta.applyUrl || meta.pdfUrl || 'https://www.digitalhomeblog.in'
+      },
+      'jobLocation': {
+        '@type': 'Place',
+        'address': {
+          '@type': 'PostalAddress',
+          'addressCountry': 'IN',
+          'addressRegion': meta.state || 'Central/All India'
         }
-      }
-      if (!validThrough) {
-        const defaultFuture = new Date();
-        defaultFuture.setDate(defaultFuture.getDate() + 45);
-        validThrough = isExpired ? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() : defaultFuture.toISOString();
-      }
+      },
+      'occupationalCategory': meta.category || 'Latest Sarkari Job',
+      'directApply': true
+    };
 
-      // Fetch 4-5 related active 2026 vacancies for internal linking refresh
-      let recAlerts = [];
-      try {
-        recAlerts = await LiveAlert.find({ 
-          _id: { $ne: alert._id },
-          status: { $in: ['active', 'published'] } 
-        })
-          .select('_id slug title state category')
-          .sort({ parsedPostDate: -1, createdAt: -1 })
-          .limit(5)
-          .lean();
-      } catch (recErr) {}
+    // Generate complete 300+ word structured HTML layout
+    const scaffoldHtml = buildIndianJobScaffoldHtml(alert, isExpired, recAlerts);
 
-      // Rich schema description (250+ words of structured information)
-      const schemaDesc = `${highCtrTitle}. Official recruitment notification issued by ${meta.board} for candidates across ${meta.state}. Category: ${meta.category}. Important dates: notification circular released on ${meta.postDate}, application deadline ${meta.lastDate}. Candidates must review educational qualifications (${meta.qualification}), age limit relaxations, and vacancy breakdown. Apply online directly through official government portals.`;
-
-      // Official Google for Jobs structured data (100% Schema Validation compliant)
-      const jobPostingSchema = {
-        '@context': 'https://schema.org',
-        '@type': 'JobPosting',
-        'title': highCtrTitle,
-        'description': schemaDesc,
-        'datePosted': datePosted,
-        'validThrough': validThrough,
-        'employmentType': 'FULL_TIME',
-        'hiringOrganization': {
-          '@type': 'Organization',
-          'name': meta.board || 'Government of India / State Public Service Commission',
-          'sameAs': meta.applyUrl || meta.pdfUrl || 'https://www.digitalhomeblog.in'
-        },
-        'jobLocation': {
-          '@type': 'Place',
-          'address': {
-            '@type': 'PostalAddress',
-            'addressCountry': 'IN',
-            'addressRegion': meta.state || 'Central/All India'
-          }
-        },
-        'occupationalCategory': meta.category || 'Latest Sarkari Job',
-        'directApply': true
-      };
-
-      // Generate complete 300+ word structured HTML layout
-      const scaffoldHtml = buildIndianJobScaffoldHtml(alert, isExpired, recAlerts);
-
-      const metaTags = `
+    const metaTags = `
     <title>${highCtrTitle}</title>
     <meta name="description" content="${highCtrDesc.replace(/"/g, '&quot;')}" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -1034,29 +1143,55 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
     <meta name="twitter:image" content="${imageUrl}" />
     <script type="application/ld+json">${JSON.stringify(jobPostingSchema)}</script>
     <script type="application/ld+json">${JSON.stringify(faqSchema)}</script>
-      `;
+    `;
 
-      html = html.replace(/<title>.*?<\/title>/, '');
-      html = html.replace(/<meta name="description" .*?\/>/, '');
-      html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
-      html = html.replace('</head>', `${metaTags}\n</head>`);
-      html = html.replace('<div id="root"></div>', `<div id="root">${scaffoldHtml}</div>`);
+    html = html.replace(/<title>.*?<\/title>/i, '');
+    html = html.replace(/<meta name="description" .*?\/>/i, '');
+    html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
+    html = html.replace('</head>', `${metaTags}\n</head>`);
+    html = html.replace('<div id="root"></div>', `<div id="root">${scaffoldHtml}</div>`);
 
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
-      return res.status(200).send(html);
-    }
-
-    // If individual alert not found in DB, return strict HTTP 404 with noindex, nofollow (Eliminates Soft 404)
-    return render404Page(req, res, 'यह सरकारी नौकरी भर्ती सूचना हटाई जा चुकी है या उपलब्ध नहीं है। (This government vacancy notification has been removed or does not exist.)', 404);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+    return res.status(200).send(html);
   } catch (err) {
     next(err);
   }
 });
 
-// Dynamic Server-Side Meta Tag & Crawler Links for Indian Sarkari Jobs Portal Hub
+// Dynamic Server-Side Meta Tag & Crawler Links for Indian Sarkari Jobs Portal Hub (QUERY PARAMETER HANDLER & CLEAN CANONICAL)
 app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res, next) => {
   try {
+    const isProd = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production';
+    const canonicalDomain = isProd ? 'https://www.digitalhomeblog.in' : '';
+
+    // 3. QUERY PARAMETER HANDLER (/job-alerts?alert=:alertId or /india/sarkari-jobs?alert=:alertId)
+    const alertParam = req.query.alert ? String(req.query.alert).trim() : '';
+    if (alertParam) {
+      const mongoose = require('mongoose');
+      if (mongoose.connection && mongoose.connection.readyState === 1) {
+        const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
+        const { sanitizeJobSlug } = require('./shared/utils/jobSeoOptimizer');
+        const isValidObjectId = mongoose.Types.ObjectId.isValid(alertParam) && /^[0-9a-fA-F]{24}$/.test(alertParam);
+
+        const alertDoc = await LiveAlert.findOne({
+          $or: [
+            ...(isValidObjectId ? [{ _id: alertParam }] : []),
+            { slug: alertParam.toLowerCase() }
+          ]
+        }).select('_id slug title boardName').lean();
+
+        if (alertDoc) {
+          const cleanSlug = alertDoc.slug || sanitizeJobSlug(alertDoc.title, alertDoc.boardName, alertDoc._id.toString());
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs/${cleanSlug}`);
+        } else {
+          // Alert requested via ?alert= does NOT exist in DB: Return strict HTTP 410 Gone (Eliminates Soft 404 & drops URL from GSC crawl queue)
+          return render404Page(req, res, 'यह सरकारी नौकरी भर्ती सूचना आधिकारिक रूप से समाप्त हो चुकी है या उपलब्ध नहीं है। (This government vacancy notification has expired or does not exist.)', 410);
+        }
+      }
+    }
+
     const indexPath = path.join(publicPath, 'index.html');
     if (!fs.existsSync(indexPath)) {
       return res.status(404).send('index.html not found');
@@ -1072,7 +1207,7 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
         const TOP_STATES_REGEX = /uttar pradesh|bihar|rajasthan|madhya pradesh|jharkhand|odisha|delhi|haryana|west bengal|maharashtra/i;
         [topAlerts, stateAlerts] = await Promise.all([
           LiveAlert.find({ status: { $in: ['active', 'published'] } })
-            .select('title category state _id slug parsedPostDate')
+            .select('title boardName category state _id slug parsedPostDate')
             .sort({ parsedPostDate: -1, createdAt: -1 })
             .limit(40)
             .lean(),
@@ -1080,7 +1215,7 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
             status: { $in: ['active', 'published'] },
             state: { $regex: TOP_STATES_REGEX }
           })
-            .select('title category state _id slug parsedPostDate')
+            .select('title boardName category state _id slug parsedPostDate')
             .sort({ parsedPostDate: -1, createdAt: -1 })
             .limit(30)
             .lean()
@@ -1090,8 +1225,10 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
       console.warn('[SSR Hub] LiveAlert query bypassed:', dbErr.message);
     }
 
-    const cleanPath = (req.path || '').toLowerCase().replace(/\/+$/, '') || '/india/sarkari-jobs';
-    const canonicalUrl = `https://www.digitalhomeblog.in${cleanPath}`;
+    const { sanitizeJobSlug } = require('./shared/utils/jobSeoOptimizer');
+
+    // Strict Unified Canonical URL: Always points to the clean canonical route (never self-canonicalize query parameters or alternative routes)
+    const canonicalUrl = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
 
     const siteName = 'Digital Home Sarkari Result';
     const fullTitle = 'Sarkari Result 2026: UP, Bihar, MP, Rajasthan & All India Govt Jobs | Digital Home';
@@ -1099,6 +1236,9 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
 
     const escapeHtml = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    // Helper to format clean slug for anchors
+    const getAnchorSlug = (a) => a.slug || sanitizeJobSlug(a.title, a.boardName, a._id ? a._id.toString() : '');
 
     // Visible, semantic internal linking matrix for Googlebot & candidates
     const visibleHub = `
@@ -1129,7 +1269,7 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     <section style="margin-bottom: 30px;">
       <h2 style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin-bottom: 14px; border-bottom: 2px solid #f59e0b; padding-bottom: 6px;">⭐ प्रमुख राज्यों की नवीनतम भर्तियां (Featured State Vacancies 2026)</h2>
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; margin-bottom: 24px;">
-        ${stateAlerts.map(a => `<a href="/india/sarkari-jobs/${a.slug || a._id}" style="display: block; padding: 14px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; color: #0f172a; text-decoration: none;">
+        ${stateAlerts.map(a => `<a href="/india/sarkari-jobs/${encodeURIComponent(getAnchorSlug(a))}" style="display: block; padding: 14px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; color: #0f172a; text-decoration: none;">
           <span style="font-size: 0.75rem; font-weight: 800; color: #b45309; display: block; margin-bottom: 4px;">🏛️ ${escapeHtml(a.state || 'State')} • ${escapeHtml(a.category || 'Recruitment')}</span>
           <strong style="font-size: 0.92rem; color: #1e293b; display: block; line-height: 1.4;">${escapeHtml(a.title)}</strong>
         </a>`).join('\n        ')}
@@ -1139,7 +1279,7 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     <section>
       <h2 style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin-bottom: 14px; border-bottom: 2px solid #0284c7; padding-bottom: 6px;">🔥 सभी सक्रिय केंद्रीय व राज्य सरकारी नौकरियां (All India Live Vacancies 2026)</h2>
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px;">
-        ${topAlerts.map(a => `<a href="/india/sarkari-jobs/${a.slug || a._id}" style="display: block; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #0f172a; text-decoration: none;">
+        ${topAlerts.map(a => `<a href="/india/sarkari-jobs/${encodeURIComponent(getAnchorSlug(a))}" style="display: block; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #0f172a; text-decoration: none;">
           <span style="font-size: 0.75rem; font-weight: 700; color: #0284c7; display: block; margin-bottom: 4px;">${escapeHtml(a.state || 'All India')} • ${escapeHtml(a.category || 'Recruitment')}</span>
           <strong style="font-size: 0.92rem; color: #1e293b; display: block; line-height: 1.4;">${escapeHtml(a.title)}</strong>
         </a>`).join('\n        ')}
@@ -1147,6 +1287,7 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     </section>
   </main>`;
 
+    const cleanPath = (req.path || '').toLowerCase();
     const breadcrumbTitle = cleanPath.includes('job-alerts') 
       ? 'Latest Job Alerts' 
       : (cleanPath.includes('live-alerts') ? 'Live Alerts' : 'Sarkari Result & Govt Jobs');
@@ -1362,7 +1503,7 @@ async function findDatabaseSlug(cleanSlug) {
     const post = await BlogPost.findOne({ slug: cleanSlug, status: 'published' }).select('slug category').lean();
     if (post) return { type: 'post', item: post };
     if (mongoose.Types.ObjectId.isValid(cleanSlug)) {
-      const alert = await LiveAlert.findById(cleanSlug).select('_id').lean();
+      const alert = await LiveAlert.findById(cleanSlug).select('_id slug title boardName').lean();
       if (alert) return { type: 'alert', item: alert };
     }
   } catch (e) {}
@@ -1420,13 +1561,15 @@ app.get('*', async (req, res, next) => {
         const catSlug = (dbMatch.item.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'sarkari-jobs-exams';
         return res.redirect(301, `https://www.digitalhomeblog.in/blog/${catSlug}/${dbMatch.item.slug}`);
       } else if (dbMatch.type === 'alert') {
-        return res.redirect(301, `https://www.digitalhomeblog.in/india/sarkari-jobs/${dbMatch.item._id}`);
+        const { sanitizeJobSlug } = require('./shared/utils/jobSeoOptimizer');
+        const alertSlug = dbMatch.item.slug || sanitizeJobSlug(dbMatch.item.title, dbMatch.item.boardName, dbMatch.item._id.toString());
+        return res.redirect(301, `https://www.digitalhomeblog.in/india/sarkari-jobs/${alertSlug}`);
       }
     }
 
-    // 2. Malformed / Broken Search Slugs or Unknown URLs: Return strict HTTP 404 with noindex, follow & canonical
+    // 2. Malformed / Broken Search Slugs or Unknown URLs: Return strict HTTP 410 Gone with noindex, follow
     if (hasMalformedChars || !isKnown) {
-      return render404Page(req, res);
+      return render404Page(req, res, 'यह पेज या भर्ती सूचना उपलब्ध नहीं है या हटाई जा चुकी है। (This resource has been permanently removed.)', 410);
     }
 
     // 3. Valid Known Route: Render with HTTP 200 OK and clean, self-referential canonical (zero query params)

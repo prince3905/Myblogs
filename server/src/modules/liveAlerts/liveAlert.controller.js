@@ -72,6 +72,14 @@ function sanitizeAlertResponse(alert) {
     }
   }
 
+  // Guarantee clean slug is always present on public alert objects
+  if (!obj.slug && obj.title) {
+    try {
+      const { sanitizeJobSlug } = require('../../shared/utils/jobSeoOptimizer');
+      obj.slug = sanitizeJobSlug(obj.title, obj.boardName, obj._id ? obj._id.toString() : '');
+    } catch (e) {}
+  }
+
   // Never expose sourceUrl to public client (keep for admin reference)
   // sourceUrl stays in the object but won't have competitor link in visible fields
 

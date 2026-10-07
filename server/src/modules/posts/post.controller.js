@@ -785,21 +785,28 @@ async function sitemap(req, res) {
         console.warn('[Sitemap] Failed to append Web Stories:', storyErr.message);
       }
 
-      // 5. Active Indian Sarkari Live Alerts
+      // 5. Active Indian Sarkari Live Alerts (Strictly Clean Slugs Only)
       try {
         const LiveAlert = require('../liveAlerts/liveAlert.model');
-        const liveAlerts = await LiveAlert.find({ status: { $in: ['active', 'published'] } })
-          .select('_id slug title updatedAt parsedPostDate createdAt')
+        const { sanitizeJobSlug } = require('../../shared/utils/jobSeoOptimizer');
+        const liveAlerts = await LiveAlert.find({ 
+          status: { $in: ['active', 'published'] },
+          title: { $exists: true, $ne: '' }
+        })
+          .select('_id slug title boardName updatedAt parsedPostDate createdAt')
           .sort({ parsedPostDate: -1, createdAt: -1 })
           .limit(1000)
           .lean();
 
         liveAlertUrls = liveAlerts
           .map((a) => {
+            const cleanSlug = a.slug || sanitizeJobSlug(a.title, a.boardName, a._id ? a._id.toString() : '');
+            // Strictly exclude raw 24-character hexadecimal MongoDB ObjectIds from sitemap.xml
+            if (!cleanSlug || /^[0-9a-fA-F]{24}$/.test(cleanSlug)) return '';
             const lastmod = a.updatedAt ? new Date(a.updatedAt).toISOString() : (a.parsedPostDate ? new Date(a.parsedPostDate).toISOString() : new Date(a.createdAt).toISOString());
-            const slugRef = a.slug || a._id;
-            return formatSitemapEntry(`https://www.digitalhomeblog.in/india/sarkari-jobs/${slugRef}`, lastmod, 'daily', '0.9');
+            return formatSitemapEntry(`https://www.digitalhomeblog.in/india/sarkari-jobs/${cleanSlug}`, lastmod, 'daily', '0.9');
           })
+          .filter(Boolean)
           .join('');
       } catch (alertErr) {
         console.warn('[Sitemap] Failed to append Live Alerts:', alertErr.message);
