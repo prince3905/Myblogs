@@ -812,12 +812,18 @@ async function sitemap(req, res) {
         console.warn('[Sitemap] Failed to append Live Alerts:', alertErr.message);
       }
 
-      // 6. Published Daily Current Affairs
+      // 6. Published Daily Current Affairs (Strictly recent indexable items within last 7 days)
       try {
         const CurrentAffairs = require('../currentAffairs/currentAffairs.model');
+        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+        const sevenDaysAgo = new Date(Date.now() - SEVEN_DAYS_MS);
         const caPosts = await CurrentAffairs.find({
           status: 'published',
-          slug: { $exists: true, $type: 'string', $ne: '' }
+          slug: { $exists: true, $type: 'string', $ne: '' },
+          $or: [
+            { publishDate: { $gte: sevenDaysAgo } },
+            { createdAt: { $gte: sevenDaysAgo } }
+          ]
         })
           .select('slug publishDate updatedAt')
           .sort({ publishDate: -1 })
@@ -826,7 +832,7 @@ async function sitemap(req, res) {
 
         caUrls = formatSitemapEntry('https://www.digitalhomeblog.in/current-affairs', homeMod, 'daily', '0.95');
         caUrls += caPosts
-          .filter(c => c.slug)
+          .filter(c => c.slug && !/^[0-9a-fA-F]{24}$/.test(c.slug))
           .map((ca) => {
             const lastmod = ca.updatedAt ? new Date(ca.updatedAt).toISOString() : (ca.publishDate ? new Date(ca.publishDate).toISOString() : new Date().toISOString());
             return formatSitemapEntry(normalizeCanonicalUrl(`/current-affairs/${ca.slug}`), lastmod, 'daily', '0.9');

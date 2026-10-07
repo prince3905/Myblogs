@@ -1668,12 +1668,38 @@ export default function PublicLiveAlertsPage() {
     ? `https://www.digitalhomeblog.in/india/sarkari-jobs/${selectedAlert.slug || selectedAlert._id}`
     : cleanHubCanonical;
 
+  // Standard JobPosting JSON-LD Structured Data Schema for Search Engines
+  const jobPostingJsonLd = selectedAlert ? {
+    '@context': 'https://schema.org',
+    '@type': 'JobPosting',
+    'title': selectedAlert.title,
+    'description': (selectedAlert.detailsText ? selectedAlert.detailsText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() : '') || `${selectedAlert.title} recruitment notification issued by ${selectedAlert.boardName || 'Official Board'}. Apply online through official government portals.`,
+    'datePosted': selectedAlert.parsedPostDate ? new Date(selectedAlert.parsedPostDate).toISOString() : new Date().toISOString(),
+    'validThrough': (selectedAlert.lastDate && selectedAlert.lastDate !== 'N/A' && !isNaN(new Date(selectedAlert.lastDate).getTime()))
+      ? new Date(selectedAlert.lastDate).toISOString()
+      : new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+    'employmentType': 'FULL_TIME',
+    'hiringOrganization': {
+      '@type': 'Organization',
+      'name': selectedAlert.boardName || 'Government of India / State Public Service Commission',
+      'sameAs': 'https://digitalhomeblog.in'
+    },
+    'jobLocation': {
+      '@type': 'Place',
+      'address': {
+        '@type': 'PostalAddress',
+        'addressCountry': 'IN'
+      }
+    }
+  } : null;
+
   return (
     <Layout>
       <Seo 
         title={selectedAlert ? `${selectedAlert.title} Recruitment: Eligibility, Last Date & Apply Online` : "Sarkari Result 2026: Live Job Alerts, Admit Cards & Vacancies | Digital Home"} 
         description={selectedAlert ? `${selectedAlert.title} 2026 Online Form: Check eligibility criteria, age limit, application fee, exam date, and official direct application link at Digital Home.` : "Browse, filter, and search active Indian Sarkari job vacancies, admit cards, and results fetched dynamically from official government boards."} 
         canonical={pageCanonicalUrl}
+        jsonLd={jobPostingJsonLd}
         noindex={Boolean(searchParams.get('search') && !selectedAlert)}
       />
 

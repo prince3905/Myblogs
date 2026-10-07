@@ -1018,10 +1018,19 @@ app.get('/current-affairs/:slug', async (req, res, next) => {
         };
       }
 
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+      const itemDate = item.publishDate ? new Date(item.publishDate) : (item.dateString ? new Date(item.dateString) : null);
+      const isOlderThan7Days = itemDate && !isNaN(itemDate.getTime()) && (Date.now() - itemDate.getTime() > SEVEN_DAYS_MS);
+
+      if (isOlderThan7Days) {
+        res.set('X-Robots-Tag', 'noindex, follow');
+      }
+      const robotsMeta = isOlderThan7Days ? 'noindex, follow' : 'index, follow, max-image-preview:large';
+
       const metaTags = `
     <title>${fullTitle}</title>
     <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="robots" content="${robotsMeta}" />
     <link rel="canonical" href="${canonicalUrl}" />
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="${siteName}" />
@@ -1200,7 +1209,14 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
       const job = await LiveAlert.findById(rawId).select('_id slug title boardName status').lean();
 
       if (job) {
-        // Document exists in DB: determine clean slug
+        const isInactive = job.status === 'inactive' || job.status === 'drafted' || job.status === 'archived';
+        if (isInactive) {
+          res.setHeader('X-Robots-Tag', 'noindex, follow');
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.status(410).send("<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>");
+        }
+
+        // Document exists in DB and is active: determine clean slug
         let cleanSlug = job.slug;
         if (!cleanSlug && job.title) {
           cleanSlug = sanitizeJobSlug(job.title, job.boardName, job._id.toString());
@@ -1213,7 +1229,7 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
         }
       }
 
-      // Legacy ID does NOT exist in DB: Return strict HTTP 410 Gone with minimal message
+      // Legacy ID does NOT exist in DB or inactive: Return strict HTTP 410 Gone with minimal message
       res.setHeader('X-Robots-Tag', 'noindex, follow');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(410).send("<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>");
@@ -1224,8 +1240,8 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
     const normalizedSlug = rawId.toLowerCase();
     const alert = await LiveAlert.findOne({ slug: normalizedSlug }).lean();
 
-    if (!alert) {
-      // Slug does NOT exist in DB: Return strict HTTP 410 Gone (Never return 200 with empty state or soft 404)
+    if (!alert || alert.status === 'inactive' || alert.status === 'drafted' || alert.status === 'archived') {
+      // Slug does NOT exist or is inactive in DB: Return strict HTTP 410 Gone (Never return 200 with empty state or soft 404)
       res.setHeader('X-Robots-Tag', 'noindex, follow');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(410).send("<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>");
@@ -1237,22 +1253,14 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
       return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs/${alert.slug || normalizedSlug}`);
     }
 
-    // Clean Archive / 410 Policy: If vacancy is archived/closed cycle, issue strict HTTP 410 Gone with noindex, follow
-    if (alert.status === 'archived') {
-      return render404Page(
-        req, 
-        res, 
-        `यह सरकारी नौकरी भर्ती सूचना अब आधिकारिक रूप से समाप्त/अभिलेखित हो चुकी है (The vacancy cycle for "${alert.title}" has officially closed and archived).`, 
-        410
-      );
-    }
-
     // Valid job found: Render page with HTTP 200 and strict self-referencing canonical tag
     const indexPath = path.join(publicPath, 'index.html');
-    if (!fs.existsSync(indexPath)) {
-      return res.status(404).send('index.html not found');
+    let html = '';
+    if (fs.existsSync(indexPath)) {
+      html = fs.readFileSync(indexPath, 'utf8');
+    } else {
+      html = '<!DOCTYPE html><html lang="hi"><head><meta charset="utf-8"></head><body><div id="root"></div></body></html>';
     }
-    let html = fs.readFileSync(indexPath, 'utf8');
 
     const { buildIndianJobScaffoldHtml } = require('./shared/utils/jobScaffoldEngine');
     const {
@@ -1269,7 +1277,7 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
     const faqSchema = generateJobFaqSchema(meta);
 
     const canonicalSlug = alert.slug || normalizedSlug;
-    const canonicalUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${canonicalSlug}`;
+    const canonicalUrl = `https://digitalhomeblog.in/india/sarkari-jobs/${canonicalSlug}`;
     const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
 
     const isExpired = alert.status === 'expired' || 
@@ -1304,33 +1312,31 @@ app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], asyn
         .lean();
     } catch (recErr) {}
 
-    // Rich schema description (250+ words of structured information)
-    const schemaDesc = `${highCtrTitle}. Official recruitment notification issued by ${meta.board} for candidates across ${meta.state}. Category: ${meta.category}. Important dates: notification circular released on ${meta.postDate}, application deadline ${meta.lastDate}. Candidates must review educational qualifications (${meta.qualification}), age limit relaxations, and vacancy breakdown. Apply online directly through official government portals.`;
+    // Clean plain-text description for structured data
+    const cleanJobDescription = (alert.detailsText ? alert.detailsText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() : '') || `${highCtrTitle}. Official recruitment notification issued by ${meta.board || 'Official Board'} for candidates across ${meta.state || 'India'}. Category: ${meta.category || 'Job'}. Important dates: notification circular released on ${meta.postDate || 'Latest'}, application deadline ${meta.lastDate || 'Check Official Portal'}. Apply online directly through official government portals.`;
+    const orgName = meta.board || alert.boardName || 'Government of India / State Public Service Commission';
 
-    // Official Google for Jobs structured data (100% Schema Validation compliant)
+    // Official Google for Jobs structured data (100% Schema Validation compliant JobPosting)
     const jobPostingSchema = {
       '@context': 'https://schema.org',
       '@type': 'JobPosting',
       'title': highCtrTitle,
-      'description': schemaDesc,
+      'description': cleanJobDescription,
       'datePosted': datePosted,
       'validThrough': validThrough,
       'employmentType': 'FULL_TIME',
       'hiringOrganization': {
         '@type': 'Organization',
-        'name': meta.board || 'Government of India / State Public Service Commission',
-        'sameAs': meta.applyUrl || meta.pdfUrl || 'https://www.digitalhomeblog.in'
+        'name': orgName,
+        'sameAs': 'https://digitalhomeblog.in'
       },
       'jobLocation': {
         '@type': 'Place',
         'address': {
           '@type': 'PostalAddress',
-          'addressCountry': 'IN',
-          'addressRegion': meta.state || 'Central/All India'
+          'addressCountry': 'IN'
         }
-      },
-      'occupationalCategory': meta.category || 'Latest Sarkari Job',
-      'directApply': true
+      }
     };
 
     // Generate complete 300+ word structured HTML layout
@@ -1727,6 +1733,14 @@ app.get(['/daily-quiz/:date', '/india/daily-quiz/:date'], async (req, res, next)
       return res.status(410).send("<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>");
     }
 
+    // Ephemeral archives: If the quiz date is older than 7 days, add response header: res.set('X-Robots-Tag', 'noindex, follow')
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const parsedDate = new Date(rawDate);
+    const isOlderThan7Days = !isNaN(parsedDate.getTime()) && (Date.now() - parsedDate.getTime() > SEVEN_DAYS_MS);
+    if (isOlderThan7Days) {
+      res.set('X-Robots-Tag', 'noindex, follow');
+    }
+
     next();
   } catch (err) {
     next(err);
@@ -1898,7 +1912,7 @@ app.get('*', async (req, res, next) => {
     const { normalizeCanonicalUrl } = require('./shared/utils/urlUtils');
     const cleanCanonicalUrl = normalizeCanonicalUrl(rawPath);
 
-    // Non-indexed public pages (tags, search, archive) return X-Robots-Tag: noindex, follow
+    // Non-indexed public pages (tags, search, archive) or routes marked with noindex header return X-Robots-Tag: noindex, follow
     const isNonIndexedPublicPage = 
       rawPath === '/tags' ||
       rawPath.startsWith('/tags/') || 
@@ -1906,10 +1920,12 @@ app.get('*', async (req, res, next) => {
       rawPath.startsWith('/tag/') || 
       rawPath === '/search' || 
       rawPath.startsWith('/search/') || 
-      rawPath === '/archive' ||
+      rawPath === '/archive' || 
       rawPath.startsWith('/archive/');
 
-    if (isNonIndexedPublicPage) {
+    const hasNoindexHeader = res.getHeader('x-robots-tag') === 'noindex, follow' || res.getHeader('X-Robots-Tag') === 'noindex, follow';
+
+    if (isNonIndexedPublicPage || hasNoindexHeader) {
       res.setHeader('X-Robots-Tag', 'noindex, follow');
       html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
       html = html.replace('</head>', '    <meta name="robots" content="noindex, follow" />\n</head>');

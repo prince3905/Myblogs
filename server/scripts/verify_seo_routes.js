@@ -106,20 +106,28 @@ async function runTests() {
     assert('/blog/blog/missing returns exact 410 body', resMissingDoubleBlog.body.includes('<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>'));
 
     // 4. Legacy Mongo ObjectId Resolution (/india/sarkari-jobs/:identifier)
-    // 4a. Specific test: /india/sarkari-jobs/6ab107a1c34418c4a5bfcbed
+    // 4a. Specific test: /india/sarkari-jobs/6abd047cb1139c2a30f65312
+    const resSpecificId2 = await makeRequest('/india/sarkari-jobs/6abd047cb1139c2a30f65312');
+    assert('/india/sarkari-jobs/6abd047cb1139c2a30f65312 returns 301 or 410', resSpecificId2.statusCode === 301 || resSpecificId2.statusCode === 410);
+    assert('/india/sarkari-jobs/6abd047cb1139c2a30f65312 never returns 200 or 500', resSpecificId2.statusCode !== 200 && resSpecificId2.statusCode !== 500);
+    if (resSpecificId2.statusCode === 410) {
+      assert('Returns 410 Gone message', resSpecificId2.body.includes('<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>'));
+    }
+
+    // 4b. Previous specific test: /india/sarkari-jobs/6ab107a1c34418c4a5bfcbed
     const resSpecificId = await makeRequest('/india/sarkari-jobs/6ab107a1c34418c4a5bfcbed');
     assert('/india/sarkari-jobs/6ab107a1c34418c4a5bfcbed returns 301 or 410', resSpecificId.statusCode === 301 || resSpecificId.statusCode === 410);
     if (resSpecificId.statusCode === 410) {
       assert('Returns 410 Gone message', resSpecificId.body.includes('<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>'));
     }
 
-    // 4b. Missing arbitrary 24-hex ObjectId -> 410 Gone
+    // 4c. Missing arbitrary 24-hex ObjectId -> 410 Gone
     const fakeObjectId = '507f1f77bcf86cd799439011';
     const resFakeId = await makeRequest(`/india/sarkari-jobs/${fakeObjectId}`);
     assert('Arbitrary missing ObjectId returns 410 Gone', resFakeId.statusCode === 410);
     assert('Arbitrary missing ObjectId returns exact 410 message', resFakeId.body.includes('<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>'));
 
-    // 4c. Missing job slug -> 410 Gone
+    // 4d. Missing job slug -> 410 Gone
     const resMissingSlug = await makeRequest('/india/sarkari-jobs/nonexistent-random-vacancy-xyz-999');
     assert('Missing job slug returns 410 Gone', resMissingSlug.statusCode === 410);
     assert('Missing job slug returns exact 410 message', resMissingSlug.body.includes('<h1>410 Gone</h1><p>This vacancy or page is no longer active.</p>'));
@@ -225,6 +233,7 @@ async function runTests() {
         const res11a = await makeRequest(`/india/sarkari-jobs/${sampleJob.slug}`);
         assert('Valid job slug returns 200 OK', res11a.statusCode === 200);
         assert('Valid job page contains strict canonical tag', 
+          res11a.body.includes(`<link rel="canonical" href="https://digitalhomeblog.in/india/sarkari-jobs/${sampleJob.slug}" />`) ||
           res11a.body.includes(`<link rel="canonical" href="https://www.digitalhomeblog.in/india/sarkari-jobs/${sampleJob.slug}" />`));
 
         // 11b: Mongo ID -> 301 to slug
@@ -250,10 +259,27 @@ async function runTests() {
         assert('/blog/blog/:slug for existing job redirects 301', res11e.statusCode === 301);
         assert(`Redirects to /india/sarkari-jobs/${sampleJob.slug}`,
           (res11e.headers.location || '').includes(`/india/sarkari-jobs/${sampleJob.slug}`));
+
+        // 11f: Valid job page contains JobPosting Schema
+        assert('Valid job page contains @type: JobPosting schema', res11a.body.includes('"@type":"JobPosting"'));
+        assert('Valid job page schema contains sameAs digitalhomeblog.in', res11a.body.includes('"sameAs":"https://digitalhomeblog.in"'));
+        assert('Valid job page schema contains addressCountry IN', res11a.body.includes('"addressCountry":"IN"'));
+        assert('Valid job page contains proper self-referencing canonical', 
+          res11a.body.includes(`/india/sarkari-jobs/${sampleJob.slug}`));
       } else {
         console.log('ℹ️ No active LiveAlert with slug in DB to test live 200/301 ID resolution');
       }
     }
+
+    // 12. Sitemap.xml Cleanliness Verification
+    const resSitemap = await makeRequest('/sitemap.xml');
+    assert('/sitemap.xml returns 200 OK', resSitemap.statusCode === 200);
+    assert('/sitemap.xml does NOT contain hex ObjectIds in /india/sarkari-jobs/', 
+      !/\/india\/sarkari-jobs\/[0-9a-fA-F]{24}<\/loc>/i.test(resSitemap.body));
+    assert('/sitemap.xml does NOT contain query strings like ?alert=', 
+      !resSitemap.body.includes('?alert='));
+    assert('/sitemap.xml includes indexable /india/sarkari-jobs', 
+      resSitemap.body.includes('/india/sarkari-jobs'));
 
     // 12. Global Error Handler Verification (CastError / BSONError -> 410, Unhandled 500)
     const errorHandler = require('/Users/harry/Prince/Myblogs/server/src/middleware/errorHandler');
