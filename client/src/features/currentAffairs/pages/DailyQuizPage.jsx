@@ -144,12 +144,17 @@ export default function DailyQuizPage() {
   const progressPercent = ((currentIndex + 1) / totalQuestions) * 100;
   const answeredCount = Object.keys(selectedAnswers).length;
 
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const isOlderThan7Days = quizData?.dateString && !isNaN(new Date(quizData.dateString).getTime()) && (Date.now() - new Date(quizData.dateString).getTime() > SEVEN_DAYS_MS);
+
   return (
     <Layout>
       <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', py: { xs: 2, md: 4 } }}>
         <Helmet>
           <title>Daily Current Affairs GK Quiz ({quizData.dateString}) | Digital Home</title>
           <meta name="description" content={`आज का डेली करेंट अफेयर्स मॉक टेस्ट (${quizData.dateString}) हल करें। 10 महत्वपूर्ण MCQs, टाइमर और विस्तृत व्याख्या।`} />
+          <meta name="robots" content={isOlderThan7Days ? "noindex, follow" : "index, follow, max-image-preview:large"} />
+          <link rel="canonical" href={`https://digitalhomeblog.in/daily-quiz/${quizData.dateString}`} />
         </Helmet>
 
       <Container maxWidth="md">

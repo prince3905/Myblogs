@@ -1184,9 +1184,9 @@ app.get(['/global-jobs/view/:id', '/global-jobs/:country/:id'], async (req, res,
 });
 
 // Dynamic Server-Side Meta Tag & JobPosting Schema Injection for Individual Indian Sarkari Jobs (DUAL-ID TO SLUG RESOLVER)
-app.get(['/india/sarkari-jobs/:id', '/job-alerts/:id', '/live-alerts/:id'], async (req, res, next) => {
+app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-alerts/:identifier', '/job-alerts/:id', '/live-alerts/:identifier', '/live-alerts/:id'], async (req, res, next) => {
   try {
-    const rawId = req.params.id ? String(req.params.id).trim() : '';
+    const rawId = (req.params.identifier || req.params.id || '').trim();
     if (!rawId) return next();
 
     const isProd = env.nodeEnv === 'production' || process.env.NODE_ENV === 'production';
