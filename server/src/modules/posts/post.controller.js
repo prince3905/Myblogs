@@ -11,7 +11,8 @@ function catUrlSlug(category) {
 }
 
 function postUrl(post) {
-  return `${env.siteUrl}/blog/${catUrlSlug(post.category)}/${post.slug}`;
+  if (!post || !post.slug) return `${env.siteUrl}/india/sarkari-jobs`;
+  return `https://www.digitalhomeblog.in/india/sarkari-jobs/${post.slug}`;
 }
 
 async function ensureUniqueSlug(baseSlug, currentId = null) {

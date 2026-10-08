@@ -880,8 +880,7 @@ ${buttonHtmlBlock}
   // 2. Trigger Instant Google & IndexNow Multi-Engine Indexing Ping
   try {
     const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
-    const catUrl = (newPost.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
-    const postUrl = `https://www.digitalhomeblog.in/blog/${catUrl}/${newPost.slug}`;
+    const postUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${newPost.slug}`;
     notifyAllIndexing(postUrl, 'URL_UPDATED').catch(() => {});
   } catch (idxErr) {}
 

@@ -2547,9 +2547,9 @@ export default function HomePage() {
   return (
     <Layout>
       <Seo 
-        title="Digital Home — Sarkari Result, Live Job Alerts & Daily Insights" 
-        description="Sarkari Result, Admit Card, Latest Jobs, Vacancies, Sarkari Result Tools, Kids Games (बचो का गेम), Health, Education, and Tech Insights from Digital Home Blog." 
-        keywords="sarkari result, admit card, latest jobs, vacancies, govt jobs, sarkari result tools, kids games, bacho ka game, health tips, education, tech tutorials, all insights blog, digital home" 
+        title="Sarkari Job 2026: Latest Online Form, Sarkari Result & Live Alerts | Digital Home" 
+        description="Latest Sarkari Job 2026 notifications, Sarkari Result, Online Form, Admit Cards, and Answer Keys for UPSSSC, SSC, Railways, BPSC, Defence, and All India Govt Jobs." 
+        keywords="sarkari job 2026, sarkari result, online form, latest jobs, vacancies, govt jobs, admit card, upsssc, ssc, railways, bpsc, police recruitment, digital home" 
         canonical="https://www.digitalhomeblog.in"
         url="https://www.digitalhomeblog.in"
       />

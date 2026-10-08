@@ -623,7 +623,7 @@ async function buildHomepageHtml() {
     <section>
       <h2 style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin-bottom: 14px; border-bottom: 2px solid #10b981; padding-bottom: 6px;">📋 विस्तृत भर्ती विश्लेषण व परीक्षा गाइड (Latest Recruitment Guides & Articles)</h2>
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
-        ${topPosts.map(p => `<a href="/blog/${catUrlSlug(p.category)}/${p.slug}" style="display: block; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #15803d; text-decoration: none; font-weight: 600; font-size: 0.9rem; line-height: 1.4;">📝 ${escapeHtml(p.title)}</a>`).join('\n        ')}
+        ${topPosts.map(p => `<a href="/india/sarkari-jobs/${p.slug}" style="display: block; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #15803d; text-decoration: none; font-weight: 600; font-size: 0.9rem; line-height: 1.4;">📝 ${escapeHtml(p.title)}</a>`).join('\n        ')}
       </div>
     </section>
   </main>`;

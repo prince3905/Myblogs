@@ -113,4 +113,17 @@ liveAlertSchema.pre('save', function (next) {
   next();
 });
 
+// Instant Multi-Engine Indexing Ping on New / Updated LiveAlert Vacancies
+liveAlertSchema.post('save', function (doc) {
+  if ((doc.status === 'published' || doc.status === 'active') && doc.slug && !/^[0-9a-fA-F]{24}$/.test(doc.slug)) {
+    try {
+      const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
+      const canonicalJobUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${doc.slug}`;
+      notifyAllIndexing(canonicalJobUrl, 'URL_UPDATED').catch(() => {});
+    } catch (err) {
+      console.warn('[LiveAlert Indexing Hook] Notice:', err.message);
+    }
+  }
+});
+
 module.exports = mongoose.model('LiveAlert', liveAlertSchema);

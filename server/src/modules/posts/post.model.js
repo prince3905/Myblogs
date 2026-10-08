@@ -540,8 +540,7 @@ blogPostSchema.post('save', async function (doc) {
     try {
       const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
       const { logAutomation } = require('../../shared/utils/automationLogger');
-      const catUrl = (doc.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'general';
-      const postUrl = `https://www.digitalhomeblog.in/blog/${catUrl}/${doc.slug}`;
+      const postUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${doc.slug}`;
       console.log(`[Auto-Indexing Pipeline] Triggering 360° pings for published post: ${postUrl}`);
       
       notifyAllIndexing(postUrl, 'URL_UPDATED')

@@ -110,11 +110,49 @@ function incrementGoogleQuota() {
 }
 
 /**
+ * Normalize any blog/alert URL to the official canonical route:
+ * https://www.digitalhomeblog.in/india/sarkari-jobs/${slug}
+ * Prevents search engines from crawling legacy /blog/ URLs that return HTTP 301.
+ */
+function normalizeIndexingUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+  let url = rawUrl.trim();
+
+  // If URL uses legacy /blog/ prefix or /job-alerts or /live-alerts, redirect to canonical /india/sarkari-jobs/
+  const blogMatch = url.match(/^https?:\/\/[^\/]+\/blog(?:\/[^\/]+)?\/([^\/?#]+)/i);
+  if (blogMatch && blogMatch[1]) {
+    const slug = blogMatch[1];
+    if (slug && !/^[0-9a-fA-F]{24}$/.test(slug)) {
+      url = `https://www.digitalhomeblog.in/india/sarkari-jobs/${slug}`;
+    }
+  }
+
+  const alertMatch = url.match(/^https?:\/\/[^\/]+\/(?:job-alerts|live-alerts)\/([^\/?#]+)/i);
+  if (alertMatch && alertMatch[1]) {
+    const slug = alertMatch[1];
+    if (slug && !/^[0-9a-fA-F]{24}$/.test(slug)) {
+      url = `https://www.digitalhomeblog.in/india/sarkari-jobs/${slug}`;
+    }
+  }
+
+  // Ensure canonical host: https://www.digitalhomeblog.in
+  if (url.startsWith('http://')) {
+    url = url.replace(/^http:\/\//i, 'https://');
+  }
+  if (url.startsWith('https://digitalhomeblog.in/')) {
+    url = url.replace('https://digitalhomeblog.in/', 'https://www.digitalhomeblog.in/');
+  }
+
+  return url;
+}
+
+/**
  * Notify Google Indexing API that a URL has been updated, created, or deleted.
- * @param {string} url - The canonical URL of the blog post
+ * @param {string} url - The canonical URL of the vacancy or post
  * @param {'URL_UPDATED'|'URL_DELETED'} type - Notification type
  */
 async function notifyUrl(url, type = 'URL_UPDATED') {
+  const targetUrl = normalizeIndexingUrl(url);
   const credentials = getCredentials();
   if (!credentials) {
     console.warn(`[Google Indexing] Warning: Google Indexing credentials not configured in environment or JSON file. Indexing notice skipped.`);
@@ -132,7 +170,7 @@ async function notifyUrl(url, type = 'URL_UPDATED') {
     const response = await axios.post(
       'https://indexing.googleapis.com/v3/urlNotifications:publish',
       {
-        url,
+        url: targetUrl,
         type
       },
       {
@@ -145,11 +183,11 @@ async function notifyUrl(url, type = 'URL_UPDATED') {
     );
 
     incrementGoogleQuota();
-    console.log(`[Google Indexing] Successfully sent API notice (${dailyGoogleIndexingCount}/${GOOGLE_DAILY_QUOTA_LIMIT}): ${url} -> ${type}`);
-    return { success: true, data: response.data };
+    console.log(`[Google Indexing] Successfully sent API notice (${dailyGoogleIndexingCount}/${GOOGLE_DAILY_QUOTA_LIMIT}): ${targetUrl} -> ${type}`);
+    return { success: true, data: response.data, targetUrl };
   } catch (error) {
     console.error(
-      `[Google Indexing] API error notification failed for ${url}:`,
+      `[Google Indexing] API error notification failed for ${targetUrl}:`,
       error.response?.data || error.message
     );
     return { success: false, error: error.response?.data || error.message };
@@ -160,6 +198,7 @@ async function notifyUrl(url, type = 'URL_UPDATED') {
  * Instant IndexNow Auto-Ping (Notifies Bing, Yandex, Seznam, Naver & DuckDuckGo in 1 second)
  */
 async function notifyIndexNow(url) {
+  const targetUrl = normalizeIndexingUrl(url);
   const indexNowKey = process.env.INDEXNOW_KEY || '8f7e2a9b3c4d5e6f7a8b9c0d1e2f3a4b';
   const host = 'www.digitalhomeblog.in';
   const keyLocation = `https://${host}/${indexNowKey}.txt`;
@@ -169,19 +208,19 @@ async function notifyIndexNow(url) {
       host: host,
       key: indexNowKey,
       keyLocation: keyLocation,
-      urlList: [url]
+      urlList: [targetUrl]
     };
 
-    console.log(`[IndexNow Protocol] Instant auto-pinging URL: ${url}`);
+    console.log(`[IndexNow Protocol] Instant auto-pinging URL: ${targetUrl}`);
     const response = await axios.post('https://api.indexnow.org/indexnow', payload, {
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
       timeout: 10000
     });
 
-    console.log(`[IndexNow Protocol] Ping success for ${url} (Status: ${response.status})`);
-    return { success: true, status: response.status };
+    console.log(`[IndexNow Protocol] Ping success for ${targetUrl} (Status: ${response.status})`);
+    return { success: true, status: response.status, targetUrl };
   } catch (err) {
-    console.warn(`[IndexNow Protocol] Notice for ${url}:`, err.response?.data || err.message);
+    console.warn(`[IndexNow Protocol] Notice for ${targetUrl}:`, err.response?.data || err.message);
     return { success: false, error: err.message };
   }
 }
@@ -208,6 +247,7 @@ async function pingSitemapEngines() {
  */
 async function notifyBatchIndexNow(urlList = []) {
   if (!urlList || urlList.length === 0) return { success: true, count: 0 };
+  const normalizedList = urlList.map(u => normalizeIndexingUrl(u));
   const indexNowKey = process.env.INDEXNOW_KEY || '8f7e2a9b3c4d5e6f7a8b9c0d1e2f3a4b';
   const host = 'www.digitalhomeblog.in';
   const keyLocation = `https://${host}/${indexNowKey}.txt`;
@@ -217,7 +257,7 @@ async function notifyBatchIndexNow(urlList = []) {
       host: host,
       key: indexNowKey,
       keyLocation: keyLocation,
-      urlList: urlList.slice(0, 1000)
+      urlList: normalizedList.slice(0, 1000)
     };
 
     console.log(`[IndexNow Batch] Auto-pinging batch of ${payload.urlList.length} URLs...`);
@@ -238,15 +278,17 @@ async function notifyBatchIndexNow(urlList = []) {
  * Universal Auto-Indexing Orchestrator (Google API + IndexNow Protocol + Sitemap Pings)
  */
 async function notifyAllIndexing(url, type = 'URL_UPDATED') {
-  console.log(`[Universal Auto-Indexing] Triggering 360° index pings for: ${url}`);
+  const targetUrl = normalizeIndexingUrl(url);
+  console.log(`[Universal Auto-Indexing] Triggering 360° index pings for: ${targetUrl}`);
   const results = await Promise.allSettled([
-    notifyUrl(url, type),
-    notifyIndexNow(url),
+    notifyUrl(targetUrl, type),
+    notifyIndexNow(targetUrl),
     pingSitemapEngines()
   ]);
   return {
     google: results[0]?.value || null,
-    indexNow: results[1]?.value || null
+    indexNow: results[1]?.value || null,
+    targetUrl
   };
 }
 
@@ -255,6 +297,7 @@ module.exports = {
   notifyIndexNow,
   notifyBatchIndexNow,
   pingSitemapEngines,
-  notifyAllIndexing
+  notifyAllIndexing,
+  normalizeIndexingUrl
 };
 
