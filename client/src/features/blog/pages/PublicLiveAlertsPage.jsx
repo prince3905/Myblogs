@@ -1693,11 +1693,20 @@ export default function PublicLiveAlertsPage() {
     }
   } : null;
 
+  const dynamicJobState = (selectedAlert?.state && selectedAlert.state !== 'Central/All India' && selectedAlert.state !== 'All India') ? `${selectedAlert.state} ` : '';
+  const dynamicJobOrg = selectedAlert?.boardName ? `${selectedAlert.boardName} ` : '';
+  const pageTitle = selectedAlert 
+    ? `Sarkari Job: ${dynamicJobState}${dynamicJobOrg}${selectedAlert.title} Recruitment 2026 – Apply Online Form, Eligibility` 
+    : "Sarkari Result: Latest Sarkari Jobs, Government Vacancy 2026 & Exam Forms | Digital Home";
+  const pageDescription = selectedAlert 
+    ? `Sarkari Result notification for ${dynamicJobOrg}${selectedAlert.title} Vacancy 2026. Check eligibility criteria, age limit, application fee, and Apply Online Form at Digital Home.` 
+    : "Sarkari Result 2026 & Latest Sarkari Job alerts. Find all Government Vacancies, Online Application Forms, Admit Cards, and Results for SSC, Railway, Banking, Police, UPSSSC, and All India Govt Jobs.";
+
   return (
     <Layout>
       <Seo 
-        title={selectedAlert ? `${selectedAlert.state && selectedAlert.state !== 'Central/All India' && selectedAlert.state !== 'All India' ? selectedAlert.state + ' ' : ''}${selectedAlert.boardName ? selectedAlert.boardName + ' ' : ''}${selectedAlert.title} Recruitment 2026: Apply Online Form, Eligibility & Vacancy Alert` : "Government Vacancy 2026: Live Govt Job Alerts & State-wise Recruitment | Digital Home"} 
-        description={selectedAlert ? `Latest Government Vacancy 2026: Check ${selectedAlert.title} Eligibility criteria, age limit, application fee, exam date, and Apply Online Form at Digital Home.` : "Get instant Government Job Alerts, Latest Sarkari Job 2026 Vacancies, Online Application Forms, Admit Cards, and Results for SSC, Railways, Banking, UPSC, Police, and Defence jobs across India."} 
+        title={pageTitle} 
+        description={pageDescription} 
         canonical={pageCanonicalUrl}
         jsonLd={jobPostingJsonLd}
         noindex={Boolean(searchParams.get('search') && !selectedAlert)}
@@ -1721,7 +1730,7 @@ export default function PublicLiveAlertsPage() {
               fontSize: { xs: '1.3rem', md: '1.6rem' } 
             }}
           >
-            Government Vacancy 2026: Live Govt Job Alerts & State-wise Recruitment 🔔
+            Sarkari Result 2026 – Latest Sarkari Jobs & Government Vacancies
           </Typography>
           <Typography 
             variant="body2" 

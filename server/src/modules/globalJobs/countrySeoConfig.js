@@ -109,10 +109,10 @@ const COUNTRY_TO_PRIMARY_LANG = {
 function getCountrySeoMeta(countryCode) {
   if (!countryCode || countryCode === 'ALL') {
     return {
-      title: 'Global Government Jobs 2026: Overseas Public Sector Openings & Visa Sponsorship Alerts',
+      title: 'Sarkari Result Global: International Government Jobs, Overseas Public Vacancies & Visa Alerts',
       description: 'Explore verified overseas government jobs, embassy vacancies, and international public sector recruitment.',
       canonical: 'https://www.digitalhomeblog.in/global-jobs',
-      keywords: ['Global Government Jobs 2026', 'Overseas Public Sector Openings', 'Visa Sponsorship Alerts', 'Embassy Vacancies', 'International Public Sector Recruitment', 'UN Jobs'],
+      keywords: ['Sarkari Result Global', 'Global Government Jobs 2026', 'Overseas Public Sector Openings', 'Visa Sponsorship Alerts', 'Embassy Vacancies', 'International Public Sector Recruitment', 'UN Jobs'],
       lang: 'en'
     };
   }

@@ -218,6 +218,30 @@ async function runTests() {
     assert('/india/sarkari-jobs DOES NOT have noindex header', resCanonicalHub.headers['x-robots-tag'] !== 'noindex, follow');
     assert('/india/sarkari-jobs contains index, follow meta', 
       resCanonicalHub.body.includes('<meta name="robots" content="index, follow, max-image-preview:large" />'));
+    assert('/india/sarkari-jobs has front-loaded Sarkari Result Title',
+      resCanonicalHub.body.includes('<title>Sarkari Result: Latest Sarkari Jobs, Government Vacancy 2026 &amp; Exam Forms | Digital Home</title>') ||
+      resCanonicalHub.body.includes('<title>Sarkari Result: Latest Sarkari Jobs, Government Vacancy 2026 & Exam Forms | Digital Home</title>'));
+    assert('/india/sarkari-jobs has front-loaded Category H1',
+      resCanonicalHub.body.includes('Sarkari Result 2026 – Latest Sarkari Jobs & Government Vacancies'));
+
+    // 9f. Homepage Root Metadata Verification
+    const resHome = await makeRequest('/');
+    assert('Homepage / returns 200 OK', resHome.statusCode === 200);
+    assert('Homepage has front-loaded Sarkari Result 2026 Title',
+      resHome.body.includes('Sarkari Result 2026: Sarkari Job, Government Vacancy &amp; Live Job Alert | Digital Home') ||
+      resHome.body.includes('Sarkari Result 2026: Sarkari Job, Government Vacancy & Live Job Alert | Digital Home'));
+    assert('Homepage Meta Description leads with Sarkari Result 2026 & Latest Sarkari Job',
+      resHome.body.includes('Sarkari Result 2026 &amp; Latest Sarkari Job alerts') ||
+      resHome.body.includes('Sarkari Result 2026 & Latest Sarkari Job alerts'));
+    assert('Homepage Meta Keywords front-loads Sarkari Result and Sarkari Job',
+      resHome.body.includes('Sarkari Result, Sarkari Result 2026, Sarkari Job, Sarkari Naukri'));
+
+    // 9g. Global Jobs Hub Metadata Verification
+    const resGlobal = await makeRequest('/global-jobs');
+    assert('Global Jobs hub /global-jobs returns 200 OK', resGlobal.statusCode === 200);
+    assert('Global Jobs hub has front-loaded Sarkari Result Global Title',
+      resGlobal.body.includes('<title>Sarkari Result Global: International Government Jobs, Overseas Public Vacancies &amp; Visa Alerts</title>') ||
+      resGlobal.body.includes('<title>Sarkari Result Global: International Government Jobs, Overseas Public Vacancies & Visa Alerts</title>'));
 
     // 10. Abandoned category -> 410 Gone
     const resCatMissing = await makeRequest('/category/abandoned-defunct-category-1234');
@@ -266,6 +290,10 @@ async function runTests() {
         assert('Valid job page schema contains addressCountry IN', res11a.body.includes('"addressCountry":"IN"'));
         assert('Valid job page contains proper self-referencing canonical', 
           res11a.body.includes(`/india/sarkari-jobs/${sampleJob.slug}`));
+        assert('Valid dynamic job post Title starts with Sarkari Job:',
+          /<title>Sarkari Job:/i.test(res11a.body));
+        assert('Valid dynamic job post Meta Description starts with Sarkari Result notification for',
+          res11a.body.includes('content="Sarkari Result notification for') || res11a.body.includes('Sarkari Result notification for'));
       } else {
         console.log('ℹ️ No active LiveAlert with slug in DB to test live 200/301 ID resolution');
       }

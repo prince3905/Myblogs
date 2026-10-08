@@ -165,7 +165,7 @@ const STATE_SHORT_MAP = {
 
 /**
  * Strict High-CTR Dynamic Title Template:
- * `${job.state ? job.state + ' ' : ''}${job.organization} ${job.postName} Recruitment 2026: Apply Online Form, Eligibility & Vacancy Alert`
+ * `Sarkari Job: ${job.state ? job.state + ' ' : ''}${job.organization} ${job.postName} Recruitment 2026 – Apply Online Form, Eligibility`
  */
 function buildHighCtrJobTitle(meta) {
   const { jobName, year = '2026', board, state } = meta;
@@ -188,12 +188,12 @@ function buildHighCtrJobTitle(meta) {
   const orgPart = cleanOrg ? `${cleanOrg} ` : '';
   const postPart = cleanPost || 'Vacancies';
 
-  return `${stateStr}${orgPart}${postPart} Recruitment ${year}: Apply Online Form, Eligibility & Vacancy Alert`.replace(/\s+/g, ' ').trim();
+  return `Sarkari Job: ${stateStr}${orgPart}${postPart} Recruitment ${year} – Apply Online Form, Eligibility`.replace(/\s+/g, ' ').trim();
 }
 
 /**
  * Strict Meta Description packed with high-intent keywords:
- * "Government Vacancy", "Eligibility", and "Apply Online Form"
+ * Starts with "Sarkari Result notification for..."
  */
 function buildHighCtrMetaDesc(meta) {
   const { jobName, year = '2026', board, state } = meta;
@@ -201,13 +201,19 @@ function buildHighCtrMetaDesc(meta) {
   const organization = (board && board !== 'Official Board') ? board : (state ? `${state} Govt` : 'Govt of India');
   const postName = jobName || 'Various Posts';
 
-  let baseDesc = `Latest Government Vacancy ${year}: Check ${stateStr}${organization} ${postName} Eligibility criteria, age limit, application fee, and Apply Online Form at Digital Home.`.replace(/\s+/g, ' ').trim();
+  let baseDesc = `Sarkari Result notification for ${stateStr}${organization} ${postName} Vacancy ${year}. Check eligibility criteria, age limit, application fee, and Apply Online Form at Digital Home.`.replace(/\s+/g, ' ').trim();
 
   // Enforce 140-160 characters target range
   if (baseDesc.length > 160) {
-    const allowedPostLen = 160 - `Latest Government Vacancy ${year}: Check ${stateStr}${organization} Eligibility criteria & Apply Online Form at Digital Home.`.length;
-    const shortPost = postName.slice(0, Math.max(10, allowedPostLen)).trim();
-    baseDesc = `Latest Government Vacancy ${year}: Check ${stateStr}${organization} ${shortPost} Eligibility criteria & Apply Online Form at Digital Home.`.replace(/\s+/g, ' ').trim();
+    const prefix = `Sarkari Result notification for ${stateStr}${organization} `;
+    const suffix = ` Vacancy ${year}. Apply Online Form & eligibility at Digital Home.`;
+    const allowedPostLen = 160 - (prefix.length + suffix.length);
+    if (allowedPostLen > 5) {
+      const shortPost = postName.slice(0, allowedPostLen).trim();
+      baseDesc = `${prefix}${shortPost}${suffix}`.replace(/\s+/g, ' ').trim();
+    } else {
+      baseDesc = `Sarkari Result notification for ${stateStr}${organization} Vacancy ${year}. Check eligibility criteria, age limit, and Apply Online Form at Digital Home.`.replace(/\s+/g, ' ').trim();
+    }
   }
 
   return baseDesc;

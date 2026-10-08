@@ -2547,9 +2547,9 @@ export default function HomePage() {
   return (
     <Layout>
       <Seo 
-        title="Sarkari Job 2026: Government Job Alert, Latest Vacancy & Sarkari Result | Digital Home" 
-        description="Get instant Government Job Alerts, Latest Sarkari Job 2026 Vacancies, Online Application Forms, Admit Cards, and Results for SSC, Railways, Banking, UPSC, Police, and Defence jobs across India." 
-        keywords="Government Job Alert, Government Vacancy 2026, Sarkari Job, Sarkari Result 2026, Free Job Alert, 10th 12th Pass Govt Jobs, Railway Recruitment, SSC CGL CHSL, Police Bharti, Defence Jobs, सरकारी नौकरी" 
+        title="Sarkari Result 2026: Sarkari Job, Government Vacancy & Live Job Alert | Digital Home" 
+        description="Sarkari Result 2026 & Latest Sarkari Job alerts. Find all Government Vacancies, Online Application Forms, Admit Cards, and Results for SSC, Railway, Banking, Police, UPSSSC, and All India Govt Jobs." 
+        keywords="Sarkari Result, Sarkari Result 2026, Sarkari Job, Sarkari Naukri, सरकारी रिजल्ट, सरकारी नौकरी, Government Job Alert, Government Vacancy 2026, Free Job Alert, Online Form, Admit Card, Answer Key" 
         canonical="https://www.digitalhomeblog.in"
         url="https://www.digitalhomeblog.in"
       />
@@ -2568,7 +2568,7 @@ export default function HomePage() {
           border: '0',
         }}
       >
-        Digital Home - Latest Sarkari Jobs, Exams & Tech Updates
+        Sarkari Result 2026: Sarkari Job, Government Vacancy & Live Job Alert
       </Typography>
 
       {/* Live Job Alerts Board Section */}
