@@ -455,9 +455,14 @@ app.get('/ads.txt', (req, res) => {
   res.type('text/plain');
   res.send('google.com, pub-7044184444698366, DIRECT, f08c47fec0942fa0');
 });
-app.get('/:key.txt', (req, res, next) => {
+app.get(['/indexnow-key.txt', '/indexnow.txt', '/:key.txt'], (req, res, next) => {
+  const indexNowKey = process.env.INDEXNOW_KEY || '8f7e2a9b3c4d5e6f7a8b9c0d1e2f3a4b';
   const key = req.params.key;
-  if (/^[a-f0-9]{32}$/i.test(key)) {
+  if (req.path === '/indexnow-key.txt' || req.path === '/indexnow.txt') {
+    res.type('text/plain');
+    return res.send(indexNowKey);
+  }
+  if (key && /^[a-f0-9]{32}$/i.test(key)) {
     res.type('text/plain');
     return res.send(key);
   }
