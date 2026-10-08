@@ -1696,8 +1696,8 @@ export default function PublicLiveAlertsPage() {
   return (
     <Layout>
       <Seo 
-        title={selectedAlert ? `${selectedAlert.title} Recruitment: Eligibility, Last Date & Apply Online` : "Sarkari Result 2026: Live Job Alerts, Admit Cards & Vacancies | Digital Home"} 
-        description={selectedAlert ? `${selectedAlert.title} 2026 Online Form: Check eligibility criteria, age limit, application fee, exam date, and official direct application link at Digital Home.` : "Browse, filter, and search active Indian Sarkari job vacancies, admit cards, and results fetched dynamically from official government boards."} 
+        title={selectedAlert ? `${selectedAlert.state && selectedAlert.state !== 'Central/All India' && selectedAlert.state !== 'All India' ? selectedAlert.state + ' ' : ''}${selectedAlert.boardName ? selectedAlert.boardName + ' ' : ''}${selectedAlert.title} Recruitment 2026: Apply Online Form, Eligibility & Vacancy Alert` : "Government Vacancy 2026: Live Govt Job Alerts & State-wise Recruitment | Digital Home"} 
+        description={selectedAlert ? `Latest Government Vacancy 2026: Check ${selectedAlert.title} Eligibility criteria, age limit, application fee, exam date, and Apply Online Form at Digital Home.` : "Get instant Government Job Alerts, Latest Sarkari Job 2026 Vacancies, Online Application Forms, Admit Cards, and Results for SSC, Railways, Banking, UPSC, Police, and Defence jobs across India."} 
         canonical={pageCanonicalUrl}
         jsonLd={jobPostingJsonLd}
         noindex={Boolean(searchParams.get('search') && !selectedAlert)}
@@ -1721,14 +1721,14 @@ export default function PublicLiveAlertsPage() {
               fontSize: { xs: '1.3rem', md: '1.6rem' } 
             }}
           >
-            Live Student Alerts & Jobs 🔔
+            Government Vacancy 2026: Live Govt Job Alerts & State-wise Recruitment 🔔
           </Typography>
           <Typography 
             variant="body2" 
             color="text.secondary" 
-            sx={{ mt: 0.5, maxWidth: 600, mx: 'auto', fontSize: '0.82rem' }}
+            sx={{ mt: 0.5, maxWidth: 680, mx: 'auto', fontSize: '0.82rem' }}
           >
-            Instant job vacancies, results, and exam updates straight from official government servers. Fast and clean access for students.
+            Instant Government Job Alerts, latest online forms, admit cards, and state-wise recruitment notifications directly from official portals.
           </Typography>
         </Box>
 

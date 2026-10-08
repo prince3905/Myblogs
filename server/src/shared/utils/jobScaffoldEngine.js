@@ -4,7 +4,7 @@
  * Ensures 100% Googlebot visibility, eliminates thin content, and satisfies all candidate intent signals.
  */
 
-const { parseJobMetadata } = require('./jobSeoOptimizer');
+const { parseJobMetadata, buildHighCtrJobTitle } = require('./jobSeoOptimizer');
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -83,7 +83,7 @@ function buildIndianJobScaffoldHtml(alert = {}, isExpired = false, recAlerts = [
 
     <!-- Main H1 Header -->
     <h1 style="font-size: 1.85rem; font-weight: 900; line-height: 1.3; color: #0f172a; margin-top: 0; margin-bottom: 16px;">
-      ${jobName} Recruitment ${year}: ${vacancyText}, Eligibility, Last Date & Apply Online
+      ${escapeHtml(buildHighCtrJobTitle(meta))}
     </h1>
 
     <!-- Status Banner -->

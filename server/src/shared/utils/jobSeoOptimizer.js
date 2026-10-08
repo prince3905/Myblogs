@@ -164,67 +164,50 @@ const STATE_SHORT_MAP = {
 };
 
 /**
- * Strict High-CTR Long-Tail Title Template:
- * {Job Name / Department} Recruitment {Year}: {Vacancy Count} Posts, Eligibility, Last Date & Apply Online
+ * Strict High-CTR Dynamic Title Template:
+ * `${job.state ? job.state + ' ' : ''}${job.organization} ${job.postName} Recruitment 2026: Apply Online Form, Eligibility & Vacancy Alert`
  */
 function buildHighCtrJobTitle(meta) {
-  const { jobName, year, vacancyCount, state } = meta;
-  let formattedName = jobName;
+  const { jobName, year = '2026', board, state } = meta;
+  const stateStr = (state && state !== 'Central/All India' && state !== 'All India') ? `${state} ` : '';
+  const organization = (board && board !== 'Official Board') ? board : (state ? `${state} Govt` : 'Govt of India');
+  const postName = jobName || 'Various Posts';
 
-  if (state && state !== 'Central/All India') {
-    const stLower = state.toLowerCase();
-    const shortCode = STATE_SHORT_MAP[stLower] || state;
-    const nameLower = formattedName.toLowerCase();
-    const hasState = nameLower.includes(stLower) || nameLower.includes(shortCode.toLowerCase());
-    if (!hasState) {
-      formattedName = `${shortCode} ${formattedName}`;
-    }
+  // Prevent duplicate state prefix if organization already starts with state
+  let cleanOrg = organization;
+  if (stateStr && cleanOrg.toLowerCase().startsWith(state.toLowerCase())) {
+    cleanOrg = cleanOrg.slice(state.length).trim();
   }
 
-  if (vacancyCount) {
-    return `${formattedName} Recruitment ${year}: ${vacancyCount} Posts, Eligibility, Last Date & Apply Online`;
+  // Prevent duplicate organization prefix if postName already starts with organization
+  let cleanPost = postName;
+  if (cleanOrg && cleanPost.toLowerCase().startsWith(cleanOrg.toLowerCase())) {
+    cleanPost = cleanPost.slice(cleanOrg.length).trim();
   }
-  return `${formattedName} Recruitment ${year}: Eligibility Criteria, Age Limit, Last Date & Apply Online`;
+
+  const orgPart = cleanOrg ? `${cleanOrg} ` : '';
+  const postPart = cleanPost || 'Vacancies';
+
+  return `${stateStr}${orgPart}${postPart} Recruitment ${year}: Apply Online Form, Eligibility & Vacancy Alert`.replace(/\s+/g, ' ').trim();
 }
 
 /**
- * Strict Meta Description (140-155 characters) packed with transactional keywords:
- * {Job Name} 2026 Online Form: Check eligibility criteria, age limit, application fee, exam date, and official direct application link at Digital Home.
+ * Strict Meta Description packed with high-intent keywords:
+ * "Government Vacancy", "Eligibility", and "Apply Online Form"
  */
 function buildHighCtrMetaDesc(meta) {
-  const { jobName, year, state } = meta;
-  let formattedName = jobName;
+  const { jobName, year = '2026', board, state } = meta;
+  const stateStr = (state && state !== 'Central/All India' && state !== 'All India') ? `${state} ` : '';
+  const organization = (board && board !== 'Official Board') ? board : (state ? `${state} Govt` : 'Govt of India');
+  const postName = jobName || 'Various Posts';
 
-  if (state && state !== 'Central/All India') {
-    const stLower = state.toLowerCase();
-    const shortCode = STATE_SHORT_MAP[stLower] || state;
-    const nameLower = formattedName.toLowerCase();
-    const hasState = nameLower.includes(stLower) || nameLower.includes(shortCode.toLowerCase());
-    if (!hasState) {
-      formattedName = `${shortCode} ${formattedName}`;
-    }
-  }
+  let baseDesc = `Latest Government Vacancy ${year}: Check ${stateStr}${organization} ${postName} Eligibility criteria, age limit, application fee, and Apply Online Form at Digital Home.`.replace(/\s+/g, ' ').trim();
 
-  let baseDesc = `${formattedName} ${year} Online Form: Check eligibility criteria, age limit, application fee, exam date, and official direct application link at Digital Home.`;
-
-  // Enforce 140-155 characters target range
-  if (baseDesc.length > 155) {
-    // Shorten job name portion if needed
-    const allowedJobLen = 155 - ` ${year} Online Form: Check eligibility criteria, age limit, fee, exam date & direct link at Digital Home.`.length;
-    const shortJob = formattedName.slice(0, Math.max(15, allowedJobLen)).trim();
-    baseDesc = `${shortJob} ${year} Online Form: Check eligibility criteria, age limit, fee, exam date & direct link at Digital Home.`;
-  }
-
-  if (baseDesc.length < 140) {
-    const padding = ' Apply online now.';
-    if (baseDesc.length + padding.length <= 155) {
-      baseDesc = baseDesc.replace(/\.$/, '') + padding;
-    }
-  }
-
-  // Ensure absolute bounds [135, 158]
-  if (baseDesc.length > 155) {
-    baseDesc = baseDesc.slice(0, 152).trim() + '...';
+  // Enforce 140-160 characters target range
+  if (baseDesc.length > 160) {
+    const allowedPostLen = 160 - `Latest Government Vacancy ${year}: Check ${stateStr}${organization} Eligibility criteria & Apply Online Form at Digital Home.`.length;
+    const shortPost = postName.slice(0, Math.max(10, allowedPostLen)).trim();
+    baseDesc = `Latest Government Vacancy ${year}: Check ${stateStr}${organization} ${shortPost} Eligibility criteria & Apply Online Form at Digital Home.`.replace(/\s+/g, ' ').trim();
   }
 
   return baseDesc;

@@ -1475,9 +1475,9 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     // Strict Unified Canonical URL: Always points to the clean canonical route (never self-canonicalize query parameters or alternative routes)
     const canonicalUrl = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
 
-    const siteName = 'Digital Home Sarkari Result';
-    const fullTitle = 'Sarkari Result 2026: UP, Bihar, MP, Rajasthan & All India Govt Jobs | Digital Home';
-    const desc = 'Latest Sarkari Result 2026 notifications, UPSSSC, BPSC, MPESB, RSMSSB, JSSC, OSSSC, UPSC, SSC, Railways, Banking, Police & State PSC exam forms and admit cards.';
+    const siteName = 'Digital Home Government Jobs';
+    const fullTitle = 'Government Vacancy 2026: Live Govt Job Alerts & State-wise Recruitment | Digital Home';
+    const desc = 'Government Vacancy 2026: Live Govt Job alerts, online application forms, eligibility criteria, and state-wise recruitment notifications for UP, Bihar, MP, Rajasthan, SSC, Railways, and UPSC.';
     const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
 
     const escapeHtml = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -1487,8 +1487,8 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
 
     // Visible, semantic internal linking matrix for Googlebot & candidates
     const visibleHub = `
-  <main class="ssr-sarkari-directory" aria-label="Sarkari Jobs Directory 2026" style="max-width: 1200px; margin: 0 auto; padding: 24px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-    <h1 style="font-size: 1.7rem; font-weight: 900; color: #0f172a; margin-bottom: 10px; line-height: 1.3;">Sarkari Result 2026: सरकारी नौकरी लाइव अलर्ट्स, ऑनलाइन फॉर्म व एडमिट कार्ड</h1>
+  <main class="ssr-sarkari-directory" aria-label="Government Vacancy & Live Job Alerts 2026" style="max-width: 1200px; margin: 0 auto; padding: 24px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <h1 style="font-size: 1.7rem; font-weight: 900; color: #0f172a; margin-bottom: 10px; line-height: 1.3;">Government Vacancy 2026: Live Govt Job Alerts & State-wise Recruitment (सरकारी नौकरी)</h1>
     <p style="color: #475569; font-size: 0.98rem; line-height: 1.6; margin-bottom: 24px; max-width: 840px;">उत्तर प्रदेश, बिहार, मध्य प्रदेश, राजस्थान, झारखंड, ओडिशा व केंद्रीय विभागों (UPSC, SSC, रेलवे, बैंकिंग, पुलिस, डिफेंस व राज्य PSC) की नवीनतम भर्तियों की 100% आधिकारिक अधिसूचनाएं और सीधे आवेदन लिंक।</p>
     
     <!-- Top 10 Indian States Anchor Links for Googlebot & Aspirants -->

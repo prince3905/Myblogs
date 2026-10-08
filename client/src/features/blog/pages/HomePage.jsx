@@ -2547,9 +2547,9 @@ export default function HomePage() {
   return (
     <Layout>
       <Seo 
-        title="Sarkari Job 2026: Latest Online Form, Sarkari Result & Live Alerts | Digital Home" 
-        description="Latest Sarkari Job 2026 notifications, Sarkari Result, Online Form, Admit Cards, and Answer Keys for UPSSSC, SSC, Railways, BPSC, Defence, and All India Govt Jobs." 
-        keywords="sarkari job 2026, sarkari result, online form, latest jobs, vacancies, govt jobs, admit card, upsssc, ssc, railways, bpsc, police recruitment, digital home" 
+        title="Sarkari Job 2026: Government Job Alert, Latest Vacancy & Sarkari Result | Digital Home" 
+        description="Get instant Government Job Alerts, Latest Sarkari Job 2026 Vacancies, Online Application Forms, Admit Cards, and Results for SSC, Railways, Banking, UPSC, Police, and Defence jobs across India." 
+        keywords="Government Job Alert, Government Vacancy 2026, Sarkari Job, Sarkari Result 2026, Free Job Alert, 10th 12th Pass Govt Jobs, Railway Recruitment, SSC CGL CHSL, Police Bharti, Defence Jobs, सरकारी नौकरी" 
         canonical="https://www.digitalhomeblog.in"
         url="https://www.digitalhomeblog.in"
       />

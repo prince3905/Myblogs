@@ -105,10 +105,10 @@ export const COUNTRY_TO_PRIMARY_LANG = {
 export function getCountrySeoMeta(countryCode) {
   if (!countryCode || countryCode === 'ALL') {
     return {
-      title: 'Official Government Jobs, Civil Service Vacancies & Gazette Circulars 2026 | Digital Home',
-      description: 'Explore verified official government jobs, federal civil service notices, and UN/WHO vacancies across 195 sovereign countries. 100% direct official links.',
+      title: 'Global Government Jobs 2026: Overseas Public Sector Openings & Visa Sponsorship Alerts',
+      description: 'Explore verified overseas government jobs, embassy vacancies, and international public sector recruitment.',
       canonical: 'https://www.digitalhomeblog.in/global-jobs',
-      keywords: ['Official Government Jobs', 'Civil Service Vacancies', 'Gazette Circulars 2026', 'UN Jobs', 'Public Sector Recruitment'],
+      keywords: ['Global Government Jobs 2026', 'Overseas Public Sector Openings', 'Visa Sponsorship Alerts', 'Embassy Vacancies', 'International Public Sector Recruitment', 'UN Jobs'],
       lang: 'en'
     };
   }
