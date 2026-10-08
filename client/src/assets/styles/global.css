@@ -265,12 +265,35 @@ html {
   background-size: 1000px 100%;
 }
 
-/* Blog Content Tables */
-.blog-content table {
+/* Blog Content Tables & Responsive Containers */
+.blog-content table,
+.job-article-scaffold table,
+table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   margin: 1.5rem 0;
   font-size: 0.95rem;
+}
+
+/* Enable smooth horizontal scrolling on touch devices */
+.table-responsive,
+.blog-content .table-container,
+.blog-content div:has(> table) {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 600px) {
+  .blog-content table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 0.85rem;
+  }
 }
 
 .blog-content th, .blog-content td {

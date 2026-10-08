@@ -1101,7 +1101,7 @@ app.get(['/global-jobs/view/:id', '/global-jobs/:country/:id'], async (req, res,
       const desc = (job.officialGazetteSummary || job.description || `${job.title} vacancy under ${job.agencyOrMinistry} (${job.countryName}). Check salary, qualifications & apply online.`).slice(0, 160);
       const canonicalRef = job.officialReferenceId || job._id;
       const canonicalUrl = `https://www.digitalhomeblog.in/global-jobs/view/${canonicalRef}`;
-      const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
+      const imageUrl = 'https://www.digitalhomeblog.in/og-sarkari-banner-1200x675.webp';
 
       const isExpired = Boolean(job.applicationDeadline && new Date(job.applicationDeadline) < new Date());
       const datePosted = job.createdAt ? new Date(job.createdAt).toISOString() : new Date().toISOString();
@@ -1283,7 +1283,7 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
 
     const canonicalSlug = alert.slug || normalizedSlug;
     const canonicalUrl = `https://digitalhomeblog.in/india/sarkari-jobs/${canonicalSlug}`;
-    const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
+    const imageUrl = 'https://www.digitalhomeblog.in/og-sarkari-banner-1200x675.webp';
 
     const isExpired = alert.status === 'expired' || 
       (alert.lastDate && alert.lastDate !== 'N/A' && !isNaN(new Date(alert.lastDate).getTime()) && new Date(alert.lastDate) < new Date(Date.now() - 24 * 60 * 60 * 1000));
@@ -1478,7 +1478,7 @@ app.get(['/india/sarkari-jobs', '/job-alerts', '/live-alerts'], async (req, res,
     const siteName = 'Digital Home Government Jobs';
     const fullTitle = 'Sarkari Result: Latest Sarkari Jobs, Government Vacancy 2026 & Exam Forms | Digital Home';
     const desc = 'Sarkari Result 2026 & Latest Sarkari Job alerts. Find all Government Vacancies, Online Application Forms, Admit Cards, and Results for SSC, Railway, Banking, Police, UPSSSC, and All India Govt Jobs.';
-    const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
+    const imageUrl = 'https://www.digitalhomeblog.in/og-sarkari-banner-1200x675.webp';
 
     const escapeHtml = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -1611,7 +1611,7 @@ app.get(['/global-jobs', '/global-jobs/:country'], async (req, res, next) => {
     const fullTitle = seoMeta.title;
     const desc = seoMeta.description;
     const canonicalUrl = seoMeta.canonical;
-    const imageUrl = 'https://www.digitalhomeblog.in/logo.webp';
+    const imageUrl = 'https://www.digitalhomeblog.in/og-sarkari-banner-1200x675.webp';
 
     const hreflangTags = hreflangMatrix
       .map(h => `<link rel="alternate" hreflang="${h.lang}" href="${h.href}" />`)

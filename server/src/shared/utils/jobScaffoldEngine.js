@@ -4,7 +4,7 @@
  * Ensures 100% Googlebot visibility, eliminates thin content, and satisfies all candidate intent signals.
  */
 
-const { parseJobMetadata, buildHighCtrJobTitle } = require('./jobSeoOptimizer');
+const { parseJobMetadata, buildHighCtrJobTitle, sanitizeJobSlug } = require('./jobSeoOptimizer');
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -30,8 +30,15 @@ function buildIndianJobScaffoldHtml(alert = {}, isExpired = false, recAlerts = [
   const applyUrl = escapeHtml(meta.applyUrl);
   const pdfUrl = escapeHtml(meta.pdfUrl);
 
+  const postSlug = alert.slug || sanitizeJobSlug(meta.jobName, meta.board, alert._id ? alert._id.toString() : '');
+  const shareUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${encodeURIComponent(postSlug)}`;
+  const shareText = `🏛️ *${board} - ${jobName} Recruitment ${year}*\n📋 *पद (Vacancies):* ${vacancyText}\n🎓 *योग्यता (Eligibility):* ${qualification}\n📍 *स्थान (State):* ${state}\n📅 *अंतिम तिथि (Last Date):* ${lastDate}\n\n👉 *100% आधिकारिक आवेदन लिंक (Apply Here):*\n${shareUrl}`;
+  const whatsappShareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+  const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+  const telegramChannelUrl = 'https://t.me/digitalhomeblog';
+
   const statusBanner = isExpired
-    ? `<div style="background: #fef2f2; border: 1.5px solid #fecaca; border-left: 6px solid #dc2626; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+    ? `<div style="background: #fef2f2; border: 1.5px solid #fecaca; border-left: 6px solid #dc2626; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 1.25rem;">⏳</span>
           <strong style="color: #991b1b; font-size: 1.05rem;">आवेदन की अंतिम तिथि समाप्त (Application Closed / Archived)</strong>
@@ -40,7 +47,7 @@ function buildIndianJobScaffoldHtml(alert = {}, isExpired = false, recAlerts = [
           ${jobName} भर्ती प्रक्रिया के लिए ऑनलाइन आवेदन अब आधिकारिक रूप से बंद हो चुके हैं। कृपया नीचे दी गई वर्तमान में सक्रिय 2026 की नवीनतम सरकारी भर्तियों में आवेदन करें। (Online applications for this recruitment cycle have officially concluded. Please explore active 2026 vacancies below.)
         </p>
       </div>`
-    : `<div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-left: 6px solid #16a34a; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+    : `<div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-left: 6px solid #16a34a; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 1.25rem;">🟢</span>
           <strong style="color: #166534; font-size: 1.05rem;">ऑनलाइन आवेदन सक्रिय (Applications Open — Live Vacancy ${year})</strong>
@@ -55,25 +62,95 @@ function buildIndianJobScaffoldHtml(alert = {}, isExpired = false, recAlerts = [
   let recHtml = '';
   if (Array.isArray(recAlerts) && recAlerts.length > 0) {
     recHtml = `
-    <section style="margin-top: 36px; padding: 24px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;">
+    <section style="margin-top: 36px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;">
       <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-top: 0; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
         🔥 वर्तमान में चालू प्रमुख सरकारी नौकरियां (Trending Active Live Vacancies ${year}):
       </h3>
       <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
-        ${recAlerts.map(r => `
+        ${recAlerts.map(r => {
+          const rSlug = r.slug || sanitizeJobSlug(r.title, r.boardName, r._id ? r._id.toString() : '');
+          return `
           <li style="margin-bottom: 8px;">
-            <a href="/india/sarkari-jobs/${r.slug || r._id}" style="color: #0284c7; text-decoration: none; font-weight: 700; font-size: 0.95rem;">
+            <a href="/india/sarkari-jobs/${encodeURIComponent(rSlug)}" style="color: #0284c7; text-decoration: none; font-weight: 700; font-size: 0.95rem;">
               ${escapeHtml(r.title)} (${escapeHtml(r.state || 'All India')}) — ${escapeHtml(r.category || 'Latest Job')}
             </a>
-          </li>
-        `).join('')}
+          </li>`;
+        }).join('')}
       </ul>
     </section>`;
   }
 
   return `
-  <article class="job-article-scaffold" style="max-width: 900px; margin: 30px auto; padding: 28px 24px; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.04); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.65;">
+  <article class="job-article-scaffold" style="max-width: 900px; margin: 24px auto; padding: 24px 20px; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.04); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.65; box-sizing: border-box;">
     
+    <style>
+      .job-article-scaffold {
+        width: 100%;
+        box-sizing: border-box;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      .job-article-scaffold table {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-collapse: collapse;
+        margin: 16px 0;
+      }
+      .job-article-scaffold table th,
+      .job-article-scaffold table td {
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+        text-align: left;
+        white-space: nowrap;
+      }
+      .job-share-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+      }
+      .job-share-btn {
+        flex: 1 1 180px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-weight: 750;
+        font-size: 0.92rem;
+        text-decoration: none;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+      }
+      .job-share-btn:hover {
+        transform: translateY(-1px);
+        opacity: 0.95;
+      }
+      .btn-whatsapp-viral {
+        background: #25D366;
+        color: #ffffff !important;
+        box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
+      }
+      .btn-telegram-viral {
+        background: #0088cc;
+        color: #ffffff !important;
+        box-shadow: 0 4px 14px rgba(0, 136, 204, 0.35);
+      }
+      @media (max-width: 600px) {
+        .job-article-scaffold {
+          padding: 16px 14px !important;
+          margin: 10px auto !important;
+          border-radius: 12px !important;
+        }
+        .job-share-btn {
+          flex: 1 1 100% !important;
+        }
+      }
+    </style>
+
     <!-- Top Meta Badges -->
     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
       <span style="display: inline-block; padding: 4px 12px; background: #e0f2fe; color: #0369a1; border-radius: 8px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase;">🏛️ ${board}</span>
@@ -89,6 +166,16 @@ function buildIndianJobScaffoldHtml(alert = {}, isExpired = false, recAlerts = [
     <!-- Status Banner -->
     ${statusBanner}
 
+    <!-- 1-Tap Viral Peer Sharing Bar (WhatsApp & Telegram Community) -->
+    <div class="job-share-actions">
+      <a href="${whatsappShareUrl}" target="_blank" rel="noopener noreferrer" class="job-share-btn btn-whatsapp-viral">
+        🟢 WhatsApp पर शेयर करें
+      </a>
+      <a href="${telegramChannelUrl}" target="_blank" rel="noopener noreferrer" class="job-share-btn btn-telegram-viral">
+        📢 Join Telegram Channel
+      </a>
+    </div>
+
     <!-- 1. Post Intro (First 100 Words Guarantee: Board Name, Total Posts, Qualification, Apply Online) -->
     <section style="margin-bottom: 28px;">
       <p style="font-size: 1rem; color: #1e293b; line-height: 1.75; margin-bottom: 16px; font-weight: 500;">
@@ -97,7 +184,7 @@ function buildIndianJobScaffoldHtml(alert = {}, isExpired = false, recAlerts = [
       <p style="font-size: 0.95rem; color: #334155; line-height: 1.7; margin-bottom: 14px; background: #f8fafc; padding: 12px 16px; border-left: 4px solid #0284c7; border-radius: 4px;">
         <strong>संक्षिप्त विवरण (Hindi Summary):</strong> <strong>${board}</strong> द्वारा <strong>${jobName}</strong> के कुल <strong>${vacancyText}</strong> पर भर्ती अधिसूचना जारी कर दी गई है। निर्धारित योग्यता धारक अभ्यर्थी <strong>Apply Online</strong> लिंक के माध्यम से अंतिम तिथि <strong>${lastDate}</strong> तक आवेदन कर सकते हैं।
       </p>
-      ${rawDetails ? `<div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; font-size: 0.92rem; color: #334155; white-space: pre-line;">${rawDetails}</div>` : ''}
+      ${rawDetails ? `<div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; font-size: 0.92rem; color: #334155; white-space: pre-line; overflow-x: auto;">${rawDetails}</div>` : ''}
     </section>
 
     <!-- 2. Candidate Intent Heading: Eligibility & Age Limit -->
@@ -190,6 +277,12 @@ function buildIndianJobScaffoldHtml(alert = {}, isExpired = false, recAlerts = [
         </a>` : ''}
         <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 13px 24px; background: #0284c7; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 800; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);">
           📄 Download Official Notification (PDF)
+        </a>
+        <a href="${whatsappShareUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 13px 20px; background: #25D366; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 800; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);">
+          📲 Share on WhatsApp
+        </a>
+        <a href="${telegramChannelUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 13px 20px; background: #0088cc; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 800; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(0, 136, 204, 0.35);">
+          📢 Join Telegram Channel
         </a>
       </div>
       <p style="font-size: 0.85rem; color: #166534; margin: 10px 0 0; font-weight: 600;">

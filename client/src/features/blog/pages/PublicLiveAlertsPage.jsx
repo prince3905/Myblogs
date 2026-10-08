@@ -959,6 +959,28 @@ function renderBlogContent(alert, onActionClick) {
                 >
                   Telegram
                 </Button>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  href="https://t.me/digitalhomeblog"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  startIcon={<TelegramIcon sx={{ color: '#FFFFFF' }} />}
+                  sx={{
+                    gridColumn: '1 / -1',
+                    bgcolor: '#0088CC',
+                    color: '#FFFFFF',
+                    fontWeight: 800,
+                    fontSize: '0.82rem',
+                    py: 1,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    boxShadow: '0 4px 12px rgba(0, 136, 204, 0.35)',
+                    '&:hover': { bgcolor: '#0077B5' }
+                  }}
+                >
+                  📢 Join Official Telegram Channel (रोजाना सरकारी जॉब अलर्ट)
+                </Button>
               </Box>
             </Box>
           </Box>
@@ -1660,6 +1682,24 @@ export default function PublicLiveAlertsPage() {
 
     return { jobs, admitCards, results, answerKeys, syllabus, admissions };
   }, [filteredAlerts]);
+
+  // Dynamic Related 4-5 Sarkari Vacancies for internal navigation & engagement retention
+  const relatedAlerts = useMemo(() => {
+    if (!selectedAlert) return [];
+    const pool = (categoryData?.jobs || []).concat(alerts || []);
+    const seen = new Set([String(selectedAlert._id), selectedAlert.slug]);
+    const list = [];
+    for (const a of pool) {
+      const idKey = String(a._id);
+      if (!seen.has(idKey) && !seen.has(a.slug) && a.title !== selectedAlert.title) {
+        seen.add(idKey);
+        if (a.slug) seen.add(a.slug);
+        list.push(a);
+        if (list.length >= 4) break;
+      }
+    }
+    return list;
+  }, [selectedAlert, categoryData, alerts]);
 
   // Strict Unified Canonical URL: Always points to the official /india/sarkari-jobs canonical route
   const cleanHubCanonical = 'https://www.digitalhomeblog.in/india/sarkari-jobs';
@@ -2886,6 +2926,53 @@ export default function PublicLiveAlertsPage() {
                 setPendingRedirectUrl(url);
                 setRedirectModalOpen(true);
               })}
+
+              {/* Related Sarkari Vacancies Widget (Viral Student Retention) */}
+              {relatedAlerts.length > 0 && (
+                <Box sx={{ mt: 3.5, pt: 2.5, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 850, color: '#FBBF24', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.95rem' }}>
+                    🔥 संबंधित अन्य सरकारी भर्तियां (Related Sarkari Jobs 2026):
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {relatedAlerts.map(rel => (
+                      <Box
+                        key={rel._id || rel.slug}
+                        onClick={() => setSelectedAlert(rel)}
+                        sx={{
+                          p: 1.3,
+                          bgcolor: 'rgba(30, 41, 59, 0.55)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: 2,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 1.2,
+                          '&:hover': {
+                            bgcolor: 'rgba(56, 189, 248, 0.12)',
+                            borderColor: '#38BDF8',
+                            transform: 'translateX(4px)'
+                          }
+                        }}
+                      >
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography sx={{ fontSize: '0.7rem', color: '#38BDF8', fontWeight: 700, mb: 0.2 }}>
+                            🏛️ {rel.boardName || 'Govt Board'} • {rel.state || 'All India'}
+                          </Typography>
+                          <Typography sx={{ fontSize: '0.84rem', color: '#FFFFFF', fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {rel.title}
+                          </Typography>
+                        </Box>
+                        <Typography sx={{ fontSize: '0.74rem', color: '#10B981', fontWeight: 800, whiteSpace: 'nowrap', pl: 1 }}>
+                          View ➔
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
               <Box sx={{ height: { xs: 20, sm: 30 } }} />
             </DialogContent>
           </>
