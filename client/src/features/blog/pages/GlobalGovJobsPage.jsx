@@ -273,9 +273,9 @@ export default function GlobalGovJobsPage() {
         detectedC = TIMEZONE_TO_COUNTRY[tz] || 'US';
       }
 
-      // Auto-assign matching language
+      // Default interface language is strictly English ('en')
       if (!detectedL) {
-        detectedL = COUNTRY_TO_PRIMARY_LANG[detectedC] || 'en';
+        detectedL = 'en';
       }
 
       setUserDetectedCountry(detectedC);

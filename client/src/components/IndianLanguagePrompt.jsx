@@ -40,7 +40,7 @@ export default function IndianLanguagePrompt() {
   const { isIndia } = useVisitorCountry();
   const [visible, setVisible] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('dh_user_lang') || 'hi');
+  const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('dh_user_lang') || 'en');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

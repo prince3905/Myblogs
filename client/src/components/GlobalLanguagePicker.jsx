@@ -23,8 +23,8 @@ export const COUNTRY_REGIONS = [
     name: 'India (भारत)',
     flag: '🇮🇳',
     languages: [
-      { code: 'hi', label: 'हिंदी (Hindi - Native)', flag: '🇮🇳' },
-      { code: 'en', label: 'English (Common)', flag: '🌐' },
+      { code: 'en', label: 'English (Default)', flag: '🌐' },
+      { code: 'hi', label: 'हिंदी (Hindi)', flag: '🇮🇳' },
       { code: 'bn', label: 'বাংলা (Bengali)', flag: '🇧🇩' },
       { code: 'ta', label: 'தமிழ் (Tamil)', flag: '🇮🇳' },
       { code: 'te', label: 'తెలుగు (Telugu)', flag: '🇮🇳' },
@@ -490,7 +490,7 @@ export function applyFullWebsiteTranslation(langCode) {
     initTranslationProtection();
     // Protect sensitive brands and acronyms before translation runs
     protectElement(document.body);
-    const isOriginal = langCode === 'original';
+    const isOriginal = langCode === 'original' || langCode === 'en';
     const targetLang = isOriginal ? '' : langCode;
     const cookieVal = isOriginal ? '' : `/auto/${targetLang}`;
     const domain = window.location.hostname;
@@ -504,6 +504,11 @@ export function applyFullWebsiteTranslation(langCode) {
       if (rootDomain !== domain) {
         document.cookie = `googtrans=${cookieVal}; path=/; domain=.${rootDomain}; ${expires}`;
       }
+    }
+
+    if (isOriginal && typeof document !== 'undefined') {
+      document.documentElement.lang = 'en';
+      document.documentElement.dir = 'ltr';
     }
 
     // 2. Dispatch event to combo element
@@ -554,7 +559,15 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState('IN');
-  const [selectedLang, setSelectedLang] = useState('hi');
+  const [selectedLang, setSelectedLang] = useState(() => {
+    try {
+      const isLocked = localStorage.getItem('dh_user_lang_locked') === 'true';
+      const saved = localStorage.getItem('dh_user_lang');
+      return (isLocked && saved) ? saved : 'en';
+    } catch (e) {
+      return 'en';
+    }
+  });
   const [showAllLanguages, setShowAllLanguages] = useState(false);
 
   // Timezone to default country map
@@ -618,26 +631,21 @@ export default function GlobalLanguagePicker({ isMobile = false }) {
     const savedL = localStorage.getItem('dh_user_lang');
     const isLocked = localStorage.getItem('dh_user_lang_locked') === 'true';
 
-    // Set UI language indicator based on saved preference or detected country
-    let activeL = savedL;
-    if (!activeL) {
-      const matched = COUNTRY_REGIONS.find(item => item.code === c);
-      activeL = matched?.languages?.[0]?.code || 'hi';
-    }
+    // Default interface language is strictly English ('en') unless explicitly locked by user
+    const activeL = (isLocked && savedL) ? savedL : 'en';
 
     setSelectedLang(activeL);
 
-    // Apply translation ONLY if user previously explicitly selected and locked a language
+    // Apply translation ONLY if user previously explicitly selected and locked a language other than English
     if (isLocked && savedL && savedL !== 'original' && savedL !== 'en') {
       if (!document.cookie.includes(`googtrans=/auto/${savedL}`)) {
         applyFullWebsiteTranslation(savedL);
       }
-    }
-
-    // Set HTML lang and dir
-    if (typeof document !== 'undefined') {
-      document.documentElement.lang = activeL;
-      document.documentElement.dir = (activeL === 'ar' || activeL === 'ur' || activeL === 'fa') ? 'rtl' : 'ltr';
+    } else {
+      if (typeof document !== 'undefined') {
+        document.documentElement.lang = 'en';
+        document.documentElement.dir = 'ltr';
+      }
     }
 
     // Listen for custom change events from other components
