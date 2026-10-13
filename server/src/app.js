@@ -640,14 +640,78 @@ async function buildHomepageHtml() {
     console.warn('Failed to inject SEO crawler links:', dbErr.message);
   }
 
-  if (!html.includes('rel="canonical"')) {
-    html = html.replace('</head>', '    <link rel="canonical" href="https://www.digitalhomeblog.in" />\n</head>');
+  // Dynamic Homepage SEO Injection from SiteSeoConfig
+  try {
+    const SiteSeoConfig = require('./modules/seo/siteSeoConfig.model');
+    const siteConfig = await SiteSeoConfig.getOrCreate();
+
+    const siteTitle = siteConfig.siteMetaTitle || 'Sarkari Result 2026: Latest Sarkari Naukri, Online Form, Admit Card & Results';
+    const siteDesc = siteConfig.siteMetaDescription || 'Digital Home Sarkari Result: Get latest online forms, government jobs alerts 2026, admit cards, answer keys, syllabus, and results for 10th, 12th, and graduate.';
+    const keywordsList = [
+      ...(siteConfig.siteShortTailKeywords || []),
+      ...(siteConfig.siteLongTailKeywords || [])
+    ].filter(Boolean);
+    const keywordsStr = keywordsList.length > 0
+      ? keywordsList.join(', ')
+      : 'Sarkari Result, Sarkari Result 2026, Sarkari Job, Sarkari Naukri, Free Job Alert, Online Form';
+
+    const bannerPath = siteConfig.defaultOgBanner || '/og-sarkari-banner-1200x675.webp';
+    const fullOgImage = bannerPath.startsWith('http')
+      ? bannerPath
+      : `https://www.digitalhomeblog.in${bannerPath.startsWith('/') ? '' : '/'}${bannerPath}`;
+
+    // Cleanly replace or inject tags in <head>
+    html = html.replace(/<title>.*?<\/title>/i, `<title>${siteTitle}</title>`);
+
+    if (/<meta\s+name=["']description["']/i.test(html)) {
+      html = html.replace(/<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${siteDesc.replace(/"/g, '&quot;')}" />`);
+    } else {
+      html = html.replace('</head>', `    <meta name="description" content="${siteDesc.replace(/"/g, '&quot;')}" />\n</head>`);
+    }
+
+    if (/<meta\s+name=["']keywords["']/i.test(html)) {
+      html = html.replace(/<meta\s+name=["']keywords["'][^>]*>/i, `<meta name="keywords" content="${keywordsStr.replace(/"/g, '&quot;')}" />`);
+    } else {
+      html = html.replace('</head>', `    <meta name="keywords" content="${keywordsStr.replace(/"/g, '&quot;')}" />\n</head>`);
+    }
+
+    if (/<meta\s+property=["']og:title["']/i.test(html)) {
+      html = html.replace(/<meta\s+property=["']og:title["'][^>]*>/i, `<meta property="og:title" content="${siteTitle.replace(/"/g, '&quot;')}" />`);
+    }
+    if (/<meta\s+property=["']og:description["']/i.test(html)) {
+      html = html.replace(/<meta\s+property=["']og:description["'][^>]*>/i, `<meta property="og:description" content="${siteDesc.replace(/"/g, '&quot;')}" />`);
+    }
+    if (/<meta\s+property=["']og:image["']/i.test(html)) {
+      html = html.replace(/<meta\s+property=["']og:image["'][^>]*>/i, `<meta property="og:image" content="${fullOgImage}" />`);
+    }
+
+    if (/<meta\s+name=["']twitter:title["']/i.test(html)) {
+      html = html.replace(/<meta\s+name=["']twitter:title["'][^>]*>/i, `<meta name="twitter:title" content="${siteTitle.replace(/"/g, '&quot;')}" />`);
+    }
+    if (/<meta\s+name=["']twitter:description["']/i.test(html)) {
+      html = html.replace(/<meta\s+name=["']twitter:description["'][^>]*>/i, `<meta name="twitter:description" content="${siteDesc.replace(/"/g, '&quot;')}" />`);
+    }
+    if (/<meta\s+name=["']twitter:image["']/i.test(html)) {
+      html = html.replace(/<meta\s+name=["']twitter:image["'][^>]*>/i, `<meta name="twitter:image" content="${fullOgImage}" />`);
+    }
+  } catch (seoErr) {
+    console.warn('Failed to hydrate SiteSeoConfig in buildHomepageHtml:', seoErr.message);
   }
+
+  // Guaranteed self-referencing canonical tag for homepage
+  html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
+  html = html.replace('</head>', '    <link rel="canonical" href="https://www.digitalhomeblog.in/" />\n</head>');
 
   cachedHomepageHtml = html;
   lastHomepageCacheTime = Date.now();
   return html;
 }
+
+function clearHomepageCache() {
+  cachedHomepageHtml = null;
+  lastHomepageCacheTime = 0;
+}
+app.clearHomepageCache = clearHomepageCache;
 
 // Handle root path / with High-Speed In-Memory HTML Cache (0ms - 2ms TTFB)
 app.get('/', async (req, res, next) => {
@@ -1286,7 +1350,7 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
     const seoEngine = alert.seoEngine || {};
     const highCtrTitle = (seoEngine.customMetaTitle && seoEngine.customMetaTitle.trim())
       ? seoEngine.customMetaTitle.trim()
-      : (alert.title || rawHighCtrTitle);
+      : rawHighCtrTitle;
     const highCtrDesc = (seoEngine.customMetaDescription && seoEngine.customMetaDescription.trim())
       ? seoEngine.customMetaDescription.trim()
       : rawHighCtrDesc;

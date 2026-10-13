@@ -6,7 +6,8 @@ const {
   generateAiMeta,
   getSeoConfig,
   updateSeoConfig,
-  pushIndexing
+  pushIndexing,
+  pingHomepage
 } = require('./seo.controller');
 
 // Require authentication for all admin SEO routes
@@ -24,5 +25,6 @@ router.put('/seo-intelligence/config', updateSeoConfig);
 
 // Instant Indexing & Social Dispatch
 router.post('/seo-intelligence/push-indexing', pushIndexing);
+router.post('/seo-intelligence/ping-homepage', pingHomepage);
 
 module.exports = router;

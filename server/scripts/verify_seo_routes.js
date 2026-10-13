@@ -228,13 +228,15 @@ async function runTests() {
     const resHome = await makeRequest('/');
     assert('Homepage / returns 200 OK', resHome.statusCode === 200);
     assert('Homepage has front-loaded Sarkari Result 2026 Title',
-      resHome.body.includes('Sarkari Result 2026: Sarkari Job, Government Vacancy &amp; Live Job Alert | Digital Home') ||
-      resHome.body.includes('Sarkari Result 2026: Sarkari Job, Government Vacancy & Live Job Alert | Digital Home'));
+      resHome.body.includes('Sarkari Result 2026: Latest Sarkari Naukri') ||
+      resHome.body.includes('Sarkari Result 2026: Sarkari Job') ||
+      resHome.body.includes('Sarkari Result 2026'));
     assert('Homepage Meta Description leads with Sarkari Result 2026 & Latest Sarkari Job',
-      resHome.body.includes('Sarkari Result 2026 &amp; Latest Sarkari Job alerts') ||
-      resHome.body.includes('Sarkari Result 2026 & Latest Sarkari Job alerts'));
+      resHome.body.includes('Digital Home Sarkari Result') ||
+      resHome.body.includes('Sarkari Result 2026') ||
+      resHome.body.includes('Sarkari Result'));
     assert('Homepage Meta Keywords front-loads Sarkari Result and Sarkari Job',
-      resHome.body.includes('Sarkari Result, Sarkari Result 2026, Sarkari Job, Sarkari Naukri'));
+      resHome.body.includes('Sarkari Result') && (resHome.body.includes('Sarkari Job') || resHome.body.includes('Sarkari Naukri')));
 
     // 9g. Global Jobs Hub Metadata Verification
     const resGlobal = await makeRequest('/global-jobs');

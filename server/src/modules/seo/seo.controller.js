@@ -66,7 +66,8 @@ exports.getSeoConfig = async (req, res) => {
     const config = await SiteSeoConfig.getOrCreate();
     return res.json({
       success: true,
-      config
+      config,
+      data: config
     });
   } catch (error) {
     console.error('[SEO Controller] getSeoConfig error:', error);
@@ -81,6 +82,10 @@ exports.updateSeoConfig = async (req, res) => {
   try {
     const config = await SiteSeoConfig.getOrCreate();
     const {
+      siteMetaTitle,
+      siteMetaDescription,
+      siteShortTailKeywords,
+      siteLongTailKeywords,
       jobTitlePattern,
       jobMetaPattern,
       defaultOgBanner,
@@ -88,6 +93,15 @@ exports.updateSeoConfig = async (req, res) => {
       autoPingIndexingApi,
       autoDispatchTelegram
     } = req.body;
+
+    if (siteMetaTitle !== undefined) config.siteMetaTitle = siteMetaTitle.trim();
+    if (siteMetaDescription !== undefined) config.siteMetaDescription = siteMetaDescription.trim();
+    if (siteShortTailKeywords !== undefined && Array.isArray(siteShortTailKeywords)) {
+      config.siteShortTailKeywords = siteShortTailKeywords.map(k => String(k).trim()).filter(Boolean);
+    }
+    if (siteLongTailKeywords !== undefined && Array.isArray(siteLongTailKeywords)) {
+      config.siteLongTailKeywords = siteLongTailKeywords.map(k => String(k).trim()).filter(Boolean);
+    }
 
     if (jobTitlePattern !== undefined) config.jobTitlePattern = jobTitlePattern;
     if (jobMetaPattern !== undefined) config.jobMetaPattern = jobMetaPattern;
@@ -98,14 +112,42 @@ exports.updateSeoConfig = async (req, res) => {
 
     await config.save();
 
+    // Invalidate cached homepage HTML so changes reflect immediately
+    if (typeof req.app?.clearHomepageCache === 'function') {
+      req.app.clearHomepageCache();
+    }
+
     return res.json({
       success: true,
       message: 'SEO Global Settings updated successfully',
-      config
+      config,
+      data: config
     });
   } catch (error) {
     console.error('[SEO Controller] updateSeoConfig error:', error);
     return res.status(500).json({ success: false, message: 'Failed to update SEO config' });
+  }
+};
+
+/**
+ * POST /api/admin/seo-intelligence/ping-homepage
+ */
+exports.pingHomepage = async (req, res) => {
+  try {
+    const canonicalHomepage = 'https://www.digitalhomeblog.in/';
+    console.log(`[SEO Intelligence] Instant Homepage Indexing Ping triggered for: ${canonicalHomepage}`);
+
+    const indexResults = await notifyAllIndexing(canonicalHomepage, 'URL_UPDATED');
+
+    return res.json({
+      success: true,
+      message: '🚀 Indexing signals for Homepage successfully pushed to Google API & IndexNow (Bing/Yandex)!',
+      targetUrl: canonicalHomepage,
+      indexing: indexResults
+    });
+  } catch (error) {
+    console.error('[SEO Controller] pingHomepage error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Failed to ping homepage indexing' });
   }
 };
 
