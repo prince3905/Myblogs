@@ -39,6 +39,7 @@ const KeywordResearchPage = lazy(() => import('../features/admin/pages/KeywordRe
 const PostEditorPage = lazy(() => import('../features/admin/pages/PostEditorPage'));
 const LiveAlertsPage = lazy(() => import('../features/admin/pages/LiveAlertsPage'));
 const AdminSettingsPage = lazy(() => import('../features/admin/pages/AdminSettingsPage'));
+const GlobalSeoSettingsPage = lazy(() => import('../features/admin/pages/GlobalSeoSettingsPage'));
 const AdminWebStoriesPage = lazy(() => import('../features/admin/pages/AdminWebStoriesPage'));
 const AdminAutomationLogsPage = lazy(() => import('../features/admin/pages/AdminAutomationLogsPage'));
 
@@ -88,6 +89,7 @@ const KeywordResearchPageSuspense = withAdminSuspense(KeywordResearchPage);
 const PostEditorPageSuspense = withAdminSuspense(PostEditorPage);
 const LiveAlertsPageSuspense = withAdminSuspense(LiveAlertsPage);
 const AdminSettingsPageSuspense = withAdminSuspense(AdminSettingsPage);
+const GlobalSeoSettingsPageSuspense = withAdminSuspense(GlobalSeoSettingsPage);
 const AdminWebStoriesPageSuspense = withAdminSuspense(AdminWebStoriesPage);
 const AdminAutomationLogsPageSuspense = withAdminSuspense(AdminAutomationLogsPage);
 
@@ -179,6 +181,7 @@ export default function App() {
           <Route path="posts/new" element={<PostEditorPageSuspense />} />
           <Route path="posts/:id/edit" element={<PostEditorPageSuspense />} />
           <Route path="settings" element={<AdminSettingsPageSuspense />} />
+          <Route path="seo-settings" element={<GlobalSeoSettingsPageSuspense />} />
         </Route>
         <Route path="*" element={<NotFoundPageSuspense />} />
       </Routes>

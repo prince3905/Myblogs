@@ -7,7 +7,8 @@ import {
   Forum as ForumIcon, MonetizationOn as AdIcon,
   TravelExplore as KeywordIcon, NotificationsActive as AlertsIcon,
   Settings as SettingsIcon, Slideshow as StoriesIcon,
-  Terminal as LogsIcon, Logout as LogoutIcon
+  Terminal as LogsIcon, Logout as LogoutIcon,
+  AutoAwesome as SeoIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../auth/context/AuthContext';
 
@@ -20,6 +21,7 @@ const nav = [
   { label: 'Live Alerts', path: '/admin/live-alerts', icon: <AlertsIcon /> },
   { label: 'Comments', path: '/admin/comments', icon: <ForumIcon /> },
   { label: 'Ads', path: '/admin/ads', icon: <AdIcon /> },
+  { label: 'SEO Engine', path: '/admin/seo-settings', icon: <SeoIcon /> },
   { label: 'Settings', path: '/admin/settings', icon: <SettingsIcon /> },
 ];
 

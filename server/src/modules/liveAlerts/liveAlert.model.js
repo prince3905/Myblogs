@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { seoEngineSchema } = require('../seo/seoEngine.schema');
 
 const liveAlertSchema = new mongoose.Schema(
   {
@@ -19,7 +20,8 @@ const liveAlertSchema = new mongoose.Schema(
     isOffline: { type: Boolean, default: false },
     offlineAddress: { type: String, default: '', trim: true },
     slug: { type: String, trim: true, index: true },
-    status: { type: String, enum: ['active', 'drafted', 'published', 'expired'], default: 'active' }
+    status: { type: String, enum: ['active', 'drafted', 'published', 'expired'], default: 'active' },
+    seoEngine: { type: seoEngineSchema, default: () => ({ isAutoMode: true }) }
   },
   { timestamps: true }
 );
@@ -110,18 +112,49 @@ liveAlertSchema.pre('save', function (next) {
       .replace(/www\.sarkariresult\.com/gi, 'www.digitalhomeblog.in')
       .replace(/sarkariresult\.com/gi, 'digitalhomeblog.in');
   }
-  next();
+
+  // Real-time AI SEO & Keyword Intelligence Engine (Pre-Save)
+  try {
+    const { processSeoAutomation } = require('../seo/seoAutomation.hook');
+    processSeoAutomation(this)
+      .then(() => next())
+      .catch((seoErr) => {
+        console.warn('[LiveAlert SEO Hook] Warning:', seoErr.message);
+        next();
+      });
+    return;
+  } catch (err) {
+    next();
+  }
 });
 
-// Instant Multi-Engine Indexing Ping on New / Updated LiveAlert Vacancies
-liveAlertSchema.post('save', function (doc) {
+// Instant Multi-Engine Indexing Ping & Telegram Dispatch on New / Updated LiveAlert Vacancies
+liveAlertSchema.post('save', async function (doc) {
   if ((doc.status === 'published' || doc.status === 'active') && doc.slug && !/^[0-9a-fA-F]{24}$/.test(doc.slug)) {
     try {
-      const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
+      const SiteSeoConfig = require('../seo/siteSeoConfig.model');
+      const config = await SiteSeoConfig.getOrCreate();
       const canonicalJobUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${doc.slug}`;
-      notifyAllIndexing(canonicalJobUrl, 'URL_UPDATED').catch(() => {});
+
+      // 1. Google & Bing Ping
+      if (config.autoPingIndexingApi !== false) {
+        const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
+        notifyAllIndexing(canonicalJobUrl, 'URL_UPDATED').catch(() => {});
+      }
+
+      // 2. Telegram Dispatch
+      if (config.autoDispatchTelegram) {
+        const { sendTelegramMessage } = require('../../shared/services/telegramService');
+        sendTelegramMessage({
+          title: doc.seoEngine?.customMetaTitle || doc.title,
+          canonicalUrl: canonicalJobUrl,
+          slug: doc.slug,
+          category: doc.category || 'Sarkari Job',
+          lastDate: doc.lastDate || ''
+        }).catch((tgErr) => console.warn('[LiveAlert Telegram Hook] Notice:', tgErr.message));
+      }
     } catch (err) {
-      console.warn('[LiveAlert Indexing Hook] Notice:', err.message);
+      console.warn('[LiveAlert Indexing/Telegram Hook] Notice:', err.message);
     }
   }
 });

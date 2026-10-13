@@ -7,6 +7,7 @@ import RichTextEditor from '../../../components/RichTextEditor';
 import { useToast } from '../../../components/Toast';
 import { request } from '../../../shared/lib/api';
 import { calculateSeoScore } from '../../../shared/utils/seoAuditor';
+import SeoEngineBox from '../components/SeoEngineBox';
 
 const initialForm = {
   title: '',
@@ -22,6 +23,16 @@ const initialForm = {
   seoKeywords: '',
   focusKeyword: '',
   canonicalUrl: '',
+  seoEngine: {
+    isAutoMode: true,
+    shortTailKeywords: [],
+    longTailKeywords: [],
+    customMetaTitle: '',
+    customMetaDescription: '',
+    canonicalUrl: '',
+    seoScore: 0,
+    faqs: []
+  },
   sponsored: false,
   affiliateDisclosure: false,
   rating: '',
@@ -338,7 +349,17 @@ export default function PostEditorPage() {
         ...post,
         tags: (post.tags || []).join(', '),
         seoKeywords: (post.seoKeywords || []).join(', '),
-        focusKeyword: post.focusKeyword || ''
+        focusKeyword: post.focusKeyword || '',
+        seoEngine: post.seoEngine || {
+          isAutoMode: true,
+          shortTailKeywords: [],
+          longTailKeywords: [],
+          customMetaTitle: post.seoTitle || '',
+          customMetaDescription: post.seoDescription || '',
+          canonicalUrl: post.canonicalUrl || '',
+          seoScore: post.seoScore || 0,
+          faqs: []
+        }
       }))
       .catch((err) => setError(err.message));
   }, [id, isEdit]);
@@ -1528,6 +1549,27 @@ export default function PostEditorPage() {
                   </Box>
                 )}
               </Box>
+
+              {/* Universal AI SEO & Keyword Intelligence Engine */}
+              <SeoEngineBox
+                title={form.title}
+                boardName={form.category}
+                category={form.category}
+                slug={form.slug}
+                detailsText={form.content}
+                seoEngine={form.seoEngine}
+                onChange={(updated) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    seoEngine: updated,
+                    seoTitle: updated.customMetaTitle || prev.seoTitle,
+                    seoDescription: updated.customMetaDescription || prev.seoDescription
+                  }));
+                }}
+                onSave={handleSubmit}
+              />
+
+              <Box sx={{ my: 3 }} />
 
               <TextField
                 fullWidth

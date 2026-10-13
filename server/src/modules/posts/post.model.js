@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { calculateSeoScore } = require('../../shared/utils/seoAuditor');
+const { seoEngineSchema } = require('../seo/seoEngine.schema');
 require('../liveAlerts/liveAlert.model');
 require('./webstory.model');
 
@@ -19,6 +20,7 @@ const blogPostSchema = new mongoose.Schema(
     focusKeyword: { type: String, trim: true, default: '' },
     seoScore: { type: Number, default: 0 },
     canonicalUrl: { type: String, trim: true, default: '' },
+    seoEngine: { type: seoEngineSchema, default: () => ({ isAutoMode: true }) },
     publishedAt: { type: Date, default: null },
     readingTime: { type: Number, default: 1 },
     views: { type: Number, default: 0 },
@@ -558,6 +560,25 @@ blogPostSchema.post('save', async function (doc) {
         });
     } catch (err) {
       console.error('[Auto-Indexing Pipeline] Failed in post-save index notifier:', err.message);
+    }
+
+    // Auto Telegram Dispatch if enabled in SiteSeoConfig
+    try {
+      const SiteSeoConfig = require('../seo/siteSeoConfig.model');
+      const seoConf = await SiteSeoConfig.getOrCreate();
+      if (seoConf.autoDispatchTelegram) {
+        const { sendTelegramMessage } = require('../../shared/services/telegramService');
+        const postUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${doc.slug}`;
+        sendTelegramMessage({
+          title: doc.seoEngine?.customMetaTitle || doc.title,
+          category: doc.category || 'Sarkari Job',
+          canonicalUrl: postUrl,
+          slug: doc.slug,
+          excerpt: doc.excerpt || ''
+        }).catch(tgErr => console.warn('[Post Telegram Dispatch] Notice:', tgErr.message));
+      }
+    } catch (tgErr) {
+      console.warn('[Post Telegram Dispatch] Warning:', tgErr.message);
     }
 
     // 2. Two-Way Internal Linking Builder

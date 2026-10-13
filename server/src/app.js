@@ -439,6 +439,7 @@ app.use('/api/admin', adRoutes.admin);
 app.use('/api', keywordRoutes);
 app.use('/api/admin', liveAlertRoutes);
 app.use('/api/admin', settingsRoutes);
+app.use('/api/admin', require('./modules/seo/seo.routes'));
 app.use('/api/current-affairs', currentAffairsRoutes);
 app.use('/api/admin/auto-publish', autoPublishRoutes);
 app.use('/api/admin/job-guides', require('./modules/jobGuides/jobGuideAutomation.routes'));
@@ -1277,12 +1278,38 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
 
     const siteName = 'Digital Home Sarkari Result';
     const meta = parseJobMetadata(alert);
-    const highCtrTitle = buildHighCtrJobTitle(meta);
-    const highCtrDesc = buildHighCtrMetaDesc(meta);
-    const faqSchema = generateJobFaqSchema(meta);
+    const rawHighCtrTitle = buildHighCtrJobTitle(meta);
+    const rawHighCtrDesc = buildHighCtrMetaDesc(meta);
+    const defaultFaqSchema = generateJobFaqSchema(meta);
+
+    // Prioritize AI SEO Engine custom meta title & description
+    const seoEngine = alert.seoEngine || {};
+    const highCtrTitle = (seoEngine.customMetaTitle && seoEngine.customMetaTitle.trim())
+      ? seoEngine.customMetaTitle.trim()
+      : (alert.title || rawHighCtrTitle);
+    const highCtrDesc = (seoEngine.customMetaDescription && seoEngine.customMetaDescription.trim())
+      ? seoEngine.customMetaDescription.trim()
+      : rawHighCtrDesc;
+
+    // Render FAQPage JSON-LD schema from seoEngine.faqs if available, otherwise fallback
+    let faqSchema = defaultFaqSchema;
+    if (Array.isArray(seoEngine.faqs) && seoEngine.faqs.length > 0) {
+      faqSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': seoEngine.faqs.map((f) => ({
+          '@type': 'Question',
+          'name': f.question,
+          'acceptedAnswer': {
+            '@type': 'Answer',
+            'text': f.answer
+          }
+        }))
+      };
+    }
 
     const canonicalSlug = alert.slug || normalizedSlug;
-    const canonicalUrl = `https://digitalhomeblog.in/india/sarkari-jobs/${canonicalSlug}`;
+    const canonicalUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${canonicalSlug}`;
     const imageUrl = 'https://www.digitalhomeblog.in/og-sarkari-banner-1200x675.webp';
 
     const isExpired = alert.status === 'expired' || 
