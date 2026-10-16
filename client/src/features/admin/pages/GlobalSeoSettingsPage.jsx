@@ -84,7 +84,7 @@ export default function GlobalSeoSettingsPage() {
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const res = await request('/admin/seo-intelligence/config');
+      const res = await request('/api/admin/seo-intelligence/config');
       if (res?.config) {
         setConfig((prev) => ({
           ...prev,
@@ -119,7 +119,7 @@ export default function GlobalSeoSettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await request('/admin/seo-intelligence/config', {
+      const res = await request('/api/admin/seo-intelligence/config', {
         method: 'PUT',
         body: JSON.stringify(config)
       });
@@ -140,7 +140,7 @@ export default function GlobalSeoSettingsPage() {
   const handlePingHomepage = async () => {
     setPinging(true);
     try {
-      const res = await request('/admin/seo-intelligence/ping-homepage', {
+      const res = await request('/api/admin/seo-intelligence/ping-homepage', {
         method: 'POST'
       });
       addToast(res.message || '🚀 Homepage indexing signals successfully sent to Google API & IndexNow!', 'success');
@@ -188,7 +188,7 @@ export default function GlobalSeoSettingsPage() {
     if (!query.trim()) return;
     setFetchingSuggestions(true);
     try {
-      const res = await request(`/admin/seo-intelligence/suggestions?q=${encodeURIComponent(query.trim())}`);
+      const res = await request(`/api/admin/seo-intelligence/suggestions?q=${encodeURIComponent(query.trim())}`);
       if (Array.isArray(res?.suggestions)) {
         setSuggestions(res.suggestions);
       }

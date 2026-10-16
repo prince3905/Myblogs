@@ -163,7 +163,7 @@ export default function SeoEngineBox({
     }
     setLoadingTrends(true);
     try {
-      const res = await request(`/admin/seo-intelligence/suggestions?q=${encodeURIComponent(q)}`);
+      const res = await request(`/api/admin/seo-intelligence/suggestions?q=${encodeURIComponent(q)}`);
       if (res?.suggestions) {
         setTrendSuggestions(res.suggestions);
         if (res.suggestions.length === 0) {
@@ -187,7 +187,7 @@ export default function SeoEngineBox({
     }
     setLoadingRegenerate(true);
     try {
-      const res = await request('/admin/seo-intelligence/generate-meta', {
+      const res = await request('/api/admin/seo-intelligence/generate-meta', {
         method: 'POST',
         body: JSON.stringify({
           title,
@@ -224,7 +224,7 @@ export default function SeoEngineBox({
         await onSave();
       }
 
-      const res = await request('/admin/seo-intelligence/push-indexing', {
+      const res = await request('/api/admin/seo-intelligence/push-indexing', {
         method: 'POST',
         body: JSON.stringify({
           slug: canonicalSlug,

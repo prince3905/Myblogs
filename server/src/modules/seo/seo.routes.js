@@ -10,21 +10,19 @@ const {
   pingHomepage
 } = require('./seo.controller');
 
-// Require authentication for all admin SEO routes
-router.use(auth);
-
+// Require authentication for all admin SEO intelligence routes
 // Autocomplete suggestions from Google Suggest
-router.get('/seo-intelligence/suggestions', getGoogleSuggestions);
+router.get('/seo-intelligence/suggestions', auth, getGoogleSuggestions);
 
 // AI Meta & FAQ generation
-router.post('/seo-intelligence/generate-meta', generateAiMeta);
+router.post('/seo-intelligence/generate-meta', auth, generateAiMeta);
 
 // Global Site SEO Config
-router.get('/seo-intelligence/config', getSeoConfig);
-router.put('/seo-intelligence/config', updateSeoConfig);
+router.get('/seo-intelligence/config', auth, getSeoConfig);
+router.put('/seo-intelligence/config', auth, updateSeoConfig);
 
 // Instant Indexing & Social Dispatch
-router.post('/seo-intelligence/push-indexing', pushIndexing);
-router.post('/seo-intelligence/ping-homepage', pingHomepage);
+router.post('/seo-intelligence/push-indexing', auth, pushIndexing);
+router.post('/seo-intelligence/ping-homepage', auth, pingHomepage);
 
 module.exports = router;

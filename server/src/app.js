@@ -463,7 +463,7 @@ app.use('/api/admin', adRoutes.admin);
 app.use('/api', keywordRoutes);
 app.use('/api/admin', liveAlertRoutes);
 app.use('/api/admin', settingsRoutes);
-app.use('/api/admin', require('./modules/seo/seo.routes'));
+app.use(['/api/admin', '/admin'], require('./modules/seo/seo.routes'));
 app.use('/api/current-affairs', currentAffairsRoutes);
 app.use('/api/admin/auto-publish', autoPublishRoutes);
 app.use('/api/admin/job-guides', require('./modules/jobGuides/jobGuideAutomation.routes'));
@@ -2095,7 +2095,7 @@ app.use((err, req, res, next) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return res.status(410).send("<h1>410 Gone</h1><p>Invalid entity reference.</p>");
   }
-  if (req.path && req.path.startsWith('/api')) {
+  if (req.path && (req.path.startsWith('/api') || req.path.includes('/seo-intelligence'))) {
     const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
     return res.status(statusCode).json({
       success: false,
