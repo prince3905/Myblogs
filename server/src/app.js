@@ -984,11 +984,20 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
         ? `<script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>`
         : '';
 
+      // Regional-Indexed vs Global-Noindex SSR Isolation
+      const isIndexable = post.isIndexable !== false && post.isGlobal !== true;
+      if (!isIndexable) {
+        res.setHeader('X-Robots-Tag', 'noindex, follow');
+      }
+      const robotsMeta = isIndexable
+        ? '<meta name="robots" content="max-image-preview:large, index, follow" />'
+        : '<meta name="robots" content="noindex, follow" />';
+
       // SEO Social Metadata Block
       const metaTags = `
     <title>${fullTitle}</title>
     <link rel="canonical" href="${canonicalUrl}" />
-    <meta name="robots" content="max-image-preview:large, index, follow" />
+    ${robotsMeta}
     <meta name="description" content="${desc}" />
     <meta property="og:title" content="${fullTitle}" />
     <meta property="og:description" content="${desc}" />
@@ -1009,6 +1018,7 @@ app.get('/blog/:category/:slug', async (req, res, next) => {
       // Remove default title/meta tags to prevent duplicates and append post specific tags
       html = html.replace(/<title>.*?<\/title>/, '');
       html = html.replace(/<meta name="description" .*?\/>/, '');
+      html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
       html = html.replace('</head>', `${metaTags}\n</head>`);
 
       if (!isLocal) {
@@ -1239,10 +1249,19 @@ app.get(['/global-jobs/view/:id', '/global-jobs/:country/:id'], async (req, res,
         } : {})
       };
 
+      // Regional-Indexed vs Global-Noindex SSR Isolation
+      const isIndexable = job.isIndexable !== false && job.isGlobal !== true;
+      if (!isIndexable) {
+        res.setHeader('X-Robots-Tag', 'noindex, follow');
+      }
+      const robotsMeta = isIndexable
+        ? '<meta name="robots" content="index, follow, max-image-preview:large" />'
+        : '<meta name="robots" content="noindex, follow" />';
+
       const metaTags = `
     <title>${fullTitle}</title>
     <meta name="description" content="${desc.replace(/"/g, '&quot;')}" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    ${robotsMeta}
     <link rel="canonical" href="${canonicalUrl}" />
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="${siteName}" />
@@ -1262,6 +1281,7 @@ app.get(['/global-jobs/view/:id', '/global-jobs/:country/:id'], async (req, res,
 
       html = html.replace(/<title>.*?<\/title>/, '');
       html = html.replace(/<meta name="description" .*?\/>/, '');
+      html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
       html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
       html = html.replace('</head>', `${metaTags}\n</head>`);
       html = html.replace('<div id="root"></div>', `<div id="root">${scaffoldHtml}</div>`);
@@ -1463,10 +1483,19 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
     // Generate complete 300+ word structured HTML layout
     const scaffoldHtml = buildIndianJobScaffoldHtml(alert, isExpired, recAlerts);
 
+    // Regional-Indexed vs Global-Noindex SSR Isolation
+    const isIndexable = alert.isIndexable !== false && alert.isGlobal !== true;
+    if (!isIndexable) {
+      res.setHeader('X-Robots-Tag', 'noindex, follow');
+    }
+    const robotsMeta = isIndexable
+      ? '<meta name="robots" content="index, follow, max-image-preview:large" />'
+      : '<meta name="robots" content="noindex, follow" />';
+
     const metaTags = `
     <title>${highCtrTitle}</title>
     <meta name="description" content="${highCtrDesc.replace(/"/g, '&quot;')}" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    ${robotsMeta}
     <link rel="canonical" href="${canonicalUrl}" />
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="${siteName}" />
@@ -1484,6 +1513,7 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
 
     html = html.replace(/<title>.*?<\/title>/i, '');
     html = html.replace(/<meta name="description" .*?\/>/i, '');
+    html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
     html = html.replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '');
     html = html.replace('</head>', `${metaTags}\n</head>`);
     html = html.replace('<div id="root"></div>', `<div id="root">${scaffoldHtml}</div>`);

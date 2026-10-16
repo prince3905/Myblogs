@@ -915,39 +915,42 @@ async function scrapeStateHubFeeds() {
   console.log('[Multi-State Scraper] Ingesting state-level vacancies from official state commission hubs...');
   let savedCount = 0;
 
+  // 🛡️ High-Priority Scraper Queue: Mass Indian state & central feeds executed first
   const STATE_TARGETS = [
-    // 28 Indian States
-    { state: 'Andhra Pradesh', url: 'https://www.freejobalert.com/ap-government-jobs/', max: 12 },
+    // 1. Primary Mass State Hubs (UPSSSC, BSSC, JSSC, State PSCs)
+    { state: 'Uttar Pradesh', url: 'https://www.freejobalert.com/up-government-jobs/', max: 15 },
+    { state: 'Bihar', url: 'https://www.freejobalert.com/bihar-government-jobs/', max: 15 },
+    { state: 'Jharkhand', url: 'https://www.freejobalert.com/jharkhand-government-jobs/', max: 12 },
+    { state: 'Delhi', url: 'https://www.freejobalert.com/delhi-government-jobs/', max: 15 },
+    { state: 'Rajasthan', url: 'https://www.freejobalert.com/rajasthan-government-jobs/', max: 12 },
+    { state: 'Madhya Pradesh', url: 'https://www.freejobalert.com/mp-government-jobs/', max: 12 },
+    { state: 'Haryana', url: 'https://www.freejobalert.com/haryana-government-jobs/', max: 12 },
+
+    // 2. Additional Sovereign States & Regions
+    { state: 'Andhra Pradesh', url: 'https://www.freejobalert.com/ap-government-jobs/', max: 10 },
     { state: 'Arunachal Pradesh', url: 'https://www.freejobalert.com/arunachal-pradesh-government-jobs/', max: 8 },
     { state: 'Assam', url: 'https://www.freejobalert.com/assam-government-jobs/', max: 10 },
-    { state: 'Bihar', url: 'https://www.freejobalert.com/bihar-government-jobs/', max: 12 },
     { state: 'Chhattisgarh', url: 'https://www.freejobalert.com/chhattisgarh-government-jobs/', max: 10 },
     { state: 'Goa', url: 'https://www.freejobalert.com/goa-government-jobs/', max: 8 },
-    { state: 'Gujarat', url: 'https://www.freejobalert.com/gujarat-government-jobs/', max: 12 },
-    { state: 'Haryana', url: 'https://www.freejobalert.com/haryana-government-jobs/', max: 12 },
+    { state: 'Gujarat', url: 'https://www.freejobalert.com/gujarat-government-jobs/', max: 10 },
     { state: 'Himachal Pradesh', url: 'https://www.freejobalert.com/hp-government-jobs/', max: 10 },
-    { state: 'Jharkhand', url: 'https://www.freejobalert.com/jharkhand-government-jobs/', max: 10 },
-    { state: 'Karnataka', url: 'https://www.freejobalert.com/karnataka-government-jobs/', max: 12 },
-    { state: 'Kerala', url: 'https://www.freejobalert.com/kerala-government-jobs/', max: 12 },
-    { state: 'Madhya Pradesh', url: 'https://www.freejobalert.com/mp-government-jobs/', max: 12 },
-    { state: 'Maharashtra', url: 'https://www.freejobalert.com/maharashtra-government-jobs/', max: 15 },
+    { state: 'Karnataka', url: 'https://www.freejobalert.com/karnataka-government-jobs/', max: 10 },
+    { state: 'Kerala', url: 'https://www.freejobalert.com/kerala-government-jobs/', max: 10 },
+    { state: 'Maharashtra', url: 'https://www.freejobalert.com/maharashtra-government-jobs/', max: 12 },
     { state: 'Manipur', url: 'https://www.freejobalert.com/manipur-government-jobs/', max: 8 },
     { state: 'Meghalaya', url: 'https://www.freejobalert.com/meghalaya-government-jobs/', max: 8 },
     { state: 'Mizoram', url: 'https://www.freejobalert.com/mizoram-government-jobs/', max: 8 },
     { state: 'Nagaland', url: 'https://www.freejobalert.com/nagaland-government-jobs/', max: 8 },
     { state: 'Odisha', url: 'https://www.freejobalert.com/odisha-government-jobs/', max: 10 },
-    { state: 'Punjab', url: 'https://www.freejobalert.com/punjab-government-jobs/', max: 12 },
-    { state: 'Rajasthan', url: 'https://www.freejobalert.com/rajasthan-government-jobs/', max: 12 },
+    { state: 'Punjab', url: 'https://www.freejobalert.com/punjab-government-jobs/', max: 10 },
     { state: 'Sikkim', url: 'https://www.freejobalert.com/sikkim-government-jobs/', max: 8 },
-    { state: 'Tamil Nadu', url: 'https://www.freejobalert.com/tn-government-jobs/', max: 12 },
-    { state: 'Telangana', url: 'https://www.freejobalert.com/telangana-government-jobs/', max: 12 },
+    { state: 'Tamil Nadu', url: 'https://www.freejobalert.com/tn-government-jobs/', max: 10 },
+    { state: 'Telangana', url: 'https://www.freejobalert.com/telangana-government-jobs/', max: 10 },
     { state: 'Tripura', url: 'https://www.freejobalert.com/tripura-government-jobs/', max: 8 },
-    { state: 'Uttar Pradesh', url: 'https://www.freejobalert.com/up-government-jobs/', max: 15 },
     { state: 'Uttarakhand', url: 'https://www.freejobalert.com/uttarakhand-government-jobs/', max: 10 },
-    { state: 'West Bengal', url: 'https://www.freejobalert.com/wb-government-jobs/', max: 12 },
+    { state: 'West Bengal', url: 'https://www.freejobalert.com/wb-government-jobs/', max: 10 },
 
-    // Key Union Territories
-    { state: 'Delhi', url: 'https://www.freejobalert.com/delhi-government-jobs/', max: 12 },
+    // Union Territories
     { state: 'Jammu & Kashmir', url: 'https://www.freejobalert.com/jk-government-jobs/', max: 8 },
     { state: 'Chandigarh', url: 'https://www.freejobalert.com/chandigarh-government-jobs/', max: 8 }
   ];
@@ -1067,6 +1070,8 @@ async function scrapeStateHubFeeds() {
             category: detectCategory(cleanTitle, uniqueKey) || 'Latest Job',
             detailsText,
             isOffline: isOfflineJob,
+            isGlobal: false,
+            isIndexable: true,
             status: 'active'
           });
 
@@ -1186,6 +1191,8 @@ async function scrapeOfflineVacancies() {
           category: 'Offline Form',
           detailsText: `Board: ${boardName}\nLocation: ${location || 'All India'}\nLast Date: ${lastDate || 'Refer Notification'}\nOfficial PDF: ${pdfUrl}\nPostal Address: ${address || location}`,
           isOffline: true,
+          isGlobal: false,
+          isIndexable: true,
           offlineAddress: address || location || '',
           status: 'active'
         });
@@ -1407,7 +1414,9 @@ async function scrapeFeeds() {
               source: 'Official Portal',
               state: detectState(text, href),
               category: detectCategory(text, href),
-              detailsText: 'Direct PDF notification link'
+              detailsText: 'Direct PDF notification link',
+              isGlobal: false,
+              isIndexable: true
             },
             $setOnInsert: {
               status: 'active'
@@ -1523,6 +1532,8 @@ async function scrapeFeeds() {
             state,
             category: finalCategory,
             detailsText: finalDetailsText,
+            isGlobal: false,
+            isIndexable: true,
             status: computedStatus
           }
         },

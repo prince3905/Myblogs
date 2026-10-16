@@ -20,6 +20,8 @@ const blogPostSchema = new mongoose.Schema(
     focusKeyword: { type: String, trim: true, default: '' },
     seoScore: { type: Number, default: 0 },
     canonicalUrl: { type: String, trim: true, default: '' },
+    isGlobal: { type: Boolean, default: false, index: true },
+    isIndexable: { type: Boolean, default: true, index: true },
     seoEngine: { type: seoEngineSchema, default: () => ({ isAutoMode: true }) },
     publishedAt: { type: Date, default: null },
     readingTime: { type: Number, default: 1 },
@@ -537,7 +539,7 @@ blogPostSchema.post('save', async function (doc) {
     console.error('[WebStory Sync] Failed to sync status in post-save hook:', storyErr.message);
   }
 
-  if (doc.status === 'published') {
+  if (doc.status === 'published' && doc.isIndexable !== false && doc.isGlobal !== true) {
     // 1. 360° Universal Auto-Indexing Notification (Google Indexing API + IndexNow + Sitemap Pings)
     try {
       const { notifyAllIndexing } = require('../../shared/utils/google-indexing');

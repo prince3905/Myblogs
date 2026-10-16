@@ -39,6 +39,8 @@ const webStorySchema = new mongoose.Schema(
     slides: { type: [slideSchema], required: true },
     status: { type: String, enum: ['draft', 'published'], default: 'draft' },
     isPublished: { type: Boolean, default: false },
+    isGlobal: { type: Boolean, default: false, index: true },
+    isIndexable: { type: Boolean, default: true, index: true },
     views: { type: Number, default: 0 },
     trafficSources: { type: trafficSourcesSchema, default: () => ({}) },
     devices: { type: devicesSchema, default: () => ({}) },
@@ -60,7 +62,7 @@ webStorySchema.pre('save', function() {
 
 // Web Story Google & IndexNow Universal Auto-Notification Hook
 webStorySchema.post('save', async function(doc) {
-  if (doc.status === 'published' || doc.isPublished === true) {
+  if ((doc.status === 'published' || doc.isPublished === true) && doc.isIndexable !== false && doc.isGlobal !== true) {
     try {
       const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
       const storyUrl = `https://www.digitalhomeblog.in/web-stories/${doc.slug}`;

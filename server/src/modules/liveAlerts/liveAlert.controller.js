@@ -878,11 +878,13 @@ ${buttonHtmlBlock}
   } catch (tgErr) {}
 
   // 2. Trigger Instant Google & IndexNow Multi-Engine Indexing Ping
-  try {
-    const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
-    const postUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${newPost.slug}`;
-    notifyAllIndexing(postUrl, 'URL_UPDATED').catch(() => {});
-  } catch (idxErr) {}
+  if (newPost.isIndexable !== false && newPost.isGlobal !== true) {
+    try {
+      const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
+      const postUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${newPost.slug}`;
+      notifyAllIndexing(postUrl, 'URL_UPDATED').catch(() => {});
+    } catch (idxErr) {}
+  }
 
   // 3. Generate Web Story for this new post in background
   try {

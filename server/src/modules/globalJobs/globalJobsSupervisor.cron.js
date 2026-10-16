@@ -241,6 +241,10 @@ async function runSupervisorCycle() {
           };
         }
 
+        // Strictly tag as Global and Non-Indexable to protect crawl budget
+        job.isGlobal = true;
+        job.isIndexable = false;
+
         const createdDoc = await GlobalJob.create(job);
         newlyAdded++;
         newJobUrls.push(`https://www.digitalhomeblog.in/global-jobs/view/${createdDoc.officialReferenceId || createdDoc._id}`);
@@ -285,12 +289,8 @@ async function runSupervisorCycle() {
       ...Array.from(affectedCountries).map(cc => `https://www.digitalhomeblog.in/global-jobs/${encodeURIComponent(cc)}`)
     ];
 
-    // Cap individual job pings to a randomized 5-10 featured circulars per day to protect crawl budget
-    const featuredIndividualJobs = newJobUrls
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 10);
-
-    const safeIndexNowUrls = [...hubUrlsToIndex, ...featuredIndividualJobs];
+    // Strictly isolate global posts: Never dispatch indexing pings for individual global job posts
+    const safeIndexNowUrls = [...hubUrlsToIndex];
 
     if (safeIndexNowUrls.length > 0) {
       try {
@@ -322,12 +322,13 @@ async function runSupervisorCycle() {
  * Fires every 4 hours (e.g. at 00:00, 04:00, 08:00, 12:00, 16:00, 20:00)
  */
 function initGlobalJobsSupervisor() {
-  console.log('🤖 Initializing Global Master Supervisor Cron AI (Phase 1)...');
+  console.log('🤖 Initializing Global Master Supervisor Cron (Secondary Background Queue)...');
 
-  // Run initial cycle after 15 seconds of server startup to pre-seed vacancies
+  // Secondary Background Queue: Run initial cycle after 90 seconds of server startup
+  // Yields priority to primary Indian state scrapers (UPSSSC, BSSC, SSC, Railway)
   setTimeout(() => {
     runSupervisorCycle();
-  }, 15000);
+  }, 90000);
 
   // Schedule every 4 hours with natural jitter
   cron.schedule('0 */4 * * *', () => {

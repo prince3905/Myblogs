@@ -336,6 +336,68 @@ async function runTests() {
       !resSitemap.body.includes('?alert='));
     assert('/sitemap.xml includes indexable /india/sarkari-jobs', 
       resSitemap.body.includes('/india/sarkari-jobs'));
+    assert('/sitemap.xml does NOT contain individual global job views (/global-jobs/view/)',
+      !resSitemap.body.includes('/global-jobs/view/'));
+
+    // 12b. Regional-Indexed vs Global-Noindex Hybrid Architecture Verification
+    console.log('\n--- Regional-Indexed vs Global-Noindex Hybrid Architecture Tests ---');
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      const GlobalJob = require('/Users/harry/Prince/Myblogs/server/src/modules/globalJobs/globalJob.model');
+      const LiveAlert = require('/Users/harry/Prince/Myblogs/server/src/modules/liveAlerts/liveAlert.model');
+      const { dispatchSeoIndexing } = require('/Users/harry/Prince/Myblogs/server/src/modules/seo/seoAutomation.hook');
+
+      // Test Hook Isolation
+      const hookGlobalResult = await dispatchSeoIndexing({ isGlobal: true, isIndexable: false, title: 'UN Test Vacancy' }, 'https://www.digitalhomeblog.in/global-jobs/view/UN-123');
+      assert('dispatchSeoIndexing skips ping for isGlobal: true / isIndexable: false', hookGlobalResult.skipped === true && hookGlobalResult.reason === 'GLOBAL_OR_NOINDEX');
+
+      // Test or create a GlobalJob to verify SSR noindex header and meta tag
+      let testGlobalJob = await GlobalJob.findOne({ isGlobal: true }).lean();
+      if (!testGlobalJob) {
+        testGlobalJob = await GlobalJob.create({
+          title: 'UN Associate Policy Officer 2026',
+          countryCode: 'UN',
+          countryName: 'United Nations',
+          continent: 'Multilateral',
+          agencyOrMinistry: 'UN Secretariat',
+          officialReferenceId: 'UN-TEST-REF-2026',
+          officialNoticeUrl: 'https://careers.un.org/notice-test-2026',
+          isGlobal: true,
+          isIndexable: false
+        });
+      }
+
+      const globalRes = await makeRequest(`/global-jobs/view/${testGlobalJob.officialReferenceId || testGlobalJob._id}`);
+      assert('Global Job SSR returns 200 OK', globalRes.statusCode === 200);
+      assert('Global Job SSR sends X-Robots-Tag: noindex, follow header',
+        (globalRes.headers['x-robots-tag'] || '').toLowerCase().includes('noindex') &&
+        (globalRes.headers['x-robots-tag'] || '').toLowerCase().includes('follow'));
+      assert('Global Job SSR injects <meta name="robots" content="noindex, follow" />',
+        globalRes.body.includes('<meta name="robots" content="noindex, follow" />'));
+      assert('Global Job SSR does NOT have index, follow',
+        !globalRes.body.includes('<meta name="robots" content="index, follow'));
+
+      // Test an Indian LiveAlert to verify SSR index, follow meta tag and no noindex header
+      let testIndianAlert = await LiveAlert.findOne({ status: { $in: ['active', 'published'] }, slug: { $exists: true, $ne: '' } }).lean();
+      if (!testIndianAlert) {
+        testIndianAlert = await LiveAlert.create({
+          title: 'UPSSSC Junior Assistant 2026 Recruitment',
+          boardName: 'UPSSSC',
+          slug: 'upsssc-junior-assistant-recruitment-2026',
+          sourceUrl: 'https://upsssc.gov.in/notice-test-2026',
+          status: 'active',
+          isGlobal: false,
+          isIndexable: true
+        });
+      }
+
+      const indianRes = await makeRequest(`/india/sarkari-jobs/${testIndianAlert.slug}`);
+      assert('Indian Sarkari Job SSR returns 200 OK', indianRes.statusCode === 200);
+      assert('Indian Sarkari Job SSR does NOT have noindex header',
+        !(indianRes.headers['x-robots-tag'] || '').toLowerCase().includes('noindex'));
+      assert('Indian Sarkari Job SSR injects <meta name="robots" content="index, follow, max-image-preview:large" />',
+        indianRes.body.includes('<meta name="robots" content="index, follow, max-image-preview:large" />'));
+    }
+
 
     // 12. Global Error Handler Verification (CastError / BSONError -> 410, Unhandled 500)
     const errorHandler = require('/Users/harry/Prince/Myblogs/server/src/middleware/errorHandler');

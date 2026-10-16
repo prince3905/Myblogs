@@ -575,7 +575,7 @@ async function updatePost(req, res, next) {
     await existing.save();
     invalidateFeedCache();
 
-    if (existing.status === 'published') {
+    if (existing.status === 'published' && existing.isIndexable !== false && existing.isGlobal !== true) {
       const { notifyAllIndexing, notifyUrl } = require('../../shared/utils/google-indexing');
       notifyAllIndexing(postUrl(existing), 'URL_UPDATED').catch(() => {});
 
@@ -730,6 +730,8 @@ async function sitemap(req, res) {
       try {
         const posts = await BlogPost.find({ 
           status: 'published',
+          isIndexable: { $ne: false },
+          isGlobal: { $ne: true },
           category: { $regex: /job|sarkari|exam|result|recruitment/i },
           slug: { $exists: true, $type: 'string', $ne: '' }
         })
@@ -792,6 +794,8 @@ async function sitemap(req, res) {
         const { sanitizeJobSlug } = require('../../shared/utils/jobSeoOptimizer');
         const liveAlerts = await LiveAlert.find({ 
           status: { $in: ['active', 'published'] },
+          isIndexable: { $ne: false },
+          isGlobal: { $ne: true },
           title: { $exists: true, $ne: '' }
         })
           .select('_id slug title boardName updatedAt parsedPostDate createdAt')
@@ -843,11 +847,13 @@ async function sitemap(req, res) {
         console.warn('[Sitemap] Failed to append Current Affairs:', caErr.message);
       }
 
-      // 7. Verified Global Government Vacancies (strictly active vacancies)
+      // 7. Verified Global Government Vacancies (Strictly filter out non-indexable/global jobs)
       try {
         const GlobalJob = require('../globalJobs/globalJob.model');
         const now = new Date();
         const globalJobs = await GlobalJob.find({
+          isIndexable: true,
+          isGlobal: false,
           $or: [
             { applicationDeadline: { $exists: false } },
             { applicationDeadline: { $gte: now } }

@@ -21,6 +21,8 @@ const liveAlertSchema = new mongoose.Schema(
     offlineAddress: { type: String, default: '', trim: true },
     slug: { type: String, trim: true, index: true },
     status: { type: String, enum: ['active', 'drafted', 'published', 'expired'], default: 'active' },
+    isGlobal: { type: Boolean, default: false, index: true },
+    isIndexable: { type: Boolean, default: true, index: true },
     seoEngine: { type: seoEngineSchema, default: () => ({ isAutoMode: true }) }
   },
   { timestamps: true }
@@ -130,7 +132,13 @@ liveAlertSchema.pre('save', function (next) {
 
 // Instant Multi-Engine Indexing Ping & Telegram Dispatch on New / Updated LiveAlert Vacancies
 liveAlertSchema.post('save', async function (doc) {
-  if ((doc.status === 'published' || doc.status === 'active') && doc.slug && !/^[0-9a-fA-F]{24}$/.test(doc.slug)) {
+  if (
+    (doc.status === 'published' || doc.status === 'active') &&
+    doc.isIndexable !== false &&
+    doc.isGlobal !== true &&
+    doc.slug &&
+    !/^[0-9a-fA-F]{24}$/.test(doc.slug)
+  ) {
     try {
       const SiteSeoConfig = require('../seo/siteSeoConfig.model');
       const config = await SiteSeoConfig.getOrCreate();

@@ -662,6 +662,8 @@ export default function GlobalGovJobsPage() {
         keywords={seoMeta.keywords}
         hreflangs={hreflangMatrix}
         jsonLd={jobSchema}
+        noindex={Boolean(selectedJob)}
+        robots={selectedJob ? "noindex, follow" : undefined}
       />
 
       {/* 🟢 TOP STATUS & LANGUAGE BAR */}

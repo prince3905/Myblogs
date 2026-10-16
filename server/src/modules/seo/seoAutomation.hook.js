@@ -223,11 +223,33 @@ async function processSeoAutomation(doc, options = {}) {
   }
 }
 
+/**
+ * Strict Regional-Indexed vs Global-Noindex Hook Isolation
+ * Only dispatch notifyAllIndexing if job.isIndexable === true AND job.isGlobal === false.
+ * Skips indexing pings completely for all Global posts.
+ */
+async function dispatchSeoIndexing(doc, url) {
+  if (!doc || doc.isIndexable === false || doc.isGlobal === true) {
+    console.log(`[SEO Indexing Hook] Bypassing search engine ping for global/non-indexable item: ${url || doc?.title}`);
+    return { skipped: true, reason: 'GLOBAL_OR_NOINDEX' };
+  }
+
+  try {
+    const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
+    return await notifyAllIndexing(url, 'URL_UPDATED');
+  } catch (err) {
+    console.warn(`[SEO Indexing Hook] Ping warning: ${err.message}`);
+    return { error: err.message };
+  }
+}
+
 module.exports = {
   processSeoAutomation,
+  dispatchSeoIndexing,
   sanitizeTitleForSeo,
   extractShortTailKeywords,
   buildLongTailKeywords,
   calculateSeoScore,
   generateCoreFaqs
 };
+

@@ -662,7 +662,7 @@ async function createWebStory(req, res) {
     });
     await newStory.save();
 
-    if (finalPublished) {
+    if (finalPublished && newStory.isIndexable !== false && newStory.isGlobal !== true) {
       const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
       const storyUrl = `https://www.digitalhomeblog.in/web-stories/${newStory.slug}`;
       notifyAllIndexing(storyUrl, 'URL_UPDATED').catch(() => {});
@@ -687,7 +687,7 @@ async function updateWebStory(req, res) {
     const updated = await WebStory.findByIdAndUpdate(id, updateData, { new: true });
     if (!updated) return res.status(404).json({ error: 'Web Story not found' });
 
-    if (updated.status === 'published' || updated.isPublished === true) {
+    if ((updated.status === 'published' || updated.isPublished === true) && updated.isIndexable !== false && updated.isGlobal !== true) {
       const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
       const storyUrl = `https://www.digitalhomeblog.in/web-stories/${updated.slug}`;
       notifyAllIndexing(storyUrl, 'URL_UPDATED').catch(() => {});

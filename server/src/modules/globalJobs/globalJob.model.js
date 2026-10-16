@@ -135,6 +135,16 @@ const globalJobSchema = new mongoose.Schema({
     enum: ['VERIFIED_OFFICIAL_GAZETTE', 'GOVERNMENT_PORTAL_CONFIRMED'],
     default: 'VERIFIED_OFFICIAL_GAZETTE'
   },
+  isGlobal: {
+    type: Boolean,
+    default: true,
+    index: true
+  },
+  isIndexable: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
   // Multilingual Cache: populated by Hy-MT2 or lightweight translator
   translations: {
     hi: {
