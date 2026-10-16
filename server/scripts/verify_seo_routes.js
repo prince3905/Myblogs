@@ -396,7 +396,79 @@ async function runTests() {
         !(indianRes.headers['x-robots-tag'] || '').toLowerCase().includes('noindex'));
       assert('Indian Sarkari Job SSR injects <meta name="robots" content="index, follow, max-image-preview:large" />',
         indianRes.body.includes('<meta name="robots" content="index, follow, max-image-preview:large" />'));
+
+      // 12c. High-Demand Priority Indexing Engine Verification
+      console.log('\n--- High-Demand Priority Indexing Engine Tests ---');
+      const { calculateIndexingPriority } = require('/Users/harry/Prince/Myblogs/server/src/modules/seo/seoAutomation.hook');
+
+      // 1. Scoring Logic Verification
+      assert('UPSSSC post calculates priority URGENT',
+        calculateIndexingPriority('UPSSSC Junior Assistant 2026', 'UPSSSC') === 'URGENT');
+      assert('Railway RRB post calculates priority URGENT',
+        calculateIndexingPriority('RRB Railway ALP Recruitment 2026', 'Railway') === 'URGENT');
+      assert('SSC GD post calculates priority URGENT',
+        calculateIndexingPriority('SSC GD Constable Notification 2026', 'SSC') === 'URGENT');
+      assert('Bihar Police / CSBC calculates priority URGENT',
+        calculateIndexingPriority('Bihar Police Constable Vacancy 2026', 'CSBC') === 'URGENT');
+      assert('Admit Card / Result notice calculates priority URGENT',
+        calculateIndexingPriority('UPSC Civil Services Exam Admit Card 2026', 'UPSC', 'Admit Card') === 'URGENT');
+
+      assert('ECHS post calculates priority LOW',
+        calculateIndexingPriority('ECHS Polyclinic Medical Officer Vacancy', 'ECHS') === 'LOW');
+      assert('District court post calculates priority LOW',
+        calculateIndexingPriority('District Court Peon Recruitment 2026', 'District Court') === 'LOW');
+      assert('Anganwadi post calculates priority LOW',
+        calculateIndexingPriority('Anganwadi Worker & Helper Bharti 2026', '') === 'LOW');
+      assert('Contractual / Apprentice post calculates priority LOW',
+        calculateIndexingPriority('IOCL Apprentice & Trainee Engagement 2026', 'IOCL') === 'LOW');
+
+      assert('Standard State PSC post calculates priority NORMAL',
+        calculateIndexingPriority('RPSC Assistant Professor 2026', 'RPSC') === 'NORMAL');
+
+      // 2. Conditional Indexing Dispatch Verification
+      // URGENT: triggers instant ping immediately
+      const urgentDoc = {
+        title: 'UPSSSC VDO Gram Vikas Adhikari 2026',
+        boardName: 'UPSSSC',
+        isIndexable: true,
+        isGlobal: false,
+        indexingPriority: 'URGENT'
+      };
+      const urgentResult = await dispatchSeoIndexing(urgentDoc, 'https://www.digitalhomeblog.in/india/sarkari-jobs/upsssc-vdo-2026');
+      assert('URGENT post triggers instant ping immediately',
+        urgentResult.dispatched === true && urgentResult.priority === 'URGENT');
+
+      // LOW: skips instant ping completely to save API quota
+      const lowDoc = {
+        title: 'ECHS Contractual Medical Attendant 2026',
+        boardName: 'ECHS',
+        isIndexable: true,
+        isGlobal: false,
+        indexingPriority: 'LOW'
+      };
+      const lowResult = await dispatchSeoIndexing(lowDoc, 'https://www.digitalhomeblog.in/india/sarkari-jobs/echs-attendant-2026');
+      assert('LOW post skips instant ping completely (quota saved)',
+        lowResult.skipped === true && lowResult.reason === 'LOW_PRIORITY_QUOTA_SAVED' && lowResult.priority === 'LOW');
+
+      // NORMAL: added to 15-minute batched queue
+      const normalDoc = {
+        title: 'RPSC Statistical Officer 2026',
+        boardName: 'RPSC',
+        isIndexable: true,
+        isGlobal: false,
+        indexingPriority: 'NORMAL'
+      };
+      const normalResult = await dispatchSeoIndexing(normalDoc, 'https://www.digitalhomeblog.in/india/sarkari-jobs/rpsc-officer-2026');
+      assert('NORMAL post added to 15-minute batched queue',
+        normalResult.queued === true && normalResult.priority === 'NORMAL');
+
+      // 3. Sitemap Priority Tag Verification
+      assert('/sitemap.xml contains Tier 1 priority tag (1.0)',
+        resSitemap.body.includes('<priority>1.0</priority>'));
+      assert('/sitemap.xml contains Tier 2 priority tag (0.8)',
+        resSitemap.body.includes('<priority>0.8</priority>'));
     }
+
 
 
     // 12. Global Error Handler Verification (CastError / BSONError -> 410, Unhandled 500)

@@ -22,6 +22,7 @@ const blogPostSchema = new mongoose.Schema(
     canonicalUrl: { type: String, trim: true, default: '' },
     isGlobal: { type: Boolean, default: false, index: true },
     isIndexable: { type: Boolean, default: true, index: true },
+    indexingPriority: { type: String, enum: ['URGENT', 'NORMAL', 'LOW'], default: 'NORMAL', index: true },
     seoEngine: { type: seoEngineSchema, default: () => ({ isAutoMode: true }) },
     publishedAt: { type: Date, default: null },
     readingTime: { type: Number, default: 1 },
@@ -49,6 +50,12 @@ const blogPostSchema = new mongoose.Schema(
 blogPostSchema.pre('save', async function (next) {
   try {
     const post = this;
+
+    // Auto-calculate High-Demand Indexing Priority
+    try {
+      const { calculateIndexingPriority } = require('../seo/seoAutomation.hook');
+      post.indexingPriority = calculateIndexingPriority(post.title, post.author, post.category);
+    } catch (prioErr) {}
 
     // Mandatory Competitor Sanitizer: Scrub all competitor text & hidden links before ANY post is saved or published
     function purgeCompetitorTrace(str = '') {
@@ -540,22 +547,15 @@ blogPostSchema.post('save', async function (doc) {
   }
 
   if (doc.status === 'published' && doc.isIndexable !== false && doc.isGlobal !== true) {
-    // 1. 360° Universal Auto-Indexing Notification (Google Indexing API + IndexNow + Sitemap Pings)
+    // 1. Conditional Priority Auto-Indexing Notification
     try {
-      const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
-      const { logAutomation } = require('../../shared/utils/automationLogger');
+      const { dispatchSeoIndexing } = require('../seo/seoAutomation.hook');
       const postUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${doc.slug}`;
-      console.log(`[Auto-Indexing Pipeline] Triggering 360° pings for published post: ${postUrl}`);
+      console.log(`[Auto-Indexing Pipeline] Processing conditional index ping for published post: ${postUrl}`);
       
-      notifyAllIndexing(postUrl, 'URL_UPDATED')
-        .then(({ google, indexNow }) => {
-          logAutomation({
-            service: 'SEO_INDEXING',
-            level: 'SUCCESS',
-            action: '360° Auto-Index Dispatch',
-            message: `Dispatched instant index pings (Google & IndexNow) for published post "${doc.title}"`,
-            metadata: { title: doc.title, url: postUrl, google: google?.success, indexNow: indexNow?.success }
-          });
+      dispatchSeoIndexing(doc, postUrl)
+        .then((result) => {
+          console.log(`[Auto-Indexing Pipeline] Ping result for "${doc.title}":`, result);
         })
         .catch(err => {
           console.warn('[Auto-Indexing Pipeline] Notice:', err.message);

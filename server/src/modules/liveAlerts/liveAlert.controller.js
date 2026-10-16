@@ -877,12 +877,12 @@ ${buttonHtmlBlock}
     sendPushNotification(newPost).catch(err => console.warn('[Push Notification] Notice:', err.message));
   } catch (tgErr) {}
 
-  // 2. Trigger Instant Google & IndexNow Multi-Engine Indexing Ping
+  // 2. Trigger Conditional Priority Multi-Engine Indexing Ping
   if (newPost.isIndexable !== false && newPost.isGlobal !== true) {
     try {
-      const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
+      const { dispatchSeoIndexing } = require('../seo/seoAutomation.hook');
       const postUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${newPost.slug}`;
-      notifyAllIndexing(postUrl, 'URL_UPDATED').catch(() => {});
+      dispatchSeoIndexing(newPost, postUrl).catch(() => {});
     } catch (idxErr) {}
   }
 

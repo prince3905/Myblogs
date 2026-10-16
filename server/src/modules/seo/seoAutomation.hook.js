@@ -216,6 +216,9 @@ async function processSeoAutomation(doc, options = {}) {
 
     doc.seoEngine.seoScore = calculateSeoScore(effectiveTitle, effectiveDesc, faqs, cleanTitle);
 
+    // 7. Auto-calculate High-Demand Indexing Priority
+    doc.indexingPriority = calculateIndexingPriority(doc.title, doc.boardName, doc.category);
+
     return doc.seoEngine;
   } catch (err) {
     console.error('[SEO Automation Hook] Error processing SEO:', err);
@@ -223,10 +226,81 @@ async function processSeoAutomation(doc, options = {}) {
   }
 }
 
+// High-Demand Indexing Pattern Matchers
+const URGENT_REGEX = /upsssc|up police|bssc|bihar police|csbc|jssc|railway|rrb|ssc gd|ssc cgl|admit card|result/i;
+const LOW_REGEX = /contractual|guest|echs|district|anganwadi|consultant|trainee|apprentice/i;
+
 /**
- * Strict Regional-Indexed vs Global-Noindex Hook Isolation
- * Only dispatch notifyAllIndexing if job.isIndexable === true AND job.isGlobal === false.
- * Skips indexing pings completely for all Global posts.
+ * Auto-calculate indexing priority score:
+ * - URGENT (Score 1.0): UPSSSC, UP Police, BSSC, Bihar Police, CSBC, JSSC, Railway/RRB, SSC GD, SSC CGL, Admit Card, Result
+ * - LOW (Score 0.3): contractual, guest, echs, district, anganwadi, consultant, trainee, apprentice
+ * - NORMAL (Score 0.7): All other Indian state vacancies
+ */
+function calculateIndexingPriority(title = '', boardName = '', category = '') {
+  const t = String(title || '');
+  const b = String(boardName || '');
+  const c = String(category || '');
+  const combined = `${t} ${b} ${c}`;
+
+  // Check LOW first if title specifically indicates temporary/district/contractual roles
+  // (unless board/title explicitly signifies a mass commission exam like UPSSSC, Railway, CSBC, SSC)
+  if (LOW_REGEX.test(t) && !URGENT_REGEX.test(t) && !URGENT_REGEX.test(b)) {
+    return 'LOW';
+  }
+
+  // URGENT if title, board, or category matches high-demand recruitment keywords
+  if (URGENT_REGEX.test(combined)) {
+    return 'URGENT';
+  }
+
+  // LOW if title matches LOW_REGEX
+  if (LOW_REGEX.test(t)) {
+    return 'LOW';
+  }
+
+  return 'NORMAL';
+}
+
+// In-Memory Batched Indexing Queue for NORMAL priority items (Flushed every 15 minutes)
+const normalBatchQueue = new Set();
+let batchIntervalTimer = null;
+
+async function processNormalBatchQueue() {
+  if (normalBatchQueue.size === 0) return { processed: 0 };
+  const urlsToPing = Array.from(normalBatchQueue);
+  normalBatchQueue.clear();
+
+  console.log(`[Batch Indexing Queue] Flushing ${urlsToPing.length} NORMAL priority URLs to search engines...`);
+  try {
+    const { notifyBatchIndexNow, notifyAllIndexing } = require('../../shared/utils/google-indexing');
+
+    // 1. Notify IndexNow engines in batch (zero daily quota penalty)
+    await notifyBatchIndexNow(urlsToPing).catch(err => console.warn('[Batch IndexNow Error]:', err.message));
+
+    // 2. Dispatch to Google Indexing API sequentially with jitter
+    for (const url of urlsToPing.slice(0, 20)) {
+      await notifyAllIndexing(url, 'URL_UPDATED').catch(() => {});
+      await new Promise(r => setTimeout(r, 800));
+    }
+    return { processed: urlsToPing.length };
+  } catch (err) {
+    console.warn('[Batch Indexing Queue Warning]:', err.message);
+    return { error: err.message };
+  }
+}
+
+function initBatchQueueTimer() {
+  if (!batchIntervalTimer) {
+    batchIntervalTimer = setInterval(processNormalBatchQueue, 15 * 60 * 1000); // 15 minutes
+    if (batchIntervalTimer.unref) batchIntervalTimer.unref();
+  }
+}
+
+/**
+ * Conditional Google & Multi-Engine Indexing Dispatch:
+ * - If priority === 'URGENT': Dispatch instant ping to Google API & IndexNow immediately.
+ * - If priority === 'NORMAL': Add to a 15-minute batched queue.
+ * - If priority === 'LOW': SKIP instant ping completely (save daily API quota).
  */
 async function dispatchSeoIndexing(doc, url) {
   if (!doc || doc.isIndexable === false || doc.isGlobal === true) {
@@ -234,22 +308,43 @@ async function dispatchSeoIndexing(doc, url) {
     return { skipped: true, reason: 'GLOBAL_OR_NOINDEX' };
   }
 
+  const priority = doc.indexingPriority || calculateIndexingPriority(doc.title, doc.boardName, doc.category);
+
+  if (priority === 'LOW') {
+    console.log(`[SEO Indexing Hook] Skipping instant ping for LOW priority item (quota saved): ${url || doc?.title}`);
+    return { skipped: true, reason: 'LOW_PRIORITY_QUOTA_SAVED', priority: 'LOW' };
+  }
+
+  if (priority === 'NORMAL') {
+    initBatchQueueTimer();
+    normalBatchQueue.add(url);
+    console.log(`[SEO Indexing Hook] Queued URL into 15-minute batched queue (NORMAL priority): ${url}`);
+    return { queued: true, queueSize: normalBatchQueue.size, priority: 'NORMAL' };
+  }
+
+  // URGENT: Dispatch instant ping to Google Indexing API & IndexNow immediately
   try {
+    console.log(`[SEO Indexing Hook] ⚡ DISPATCHING INSTANT PING (URGENT priority): ${url}`);
     const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
-    return await notifyAllIndexing(url, 'URL_UPDATED');
+    const result = await notifyAllIndexing(url, 'URL_UPDATED');
+    return { dispatched: true, result, priority: 'URGENT' };
   } catch (err) {
     console.warn(`[SEO Indexing Hook] Ping warning: ${err.message}`);
-    return { error: err.message };
+    return { error: err.message, priority: 'URGENT' };
   }
 }
 
 module.exports = {
   processSeoAutomation,
   dispatchSeoIndexing,
+  calculateIndexingPriority,
+  processNormalBatchQueue,
+  normalBatchQueue,
   sanitizeTitleForSeo,
   extractShortTailKeywords,
   buildLongTailKeywords,
   calculateSeoScore,
   generateCoreFaqs
 };
+
 

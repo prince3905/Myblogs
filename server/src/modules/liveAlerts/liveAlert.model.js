@@ -23,6 +23,7 @@ const liveAlertSchema = new mongoose.Schema(
     status: { type: String, enum: ['active', 'drafted', 'published', 'expired'], default: 'active' },
     isGlobal: { type: Boolean, default: false, index: true },
     isIndexable: { type: Boolean, default: true, index: true },
+    indexingPriority: { type: String, enum: ['URGENT', 'NORMAL', 'LOW'], default: 'NORMAL', index: true },
     seoEngine: { type: seoEngineSchema, default: () => ({ isAutoMode: true }) }
   },
   { timestamps: true }
@@ -44,6 +45,12 @@ liveAlertSchema.pre('save', function (next) {
       this.slug = sanitizeJobSlug(this.title, this.boardName, this._id ? this._id.toString() : '');
     } catch (slugErr) {}
   }
+
+  // Auto-calculate High-Demand Indexing Priority
+  try {
+    const { calculateIndexingPriority } = require('../seo/seoAutomation.hook');
+    this.indexingPriority = calculateIndexingPriority(this.title, this.boardName, this.category);
+  } catch (prioErr) {}
 
   // Strict Date Clamp: Never allow a future parsedPostDate in the database
   if (this.parsedPostDate && this.parsedPostDate > now) {
@@ -144,10 +151,10 @@ liveAlertSchema.post('save', async function (doc) {
       const config = await SiteSeoConfig.getOrCreate();
       const canonicalJobUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${doc.slug}`;
 
-      // 1. Google & Bing Ping
+      // 1. Conditional Google & Multi-Engine Priority Indexing Ping
       if (config.autoPingIndexingApi !== false) {
-        const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
-        notifyAllIndexing(canonicalJobUrl, 'URL_UPDATED').catch(() => {});
+        const { dispatchSeoIndexing } = require('../seo/seoAutomation.hook');
+        dispatchSeoIndexing(doc, canonicalJobUrl).catch(() => {});
       }
 
       // 2. Telegram Dispatch

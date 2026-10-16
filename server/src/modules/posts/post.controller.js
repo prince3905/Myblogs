@@ -576,8 +576,9 @@ async function updatePost(req, res, next) {
     invalidateFeedCache();
 
     if (existing.status === 'published' && existing.isIndexable !== false && existing.isGlobal !== true) {
-      const { notifyAllIndexing, notifyUrl } = require('../../shared/utils/google-indexing');
-      notifyAllIndexing(postUrl(existing), 'URL_UPDATED').catch(() => {});
+      const { dispatchSeoIndexing } = require('../seo/seoAutomation.hook');
+      const { notifyUrl } = require('../../shared/utils/google-indexing');
+      dispatchSeoIndexing(existing, postUrl(existing)).catch(() => {});
 
       if (oldStatus === 'published' && oldUrl !== postUrl(existing)) {
         notifyUrl(oldUrl, 'URL_DELETED').catch(() => {});
@@ -727,6 +728,11 @@ async function sitemap(req, res) {
 
     if (isDbConnected) {
       // 2. Published Sarkari Job articles
+      // 2. Published Sarkari Job articles (Priority Tier Sorted)
+      const priorityWeightMap = { URGENT: 3, NORMAL: 2, LOW: 1 };
+      const priorityTagMap = { URGENT: '1.0', NORMAL: '0.8', LOW: '0.5' };
+      const { calculateIndexingPriority } = require('../seo/seoAutomation.hook');
+
       try {
         const posts = await BlogPost.find({ 
           status: 'published',
@@ -735,16 +741,29 @@ async function sitemap(req, res) {
           category: { $regex: /job|sarkari|exam|result|recruitment/i },
           slug: { $exists: true, $type: 'string', $ne: '' }
         })
-          .select('canonicalUrl category slug updatedAt publishedAt')
-          .sort({ updatedAt: -1 })
+          .select('title canonicalUrl category slug updatedAt publishedAt createdAt indexingPriority')
           .lean();
+
+        posts.sort((a, b) => {
+          const prioA = a.indexingPriority || calculateIndexingPriority(a.title, '', a.category);
+          const prioB = b.indexingPriority || calculateIndexingPriority(b.title, '', b.category);
+          const weightA = priorityWeightMap[prioA] || 2;
+          const weightB = priorityWeightMap[prioB] || 2;
+          if (weightB !== weightA) return weightB - weightA;
+
+          const dateA = new Date(a.updatedAt || a.publishedAt || a.createdAt || 0).getTime();
+          const dateB = new Date(b.updatedAt || b.publishedAt || b.createdAt || 0).getTime();
+          return dateB - dateA;
+        });
 
         urls = posts
           .filter(p => p.slug && p.category)
           .map((post) => {
+            const prio = post.indexingPriority || calculateIndexingPriority(post.title, '', post.category);
+            const priorityTag = priorityTagMap[prio] || '0.8';
             const canonical = normalizeCanonicalUrl(post.canonicalUrl || postUrl(post));
             const lastmod = post.updatedAt ? new Date(post.updatedAt).toISOString() : (post.publishedAt ? new Date(post.publishedAt).toISOString() : new Date().toISOString());
-            return formatSitemapEntry(canonical, lastmod, 'weekly', '0.8');
+            return formatSitemapEntry(canonical, lastmod, 'weekly', priorityTag);
           })
           .join('');
       } catch (postErr) {
@@ -788,7 +807,7 @@ async function sitemap(req, res) {
         console.warn('[Sitemap] Failed to append Web Stories:', storyErr.message);
       }
 
-      // 5. Active Indian Sarkari Live Alerts (Strictly Clean Slugs Only)
+      // 5. Active Indian Sarkari Live Alerts (Tier 1 URGENT at top with 1.0, Tier 2 with 0.8, Tier 3 with 0.5)
       try {
         const LiveAlert = require('../liveAlerts/liveAlert.model');
         const { sanitizeJobSlug } = require('../../shared/utils/jobSeoOptimizer');
@@ -798,18 +817,31 @@ async function sitemap(req, res) {
           isGlobal: { $ne: true },
           title: { $exists: true, $ne: '' }
         })
-          .select('_id slug title boardName updatedAt parsedPostDate createdAt')
-          .sort({ parsedPostDate: -1, createdAt: -1 })
-          .limit(1000)
+          .select('_id slug title boardName category state updatedAt parsedPostDate createdAt indexingPriority')
           .lean();
 
+        liveAlerts.sort((a, b) => {
+          const prioA = a.indexingPriority || calculateIndexingPriority(a.title, a.boardName, a.category);
+          const prioB = b.indexingPriority || calculateIndexingPriority(b.title, b.boardName, b.category);
+          const weightA = priorityWeightMap[prioA] || 2;
+          const weightB = priorityWeightMap[prioB] || 2;
+          if (weightB !== weightA) return weightB - weightA;
+
+          const dateA = new Date(a.updatedAt || a.parsedPostDate || a.createdAt || 0).getTime();
+          const dateB = new Date(b.updatedAt || b.parsedPostDate || b.createdAt || 0).getTime();
+          return dateB - dateA;
+        });
+
         liveAlertUrls = liveAlerts
+          .slice(0, 1000)
           .map((a) => {
             const cleanSlug = a.slug || sanitizeJobSlug(a.title, a.boardName, a._id ? a._id.toString() : '');
             // Strictly exclude raw 24-character hexadecimal MongoDB ObjectIds from sitemap.xml
             if (!cleanSlug || /^[0-9a-fA-F]{24}$/.test(cleanSlug)) return '';
+            const prio = a.indexingPriority || calculateIndexingPriority(a.title, a.boardName, a.category);
+            const priorityTag = priorityTagMap[prio] || '0.8';
             const lastmod = a.updatedAt ? new Date(a.updatedAt).toISOString() : (a.parsedPostDate ? new Date(a.parsedPostDate).toISOString() : new Date(a.createdAt).toISOString());
-            return formatSitemapEntry(`https://www.digitalhomeblog.in/india/sarkari-jobs/${cleanSlug}`, lastmod, 'daily', '0.9');
+            return formatSitemapEntry(`https://www.digitalhomeblog.in/india/sarkari-jobs/${cleanSlug}`, lastmod, 'daily', priorityTag);
           })
           .filter(Boolean)
           .join('');

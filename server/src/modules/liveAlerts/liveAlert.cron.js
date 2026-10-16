@@ -3,6 +3,7 @@ const cheerio = require('cheerio');
 const LiveAlert = require('./liveAlert.model');
 const { resolveOfficialGovtPortal, isDisallowedThirdPartyDomain } = require('../../shared/utils/govtPortalMap');
 const { extractDateFromSlugOrText, parseFlexibleDate } = require('../../shared/utils/dateExtractor');
+const { calculateIndexingPriority } = require('../seo/seoAutomation.hook');
 
 const USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -1072,6 +1073,7 @@ async function scrapeStateHubFeeds() {
             isOffline: isOfflineJob,
             isGlobal: false,
             isIndexable: true,
+            indexingPriority: calculateIndexingPriority(cleanTitle, boardName, target.state),
             status: 'active'
           });
 
@@ -1193,6 +1195,7 @@ async function scrapeOfflineVacancies() {
           isOffline: true,
           isGlobal: false,
           isIndexable: true,
+          indexingPriority: calculateIndexingPriority(cleanTitle, boardName, 'Offline Form'),
           offlineAddress: address || location || '',
           status: 'active'
         });
@@ -1416,7 +1419,8 @@ async function scrapeFeeds() {
               category: detectCategory(text, href),
               detailsText: 'Direct PDF notification link',
               isGlobal: false,
-              isIndexable: true
+              isIndexable: true,
+              indexingPriority: calculateIndexingPriority(text, board, 'PDF Notice')
             },
             $setOnInsert: {
               status: 'active'
@@ -1534,6 +1538,7 @@ async function scrapeFeeds() {
             detailsText: finalDetailsText,
             isGlobal: false,
             isIndexable: true,
+            indexingPriority: calculateIndexingPriority(cleanTitle, boardName, finalCategory),
             status: computedStatus
           }
         },
