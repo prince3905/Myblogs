@@ -38,6 +38,7 @@ const webStorySchema = new mongoose.Schema(
     post: { type: mongoose.Schema.Types.ObjectId, ref: 'BlogPost', required: true },
     slides: { type: [slideSchema], required: true },
     status: { type: String, enum: ['draft', 'published'], default: 'draft' },
+    isPublished: { type: Boolean, default: false },
     views: { type: Number, default: 0 },
     trafficSources: { type: trafficSourcesSchema, default: () => ({}) },
     devices: { type: devicesSchema, default: () => ({}) },
@@ -48,21 +49,28 @@ const webStorySchema = new mongoose.Schema(
 
 webStorySchema.index({ status: 1, createdAt: -1 });
 
-// Web Story Google Indexing Auto-Notification Hook
+// Synchronize status and isPublished flags
+webStorySchema.pre('save', function() {
+  if (this.isPublished && this.status !== 'published') {
+    this.status = 'published';
+  } else if (this.status === 'published') {
+    this.isPublished = true;
+  }
+});
+
+// Web Story Google & IndexNow Universal Auto-Notification Hook
 webStorySchema.post('save', async function(doc) {
-  if (doc.status === 'published') {
+  if (doc.status === 'published' || doc.isPublished === true) {
     try {
-      const { notifyUrl } = require('../../shared/utils/google-indexing');
-      const env = require('../../config/env');
-      
-      const storyUrl = `${env.siteUrl}/web-stories/${doc.slug}`;
+      const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
+      const storyUrl = `https://www.digitalhomeblog.in/web-stories/${doc.slug}`;
       console.log(`[Google Indexing] Auto-pinging index for published Web Story: ${storyUrl}`);
       
-      const result = await notifyUrl(storyUrl, 'URL_UPDATED');
-      if (result.success) {
+      const result = await notifyAllIndexing(storyUrl, 'URL_UPDATED');
+      if (result && (result.google?.success || result.indexNow?.success)) {
         console.log(`[Google Indexing] Successfully auto-indexed published Web Story: "${doc.title}"`);
       } else {
-        console.warn(`[Google Indexing] Auto-indexing failed for Web Story "${doc.title}":`, result.error || result.message);
+        console.warn(`[Google Indexing] Auto-indexing dispatched for Web Story "${doc.title}"`);
       }
     } catch (err) {
       console.error('[Google Indexing] Failed in WebStory post-save index notifier:', err.message);

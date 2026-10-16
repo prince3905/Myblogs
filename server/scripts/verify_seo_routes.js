@@ -63,15 +63,41 @@ async function runTests() {
   }
 
   try {
-    // 1. Robots.txt standard guidelines check
+    // 1. Robots.txt strict crawler isolation check
     const resRobots = await makeRequest('/robots.txt');
     assert('/robots.txt returns 200 OK', resRobots.statusCode === 200);
     assert('/robots.txt disallows /admin/', resRobots.body.includes('Disallow: /admin/'));
+    assert('/robots.txt disallows /admin/*', resRobots.body.includes('Disallow: /admin/*'));
     assert('/robots.txt disallows /api/', resRobots.body.includes('Disallow: /api/'));
-    assert('/robots.txt contains sitemap', resRobots.body.includes('Sitemap: https://digitalhomeblog.in/sitemap.xml'));
-    assert('/robots.txt DOES NOT block /*?*', !resRobots.body.includes('Disallow: /*?*'));
-    assert('/robots.txt DOES NOT block /tags/', !resRobots.body.includes('Disallow: /tags/'));
-    assert('/robots.txt DOES NOT block /job-alerts', !resRobots.body.includes('Disallow: /job-alerts'));
+    assert('/robots.txt disallows /api/*', resRobots.body.includes('Disallow: /api/*'));
+    assert('/robots.txt disallows /login', resRobots.body.includes('Disallow: /login'));
+    assert('/robots.txt disallows /auth/', resRobots.body.includes('Disallow: /auth/'));
+    assert('/robots.txt contains primary sitemap', resRobots.body.includes('Sitemap: https://www.digitalhomeblog.in/sitemap.xml'));
+    assert('/robots.txt contains web stories sitemap', resRobots.body.includes('Sitemap: https://www.digitalhomeblog.in/web-stories-sitemap.xml'));
+    assert('/robots.txt blocks /*?*', resRobots.body.includes('Disallow: /*?*'));
+    assert('/robots.txt blocks /*?page=*', resRobots.body.includes('Disallow: /*?page=*'));
+    assert('/robots.txt allows /web-stories/*', resRobots.body.includes('Allow: /web-stories/*'));
+    assert('/robots.txt allows /india/sarkari-jobs/*', resRobots.body.includes('Allow: /india/sarkari-jobs/*'));
+
+    // 1b. Dedicated Web Stories Sitemap verification
+    const resStoriesSitemap = await makeRequest('/web-stories-sitemap.xml');
+    assert('/web-stories-sitemap.xml returns 200 OK', resStoriesSitemap.statusCode === 200);
+    assert('/web-stories-sitemap.xml is XML', (resStoriesSitemap.headers['content-type'] || '').includes('xml'));
+    assert('/web-stories-sitemap.xml contains urlset', resStoriesSitemap.body.includes('<urlset'));
+
+    // 1c. Strict Admin & Private Route noindex, nofollow, noarchive header check
+    const resAdmin = await makeRequest('/admin');
+    assert('/admin returns X-Robots-Tag: noindex, nofollow, noarchive', 
+      (resAdmin.headers['x-robots-tag'] || '').toLowerCase().includes('noindex') &&
+      (resAdmin.headers['x-robots-tag'] || '').toLowerCase().includes('nofollow') &&
+      (resAdmin.headers['x-robots-tag'] || '').toLowerCase().includes('noarchive'));
+    assert('/admin HTML contains meta robots noindex, nofollow, noarchive',
+      resAdmin.body.includes('content="noindex, nofollow, noarchive"'));
+
+    const resLogin = await makeRequest('/admin/login');
+    assert('/admin/login returns X-Robots-Tag: noindex, nofollow, noarchive', 
+      (resLogin.headers['x-robots-tag'] || '').toLowerCase().includes('noindex') &&
+      (resLogin.headers['x-robots-tag'] || '').toLowerCase().includes('noarchive'));
 
     // 2. Legacy Blog Prefix Redirector (/blog/sarkari-jobs-exams/*)
     // 2a. Generic category hub without slug -> 301 to /india/sarkari-jobs

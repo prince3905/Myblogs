@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { normalizeCanonicalUrl } from '../../../shared/lib/urlUtils';
 
-export default function Seo({ title, description, image, url, canonical, keywords, jsonLd, noindex, hreflangs }) {
+export default function Seo({ title, description, image, url, canonical, keywords, jsonLd, noindex, hreflangs, robots }) {
   const siteName = 'Digital Home Sarkari Result';
   
   let cleanTitle = title || '';
@@ -58,7 +58,7 @@ export default function Seo({ title, description, image, url, canonical, keyword
         <link key={`hreflang-${idx}-${h.lang}`} rel="alternate" hrefLang={h.lang} href={h.href} />
       ))}
       <meta name="description" content={desc} />
-      <meta name="robots" content={noindex ? "noindex, follow" : "max-image-preview:large, index, follow"} />
+      <meta name="robots" content={robots || (noindex ? "noindex, follow" : "max-image-preview:large, index, follow")} />
       <meta name="keywords" content={keys} />
 
       {/* Open Graph */}

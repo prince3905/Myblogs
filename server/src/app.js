@@ -26,7 +26,7 @@ const settingsRoutes = require('./modules/settings/settings.routes');
 const currentAffairsRoutes = require('./modules/currentAffairs/currentAffairs.routes');
 const autoPublishRoutes = require('./modules/autoPublisher/multiCategory.routes');
 const { geoTranslateMiddleware } = require('./shared/middleware/geoTranslate');
-const { sitemap, robots, rssFeed, getHomepageData } = require('./modules/posts/post.controller');
+const { sitemap, webStoriesSitemap, robots, rssFeed, getHomepageData } = require('./modules/posts/post.controller');
 const serverCacheService = require('./shared/services/serverCacheService');
 
 const app = express();
@@ -40,6 +40,30 @@ app.use(serverCacheService.staticAssetCacheMiddleware());
 app.use((req, res, next) => {
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('Keep-Alive', 'timeout=65');
+  next();
+});
+
+// Strict Crawler Isolation: Disallow search bots from archiving/indexing any admin, auth, or private route
+app.use((req, res, next) => {
+  const p = (req.path || '').toLowerCase();
+  if (
+    p === '/login' ||
+    p.startsWith('/login/') ||
+    p === '/logout' ||
+    p.startsWith('/logout/') ||
+    p === '/admin' ||
+    p.startsWith('/admin/') ||
+    p === '/auth' ||
+    p.startsWith('/auth/') ||
+    p === '/temp' ||
+    p.startsWith('/temp/') ||
+    p === '/api/admin' ||
+    p.startsWith('/api/admin/') ||
+    p === '/api/auth' ||
+    p.startsWith('/api/auth/')
+  ) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
   next();
 });
 
@@ -450,6 +474,7 @@ app.use('/api/global-jobs', require('./modules/globalJobs/globalJob.routes'));
 const { renderWebStory } = require('./modules/posts/webstory.controller');
 app.get('/web-stories/:slug', renderWebStory);
 app.get('/sitemap.xml', sitemap);
+app.get('/web-stories-sitemap.xml', webStoriesSitemap);
 app.get('/robots.txt', robots);
 app.get('/rss.xml', rssFeed);
 app.get('/ads.txt', (req, res) => {
@@ -1761,7 +1786,10 @@ const KNOWN_EXACT_ROUTES = new Set([
   '/games',
   '/tags',
   '/tag',
-  '/admin/login'
+  '/admin/login',
+  '/login',
+  '/logout',
+  '/auth'
 ]);
 
 // Dynamic Category Page Route with Validation
@@ -1895,7 +1923,8 @@ app.get(['/tags/:tag', '/tag/:tag'], async (req, res, next) => {
 const KNOWN_PREFIX_ROUTES = [
   '/admin',
   '/tags/',
-  '/tag/'
+  '/tag/',
+  '/auth/'
 ];
 
 function isKnownFrontendRoute(pathname) {
@@ -2008,6 +2037,19 @@ app.get('*', async (req, res, next) => {
     const { normalizeCanonicalUrl } = require('./shared/utils/urlUtils');
     const cleanCanonicalUrl = normalizeCanonicalUrl(rawPath);
 
+    // Strict Crawler Isolation: Hardcode noindex, nofollow, noarchive on all admin & private pages
+    const isPrivateAdminRoute = 
+      rawPath === '/login' ||
+      rawPath.startsWith('/login/') || 
+      rawPath === '/logout' ||
+      rawPath.startsWith('/logout/') || 
+      rawPath === '/admin' ||
+      rawPath.startsWith('/admin/') || 
+      rawPath === '/auth' ||
+      rawPath.startsWith('/auth/') || 
+      rawPath === '/temp' ||
+      rawPath.startsWith('/temp/');
+
     // Non-indexed public pages (tags, search, archive) or routes marked with noindex header return X-Robots-Tag: noindex, follow
     const isNonIndexedPublicPage = 
       rawPath === '/tags' ||
@@ -2021,7 +2063,11 @@ app.get('*', async (req, res, next) => {
 
     const hasNoindexHeader = res.getHeader('x-robots-tag') === 'noindex, follow' || res.getHeader('X-Robots-Tag') === 'noindex, follow';
 
-    if (isNonIndexedPublicPage || hasNoindexHeader) {
+    if (isPrivateAdminRoute) {
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+      html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
+      html = html.replace('</head>', '    <meta name="robots" content="noindex, nofollow, noarchive" />\n</head>');
+    } else if (isNonIndexedPublicPage || hasNoindexHeader) {
       res.setHeader('X-Robots-Tag', 'noindex, follow');
       html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
       html = html.replace('</head>', '    <meta name="robots" content="noindex, follow" />\n</head>');

@@ -886,11 +886,68 @@ async function sitemap(req, res) {
 function robots(req, res) {
   res.type('text/plain');
   return res.send(`User-agent: *
-Disallow: /admin/
-Disallow: /api/
+# Core Indexable Assets (Daily Posts, Vacancies & Web Stories)
+Allow: /$
+Allow: /india/sarkari-jobs/
+Allow: /india/sarkari-jobs/*
+Allow: /web-stories/
+Allow: /web-stories/*
+Allow: /blog/
+Allow: /blog/*
 
-Sitemap: https://digitalhomeblog.in/sitemap.xml
+# Strictly Disallow All Admin, Auth, API & System Pages
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /api/
+Disallow: /api/*
+Disallow: /login
+Disallow: /logout
+Disallow: /auth/
+Disallow: /temp/
+
+# Strictly Block Dynamic Query Strings (Filter, Sort, Search, Session garbage)
+Disallow: /*?*
+Disallow: /*?page=*
+Disallow: /*?filter=*
+Disallow: /*?sort=*
+Disallow: /*?search=*
+
+# Dedicated Sitemaps
+Sitemap: https://www.digitalhomeblog.in/sitemap.xml
+Sitemap: https://www.digitalhomeblog.in/web-stories-sitemap.xml
 `);
+}
+
+async function webStoriesSitemap(req, res) {
+  try {
+    let storyUrls = '';
+    const WebStory = mongoose.models.WebStory || mongoose.model('WebStory');
+    const stories = await WebStory.find({
+      status: 'published',
+      slug: { $exists: true, $type: 'string', $ne: '' }
+    })
+      .select('slug updatedAt createdAt')
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .lean();
+
+    storyUrls = stories
+      .filter(s => s.slug && typeof s.slug === 'string' && s.slug.trim())
+      .map(story => {
+        const lastmod = story.updatedAt
+          ? new Date(story.updatedAt).toISOString()
+          : (story.createdAt ? new Date(story.createdAt).toISOString() : new Date().toISOString());
+        return `<url><loc>https://www.digitalhomeblog.in/web-stories/${story.slug.trim()}</loc><lastmod>${lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>`;
+      })
+      .join('');
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${storyUrls}</urlset>`;
+    res.type('application/xml');
+    return res.send(xml);
+  } catch (err) {
+    console.error('[WebStories Sitemap] Failed to generate XML:', err.message);
+    res.type('application/xml');
+    return res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`);
+  }
 }
 
 async function rssFeed(req, res) {
@@ -1350,6 +1407,7 @@ module.exports = {
   listCategories,
   siteMeta,
   sitemap,
+  webStoriesSitemap,
   robots,
   rssFeed,
   searchPosts,

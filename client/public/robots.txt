@@ -1,5 +1,30 @@
 User-agent: *
-Disallow: /admin/
-Disallow: /api/
+# Core Indexable Assets (Daily Posts, Vacancies & Web Stories)
+Allow: /$
+Allow: /india/sarkari-jobs/
+Allow: /india/sarkari-jobs/*
+Allow: /web-stories/
+Allow: /web-stories/*
+Allow: /blog/
+Allow: /blog/*
 
-Sitemap: https://digitalhomeblog.in/sitemap.xml
+# Strictly Disallow All Admin, Auth, API & System Pages
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /api/
+Disallow: /api/*
+Disallow: /login
+Disallow: /logout
+Disallow: /auth/
+Disallow: /temp/
+
+# Strictly Block Dynamic Query Strings (Filter, Sort, Search, Session garbage)
+Disallow: /*?*
+Disallow: /*?page=*
+Disallow: /*?filter=*
+Disallow: /*?sort=*
+Disallow: /*?search=*
+
+# Dedicated Sitemaps
+Sitemap: https://www.digitalhomeblog.in/sitemap.xml
+Sitemap: https://www.digitalhomeblog.in/web-stories-sitemap.xml

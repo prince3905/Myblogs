@@ -39,7 +39,11 @@ export default function AdminLoginPage() {
         bgcolor: 'background.default',
       }}
     >
-      <Seo title="Admin Login | Digital Home" description="Secure admin login for Digital Home management." />
+      <Seo 
+        title="Admin Login | Digital Home" 
+        description="Secure admin login for Digital Home management." 
+        robots="noindex, nofollow, noarchive"
+      />
       
       <Container maxWidth="sm">
         <Paper 

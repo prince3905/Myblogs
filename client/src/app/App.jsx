@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes, useParams, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Box, Typography } from '@mui/material';
 import ToastProvider from '../components/Toast';
 import AdminRoute from '../features/auth/components/AdminRoute';
@@ -128,8 +129,20 @@ function WebStoryRedirect() {
 }
 
 export default function App() {
+  const location = useLocation();
+  const isAdminOrAuthRoute = 
+    location.pathname.startsWith('/admin') || 
+    location.pathname.startsWith('/auth') || 
+    location.pathname === '/login' || 
+    location.pathname === '/logout';
+
   return (
     <ToastProvider>
+      {isAdminOrAuthRoute && (
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow, noarchive" />
+        </Helmet>
+      )}
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/web-stories/:slug" element={<WebStoryRedirect />} />

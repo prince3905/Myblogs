@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
   Box, Typography, Button, BottomNavigation, BottomNavigationAction, Paper,
 } from '@mui/material';
@@ -36,6 +37,9 @@ export default function AdminLayout() {
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', bgcolor: '#F6F4F3' }}>
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow, noarchive" />
+      </Helmet>
       {/* Desktop Sidebar */}
       <Box
         sx={{

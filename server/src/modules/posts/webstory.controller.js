@@ -650,9 +650,24 @@ async function getAdminWebStoryById(req, res) {
 
 async function createWebStory(req, res) {
   try {
-    const { title, slug, postId, slides } = req.body;
-    const newStory = new WebStory({ title, slug, post: postId, slides, status: 'published' });
+    const { title, slug, postId, slides, status, isPublished } = req.body;
+    const finalPublished = isPublished === true || status === 'published';
+    const newStory = new WebStory({
+      title,
+      slug,
+      post: postId,
+      slides,
+      status: finalPublished ? 'published' : (status || 'draft'),
+      isPublished: finalPublished
+    });
     await newStory.save();
+
+    if (finalPublished) {
+      const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
+      const storyUrl = `https://www.digitalhomeblog.in/web-stories/${newStory.slug}`;
+      notifyAllIndexing(storyUrl, 'URL_UPDATED').catch(() => {});
+    }
+
     res.status(201).json(newStory);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -662,7 +677,22 @@ async function createWebStory(req, res) {
 async function updateWebStory(req, res) {
   try {
     const { id } = req.params;
-    const updated = await WebStory.findByIdAndUpdate(id, req.body, { new: true });
+    const updateData = { ...req.body };
+    if (updateData.isPublished === true) {
+      updateData.status = 'published';
+    } else if (updateData.status === 'published') {
+      updateData.isPublished = true;
+    }
+
+    const updated = await WebStory.findByIdAndUpdate(id, updateData, { new: true });
+    if (!updated) return res.status(404).json({ error: 'Web Story not found' });
+
+    if (updated.status === 'published' || updated.isPublished === true) {
+      const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
+      const storyUrl = `https://www.digitalhomeblog.in/web-stories/${updated.slug}`;
+      notifyAllIndexing(storyUrl, 'URL_UPDATED').catch(() => {});
+    }
+
     res.json(updated);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -685,16 +715,16 @@ async function pingWebStoryIndexing(req, res) {
     const story = await WebStory.findById(id).lean();
     if (!story) return res.status(404).json({ error: 'Web Story not found' });
 
-    const { notifyUrl } = require('../../shared/utils/google-indexing');
+    const { notifyAllIndexing } = require('../../shared/utils/google-indexing');
     const storyUrl = `https://www.digitalhomeblog.in/web-stories/${story.slug}`;
-    const result = await notifyUrl(storyUrl, 'URL_UPDATED');
+    const result = await notifyAllIndexing(storyUrl, 'URL_UPDATED');
 
     const { logAutomation } = require('../../shared/utils/automationLogger');
     logAutomation({
       service: 'SEO_INDEXING',
       level: 'SUCCESS',
       action: 'Google Index Ping (WebStory)',
-      message: `Pinged Google Indexing API for WebStory "${story.title}"`
+      message: `Pinged Google Indexing & IndexNow for WebStory "${story.title}"`
     });
 
     res.json({ success: true, url: storyUrl, result });
