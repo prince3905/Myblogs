@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
+const { sanitizeAndDeduplicateTitle } = require('../../shared/utils/titleSanitizer');
 
 require('./post.model');
 require('./webstory.model');
+require('../liveAlerts/liveAlert.model');
 
 const WebStory = mongoose.model('WebStory');
 const BlogPost = mongoose.model('BlogPost');
+const LiveAlert = mongoose.model('LiveAlert');
 
 function catUrlSlug(category) {
   if (!category) return 'blog';
@@ -182,7 +185,7 @@ async function renderWebStory(req, res, next) {
         { slug: slug },
         ...(isObjectId ? [{ _id: slug }] : [])
       ]
-    }).populate('post').lean();
+    }).populate('post').populate('liveAlert').lean();
 
     if (!story) {
       res.setHeader('X-Robots-Tag', 'noindex, nofollow');
@@ -232,16 +235,21 @@ async function renderWebStory(req, res, next) {
     // Record view & traffic analytics in background
     recordStoryView(story._id, req);
 
-    // Resolve post path details
-    const categorySlug = catUrlSlug(story.post?.category);
-    const postUrl = `https://www.digitalhomeblog.in/blog/${categorySlug}/${story.slug}`;
+    // Resolve direct final post path (no 301 redirect chains)
+    let postUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${story.slug}`;
+    if (story.post && story.post.category && story.post.category !== 'Sarkari Jobs & Exams') {
+      const categorySlug = catUrlSlug(story.post.category);
+      postUrl = `https://www.digitalhomeblog.in/blog/${categorySlug}/${story.slug}`;
+    }
     const canonicalUrl = `https://www.digitalhomeblog.in/web-stories/${story.slug}`;
 
     const coverImage = formatAmpUrl(story.slides?.[0]?.image);
-    const publisherLogo = 'https://www.digitalhomeblog.in/logo.png';
+    // 1:1 Square Publisher Logo (AMP & Google Discover Compliant: 512x512)
+    const publisherLogo = 'https://www.digitalhomeblog.in/logo-square.png';
 
-    const escapedTitle = escapeXml(story.title);
-    const escapedDesc = escapeXml(story.slides?.[0]?.text || story.title);
+    const cleanTitle = sanitizeAndDeduplicateTitle(story.title || '');
+    const escapedTitle = escapeXml(cleanTitle);
+    const escapedDesc = escapeXml(story.slides?.[0]?.text || cleanTitle);
 
     const ampHtml = `<!doctype html>
 <html amp lang="hi">
@@ -290,7 +298,9 @@ async function renderWebStory(req, res, next) {
         "name": "Digital Home",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://www.digitalhomeblog.in/logo.png"
+          "url": "https://www.digitalhomeblog.in/logo-square.png",
+          "width": 512,
+          "height": 512
         }
       }
     }
@@ -396,9 +406,7 @@ async function renderWebStory(req, res, next) {
                title="${escapedTitle}"
                publisher="Digital Home"
                publisher-logo-src="${publisherLogo}"
-               poster-portrait-src="${coverImage}"
-               poster-square-src="${coverImage}"
-               poster-landscape-src="${coverImage}">
+               poster-portrait-src="${coverImage}">
                
       <!-- Google AdSense Auto-Ads between story slides -->
       <amp-story-auto-ads>

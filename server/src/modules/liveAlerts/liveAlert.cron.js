@@ -1058,7 +1058,7 @@ async function scrapeStateHubFeeds() {
             (!extracted.applyUrl && extracted.pdfUrl)
           );
 
-          await LiveAlert.create({
+          const createdAlert = await LiveAlert.create({
             title: cleanTitle,
             boardName,
             sourceUrl: uniqueKey,
@@ -1077,6 +1077,13 @@ async function scrapeStateHubFeeds() {
             indexingPriority: calculateIndexingPriority(cleanTitle, boardName, target.state),
             status: 'active'
           });
+
+          if (createdAlert && createdAlert.indexingPriority === 'URGENT') {
+            try {
+              const { generateWebStoryForLiveAlert } = require('../posts/webstory.service');
+              generateWebStoryForLiveAlert(createdAlert).catch(() => {});
+            } catch (wsErr) {}
+          }
 
           savedCount++;
           pageCount++;
@@ -1548,6 +1555,17 @@ async function scrapeFeeds() {
       
       console.log(`[LiveAlert Scraper] Saved alert: "${cleanTitle}" [State: ${state}]`);
       totalSaved++;
+
+      if (computedStatus === 'active') {
+        try {
+          const { generateWebStoryForLiveAlert } = require('../posts/webstory.service');
+          LiveAlert.findOne({ sourceUrl: href }).then(doc => {
+            if (doc && (doc.indexingPriority === 'URGENT' || doc.category === 'Current Affairs')) {
+              generateWebStoryForLiveAlert(doc).catch(() => {});
+            }
+          }).catch(() => {});
+        } catch (wsErr) {}
+      }
     } catch (err) {
       console.error(`[LiveAlert Scraper] Failed to process listing:`, listing.href, err.message);
     }
@@ -1725,6 +1743,23 @@ async function scrapeFeeds() {
     }
   } catch (autoErr) {
     console.error(`[Autopilot] Main auto-draft trigger failed:`, autoErr.message);
+  }
+
+  // Auto-Generate Deterministic High-CTR Web Stories for Tier-1 LiveAlert Jobs (Max 8/day)
+  try {
+    const { generateWebStoryForLiveAlert } = require('../posts/webstory.service');
+    const urgentCandidateAlerts = await LiveAlert.find({
+      status: 'active',
+      isGlobal: { $ne: true },
+      indexingPriority: 'URGENT',
+      createdAt: { $gte: new Date(Date.now() - 48 * 60 * 60 * 1000) }
+    }).sort({ createdAt: -1 }).limit(10);
+
+    for (const uAlert of urgentCandidateAlerts) {
+      await generateWebStoryForLiveAlert(uAlert);
+    }
+  } catch (wsErr) {
+    console.warn('[LiveAlert Cron] Auto WebStory generation batch notice:', wsErr.message);
   }
 
   return totalSaved;

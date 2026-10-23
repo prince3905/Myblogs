@@ -166,6 +166,17 @@ function buildIndianJobScaffoldHtml(alert = {}, isExpired = false, recAlerts = [
     <!-- Status Banner -->
     ${statusBanner}
 
+    <!-- Crawlable Web Story Visual Reel Callout -->
+    <div style="margin: 14px 0 18px; padding: 12px 16px; background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%); border: 1.5px solid #bfdbfe; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.25rem;">⚡</span>
+        <span style="font-size: 0.92rem; font-weight: 700; color: #1e40af;">इस भर्ती की 30-Second विजुअल स्टोरी देखें (Web Story / Reels):</span>
+      </div>
+      <a href="/web-stories/${encodeURIComponent(postSlug)}" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff !important; padding: 7px 16px; border-radius: 9999px; font-size: 0.82rem; font-weight: 800; text-decoration: none; box-shadow: 0 2px 8px rgba(37,99,235,0.3); white-space: nowrap;">
+        📱 देखें Web Story ➔
+      </a>
+    </div>
+
     <!-- 1-Tap Viral Peer Sharing Bar (WhatsApp & Telegram Community) -->
     <div class="job-share-actions">
       <a href="${whatsappShareUrl}" target="_blank" rel="noopener noreferrer" class="job-share-btn btn-whatsapp-viral">

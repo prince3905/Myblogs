@@ -555,6 +555,61 @@ function renderBlogContent(alert, onActionClick) {
 
   return (
     <Box sx={{ color: '#E2E8F0', fontSize: '0.9rem', lineHeight: 1.6 }}>
+      {/* Visual Web Story Reel Banner (Internal Linking & Student Engagement) */}
+      {alert.slug && (
+        <Box 
+          component="a"
+          href={`/web-stories/${alert.slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{
+            mb: 2.5,
+            p: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1.5,
+            background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.22) 0%, rgba(139, 92, 246, 0.22) 100%)',
+            border: '1px solid rgba(56, 189, 248, 0.4)',
+            borderRadius: '12px',
+            textDecoration: 'none',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              borderColor: '#38BDF8',
+              transform: 'translateY(-1px)',
+              boxShadow: '0 4px 14px rgba(56, 189, 248, 0.25)'
+            }
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography sx={{ fontSize: '1.25rem' }}>⚡</Typography>
+            <Box>
+              <Typography sx={{ fontWeight: 800, color: '#38BDF8', fontSize: '0.86rem', lineHeight: 1.2 }}>
+                30-Second Visual Web Story (Reels)
+              </Typography>
+              <Typography sx={{ color: '#CBD5E1', fontSize: '0.74rem', mt: 0.3 }}>
+                पूरी भर्ती की जानकारी आसान रील्स / स्लाइड्स में देखें
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{
+            px: 1.8,
+            py: 0.7,
+            bgcolor: '#2563EB',
+            color: '#FFFFFF',
+            borderRadius: '9999px',
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            whiteSpace: 'nowrap',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5
+          }}>
+            देखें स्टोरी ➔
+          </Box>
+        </Box>
+      )}
+
       {parsed.shortInfo && (
         <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(56, 189, 248, 0.12)', borderRadius: 2, borderLeft: '4px solid #38BDF8', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#38BDF8', mb: 0.5, textTransform: 'uppercase', fontSize: '0.72rem', letterSpacing: 0.8 }}>

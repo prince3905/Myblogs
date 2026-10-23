@@ -35,7 +35,8 @@ const webStorySchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    post: { type: mongoose.Schema.Types.ObjectId, ref: 'BlogPost', required: true },
+    post: { type: mongoose.Schema.Types.ObjectId, ref: 'BlogPost', required: false },
+    liveAlert: { type: mongoose.Schema.Types.ObjectId, ref: 'LiveAlert', required: false, index: true },
     slides: { type: [slideSchema], required: true },
     status: { type: String, enum: ['draft', 'published'], default: 'draft' },
     isPublished: { type: Boolean, default: false },

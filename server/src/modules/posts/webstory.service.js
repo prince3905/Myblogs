@@ -1,9 +1,16 @@
 const mongoose = require('mongoose');
 const axios = require('axios');
 const env = require('../../config/env');
+const { sanitizeAndDeduplicateTitle } = require('../../shared/utils/titleSanitizer');
+const { calculateIndexingPriority } = require('../seo/seoAutomation.hook');
+
+require('./webstory.model');
+require('./post.model');
+require('../liveAlerts/liveAlert.model');
 
 const BlogPost = mongoose.model('BlogPost');
 const WebStory = mongoose.model('WebStory');
+const LiveAlert = mongoose.model('LiveAlert');
 
 const UNSPLASH_PORTRAIT_PHOTOS = [
   'photo-1542831371-29b0f74f9713', 'photo-1499750310107-5fef28a66643', 'photo-1498050108023-c5249f4df085',
@@ -275,4 +282,162 @@ Each slide MUST contain a descriptive 'imageQuery' to fetch the background.
   }
 }
 
-module.exports = { generateWebStoryForPost, callAiJson, fetchPortraitImage };
+/**
+ * Fast, deterministic (no LLM, no 429 risk) Web Story generator for Tier-1 LiveAlert jobs.
+ * Enforces strict crawl budget rules (max 8 stories per day, Tier-1 or 50+ posts only).
+ */
+async function generateWebStoryForLiveAlert(alertDoc) {
+  try {
+    if (!alertDoc || !alertDoc._id || !alertDoc.slug) {
+      return null;
+    }
+
+    // 1. Strict Geo & Niche Filter: Indian Government Jobs only
+    if (alertDoc.isGlobal === true) {
+      return null;
+    }
+
+    // 2. Strict Qualification Filter (Crawl Budget Protection)
+    const rawPriority = alertDoc.indexingPriority || calculateIndexingPriority(alertDoc.title, alertDoc.boardName, alertDoc.category);
+    
+    // Parse vacancy count from detailsText or title
+    const vacancyMatch = (alertDoc.detailsText || alertDoc.title || '').match(/(?:total vacancies|vacancies|posts?|कुल पद)[^\d\n]*(\d+[\d,]*)/i)
+      || (alertDoc.title || '').match(/\b(\d+)\s*(?:posts|पद|vacancies)\b/i);
+    const parsedVacancies = vacancyMatch ? parseInt(vacancyMatch[1].replace(/,/g, ''), 10) : 0;
+    const isCurrentAffairs = alertDoc.category === 'Current Affairs';
+    const isUrgent = rawPriority === 'URGENT';
+    const isHighVacancy = parsedVacancies >= 50;
+
+    if (!isUrgent && !isHighVacancy && !isCurrentAffairs) {
+      return null;
+    }
+
+    // 3. De-duplication Check: If story already exists, skip
+    const existingStory = await WebStory.findOne({
+      $or: [
+        { slug: alertDoc.slug },
+        { liveAlert: alertDoc._id }
+      ]
+    }).select('_id slug');
+
+    if (existingStory) {
+      return existingStory._id;
+    }
+
+    // 4. Strict Daily Cap: Maximum 8 LiveAlert Web Stories per day
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const todayCount = await WebStory.countDocuments({
+      createdAt: { $gte: startOfToday },
+      liveAlert: { $exists: true }
+    });
+
+    if (todayCount >= 8) {
+      console.log(`[WebStory LiveAlert] Daily crawl budget cap of 8 stories reached today. Skipping: "${alertDoc.title}"`);
+      return null;
+    }
+
+    // 5. Clean & Deduplicate Title
+    const cleanTitle = sanitizeAndDeduplicateTitle(alertDoc.title || 'Sarkari Job Notification 2026');
+    const board = (alertDoc.boardName && alertDoc.boardName !== 'Official Board') ? alertDoc.boardName : 'सरकारी विभाग';
+    const state = alertDoc.state || 'All India';
+    const lastDate = (alertDoc.lastDate && alertDoc.lastDate !== 'N/A') ? alertDoc.lastDate : 'जल्द घोषित होगी';
+    const vacancyBadge = parsedVacancies > 0 ? `${parsedVacancies}+` : 'विभिन्न';
+
+    // Parse qualification summary
+    let qualification = '10वीं / 12वीं / स्नातक / संबंधित डिप्लोमा';
+    if (alertDoc.detailsText) {
+      const qMatch = alertDoc.detailsText.match(/(?:qualification|योग्यता|eligibility)[^\n:]*[:\-]([^\n]+)/i);
+      if (qMatch && qMatch[1].trim()) {
+        qualification = qMatch[1].trim().slice(0, 60);
+      }
+    }
+
+    // Parse pay scale / salary summary
+    let salary = 'नियमानुसार उत्कृष्ट 7th CPC वेतनमान';
+    if (alertDoc.detailsText) {
+      const sMatch = alertDoc.detailsText.match(/(?:pay scale|salary|वेतनमान)[^\n:]*[:\-]([^\n]+)/i);
+      if (sMatch && sMatch[1].trim()) {
+        salary = sMatch[1].trim().slice(0, 60);
+      }
+    }
+
+    // 6. Source 5 High-Quality Portrait Background Images
+    const usedImages = new Set();
+    const slideQueries = [
+      'government building office career',
+      'indian railways police uniform desk',
+      'student graduate examination library',
+      'calendar date salary time document',
+      'success achievement happy student mobile'
+    ];
+
+    const slideImages = [];
+    for (let i = 0; i < 5; i++) {
+      const img = await fetchPortraitImage(slideQueries[i], alertDoc.title, i, usedImages);
+      usedImages.add(img);
+      slideImages.push(img);
+    }
+
+    // 7. Assemble 5 High-Retention Slides
+    const finalSlides = [
+      {
+        heading: cleanTitle,
+        text: `🔥 बंपर भर्ती जारी! कुल ${vacancyBadge} पद। ${qualification} पास उम्मीदवारों के लिए सरकारी नौकरी का सुनहरा अवसर।`,
+        image: slideImages[0]
+      },
+      {
+        heading: `🏛️ विभाग एवं पद विवरण`,
+        text: `संगठन: ${board} | कुल पद: ${vacancyBadge} | कार्यक्षेत्र: ${state} | पद नाम व श्रेणीवार विवरण चेक करें।`,
+        image: slideImages[1]
+      },
+      {
+        heading: `📋 शैक्षणिक योग्यता व आयु सीमा`,
+        text: `आवश्यक योग्यता: ${qualification} | आयु सीमा व आरक्षित वर्गों को नियमानुसार अधिकतम आयु में छूट लागू।`,
+        image: slideImages[2]
+      },
+      {
+        heading: `📅 महत्वपूर्ण तिथियां व वेतनमान`,
+        text: `ऑनलाइन आवेदन की अंतिम तिथि: ${lastDate} | वेतनमान: ${salary} | अंतिम तारीख से पहले फॉर्म अवश्य भरें।`,
+        image: slideImages[3]
+      },
+      {
+        heading: `⚡ 100% आधिकारिक आवेदन लिंक`,
+        text: `पूरी जानकारी, आधिकारिक नोटिफिकेशन PDF व ऑनलाइन आवेदन लिंक के लिए नीचे Swipe Up करें।`,
+        image: slideImages[4]
+      }
+    ];
+
+    // 8. Create & Save WebStory Document
+    const newStory = new WebStory({
+      title: cleanTitle,
+      slug: alertDoc.slug,
+      liveAlert: alertDoc._id,
+      slides: finalSlides,
+      status: 'published',
+      isPublished: true,
+      isGlobal: false,
+      isIndexable: true,
+      views: 0
+    });
+
+    await newStory.save();
+    console.log(`[WebStory LiveAlert] ⚡ Auto-generated Web Story for Tier-1 alert: "${cleanTitle}" [Slug: ${alertDoc.slug}]`);
+
+    const { logAutomation } = require('../../shared/utils/automationLogger');
+    logAutomation({
+      service: 'WEB_STORY',
+      level: 'SUCCESS',
+      action: 'Tier-1 LiveAlert WebStory Created',
+      message: `Deterministic WebStory published for "${cleanTitle}" (${todayCount + 1}/8 today)`,
+      metadata: { title: cleanTitle, slug: alertDoc.slug, alertId: alertDoc._id, storyId: newStory._id }
+    });
+
+    return newStory._id;
+  } catch (err) {
+    console.error(`[WebStory LiveAlert] Failed to generate story for alert "${alertDoc?.title}":`, err.message);
+    return null;
+  }
+}
+
+module.exports = { generateWebStoryForPost, generateWebStoryForLiveAlert, callAiJson, fetchPortraitImage };
