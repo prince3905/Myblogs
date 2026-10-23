@@ -1,4 +1,5 @@
 const SiteSeoConfig = require('./siteSeoConfig.model');
+const { sanitizeAndDeduplicateTitle } = require('../../shared/utils/titleSanitizer');
 
 // Well-known recruiters and organizations in India
 const KNOWN_ORGS = [
@@ -12,16 +13,10 @@ const KNOWN_ORGS = [
 ];
 
 /**
- * Clean job title for high-CTR SEO rendering
+ * Clean job title for high-CTR SEO rendering and deduplicate repeated words
  */
 function sanitizeTitleForSeo(rawTitle = '') {
-  let title = (rawTitle || '').trim();
-  // Remove duplicate brackets, competitor names, messy characters
-  title = title.replace(/\s+/g, ' ');
-  title = title.replace(/[-–—]\s*(?:sarkariresult|freejobalert|sarkariexam)\S*/gi, '');
-  title = title.replace(/\s*\(Link:\s*[^\)]*\)/gi, '');
-  title = title.replace(/\s*#\|\|:\|\|\s*/g, ' ');
-  return title.trim();
+  return sanitizeAndDeduplicateTitle(rawTitle);
 }
 
 /**
@@ -185,6 +180,7 @@ async function processSeoAutomation(doc, options = {}) {
       if (!/\b(OUT|Apply Online|Direct Link)\b/i.test(metaTitle)) {
         metaTitle = `${metaTitle} – Apply Online`;
       }
+      metaTitle = sanitizeAndDeduplicateTitle(metaTitle);
       if (metaTitle.length > 70) {
         metaTitle = metaTitle.slice(0, 68).trim();
       }
@@ -340,6 +336,7 @@ module.exports = {
   calculateIndexingPriority,
   processNormalBatchQueue,
   normalBatchQueue,
+  sanitizeAndDeduplicateTitle,
   sanitizeTitleForSeo,
   extractShortTailKeywords,
   buildLongTailKeywords,

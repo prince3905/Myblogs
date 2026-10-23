@@ -4,6 +4,7 @@ const LiveAlert = require('./liveAlert.model');
 const { resolveOfficialGovtPortal, isDisallowedThirdPartyDomain } = require('../../shared/utils/govtPortalMap');
 const { extractDateFromSlugOrText, parseFlexibleDate } = require('../../shared/utils/dateExtractor');
 const { calculateIndexingPriority } = require('../seo/seoAutomation.hook');
+const { sanitizeAndDeduplicateTitle } = require('../../shared/utils/titleSanitizer');
 
 const USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -990,7 +991,7 @@ async function scrapeStateHubFeeds() {
           const boardName = rawBoard.replace(/\s+/g, ' ').trim() || `${target.state} Board`;
           const postName = rawPostName.replace(/\s+/g, ' ').trim();
 
-          const cleanTitle = `${boardName} ${postName} Recruitment 2026`.replace(/\s+/g, ' ').trim();
+          const cleanTitle = sanitizeAndDeduplicateTitle(`${boardName} ${postName}`, { appendRecruitment: true, year: '2026' });
 
           // Parse Dates
           const parsedDate = parseIndianDate(postDateStr) || new Date();
@@ -1116,7 +1117,7 @@ async function scrapeOfflineVacancies() {
 
     for (const item of offlineItems) {
       try {
-        const cleanTitle = item.title.replace(/\s+/g, ' ').trim();
+        const cleanTitle = sanitizeAndDeduplicateTitle(item.title);
         const existing = await LiveAlert.findOne({
           $or: [
             { title: cleanTitle },
@@ -1478,8 +1479,8 @@ async function scrapeFeeds() {
         ? details.officialUrl
         : resolveOfficialGovtPortal(title, boardName, safeGovtFallback);
 
-      // Final text sanitization — strip any remaining competitor mentions
-      const cleanTitle = stripSarkariResultMentionsAndLinks(title);
+      // Final text sanitization — strip any remaining competitor mentions and deduplicate title
+      const cleanTitle = sanitizeAndDeduplicateTitle(stripSarkariResultMentionsAndLinks(title));
       finalDetailsText = stripSarkariResultMentionsAndLinks(finalDetailsText);
 
       const detectedCat = detectCategory(title, href);

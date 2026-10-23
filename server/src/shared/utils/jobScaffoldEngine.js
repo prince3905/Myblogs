@@ -208,6 +208,13 @@ function buildIndianJobScaffoldHtml(alert = {}, isExpired = false, recAlerts = [
           <li><strong>अधिकतम आयु (Maximum Age):</strong> पदवार अधिसूचना नियमानुसार (27 से 40 वर्ष)</li>
           <li><strong>आयु में छूट (Age Relaxation):</strong> आरक्षित श्रेणियों (OBC को 3 वर्ष, SC/ST को 5 वर्ष एवं PwD अभ्यर्थियों को 10 वर्ष) को सरकारी नियमानुसार अधिकतम आयु सीमा में छूट देय होगी।</li>
         </ul>
+        <div style="margin-top: 14px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.2rem;">🧮</span>
+            <strong style="color: #92400e; font-size: 0.92rem;">अपनी सटीक आयु (Exact Age) चेक करें</strong>
+          </div>
+          <a href="/tools" style="display: inline-block; padding: 6px 16px; background: #d97706; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 750; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);">Free Age Calculator →</a>
+        </div>
       </div>
     </section>
 
@@ -271,6 +278,16 @@ function buildIndianJobScaffoldHtml(alert = {}, isExpired = false, recAlerts = [
       <h2 style="font-size: 1.25rem; font-weight: 800; color: #166534; margin-top: 0; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
         🔗 Important Links (Notification PDF & Apply Online - आधिकारिक लिंक)
       </h2>
+      <div style="margin-bottom: 16px; padding: 14px 18px; background: #eef2ff; border: 1.5px solid #c7d2fe; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.35rem;">📸</span>
+          <div>
+            <strong style="color: #3730a3; font-size: 0.94rem; display: block;">फॉर्म भरने के लिए 20KB–50KB फोटो और सिग्नेचर रीसाइज़ करें</strong>
+            <span style="color: #6366f1; font-size: 0.78rem;">100% Free Passport Photo & Signature Cropper / Compressor for Govt Application Forms</span>
+          </div>
+        </div>
+        <a href="/tools" style="display: inline-block; padding: 8px 18px; background: #4f46e5; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 750; font-size: 0.88rem; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);">Free Photo & Signature Compressor / Cropper →</a>
+      </div>
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
         ${!isExpired ? `<a href="${applyUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 13px 24px; background: #16a34a; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 800; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);">
           🟢 Apply Online (Direct Official Portal)

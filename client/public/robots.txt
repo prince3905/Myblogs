@@ -9,6 +9,7 @@ Allow: /blog/
 Allow: /blog/*
 
 # Strictly Disallow All Admin, Auth, API & System Pages
+Disallow: /admin
 Disallow: /admin/
 Disallow: /admin/*
 Disallow: /api/

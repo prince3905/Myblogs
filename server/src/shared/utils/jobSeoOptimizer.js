@@ -7,6 +7,8 @@
  * and valid FAQPage + JobPosting JSON-LD schemas.
  */
 
+const { sanitizeAndDeduplicateTitle } = require('./titleSanitizer');
+
 function sanitizeJobSlug(title = '', boardName = '', fallbackId = '') {
   let text = `${title}`.toLowerCase();
 
@@ -106,8 +108,8 @@ function parseJobMetadata(alert = {}) {
   jobName = jobName.replace(/\s*\|\s*(?:Digital Home|Sarkari Result|Official).*$/i, '');
   // Strip redundant phrases at the end like "Online Form 2026", "Online Form", "Apply Online"
   jobName = jobName.replace(/\s*(?:Online Form|Apply Online|Recruitment|Notification)\s*(?:202[4-9]|2030)?\s*$/i, '');
-  // Clean extra spaces
-  jobName = jobName.replace(/\s+/g, ' ').trim();
+  // Clean extra spaces and deduplicate words
+  jobName = sanitizeAndDeduplicateTitle(jobName);
   if (!jobName) {
     jobName = rawBoard || 'Government Department';
   }
@@ -188,7 +190,8 @@ function buildHighCtrJobTitle(meta) {
   const orgPart = cleanOrg ? `${cleanOrg} ` : '';
   const postPart = cleanPost || 'Vacancies';
 
-  return `Sarkari Job: ${stateStr}${orgPart}${postPart} Recruitment ${year} – Apply Online Form, Eligibility`.replace(/\s+/g, ' ').trim();
+  const rawTitle = `Sarkari Job: ${stateStr}${orgPart}${postPart} Recruitment ${year} – Apply Online Form, Eligibility`;
+  return sanitizeAndDeduplicateTitle(rawTitle);
 }
 
 /**
@@ -265,6 +268,7 @@ function generateJobFaqSchema(meta) {
 }
 
 module.exports = {
+  sanitizeAndDeduplicateTitle,
   sanitizeJobSlug,
   parseJobMetadata,
   buildHighCtrJobTitle,

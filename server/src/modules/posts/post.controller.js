@@ -4,6 +4,7 @@ const BlogPost = Post;
 const env = require('../../config/env');
 const { makeSlug, normalizeCsvOrArray, calculateReadingTime, toTitleCase } = require('../../shared/utils/post.helpers');
 const { processAIOutput } = require('../ai/aiPostProcessor');
+const { sanitizeAndDeduplicateTitle } = require('../../shared/utils/titleSanitizer');
 
 function catUrlSlug(category) {
   if (!category) return 'blog';
@@ -30,7 +31,7 @@ async function ensureUniqueSlug(baseSlug, currentId = null) {
 }
 
 function mapPayload(body) {
-  const title = toTitleCase(`${body.title || ''}`);
+  const title = sanitizeAndDeduplicateTitle(toTitleCase(`${body.title || ''}`));
   const excerpt = `${body.excerpt || ''}`.trim();
   const content = `${body.content || ''}`.trim();
   const category = `${body.category || ''}`.trim();
@@ -49,7 +50,7 @@ function mapPayload(body) {
     featuredImage: `${body.featuredImage || ''}`.trim(),
     tags: normalizeCsvOrArray(body.tags),
     status,
-    seoTitle: `${body.seoTitle || ''}`.trim() || title,
+    seoTitle: sanitizeAndDeduplicateTitle(`${body.seoTitle || ''}`.trim()) || title,
     seoDescription,
     seoKeywords: normalizeCsvOrArray(body.seoKeywords),
     focusKeyword: `${body.focusKeyword || ''}`.trim(),
@@ -934,6 +935,7 @@ Allow: /blog/
 Allow: /blog/*
 
 # Strictly Disallow All Admin, Auth, API & System Pages
+Disallow: /admin
 Disallow: /admin/
 Disallow: /admin/*
 Disallow: /api/

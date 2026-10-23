@@ -38,7 +38,8 @@ export default function AdminLayout() {
   return (
     <Box sx={{ height: '100vh', display: 'flex', bgcolor: '#F6F4F3' }}>
       <Helmet>
-        <meta name="robots" content="noindex, nofollow, noarchive" />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="googlebot" content="noindex, nofollow" />
       </Helmet>
       {/* Desktop Sidebar */}
       <Box

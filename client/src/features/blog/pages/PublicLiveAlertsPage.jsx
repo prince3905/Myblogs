@@ -24,6 +24,7 @@ import AdSlot from '../../../components/AdSlot';
 import { request } from '../../../shared/lib/api';
 import TelegramRedirectModal from '../../../components/TelegramRedirectModal';
 import { resolveOfficialGovtPortal } from '../../../shared/lib/govtPortalMap';
+import { sanitizeAndDeduplicateTitle } from '../../../shared/lib/titleSanitizer';
 
 const keyKeywords = [
   'Application Begin',
@@ -450,8 +451,107 @@ function parseDetails(text, alert) {
   return parsed;
 }
 
+function AgeCalculatorCallout() {
+  return (
+    <Box
+      sx={{
+        my: 1.5,
+        p: { xs: 1.4, sm: 1.8 },
+        bgcolor: 'rgba(245, 158, 11, 0.12)',
+        border: '1px solid rgba(245, 158, 11, 0.35)',
+        borderRadius: 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 1.2
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography sx={{ fontSize: '1.25rem', lineHeight: 1 }}>🧮</Typography>
+        <Typography sx={{ color: '#FDE68A', fontWeight: 800, fontSize: { xs: '0.84rem', sm: '0.9rem' } }}>
+          अपनी सटीक आयु (Exact Age) चेक करें
+        </Typography>
+      </Box>
+      <Button
+        component={Link}
+        to="/tools"
+        size="small"
+        variant="contained"
+        sx={{
+          bgcolor: '#D97706',
+          color: '#FFFFFF',
+          fontWeight: 800,
+          fontSize: '0.8rem',
+          textTransform: 'none',
+          borderRadius: 1.5,
+          px: 2,
+          py: 0.6,
+          boxShadow: '0 2px 8px rgba(217, 119, 6, 0.35)',
+          '&:hover': { bgcolor: '#B45309' }
+        }}
+      >
+        Free Age Calculator →
+      </Button>
+    </Box>
+  );
+}
+
+function PhotoSignatureResizerBanner() {
+  return (
+    <Box
+      sx={{
+        my: 2,
+        p: { xs: 1.8, sm: 2.2 },
+        bgcolor: 'rgba(99, 102, 241, 0.12)',
+        border: '1.5px solid rgba(99, 102, 241, 0.35)',
+        borderRadius: 2.5,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 1.5
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+        <Typography sx={{ fontSize: '1.4rem', lineHeight: 1 }}>📸</Typography>
+        <Box>
+          <Typography sx={{ color: '#E0E7FF', fontWeight: 850, fontSize: { xs: '0.86rem', sm: '0.94rem' } }}>
+            फॉर्म भरने के लिए 20KB–50KB फोटो और सिग्नेचर रीसाइज़ करें
+          </Typography>
+          <Typography sx={{ color: '#94A3B8', fontSize: '0.74rem', mt: 0.3 }}>
+            100% Free Passport Photo & Signature Cropper / Compressor for Govt Application Forms
+          </Typography>
+        </Box>
+      </Box>
+      <Button
+        component={Link}
+        to="/tools"
+        size="small"
+        variant="contained"
+        sx={{
+          bgcolor: '#4F46E5',
+          color: '#FFFFFF',
+          fontWeight: 800,
+          fontSize: '0.82rem',
+          textTransform: 'none',
+          borderRadius: 1.5,
+          px: 2.2,
+          py: 0.7,
+          boxShadow: '0 2px 10px rgba(79, 70, 229, 0.4)',
+          '&:hover': { bgcolor: '#4338CA' }
+        }}
+      >
+        Free Photo & Signature Compressor / Cropper →
+      </Button>
+    </Box>
+  );
+}
+
 function renderBlogContent(alert, onActionClick) {
   const parsed = parseDetails(alert.detailsText, alert);
+  let hasRenderedAgeCta = false;
+  let hasRenderedPhotoCta = false;
 
   return (
     <Box sx={{ color: '#E2E8F0', fontSize: '0.9rem', lineHeight: 1.6 }}>
@@ -497,34 +597,43 @@ function renderBlogContent(alert, onActionClick) {
             borderLeftColor = '#10B981';
           }
 
+          const isAgeSection = titleLower.includes('age limit') || titleLower.includes('age criteria');
+          const isApplySection = titleLower.includes('how to fill') || titleLower.includes('how to apply');
+
+          if (isAgeSection) hasRenderedAgeCta = true;
+          if (isApplySection) hasRenderedPhotoCta = true;
+
           return (
-            <Box 
-              key={idx} 
-              sx={{ 
-                p: 1.5, 
-                bgcolor: bgColor, 
-                borderLeft: `5px solid ${borderLeftColor}`, 
-                borderRadius: '8px', 
-                mt: 3, 
-                mb: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}
-            >
-              <Typography 
-                variant="subtitle2" 
+            <Fragment key={idx}>
+              <Box 
                 sx={{ 
-                  fontWeight: 850, 
-                  color: textColor, 
-                  fontSize: '0.88rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5
+                  p: 1.5, 
+                  bgcolor: bgColor, 
+                  borderLeft: `5px solid ${borderLeftColor}`, 
+                  borderRadius: '8px', 
+                  mt: 3, 
+                  mb: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
                 }}
               >
-                {icon} {sect.title}
-              </Typography>
-            </Box>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    fontWeight: 850, 
+                    color: textColor, 
+                    fontSize: '0.88rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5
+                  }}
+                >
+                  {icon} {sect.title}
+                </Typography>
+              </Box>
+              {isAgeSection && <AgeCalculatorCallout />}
+              {isApplySection && <PhotoSignatureResizerBanner />}
+            </Fragment>
           );
         }
 
@@ -757,6 +866,10 @@ function renderBlogContent(alert, onActionClick) {
             <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 2 }}>
               100% सत्यापित सरकारी पोर्टल लिंक्स • कोई बिचौलिया नहीं, सीधे ऑफिशियल वेबसाइट से आवेदन करें
             </Typography>
+
+            {/* Contextual Student Tool Retention CTAs */}
+            {!hasRenderedAgeCta && <AgeCalculatorCallout />}
+            <PhotoSignatureResizerBanner />
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {isOffline ? (
@@ -1735,9 +1848,10 @@ export default function PublicLiveAlertsPage() {
 
   const dynamicJobState = (selectedAlert?.state && selectedAlert.state !== 'Central/All India' && selectedAlert.state !== 'All India') ? `${selectedAlert.state} ` : '';
   const dynamicJobOrg = selectedAlert?.boardName ? `${selectedAlert.boardName} ` : '';
-  const pageTitle = selectedAlert 
+  const rawPageTitle = selectedAlert 
     ? `Sarkari Job: ${dynamicJobState}${dynamicJobOrg}${selectedAlert.title} Recruitment 2026 – Apply Online Form, Eligibility` 
     : "Sarkari Result: Latest Sarkari Jobs, Government Vacancy 2026 & Exam Forms | Digital Home";
+  const pageTitle = sanitizeAndDeduplicateTitle(rawPageTitle);
   const pageDescription = selectedAlert 
     ? `Sarkari Result notification for ${dynamicJobOrg}${selectedAlert.title} Vacancy 2026. Check eligibility criteria, age limit, application fee, and Apply Online Form at Digital Home.` 
     : "Sarkari Result 2026 & Latest Sarkari Job alerts. Find all Government Vacancies, Online Application Forms, Admit Cards, and Results for SSC, Railway, Banking, Police, UPSSSC, and All India Govt Jobs.";

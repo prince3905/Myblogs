@@ -66,6 +66,7 @@ async function runTests() {
     // 1. Robots.txt strict crawler isolation check
     const resRobots = await makeRequest('/robots.txt');
     assert('/robots.txt returns 200 OK', resRobots.statusCode === 200);
+    assert('/robots.txt explicitly disallows /admin', /(?:^|\n)Disallow:\s*\/admin(?:\r?\n|$)/.test(resRobots.body));
     assert('/robots.txt disallows /admin/', resRobots.body.includes('Disallow: /admin/'));
     assert('/robots.txt disallows /admin/*', resRobots.body.includes('Disallow: /admin/*'));
     assert('/robots.txt disallows /api/', resRobots.body.includes('Disallow: /api/'));
@@ -85,19 +86,32 @@ async function runTests() {
     assert('/web-stories-sitemap.xml is XML', (resStoriesSitemap.headers['content-type'] || '').includes('xml'));
     assert('/web-stories-sitemap.xml contains urlset', resStoriesSitemap.body.includes('<urlset'));
 
-    // 1c. Strict Admin & Private Route noindex, nofollow, noarchive header check
+    // 1c. Strict Admin & Private Route noindex, nofollow, noarchive header and meta check
     const resAdmin = await makeRequest('/admin');
-    assert('/admin returns X-Robots-Tag: noindex, nofollow, noarchive', 
+    assert('/admin returns X-Robots-Tag: noindex, nofollow', 
       (resAdmin.headers['x-robots-tag'] || '').toLowerCase().includes('noindex') &&
-      (resAdmin.headers['x-robots-tag'] || '').toLowerCase().includes('nofollow') &&
-      (resAdmin.headers['x-robots-tag'] || '').toLowerCase().includes('noarchive'));
-    assert('/admin HTML contains meta robots noindex, nofollow, noarchive',
-      resAdmin.body.includes('content="noindex, nofollow, noarchive"'));
+      (resAdmin.headers['x-robots-tag'] || '').toLowerCase().includes('nofollow'));
+    assert('/admin HTML contains meta robots noindex, nofollow',
+      resAdmin.body.includes('content="noindex, nofollow'));
+    assert('/admin HTML contains meta googlebot noindex, nofollow',
+      resAdmin.body.includes('name="googlebot" content="noindex, nofollow"'));
 
     const resLogin = await makeRequest('/admin/login');
-    assert('/admin/login returns X-Robots-Tag: noindex, nofollow, noarchive', 
+    assert('/admin/login returns X-Robots-Tag: noindex, nofollow', 
       (resLogin.headers['x-robots-tag'] || '').toLowerCase().includes('noindex') &&
-      (resLogin.headers['x-robots-tag'] || '').toLowerCase().includes('noarchive'));
+      (resLogin.headers['x-robots-tag'] || '').toLowerCase().includes('nofollow'));
+
+    // 1d. Title Sanitizer & Deduplication Verification
+    const { sanitizeAndDeduplicateTitle } = require('../src/shared/utils/titleSanitizer');
+    const rawTestTitle = 'West Bengal UCO Bank UCO Bank Apprentice Recruitment 2026 Recruitment 2026';
+    const cleanTestTitle = sanitizeAndDeduplicateTitle(rawTestTitle);
+    assert('Title deduplication cleanly normalizes repeated bank name and recruitment suffix',
+      cleanTestTitle === 'West Bengal UCO Bank Apprentice Recruitment 2026');
+
+    const rawTestTitle2 = 'Sarkari Job: Maharashtra DGMA DGMA Management Support Associate Recruitment 2026 Recruitment 2026 – Apply Online Form';
+    const cleanTestTitle2 = sanitizeAndDeduplicateTitle(rawTestTitle2);
+    assert('Title deduplication cleanly normalizes repeated DGMA and Recruitment 2026',
+      cleanTestTitle2 === 'Sarkari Job: Maharashtra DGMA Management Support Associate Recruitment 2026 – Apply Online Form');
 
     // 2. Legacy Blog Prefix Redirector (/blog/sarkari-jobs-exams/*)
     // 2a. Generic category hub without slug -> 301 to /india/sarkari-jobs

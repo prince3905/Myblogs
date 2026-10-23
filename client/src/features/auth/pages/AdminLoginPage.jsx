@@ -5,6 +5,7 @@ import {
   Box, CircularProgress, Avatar 
 } from '@mui/material';
 import { LockOutlined } from '@mui/icons-material';
+import { Helmet } from 'react-helmet-async';
 import Seo from '../../blog/components/Seo';
 import { useAuth } from '../context/AuthContext';
 
@@ -39,10 +40,15 @@ export default function AdminLoginPage() {
         bgcolor: 'background.default',
       }}
     >
+      <Helmet>
+        <title>Admin Login | Digital Home</title>
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="googlebot" content="noindex, nofollow" />
+      </Helmet>
       <Seo 
         title="Admin Login | Digital Home" 
         description="Secure admin login for Digital Home management." 
-        robots="noindex, nofollow, noarchive"
+        robots="noindex, nofollow"
       />
       
       <Container maxWidth="sm">

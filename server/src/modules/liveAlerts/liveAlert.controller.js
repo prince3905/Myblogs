@@ -13,6 +13,7 @@ cloudinary.config({
 });
 const axios = require('axios');
 const { resolveOfficialGovtPortal } = require('../../shared/utils/govtPortalMap');
+const { sanitizeAndDeduplicateTitle } = require('../../shared/utils/titleSanitizer');
 
 // Universal API Response Sanitizer — last line of defense before data reaches client
 function sanitizeAlertResponse(alert) {
@@ -45,6 +46,10 @@ function sanitizeAlertResponse(alert) {
         .replace(/freejobalert\.com/gi, 'digitalhomeblog.in');
     }
   });
+
+  if (obj.title) {
+    obj.title = sanitizeAndDeduplicateTitle(obj.title);
+  }
 
   // Strictly clamp parsedPostDate: never expose future dates to client
   const now = new Date();
@@ -611,9 +616,7 @@ async function draftAlertToPostDoc(alert) {
   }
 
   // Dynamic professional title for the blog post
-  const cleanTitle = alert.title
-    .replace(/([a-zA-Z])(\d{4})\b/g, '$1 $2') // e.g. "Answer2026" -> "Answer 2026"
-    .replace(/\b\w/g, c => c.toUpperCase());
+  const cleanTitle = sanitizeAndDeduplicateTitle(alert.title);
 
   // Construct the context/command parameters for Gemini Flash to generate a 1200+ word post
   const resolvedUrl = sanitizeUrlValue(alert.officialUrl || '', alert.boardName || cleanTitle);

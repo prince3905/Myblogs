@@ -1382,7 +1382,8 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
       parseJobMetadata,
       buildHighCtrJobTitle,
       buildHighCtrMetaDesc,
-      generateJobFaqSchema
+      generateJobFaqSchema,
+      sanitizeAndDeduplicateTitle
     } = require('./shared/utils/jobSeoOptimizer');
 
     const siteName = 'Digital Home Sarkari Result';
@@ -1394,7 +1395,7 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
     // Prioritize AI SEO Engine custom meta title & description
     const seoEngine = alert.seoEngine || {};
     const highCtrTitle = (seoEngine.customMetaTitle && seoEngine.customMetaTitle.trim())
-      ? seoEngine.customMetaTitle.trim()
+      ? sanitizeAndDeduplicateTitle(seoEngine.customMetaTitle.trim())
       : rawHighCtrTitle;
     const highCtrDesc = (seoEngine.customMetaDescription && seoEngine.customMetaDescription.trim())
       ? seoEngine.customMetaDescription.trim()
@@ -2095,8 +2096,8 @@ app.get('*', async (req, res, next) => {
 
     if (isPrivateAdminRoute) {
       res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
-      html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');
-      html = html.replace('</head>', '    <meta name="robots" content="noindex, nofollow, noarchive" />\n</head>');
+      html = html.replace(/<meta[^>]+name=["'](robots|googlebot)["'][^>]*>/gi, '');
+      html = html.replace('</head>', '    <meta name="robots" content="noindex, nofollow" />\n    <meta name="googlebot" content="noindex, nofollow" />\n</head>');
     } else if (isNonIndexedPublicPage || hasNoindexHeader) {
       res.setHeader('X-Robots-Tag', 'noindex, follow');
       html = html.replace(/<meta[^>]+name=["']robots["'][^>]*>/gi, '');

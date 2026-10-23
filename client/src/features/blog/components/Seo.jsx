@@ -1,10 +1,11 @@
 import { Helmet } from 'react-helmet-async';
 import { normalizeCanonicalUrl } from '../../../shared/lib/urlUtils';
+import { sanitizeAndDeduplicateTitle } from '../../../shared/lib/titleSanitizer';
 
 export default function Seo({ title, description, image, url, canonical, keywords, jsonLd, noindex, hreflangs, robots }) {
   const siteName = 'Digital Home Sarkari Result';
   
-  let cleanTitle = title || '';
+  let cleanTitle = sanitizeAndDeduplicateTitle(title || '');
   const hasDigitalHomeSuffix = /\s*\|\s*Digital Home\s*$/i.test(cleanTitle);
   // Strip any trailing "| Digital Home" or "| Inkspire Blog" or "| Sarkari Result" suffixes
   cleanTitle = cleanTitle.replace(/\s*\|\s*(Digital Home|Inkspire Blog|Sarkari Result)\s*$/i, '');
@@ -59,6 +60,9 @@ export default function Seo({ title, description, image, url, canonical, keyword
       ))}
       <meta name="description" content={desc} />
       <meta name="robots" content={robots || (noindex ? "noindex, follow" : "max-image-preview:large, index, follow")} />
+      {(robots || noindex) && (
+        <meta name="googlebot" content={robots || "noindex, follow"} />
+      )}
       <meta name="keywords" content={keys} />
 
       {/* Open Graph */}
