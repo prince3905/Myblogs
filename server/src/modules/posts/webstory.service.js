@@ -12,6 +12,29 @@ const BlogPost = mongoose.model('BlogPost');
 const WebStory = mongoose.model('WebStory');
 const LiveAlert = mongoose.model('LiveAlert');
 
+const fallbackBackgrounds = [
+  // 1. Studying students & exam preparation
+  'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=720&h=1280&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=720&h=1280&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=720&h=1280&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=720&h=1280&fit=crop&q=80',
+
+  // 2. Indian & classical government buildings / administrative architecture
+  'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=720&h=1280&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=720&h=1280&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=720&h=1280&fit=crop&q=80',
+
+  // 3. Modern offices & career desks
+  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=720&h=1280&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=720&h=1280&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=720&h=1280&fit=crop&q=80',
+
+  // 4. Abstract dark gradients & modern textures
+  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=720&h=1280&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=720&h=1280&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=720&h=1280&fit=crop&q=80'
+];
+
 const UNSPLASH_PORTRAIT_PHOTOS = [
   'photo-1542831371-29b0f74f9713', 'photo-1499750310107-5fef28a66643', 'photo-1498050108023-c5249f4df085',
   'photo-1517694712202-14dd9538aa97', 'photo-1461749280684-dccba630e2f6', 'photo-1504384308090-c894fdcc538d',
@@ -362,49 +385,46 @@ async function generateWebStoryForLiveAlert(alertDoc) {
       }
     }
 
-    // 6. Source 5 High-Quality Portrait Background Images
-    const usedImages = new Set();
-    const slideQueries = [
-      'government building office career',
-      'indian railways police uniform desk',
-      'student graduate examination library',
-      'calendar date salary time document',
-      'success achievement happy student mobile'
-    ];
-
-    const slideImages = [];
-    for (let i = 0; i < 5; i++) {
-      const img = await fetchPortraitImage(slideQueries[i], alertDoc.title, i, usedImages);
-      usedImages.add(img);
-      slideImages.push(img);
+    // 6. Source High-Quality Vertical (9:16) Background Image
+    let storyBgImage = null;
+    if (alertDoc.featuredImage && typeof alertDoc.featuredImage === 'string' && alertDoc.featuredImage.startsWith('http') && !alertDoc.featuredImage.includes('logo-og.webp')) {
+      storyBgImage = alertDoc.featuredImage;
+    } else if (alertDoc.imageUrl && typeof alertDoc.imageUrl === 'string' && alertDoc.imageUrl.startsWith('http')) {
+      storyBgImage = alertDoc.imageUrl;
     }
 
-    // 7. Assemble 5 High-Retention Slides
+    // If no specific high-res image found for the job, randomly select from fallbackBackgrounds
+    if (!storyBgImage) {
+      const randomIndex = Math.floor(Math.random() * fallbackBackgrounds.length);
+      storyBgImage = fallbackBackgrounds[randomIndex];
+    }
+
+    // 7. Assemble 5 High-Retention Slides (Consistent, high-res background with dark overlay)
     const finalSlides = [
       {
         heading: cleanTitle,
         text: `🔥 बंपर भर्ती जारी! कुल ${vacancyBadge} पद। ${qualification} पास उम्मीदवारों के लिए सरकारी नौकरी का सुनहरा अवसर।`,
-        image: slideImages[0]
+        image: storyBgImage
       },
       {
         heading: `🏛️ विभाग एवं पद विवरण`,
         text: `संगठन: ${board} | कुल पद: ${vacancyBadge} | कार्यक्षेत्र: ${state} | पद नाम व श्रेणीवार विवरण चेक करें।`,
-        image: slideImages[1]
+        image: storyBgImage
       },
       {
         heading: `📋 शैक्षणिक योग्यता व आयु सीमा`,
         text: `आवश्यक योग्यता: ${qualification} | आयु सीमा व आरक्षित वर्गों को नियमानुसार अधिकतम आयु में छूट लागू।`,
-        image: slideImages[2]
+        image: storyBgImage
       },
       {
         heading: `📅 महत्वपूर्ण तिथियां व वेतनमान`,
         text: `ऑनलाइन आवेदन की अंतिम तिथि: ${lastDate} | वेतनमान: ${salary} | अंतिम तारीख से पहले फॉर्म अवश्य भरें।`,
-        image: slideImages[3]
+        image: storyBgImage
       },
       {
         heading: `⚡ 100% आधिकारिक आवेदन लिंक`,
         text: `पूरी जानकारी, आधिकारिक नोटिफिकेशन PDF व ऑनलाइन आवेदन लिंक के लिए नीचे Swipe Up करें।`,
-        image: slideImages[4]
+        image: storyBgImage
       }
     ];
 
@@ -440,4 +460,4 @@ async function generateWebStoryForLiveAlert(alertDoc) {
   }
 }
 
-module.exports = { generateWebStoryForPost, generateWebStoryForLiveAlert, callAiJson, fetchPortraitImage };
+module.exports = { generateWebStoryForPost, generateWebStoryForLiveAlert, callAiJson, fetchPortraitImage, fallbackBackgrounds };
