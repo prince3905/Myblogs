@@ -251,12 +251,28 @@ app.use('/blog/sarkari-jobs-exams', async (req, res, next) => {
       return res.redirect(301, `${canonicalDomain}/india/sarkari-jobs`);
     }
 
-    // Lookup the vacancy in MongoDB:
+    // Lookup the vacancy or blog post in MongoDB:
     const mongoose = require('mongoose');
     let alertDoc = null;
     if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
       const isValidObjectId = mongoose.Types.ObjectId.isValid(cleanSlug) && /^[0-9a-fA-F]{24}$/.test(cleanSlug);
+
+      // 1. Check if this is an active BlogPost first - pass through to SSR handler!
+      const BlogPost = mongoose.models.BlogPost || require('./modules/posts/post.model');
+      const postDoc = await BlogPost.findOne({
+        status: 'published',
+        $or: [
+          ...(isValidObjectId ? [{ _id: cleanSlug }] : []),
+          { slug: cleanSlug.toLowerCase() }
+        ]
+      }).select('_id slug category title').lean();
+
+      if (postDoc) {
+        return next();
+      }
+
+      // 2. Check if this is an active LiveAlert vacancy
+      const LiveAlert = require('./modules/liveAlerts/liveAlert.model');
       alertDoc = await LiveAlert.findOne({
         $or: [
           ...(isValidObjectId ? [{ _id: cleanSlug }] : []),
@@ -1355,6 +1371,17 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
     const normalizedSlug = rawId.toLowerCase();
     const alert = await LiveAlert.findOne({ slug: normalizedSlug }).lean();
 
+    if (!alert) {
+      // Check if this slug belongs to an active BlogPost - redirect cleanly to its canonical URL!
+      const BlogPost = mongoose.models.BlogPost || require('./modules/posts/post.model');
+      const blogDoc = await BlogPost.findOne({ slug: normalizedSlug, status: 'published' }).select('category slug').lean();
+      if (blogDoc) {
+        const catUrl = (blogDoc.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'sarkari-jobs-exams';
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        return res.redirect(301, `${canonicalDomain}/blog/${catUrl}/${blogDoc.slug}`);
+      }
+    }
+
     if (!alert || alert.status === 'inactive' || alert.status === 'drafted' || alert.status === 'archived') {
       // Slug does NOT exist or is inactive in DB: Return strict HTTP 410 Gone (Never return 200 with empty state or soft 404)
       res.setHeader('X-Robots-Tag', 'noindex, follow');
@@ -1392,14 +1419,19 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
     const rawHighCtrDesc = buildHighCtrMetaDesc(meta);
     const defaultFaqSchema = generateJobFaqSchema(meta);
 
-    // Prioritize AI SEO Engine custom meta title & description
+    // Prioritize AI SEO Engine custom meta title & description with canonical keyword compliance
     const seoEngine = alert.seoEngine || {};
-    const highCtrTitle = (seoEngine.customMetaTitle && seoEngine.customMetaTitle.trim())
+    let highCtrTitle = (seoEngine.customMetaTitle && seoEngine.customMetaTitle.trim())
       ? sanitizeAndDeduplicateTitle(seoEngine.customMetaTitle.trim())
       : rawHighCtrTitle;
-    const highCtrDesc = (seoEngine.customMetaDescription && seoEngine.customMetaDescription.trim())
-      ? seoEngine.customMetaDescription.trim()
-      : rawHighCtrDesc;
+    if (!highCtrTitle.toLowerCase().startsWith('sarkari job:')) {
+      highCtrTitle = `Sarkari Job: ${highCtrTitle.replace(/^sarkari result\s*\d*:\s*/i, '')}`;
+    }
+
+    let highCtrDesc = rawHighCtrDesc;
+    if (seoEngine.customMetaDescription && seoEngine.customMetaDescription.trim().startsWith('Sarkari Result notification for')) {
+      highCtrDesc = seoEngine.customMetaDescription.trim();
+    }
 
     // Render FAQPage JSON-LD schema from seoEngine.faqs if available, otherwise fallback
     let faqSchema = defaultFaqSchema;

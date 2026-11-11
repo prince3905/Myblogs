@@ -547,10 +547,12 @@ blogPostSchema.post('save', async function (doc) {
   }
 
   if (doc.status === 'published' && doc.isIndexable !== false && doc.isGlobal !== true) {
+    const catUrl = (doc.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'sarkari-jobs-exams';
+    const postUrl = `https://www.digitalhomeblog.in/blog/${catUrl}/${doc.slug}`;
+
     // 1. Conditional Priority Auto-Indexing Notification
     try {
       const { dispatchSeoIndexing } = require('../seo/seoAutomation.hook');
-      const postUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${doc.slug}`;
       console.log(`[Auto-Indexing Pipeline] Processing conditional index ping for published post: ${postUrl}`);
       
       dispatchSeoIndexing(doc, postUrl)
@@ -570,7 +572,6 @@ blogPostSchema.post('save', async function (doc) {
       const seoConf = await SiteSeoConfig.getOrCreate();
       if (seoConf.autoDispatchTelegram) {
         const { sendTelegramMessage } = require('../../shared/services/telegramService');
-        const postUrl = `https://www.digitalhomeblog.in/india/sarkari-jobs/${doc.slug}`;
         sendTelegramMessage({
           title: doc.seoEngine?.customMetaTitle || doc.title,
           category: doc.category || 'Sarkari Job',

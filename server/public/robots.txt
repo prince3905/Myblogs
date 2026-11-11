@@ -1,6 +1,5 @@
 User-agent: *
-# Core Indexable Assets (Daily Posts, Vacancies & Web Stories)
-Allow: /$
+Allow: /
 Allow: /india/sarkari-jobs/
 Allow: /india/sarkari-jobs/*
 Allow: /web-stories/

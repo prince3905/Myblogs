@@ -925,8 +925,7 @@ async function sitemap(req, res) {
 function robots(req, res) {
   res.type('text/plain');
   return res.send(`User-agent: *
-# Core Indexable Assets (Daily Posts, Vacancies & Web Stories)
-Allow: /$
+Allow: /
 Allow: /india/sarkari-jobs/
 Allow: /india/sarkari-jobs/*
 Allow: /web-stories/
