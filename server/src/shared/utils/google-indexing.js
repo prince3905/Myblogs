@@ -118,15 +118,7 @@ function normalizeIndexingUrl(rawUrl) {
   if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
   let url = rawUrl.trim();
 
-  // If URL uses legacy /blog/ prefix or /job-alerts or /live-alerts, redirect to canonical /india/sarkari-jobs/
-  const blogMatch = url.match(/^https?:\/\/[^\/]+\/blog(?:\/[^\/]+)?\/([^\/?#]+)/i);
-  if (blogMatch && blogMatch[1]) {
-    const slug = blogMatch[1];
-    if (slug && !/^[0-9a-fA-F]{24}$/.test(slug)) {
-      url = `https://www.digitalhomeblog.in/india/sarkari-jobs/${slug}`;
-    }
-  }
-
+  // If URL uses legacy /job-alerts or /live-alerts, redirect to canonical /india/sarkari-jobs/
   const alertMatch = url.match(/^https?:\/\/[^\/]+\/(?:job-alerts|live-alerts)\/([^\/?#]+)/i);
   if (alertMatch && alertMatch[1]) {
     const slug = alertMatch[1];
