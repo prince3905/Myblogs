@@ -181,42 +181,53 @@ function buildHighCtrJobTitle(meta) {
     cleanOrg = cleanOrg.slice(state.length).trim();
   }
 
-  // Prevent duplicate organization prefix if postName already starts with organization
+  // Prevent duplicate organization if postName already contains organization
   let cleanPost = postName;
-  if (cleanOrg && cleanPost.toLowerCase().startsWith(cleanOrg.toLowerCase())) {
-    cleanPost = cleanPost.slice(cleanOrg.length).trim();
+  if (cleanOrg && cleanPost.toLowerCase().includes(cleanOrg.toLowerCase())) {
+    cleanOrg = '';
   }
 
   const orgPart = cleanOrg ? `${cleanOrg} ` : '';
   const postPart = cleanPost || 'Vacancies';
 
-  const rawTitle = `Sarkari Job: ${stateStr}${orgPart}${postPart} Recruitment ${year} – Apply Online Form, Eligibility`;
+  let rawTitle = `Sarkari Job: ${stateStr}${orgPart}${postPart}`;
+  if (!rawTitle.toLowerCase().includes('recruitment') && !rawTitle.toLowerCase().includes('bharti') && !rawTitle.toLowerCase().includes('vacancy') && !rawTitle.toLowerCase().includes('exam') && !rawTitle.toLowerCase().includes('admit') && !rawTitle.toLowerCase().includes('result')) {
+    rawTitle += ` Recruitment ${year}`;
+  }
   return sanitizeAndDeduplicateTitle(rawTitle);
 }
 
 /**
- * Strict Meta Description packed with high-intent keywords:
- * Starts with "Sarkari Result notification for..."
+ * Clean, human-written Meta Description (140-160 characters):
+ * Starts with "Sarkari Result notification for..." for Google search snippet CTR
  */
 function buildHighCtrMetaDesc(meta) {
   const { jobName, year = '2026', board, state } = meta;
   const stateStr = (state && state !== 'Central/All India' && state !== 'All India') ? `${state} ` : '';
   const organization = (board && board !== 'Official Board') ? board : (state ? `${state} Govt` : 'Govt of India');
-  const postName = jobName || 'Various Posts';
+  let postName = jobName || 'Various Posts';
 
-  let baseDesc = `Sarkari Result notification for ${stateStr}${organization} ${postName} Vacancy ${year}. Check eligibility criteria, age limit, application fee, and Apply Online Form at Digital Home.`.replace(/\s+/g, ' ').trim();
+  // Strip redundant trailing Vacancy/Posts/Recruitment
+  postName = postName.replace(/\s*(?:Vacancy|Recruitment|Posts|Post)\s*(?:202[4-9]|2030)?\s*$/i, '');
 
-  // Enforce 140-160 characters target range
+  let cleanOrg = organization;
+  if (cleanOrg && postName.toLowerCase().includes(cleanOrg.toLowerCase())) {
+    cleanOrg = '';
+  }
+
+  const subject = sanitizeAndDeduplicateTitle(`${stateStr}${cleanOrg ? cleanOrg + ' ' : ''}${postName}`);
+  let baseDesc = `Sarkari Result notification for ${subject} Vacancy ${year}. Check eligibility criteria, age limit, selection process, and Apply Online Form at Digital Home.`;
+  baseDesc = sanitizeAndDeduplicateTitle(baseDesc);
+
+  // Cleanly truncate at word boundary within 160 characters
   if (baseDesc.length > 160) {
-    const prefix = `Sarkari Result notification for ${stateStr}${organization} `;
-    const suffix = ` Vacancy ${year}. Apply Online Form & eligibility at Digital Home.`;
-    const allowedPostLen = 160 - (prefix.length + suffix.length);
-    if (allowedPostLen > 5) {
-      const shortPost = postName.slice(0, allowedPostLen).trim();
-      baseDesc = `${prefix}${shortPost}${suffix}`.replace(/\s+/g, ' ').trim();
-    } else {
-      baseDesc = `Sarkari Result notification for ${stateStr}${organization} Vacancy ${year}. Check eligibility criteria, age limit, and Apply Online Form at Digital Home.`.replace(/\s+/g, ' ').trim();
+    const words = baseDesc.split(/\s+/);
+    let fitted = '';
+    for (const w of words) {
+      if ((fitted + ' ' + w).length > 156) break;
+      fitted = fitted ? `${fitted} ${w}` : w;
     }
+    baseDesc = fitted ? `${fitted}...` : baseDesc.slice(0, 157) + '...';
   }
 
   return baseDesc;
