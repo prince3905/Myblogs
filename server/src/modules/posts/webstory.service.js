@@ -330,8 +330,9 @@ async function generateWebStoryForLiveAlert(alertDoc) {
     const isCurrentAffairs = alertDoc.category === 'Current Affairs';
     const isUrgent = rawPriority === 'URGENT';
     const isHighVacancy = parsedVacancies >= 50;
+    const isMassInterest = /railway|rrb|ssc|upsc|police|constable|sub inspector|teacher|shikshak|kvs|nvs|bpsc|upsssc|dsssb|bank|ibps|sbi|navy|army|airforce|crpf|bsf|cisf|itbp|post office|gds|patwari|lekhpal/i.test(`${alertDoc.title || ''} ${alertDoc.boardName || ''}`);
 
-    if (!isUrgent && !isHighVacancy && !isCurrentAffairs) {
+    if (!isUrgent && !isHighVacancy && !isCurrentAffairs && !isMassInterest) {
       return null;
     }
 
@@ -366,6 +367,17 @@ async function generateWebStoryForLiveAlert(alertDoc) {
     const state = alertDoc.state || 'All India';
     const lastDate = (alertDoc.lastDate && alertDoc.lastDate !== 'N/A') ? alertDoc.lastDate : 'जल्द घोषित होगी';
     const vacancyBadge = parsedVacancies > 0 ? `${parsedVacancies}+` : 'विभिन्न';
+
+    // Format punchy Discover Headline
+    let discoverHeading = `🔥 ${board} बंपर भर्ती 2026`;
+    if (cleanTitle.toLowerCase().includes('admit card') || cleanTitle.toLowerCase().includes('hall ticket')) {
+      discoverHeading = `⚡ ${board} Admit Card 2026 जारी!`;
+    } else if (cleanTitle.toLowerCase().includes('result') || cleanTitle.toLowerCase().includes('score card')) {
+      discoverHeading = `📢 ${board} Result 2026 घोषित!`;
+    } else if (parsedVacancies > 0) {
+      discoverHeading = `🔥 ${board} ${parsedVacancies}+ पदों पर सीधी भर्ती!`;
+    }
+    const discoverStoryTitle = `${board} Bharti 2026: ${vacancyBadge} पदों पर आवेदन शुरू, Direct Notification Link`;
 
     // Parse qualification summary
     let qualification = '10वीं / 12वीं / स्नातक / संबंधित डिप्लोमा';
@@ -402,7 +414,7 @@ async function generateWebStoryForLiveAlert(alertDoc) {
     // 7. Assemble 5 High-Retention Slides (Consistent, high-res background with dark overlay)
     const finalSlides = [
       {
-        heading: cleanTitle,
+        heading: discoverHeading,
         text: `🔥 बंपर भर्ती जारी! कुल ${vacancyBadge} पद। ${qualification} पास उम्मीदवारों के लिए सरकारी नौकरी का सुनहरा अवसर।`,
         image: storyBgImage
       },
@@ -430,7 +442,7 @@ async function generateWebStoryForLiveAlert(alertDoc) {
 
     // 8. Create & Save WebStory Document
     const newStory = new WebStory({
-      title: cleanTitle,
+      title: discoverStoryTitle,
       slug: alertDoc.slug,
       liveAlert: alertDoc._id,
       slides: finalSlides,

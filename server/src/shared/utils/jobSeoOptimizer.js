@@ -167,10 +167,11 @@ const STATE_SHORT_MAP = {
 
 /**
  * Strict High-CTR Dynamic Title Template:
- * `Sarkari Job: ${job.state ? job.state + ' ' : ''}${job.organization} ${job.postName} Recruitment 2026 – Apply Online Form, Eligibility`
+ * Front-loads `Sarkari Job:` followed by [State] [Board] [Post Name] [Vacancy Count] and a high-converting Action Hook.
+ * Example: `Sarkari Job: UPSSSC 1784 Junior Assistant Recruitment 2026 – Apply Online Form, Notification PDF`
  */
 function buildHighCtrJobTitle(meta) {
-  const { jobName, year = '2026', board, state } = meta;
+  const { jobName, year = '2026', board, state, vacancyCount, category } = meta;
   const stateStr = (state && state !== 'Central/All India' && state !== 'All India') ? `${state} ` : '';
   const organization = (board && board !== 'Official Board') ? board : (state ? `${state} Govt` : 'Govt of India');
   const postName = jobName || 'Various Posts';
@@ -188,12 +189,36 @@ function buildHighCtrJobTitle(meta) {
   }
 
   const orgPart = cleanOrg ? `${cleanOrg} ` : '';
-  const postPart = cleanPost || 'Vacancies';
+  let postPart = cleanPost || 'Vacancies';
+
+  // Determine intent trigger hook
+  let actionHook = '– Apply Online Form, Notification PDF';
+  const combinedText = `${postPart} ${category || ''}`.toLowerCase();
+  if (combinedText.includes('admit') || combinedText.includes('hall ticket')) {
+    actionHook = '– Admit Card 2026 Download Link';
+  } else if (combinedText.includes('result') || combinedText.includes('score card')) {
+    actionHook = '– Result & Cut Off Marks Out';
+  } else if (combinedText.includes('answer key')) {
+    actionHook = '– Answer Key 2026 Check Online';
+  } else if (vacancyCount && parseInt(vacancyCount, 10) > 0) {
+    actionHook = `– Apply Online (${vacancyCount} Posts), Eligibility`;
+  }
 
   let rawTitle = `Sarkari Job: ${stateStr}${orgPart}${postPart}`;
-  if (!rawTitle.toLowerCase().includes('recruitment') && !rawTitle.toLowerCase().includes('bharti') && !rawTitle.toLowerCase().includes('vacancy') && !rawTitle.toLowerCase().includes('exam') && !rawTitle.toLowerCase().includes('admit') && !rawTitle.toLowerCase().includes('result')) {
-    rawTitle += ` Recruitment ${year}`;
+  const hasActionNoun = /recruitment|bharti|vacancy|vacancies|exam|admit|result|syllabus|admission/i.test(rawTitle);
+  const hasYear = /202[4-9]|2030/i.test(rawTitle);
+
+  if (!hasActionNoun) {
+    rawTitle += hasYear ? ' Recruitment' : ` Recruitment ${year}`;
+  } else if (!hasYear) {
+    rawTitle += ` ${year}`;
   }
+
+  // Append action hook if not already present
+  if (!rawTitle.includes('–') && !rawTitle.includes('Apply Online') && !rawTitle.includes('Admit Card') && !rawTitle.includes('Result')) {
+    rawTitle = `${rawTitle} ${actionHook}`;
+  }
+
   return sanitizeAndDeduplicateTitle(rawTitle);
 }
 
@@ -202,7 +227,7 @@ function buildHighCtrJobTitle(meta) {
  * Starts with "Sarkari Result notification for..." for Google search snippet CTR
  */
 function buildHighCtrMetaDesc(meta) {
-  const { jobName, year = '2026', board, state } = meta;
+  const { jobName, year = '2026', board, state, vacancyCount } = meta;
   const stateStr = (state && state !== 'Central/All India' && state !== 'All India') ? `${state} ` : '';
   const organization = (board && board !== 'Official Board') ? board : (state ? `${state} Govt` : 'Govt of India');
   let postName = jobName || 'Various Posts';
@@ -216,7 +241,10 @@ function buildHighCtrMetaDesc(meta) {
   }
 
   const subject = sanitizeAndDeduplicateTitle(`${stateStr}${cleanOrg ? cleanOrg + ' ' : ''}${postName}`);
-  let baseDesc = `Sarkari Result notification for ${subject} Vacancy ${year}. Check eligibility criteria, age limit, selection process, and Apply Online Form at Digital Home.`;
+  const hasSubjectYear = /202[4-9]|2030/i.test(subject);
+  const vacStr = (vacancyCount && parseInt(vacancyCount, 10) > 0) ? `(${vacancyCount} Posts)` : '';
+  const yearSuffix = hasSubjectYear ? '' : ` ${year}`;
+  let baseDesc = `Sarkari Result notification for ${subject} ${vacStr} Recruitment${yearSuffix}. Check eligibility criteria, age limit, salary details, and Apply Online Form before deadline at Digital Home.`;
   baseDesc = sanitizeAndDeduplicateTitle(baseDesc);
 
   // Cleanly truncate at word boundary within 160 characters

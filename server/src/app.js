@@ -1525,6 +1525,31 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
       ? '<meta name="robots" content="index, follow, max-image-preview:large" />'
       : '<meta name="robots" content="noindex, follow" />';
 
+    const breadcrumbSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      'itemListElement': [
+        {
+          '@type': 'ListItem',
+          'position': 1,
+          'name': 'Home',
+          'item': 'https://www.digitalhomeblog.in/'
+        },
+        {
+          '@type': 'ListItem',
+          'position': 2,
+          'name': 'Sarkari Jobs',
+          'item': 'https://www.digitalhomeblog.in/india/sarkari-jobs'
+        },
+        {
+          '@type': 'ListItem',
+          'position': 3,
+          'name': highCtrTitle,
+          'item': canonicalUrl
+        }
+      ]
+    };
+
     const metaTags = `
     <title>${highCtrTitle}</title>
     <meta name="description" content="${highCtrDesc.replace(/"/g, '&quot;')}" />
@@ -1542,6 +1567,7 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
     <meta name="twitter:image" content="${imageUrl}" />
     <script type="application/ld+json">${JSON.stringify(jobPostingSchema)}</script>
     <script type="application/ld+json">${JSON.stringify(faqSchema)}</script>
+    <script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>
     `;
 
     html = html.replace(/<title>.*?<\/title>/i, '');
