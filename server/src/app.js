@@ -1422,16 +1422,13 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
     // Prioritize AI SEO Engine custom meta title & description with canonical keyword compliance
     const seoEngine = alert.seoEngine || {};
     let highCtrTitle = (seoEngine.customMetaTitle && seoEngine.customMetaTitle.trim())
-      ? sanitizeAndDeduplicateTitle(seoEngine.customMetaTitle.trim())
+      ? sanitizeAndDeduplicateTitle(seoEngine.customMetaTitle.trim(), { maxLen: 75 })
       : rawHighCtrTitle;
-    if (!highCtrTitle.toLowerCase().startsWith('sarkari job:')) {
-      highCtrTitle = `Sarkari Job: ${highCtrTitle.replace(/^sarkari result\s*\d*:\s*/i, '')}`;
-    }
+    highCtrTitle = highCtrTitle.replace(/^(?:sarkari\s+(?:job|result)\s*:\s*)+/gi, '').trim();
 
-    let highCtrDesc = rawHighCtrDesc;
-    if (seoEngine.customMetaDescription && seoEngine.customMetaDescription.trim().startsWith('Sarkari Result notification for')) {
-      highCtrDesc = seoEngine.customMetaDescription.trim();
-    }
+    const highCtrDesc = (seoEngine.customMetaDescription && seoEngine.customMetaDescription.trim())
+      ? seoEngine.customMetaDescription.trim()
+      : rawHighCtrDesc;
 
     // Render FAQPage JSON-LD schema from seoEngine.faqs if available, otherwise fallback
     let faqSchema = defaultFaqSchema;
@@ -1533,7 +1530,7 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
           '@type': 'ListItem',
           'position': 1,
           'name': 'Home',
-          'item': 'https://www.digitalhomeblog.in/'
+          'item': 'https://www.digitalhomeblog.in'
         },
         {
           '@type': 'ListItem',

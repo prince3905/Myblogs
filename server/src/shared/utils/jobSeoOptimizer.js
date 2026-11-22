@@ -166,15 +166,20 @@ const STATE_SHORT_MAP = {
 };
 
 /**
- * Strict High-CTR Dynamic Title Template:
- * Front-loads `Sarkari Job:` followed by [State] [Board] [Post Name] [Vacancy Count] and a high-converting Action Hook.
- * Example: `Sarkari Job: UPSSSC 1784 Junior Assistant Recruitment 2026 – Apply Online Form, Notification PDF`
+ * Clean, Natural High-CTR Dynamic Title Template:
+ * Front-loads the exact entity: [State] [Board] [Post Name] [Intent/Action]
+ * Zero forced boilerplate ("Sarkari Job:") so Google mobile displays the exact exam/post name.
+ * Example: `UPSSSC 1784 Junior Assistant Recruitment 2026 – Apply Online Form`
+ * Example Result: `Indian Bank SO Result 2026 Out – Score Card & Cut Off Marks`
  */
 function buildHighCtrJobTitle(meta) {
   const { jobName, year = '2026', board, state, vacancyCount, category } = meta;
   const stateStr = (state && state !== 'Central/All India' && state !== 'All India') ? `${state} ` : '';
-  const organization = (board && board !== 'Official Board') ? board : (state ? `${state} Govt` : 'Govt of India');
-  const postName = jobName || 'Various Posts';
+  const organization = (board && board !== 'Official Board') ? board : (state ? `${state} Govt` : '');
+  let postName = jobName || 'Various Vacancies';
+
+  // Strip duplicate leading repetitive prefixes
+  postName = postName.replace(/^(?:sarkari\s+(?:job|result)\s*:\s*)+/gi, '').trim();
 
   // Prevent duplicate state prefix if organization already starts with state
   let cleanOrg = organization;
@@ -191,46 +196,58 @@ function buildHighCtrJobTitle(meta) {
   const orgPart = cleanOrg ? `${cleanOrg} ` : '';
   let postPart = cleanPost || 'Vacancies';
 
-  // Determine intent trigger hook
-  let actionHook = '– Apply Online Form, Notification PDF';
+  // Determine intent trigger hook based on category and title content
   const combinedText = `${postPart} ${category || ''}`.toLowerCase();
-  if (combinedText.includes('admit') || combinedText.includes('hall ticket')) {
-    actionHook = '– Admit Card 2026 Download Link';
-  } else if (combinedText.includes('result') || combinedText.includes('score card')) {
-    actionHook = '– Result & Cut Off Marks Out';
-  } else if (combinedText.includes('answer key')) {
-    actionHook = '– Answer Key 2026 Check Online';
+  let actionHook = '– Apply Online Form';
+  let isNonJob = false;
+
+  if (combinedText.includes('result') || combinedText.includes('score card') || combinedText.includes('merit list')) {
+    actionHook = '– Score Card & Cut Off Marks Out';
+    isNonJob = true;
+  } else if (combinedText.includes('admit') || combinedText.includes('hall ticket') || combinedText.includes('call letter')) {
+    actionHook = '– Download Hall Ticket / Admit Card';
+    isNonJob = true;
+  } else if (combinedText.includes('answer key') || combinedText.includes('response sheet')) {
+    actionHook = '– Check Response Sheet & Answer Key';
+    isNonJob = true;
+  } else if (combinedText.includes('admission') || combinedText.includes('entrance') || combinedText.includes('counselling')) {
+    actionHook = '– Admission Form Online';
+    isNonJob = true;
+  } else if (combinedText.includes('syllabus') || combinedText.includes('exam pattern')) {
+    actionHook = '– Exam Pattern & Syllabus PDF';
+    isNonJob = true;
   } else if (vacancyCount && parseInt(vacancyCount, 10) > 0) {
-    actionHook = `– Apply Online (${vacancyCount} Posts), Eligibility`;
+    actionHook = `– Apply Online (${vacancyCount} Posts)`;
   }
 
-  let rawTitle = `Sarkari Job: ${stateStr}${orgPart}${postPart}`;
-  const hasActionNoun = /recruitment|bharti|vacancy|vacancies|exam|admit|result|syllabus|admission/i.test(rawTitle);
+  let rawTitle = `${stateStr}${orgPart}${postPart}`.trim();
+  const hasActionNoun = /recruitment|bharti|vacancy|vacancies|exam|admit|result|syllabus|admission|answer key/i.test(rawTitle);
   const hasYear = /202[4-9]|2030/i.test(rawTitle);
 
-  if (!hasActionNoun) {
+  if (!hasActionNoun && !isNonJob) {
     rawTitle += hasYear ? ' Recruitment' : ` Recruitment ${year}`;
   } else if (!hasYear) {
     rawTitle += ` ${year}`;
   }
 
-  // Append action hook if not already present
-  if (!rawTitle.includes('–') && !rawTitle.includes('Apply Online') && !rawTitle.includes('Admit Card') && !rawTitle.includes('Result')) {
+  // Append action hook if not already present in the title
+  const hasExistingHook = /–|apply online|admit card|hall ticket|result|score card|admission|answer key|syllabus/i.test(rawTitle);
+  if (!hasExistingHook) {
     rawTitle = `${rawTitle} ${actionHook}`;
   }
 
-  return sanitizeAndDeduplicateTitle(rawTitle);
+  return sanitizeAndDeduplicateTitle(rawTitle, { maxLen: 85 });
 }
 
 /**
- * Clean, human-written Meta Description (140-160 characters):
- * Starts with "Sarkari Result notification for..." for Google search snippet CTR
+ * Category-aware, human-written Meta Description (140-160 characters):
+ * Perfectly matches search intent so CTR and Google search snippet ranking remain high.
  */
 function buildHighCtrMetaDesc(meta) {
-  const { jobName, year = '2026', board, state, vacancyCount } = meta;
+  const { jobName, year = '2026', board, state, vacancyCount, category } = meta;
   const stateStr = (state && state !== 'Central/All India' && state !== 'All India') ? `${state} ` : '';
-  const organization = (board && board !== 'Official Board') ? board : (state ? `${state} Govt` : 'Govt of India');
-  let postName = jobName || 'Various Posts';
+  const organization = (board && board !== 'Official Board') ? board : (state ? `${state} Govt` : '');
+  let postName = (jobName || 'Various Vacancies').replace(/^(?:sarkari\s+(?:job|result)\s*:\s*)+/gi, '').trim();
 
   // Strip redundant trailing Vacancy/Posts/Recruitment
   postName = postName.replace(/\s*(?:Vacancy|Recruitment|Posts|Post)\s*(?:202[4-9]|2030)?\s*$/i, '');
@@ -241,21 +258,35 @@ function buildHighCtrMetaDesc(meta) {
   }
 
   const subject = sanitizeAndDeduplicateTitle(`${stateStr}${cleanOrg ? cleanOrg + ' ' : ''}${postName}`);
-  const hasSubjectYear = /202[4-9]|2030/i.test(subject);
+  const combinedText = `${subject} ${category || ''}`.toLowerCase();
   const vacStr = (vacancyCount && parseInt(vacancyCount, 10) > 0) ? `(${vacancyCount} Posts)` : '';
-  const yearSuffix = hasSubjectYear ? '' : ` ${year}`;
-  let baseDesc = `Sarkari Result notification for ${subject} ${vacStr} Recruitment${yearSuffix}. Check eligibility criteria, age limit, salary details, and Apply Online Form before deadline at Digital Home.`;
+
+  let baseDesc = '';
+  const cleanSubject = subject.replace(/\s*(?:Admission|Online Form|Result|Admit Card|Answer Key)\s*$/gi, '').trim();
+
+  if (combinedText.includes('result') || combinedText.includes('score card') || combinedText.includes('merit list')) {
+    baseDesc = `${cleanSubject} Result ${year} has been declared. Check direct score card link, cut off marks, merit list, and official notice at Digital Home.`;
+  } else if (combinedText.includes('admit') || combinedText.includes('hall ticket')) {
+    baseDesc = `${cleanSubject} Admit Card ${year} is released. Download official hall ticket, check exam date, shift timings, and instructions at Digital Home.`;
+  } else if (combinedText.includes('answer key')) {
+    baseDesc = `${cleanSubject} Answer Key ${year} released. Download question paper response sheet PDF and submit objections at Digital Home.`;
+  } else if (combinedText.includes('admission') || combinedText.includes('entrance')) {
+    baseDesc = `${cleanSubject} Admission Form ${year} is active. Check eligibility criteria, seat details, important dates, and apply online at Digital Home.`;
+  } else {
+    baseDesc = `${subject} ${vacStr} Recruitment ${year} notification released. Check eligibility criteria, age limit, salary details, and apply online before last date at Digital Home.`;
+  }
+
   baseDesc = sanitizeAndDeduplicateTitle(baseDesc);
 
-  // Cleanly truncate at word boundary within 160 characters
-  if (baseDesc.length > 160) {
+  // Cleanly truncate at word boundary within 158 characters
+  if (baseDesc.length > 158) {
     const words = baseDesc.split(/\s+/);
     let fitted = '';
     for (const w of words) {
-      if ((fitted + ' ' + w).length > 156) break;
+      if ((fitted + ' ' + w).length > 154) break;
       fitted = fitted ? `${fitted} ${w}` : w;
     }
-    baseDesc = fitted ? `${fitted}...` : baseDesc.slice(0, 157) + '...';
+    baseDesc = fitted ? `${fitted}...` : baseDesc.slice(0, 155) + '...';
   }
 
   return baseDesc;

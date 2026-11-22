@@ -332,10 +332,10 @@ async function runTests() {
         assert('Valid job page schema contains addressCountry IN', res11a.body.includes('"addressCountry":"IN"'));
         assert('Valid job page contains proper self-referencing canonical', 
           res11a.body.includes(`/india/sarkari-jobs/${sampleJob.slug}`));
-        assert('Valid dynamic job post Title starts with Sarkari Job:',
-          /<title>Sarkari Job:/i.test(res11a.body));
-        assert('Valid dynamic job post Meta Description starts with Sarkari Result notification for',
-          res11a.body.includes('content="Sarkari Result notification for') || res11a.body.includes('Sarkari Result notification for'));
+        assert('Valid dynamic job post Title contains exam/board name and action hook',
+          /<title>[^<]+(?:Recruitment|Bharti|Apply Online|Result|Admit Card|Admission)/i.test(res11a.body));
+        assert('Valid dynamic job post Meta Description is present and rich',
+          /<meta name="description" content="[^"]+"/i.test(res11a.body));
       } else {
         console.log('ℹ️ No active LiveAlert with slug in DB to test live 200/301 ID resolution');
       }
