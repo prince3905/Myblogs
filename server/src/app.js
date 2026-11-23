@@ -1422,9 +1422,9 @@ app.get(['/india/sarkari-jobs/:identifier', '/india/sarkari-jobs/:id', '/job-ale
     // Prioritize AI SEO Engine custom meta title & description with canonical keyword compliance
     const seoEngine = alert.seoEngine || {};
     let highCtrTitle = (seoEngine.customMetaTitle && seoEngine.customMetaTitle.trim())
-      ? sanitizeAndDeduplicateTitle(seoEngine.customMetaTitle.trim(), { maxLen: 75 })
+      ? sanitizeAndDeduplicateTitle(seoEngine.customMetaTitle.trim(), { maxLen: 85 })
       : rawHighCtrTitle;
-    highCtrTitle = highCtrTitle.replace(/^(?:sarkari\s+(?:job|result)\s*:\s*)+/gi, '').trim();
+    highCtrTitle = highCtrTitle.replace(/^(?:sarkari\s+(?:job|result)\s*(?:202[4-9]|2030)?\s*:\s*)+/gi, '').trim();
 
     const highCtrDesc = (seoEngine.customMetaDescription && seoEngine.customMetaDescription.trim())
       ? seoEngine.customMetaDescription.trim()

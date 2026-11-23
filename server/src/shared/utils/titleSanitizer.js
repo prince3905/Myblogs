@@ -12,8 +12,8 @@ function sanitizeAndDeduplicateTitle(rawTitle = '', options = {}) {
 
   let title = rawTitle.trim();
 
-  // 1. Remove unwanted repetitive prefixes (e.g., "Sarkari Job: Sarkari Job:", "Sarkari Result:")
-  title = title.replace(/^(?:sarkari\s+(?:job|result)\s*:\s*)+/gi, '');
+  // 1. Remove unwanted repetitive prefixes (e.g., "Sarkari Job: ", "Sarkari Result 2026:")
+  title = title.replace(/^(?:sarkari\s+(?:job|result)\s*(?:202[4-9]|2030)?\s*:\s*)+/gi, '');
 
   // 2. Unglue concatenated words caused by DOM scraping without spaces (e.g. "PostsAmrita", "VacancyKKHSOU")
   title = title.replace(/\b(Posts?|Vacanc(?:y|ies)|Forms?|Dates?|Direct\s+Link)([A-Z])/g, '$1 $2');
